@@ -3,14 +3,22 @@ import { useState, useEffect } from "react";
 import { ZohoFile } from "../types";
 import { useZoho } from "@/context/ZohoContext";
 
+interface FolderInfo {
+  id: string;
+  name: string;
+}
+
 export const useWorkdriveFiles = (initialFolderId: string) => {
   const { accessToken } = useZoho();
   const [files, setFiles] = useState<ZohoFile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentFolder, setCurrentFolder] = useState<string>(initialFolderId);
-  const [folderHistory, setFolderHistory] = useState<string[]>([]);
+  const [currentFolder, setCurrentFolder] = useState<FolderInfo>({
+    id: initialFolderId,
+    name: "Racine",
+  });
+  const [folderHistory, setFolderHistory] = useState<FolderInfo[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [folderPath, setFolderPath] = useState<{ id: string; name: string }[]>([
+  const [folderPath, setFolderPath] = useState<FolderInfo[]>([
     { id: initialFolderId, name: "Racine" },
   ]);
 
@@ -27,7 +35,7 @@ export const useWorkdriveFiles = (initialFolderId: string) => {
         setError(null);
 
         // Utiliser l'API client pour récupérer les fichiers
-        const response = await fetchFiles(currentFolder, accessToken);
+        const response = await fetchFiles(currentFolder.id, accessToken);
         if (response) {
           setFiles(response);
         } else {
@@ -46,7 +54,7 @@ export const useWorkdriveFiles = (initialFolderId: string) => {
     };
 
     loadFiles();
-  }, [accessToken, currentFolder]);
+  }, [accessToken, currentFolder.id]);
 
   // Fonction simplifiée pour récupérer les fichiers
   const fetchFiles = async (
@@ -97,30 +105,20 @@ export const useWorkdriveFiles = (initialFolderId: string) => {
 
       // Sauvegarder le dossier actuel dans l'historique
       if (currentFolder) {
-        setFolderHistory((prev) => [
-          ...prev,
-          {
-            id:
-              typeof currentFolder === "string"
-                ? currentFolder
-                : currentFolder.id,
-            name:
-              typeof currentFolder === "string"
-                ? "Dossier précédent"
-                : currentFolder.name || "Dossier précédent",
-          },
-        ]);
+        setFolderHistory((prev) => [...prev, currentFolder]);
       }
 
-      // Mettre à jour le dossier courant
-      setCurrentFolder({
+      const newFolder = {
         id: folderId,
         name: folderName || "Dossier",
-      });
+      };
+
+      // Mettre à jour le dossier courant
+      setCurrentFolder(newFolder);
 
       // Ajouter au chemin
       if (folderName) {
-        setFolderPath((prev) => [...prev, { id: folderId, name: folderName }]);
+        setFolderPath((prev) => [...prev, newFolder]);
       }
 
       // Charger les fichiers du nouveau dossier
@@ -174,13 +172,17 @@ export const useWorkdriveFiles = (initialFolderId: string) => {
   // Gestionnaire pour revenir au dossier racine
   const handleHome = (rootFolderId: string) => {
     setFolderHistory([]);
-    setCurrentFolder(rootFolderId);
+    setCurrentFolder({
+      id: rootFolderId,
+      name: "Racine",
+    });
     setFolderPath([{ id: rootFolderId, name: "Racine" }]);
   };
 
   // Gestionnaire de navigation par breadcrumb
   const handleBreadcrumbNavigation = (folderId: string, index: number) => {
-    setCurrentFolder(folderId);
+    const folder = folderPath[index];
+    setCurrentFolder(folder);
     setFolderPath((prev) => prev.slice(0, index + 1));
     setFolderHistory((prev) => prev.slice(0, index));
   };

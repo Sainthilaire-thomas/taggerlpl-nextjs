@@ -1,6 +1,5 @@
 // components/FileList.tsx
-import React from "react";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   Grid,
   Card,
@@ -38,6 +37,12 @@ export const FileList: React.FC<FileListProps> = ({
   onSelectAudioFile,
   onSelectTranscriptionFile,
 }) => {
+  useEffect(() => {
+    if (files && files.length > 0) {
+      console.log("Structure des fichiers reçus:", files[0]);
+    }
+  }, [files]);
+
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", p: 5 }}>
@@ -46,7 +51,7 @@ export const FileList: React.FC<FileListProps> = ({
     );
   }
 
-  if (files.length === 0) {
+  if (!files || files.length === 0) {
     return (
       <Grid item xs={12}>
         <Paper sx={{ p: 3, textAlign: "center" }}>
@@ -58,24 +63,29 @@ export const FileList: React.FC<FileListProps> = ({
     );
   }
 
-  useEffect(() => {
-    console.log(
-      "Structure des fichiers reçus:",
-      JSON.stringify(files[0], null, 2)
-    );
-  }, [files]);
-
   return (
     <Grid container spacing={2}>
       {files.map((file) => {
+        if (!file || !file.id) {
+          console.warn("Fichier invalide dans la liste:", file);
+          return null;
+        }
+
+        // Détermine si c'est un dossier en vérifiant plusieurs propriétés possibles
         const isFolder =
           file.attributes?.type === "folder" ||
           file.attributes?.is_folder === true;
+
+        // Vérifie si c'est un fichier audio ou de transcription
         const isAudio = isAudioFile(file);
         const isTranscription = isTranscriptionFile(file);
 
-        // Récupérer le nom du fichier/dossier de manière fiable
-        const fileName = file.attributes?.name || file.name || "Sans nom";
+        // Récupère le nom du fichier/dossier de manière fiable
+        const fileName =
+          file.attributes?.name ||
+          file.attributes?.display_attr_name ||
+          file.name ||
+          "Sans nom";
 
         return (
           <Grid item xs={12} sm={6} md={4} key={file.id}>
@@ -106,7 +116,7 @@ export const FileList: React.FC<FileListProps> = ({
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
-                      fontWeight: isFolder ? "bold" : "normal", // Mettre en gras les noms de dossiers
+                      fontWeight: isFolder ? "bold" : "normal",
                     }}
                   >
                     {fileName}
@@ -129,68 +139,47 @@ export const FileList: React.FC<FileListProps> = ({
                       fullWidth
                       startIcon={<FolderIcon />}
                     >
-                      Ouvrir {fileName}
+                      Ouvrir
                     </Button>
                   ) : (
                     <Box
                       sx={{
-                        mt: 1,
                         display: "flex",
-                        justifyContent: "space-between",
+                        width: "100%",
+                        justifyContent: "space-around",
                       }}
                     >
-                      {isFolder ? (
+                      {isAudio && (
                         <Button
                           size="small"
-                          variant="outlined"
-                          color="primary"
-                          onClick={() => onFolderClick(file.id, fileName)}
-                          fullWidth
-                          startIcon={<FolderIcon />}
+                          variant={
+                            selectedAudioFile?.id === file.id
+                              ? "contained"
+                              : "outlined"
+                          }
+                          color="secondary"
+                          onClick={() => onSelectAudioFile(file)}
                         >
-                          Ouvrir {fileName}
+                          {selectedAudioFile?.id === file.id
+                            ? "Audio ✓"
+                            : "Sélect. Audio"}
                         </Button>
-                      ) : (
-                        <Box
-                          sx={{
-                            display: "flex",
-                            width: "100%",
-                            justifyContent: "space-around",
-                          }}
+                      )}
+                      {isTranscription && (
+                        <Button
+                          size="small"
+                          variant={
+                            selectedTranscriptionFile?.id === file.id
+                              ? "contained"
+                              : "outlined"
+                          }
+                          color="primary"
+                          onClick={() => onSelectTranscriptionFile(file)}
                         >
-                          {isAudio && (
-                            <Button
-                              size="small"
-                              variant={
-                                selectedAudioFile?.id === file.id
-                                  ? "contained"
-                                  : "outlined"
-                              }
-                              color="secondary"
-                              onClick={() => onSelectAudioFile(file)}
-                            >
-                              {selectedAudioFile?.id === file.id
-                                ? "Audio ✓"
-                                : "Sélectionner Audio"}
-                            </Button>
-                          )}
-                          {isTranscription && (
-                            <Button
-                              size="small"
-                              variant={
-                                selectedTranscriptionFile?.id === file.id
-                                  ? "contained"
-                                  : "outlined"
-                              }
-                              color="primary"
-                              onClick={() => onSelectTranscriptionFile(file)}
-                            >
-                              {selectedTranscriptionFile?.id === file.id
-                                ? "Transcription ✓"
-                                : "Sélect. Transcription"}
-                            </Button>
-                          )}
-                        </Box>
+                          {selectedTranscriptionFile?.id === file.id
+                            ? "Transcript. ✓"
+                            : "Sélect. Transcript."}
+                        </Button>
                       )}
                     </Box>
                   )}
