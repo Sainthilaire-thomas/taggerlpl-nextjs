@@ -1,4 +1,4 @@
-import { supabase } from "@/supabaseClient";
+import supabase from "@/lib/supabaseClient";
 
 /**
  * Génère une URL signée pour un fichier dans le bucket de stockage Supabase

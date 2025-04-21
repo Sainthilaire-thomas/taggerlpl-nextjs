@@ -1,4 +1,4 @@
-import { supabase } from "@/supabaseClient";
+import supabase from "@/lib/supabaseClient"; // Importez votre client Supabase ici
 import { generateSignedUrl } from "./signedUrls";
 
 // Define types for the functions

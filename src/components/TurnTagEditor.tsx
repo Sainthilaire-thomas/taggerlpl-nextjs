@@ -13,7 +13,7 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
-import { supabase } from "@/supabaseClient";
+import supabase from "@/lib/supabaseClient";
 
 // Définition des interfaces TypeScript
 interface TurnTag {

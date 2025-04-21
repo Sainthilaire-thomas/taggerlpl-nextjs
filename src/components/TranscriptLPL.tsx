@@ -11,14 +11,7 @@ import {
 } from "react";
 import { useTheme } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
-import {
-  Box,
-  Typography,
-  Switch,
-  FormControlLabel,
-  Button,
-  IconButton,
-} from "@mui/material";
+import { Box, Typography, Button, IconButton } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import NoteAddIcon from "@mui/icons-material/NoteAdd";
@@ -97,14 +90,11 @@ const TranscriptLPL = memo<TranscriptLPLProps>(({ callId, audioSrc }) => {
     return call?.filename || "Nom de fichier indisponible";
   }, [taggingCalls, callId]);
 
-  // const [editingTag, setEditingTag] = useState(null);
   const [selectedText, setSelectedText] = useState<string>("");
   const [selectedWords, setSelectedWords] = useState<
     { startTime: number; endTime: number }[]
   >([]);
-  // const [tooltipPosition, setTooltipPosition] = useState(null);
   const [fontSize, setFontSize] = useState<number>(12);
-  const [highlightTurnOne, setHighlightTurnOne] = useState<boolean>(false);
   const [currentWordIndex, setCurrentWordIndex] = useState<number>(-1);
   const [tooltipState, setTooltipState] = useState<TooltipState | null>(null); // Contient { position, mode, tag }
 
@@ -631,16 +621,7 @@ const TranscriptLPL = memo<TranscriptLPLProps>(({ callId, audioSrc }) => {
         )}
       </Box>
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={highlightTurnOne}
-              onChange={() => setHighlightTurnOne(!highlightTurnOne)}
-            />
-          }
-          label="Surligner les tours de parole"
-        />
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 2, mb: 2 }}>
         <Box>
           <Button
             variant="outlined"
@@ -648,7 +629,9 @@ const TranscriptLPL = memo<TranscriptLPLProps>(({ callId, audioSrc }) => {
           >
             <RemoveIcon />
           </Button>
-          <Typography>{fontSize}px</Typography>
+          <Typography sx={{ display: "inline-block", mx: 1 }}>
+            {fontSize}px
+          </Typography>
           <Button
             variant="outlined"
             onClick={() => setFontSize((prev) => Math.min(prev + 1, 30))}

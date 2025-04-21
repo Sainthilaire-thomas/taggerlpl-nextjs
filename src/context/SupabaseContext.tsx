@@ -2,20 +2,12 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
-
-// Environnement variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-// Create supabase client
-const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+import supabase from "@/lib/supabaseClient"; // Import de l'instance singleton
 
 // Create context
 const SupabaseContext = createContext(null);
 
 export function SupabaseProvider({ children }) {
-  const [supabase] = useState(() => supabaseClient);
   const [session, setSession] = useState(null);
 
   useEffect(() => {
@@ -37,7 +29,7 @@ export function SupabaseProvider({ children }) {
     return () => {
       subscription?.unsubscribe();
     };
-  }, [supabase]);
+  }, []);
 
   return (
     <SupabaseContext.Provider value={{ supabase, session }}>

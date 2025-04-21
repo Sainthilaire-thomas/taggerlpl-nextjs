@@ -36,6 +36,7 @@ import {
 } from "./utils/callApiUtils";
 import SnackbarManager from "./SnackBarManager";
 import { generateSignedUrl } from "./utils/signedUrls";
+import SimpleWorkdriveExplorer from "@/components/SimpleWorkdriveExplorer"; // Nouveau composant à créer
 
 // Types
 interface ZohoFile {
@@ -238,6 +239,44 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
     }
   };
 
+  // Gestionnaire pour les fichiers sélectionnés depuis SimpleWorkdriveExplorer
+  const handleWorkdriveFileSelect = async (
+    audioFile,
+    transcriptionText = ""
+  ) => {
+    try {
+      if (audioFile) {
+        setAudioFile(audioFile);
+        // Ajouter un commentaire pour le fichier audio
+        setDescription(
+          (prevDescription) =>
+            `${prevDescription ? prevDescription + "\n" : ""}Appel (${
+              audioFile.name
+            }) chargé de Workdrive Explorer le ${new Date().toLocaleString()}`
+        );
+
+        // Si on a aussi une transcription
+        if (transcriptionText) {
+          setTranscriptionText(transcriptionText);
+          setDescription(
+            (prevDesc) =>
+              `${prevDesc}\nTranscription importée depuis Workdrive Explorer le ${new Date().toLocaleString()}`
+          );
+        }
+
+        showMessage("Fichier(s) chargé(s) depuis Workdrive Explorer");
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Erreur inconnue";
+      console.error(
+        "Erreur lors de l'importation depuis Workdrive Explorer :",
+        errorMessage
+      );
+      showMessage("Erreur lors de l'importation depuis Workdrive Explorer");
+    }
+  };
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
@@ -308,12 +347,23 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
     <Box>
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography>Import ZohoWorkdrive</Typography>
+          <Typography>Import ZohoWorkdrive (Ancien)</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <AudioList onFileSelect={handleFileSelect} />
         </AccordionDetails>
       </Accordion>
+
+      {/* Nouvel accordéon pour le nouveau WorkdriveExplorer */}
+      <Accordion>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography>Import ZohoWorkdrive Explorer (Nouveau)</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <SimpleWorkdriveExplorer onFilesSelect={handleWorkdriveFileSelect} />
+        </AccordionDetails>
+      </Accordion>
+
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography>Chargez un nouvel appel</Typography>

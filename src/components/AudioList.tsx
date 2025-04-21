@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FC } from "react";
+import { useState, FC, useEffect } from "react";
 import { useZoho } from "@/context/ZohoContext";
 import AuthButton from "./AuthButton";
 import FolderTreeView from "./FolderTreeView";
@@ -27,12 +27,18 @@ interface AudioListProps {
 const AudioList: FC<AudioListProps> = ({ onFileSelect }) => {
   const { accessToken } = useZoho();
   const [modalOpen, setModalOpen] = useState<boolean>(false);
-  const [lastFetchDate, setLastFetchDate] = useState<string>(
-    localStorage.getItem("lastFetchDate") || "Jamais"
-  );
+  const [lastFetchDate, setLastFetchDate] = useState<string>("Jamais");
   const [loading, setLoading] = useState<boolean>(false);
   const [isAccessTokenExpired, setIsAccessTokenExpired] =
     useState<boolean>(false);
+
+  // Initialize state with localStorage value on client-side
+  useEffect(() => {
+    const storedDate = localStorage.getItem("lastFetchDate");
+    if (storedDate) {
+      setLastFetchDate(storedDate);
+    }
+  }, []);
 
   const handleOpenModal = () => setModalOpen(true);
   const handleCloseModal = () => setModalOpen(false);

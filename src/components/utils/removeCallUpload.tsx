@@ -1,4 +1,4 @@
-import { supabase } from "@/supabaseClient";
+import supabase from "@/lib/supabaseClient"; // Importez votre client Supabase ici
 
 interface RemoveCallResult {
   success: boolean;

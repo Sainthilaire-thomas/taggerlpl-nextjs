@@ -19,8 +19,11 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <body>
         <AppRouterCacheProvider>
           <SupabaseProvider>
-            <GlobalNavbar />
             <ThemeModeProvider>
+              {/* Le GlobalNavbar peut être conditionnel ou être utilisé 
+                  uniquement pour les pages publiques si nécessaire */}
+              <GlobalNavbar />
+
               {/* Positionnez le toggle au bon endroit dans votre UI */}
               <div
                 style={{

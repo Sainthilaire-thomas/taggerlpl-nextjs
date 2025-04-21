@@ -14,7 +14,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { SketchPicker } from "react-color";
 import { useTaggingData } from "../context/TaggingDataContext";
-import { supabase } from "../supabaseClient";
+import supabase from "@/lib/supabaseClient";
 
 // Interfaces TypeScript
 interface Tag {
