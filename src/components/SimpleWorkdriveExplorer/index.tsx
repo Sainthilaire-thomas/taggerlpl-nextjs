@@ -1,9 +1,24 @@
-// index.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Box } from "@mui/material";
+import {
+  Box,
+  Button,
+  Typography,
+  Paper,
+  Alert,
+  Snackbar,
+  LinearProgress,
+  Breadcrumbs,
+  Link,
+  Chip,
+} from "@mui/material";
 import { useSearchParams } from "next/navigation";
+import HomeIcon from "@mui/icons-material/Home";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import AudioFileIcon from "@mui/icons-material/AudioFile";
+import DescriptionIcon from "@mui/icons-material/Description";
 
 import { useZoho } from "@/context/ZohoContext";
 import { useWorkdriveFiles } from "./hooks/useWorkdriveFiles";
@@ -123,11 +138,12 @@ export default function SimpleWorkdriveExplorer({
       // Appeler le callback avec les fichiers préparés
       onFilesSelect(audioFile, transcriptionText);
 
+      // Afficher un message de succès
+      setSuccessMessage("Fichiers importés avec succès");
+
       // Réinitialiser les sélections
       setSelectedAudioFile(null);
       setSelectedTranscriptionFile(null);
-
-      setSuccessMessage("Fichiers importés avec succès");
     } catch (error) {
       console.error("Erreur lors de l'importation:", error);
       setError(
@@ -140,35 +156,153 @@ export default function SimpleWorkdriveExplorer({
     }
   };
 
-  // S'il n'y a pas de token d'accès, afficher le prompt de connexion
+  // Affichage simplifié si aucun token d'accès
   if (!accessToken) {
-    return <AuthPrompt />;
+    return (
+      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Connexion à Zoho WorkDrive
+        </Typography>
+        <Typography paragraph>
+          Pour accéder à vos fichiers Zoho WorkDrive, vous devez vous connecter
+          à votre compte.
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => handleZohoAuth()}
+        >
+          Se connecter à Zoho WorkDrive
+        </Button>
+      </Paper>
+    );
   }
 
   return (
     <Box sx={{ width: "100%" }}>
-      {/* Contrôles de navigation */}
-      <NavigationControls
-        folderHistory={folderHistory}
-        currentFolder={currentFolder}
-        rootFolderId={rootFolderId}
-        folderPath={folderPath}
-        onBack={handleBack}
-        onHome={() => handleHome(rootFolderId)}
-        onBreadcrumbClick={handleBreadcrumbNavigation}
-        selectedAudioFile={selectedAudioFile}
-        selectedTranscriptionFile={selectedTranscriptionFile}
-        onImportFiles={handleImportFiles}
-        processingImport={processingImport}
-      />
+      {/* Affichage du chemin de navigation (breadcrumb) */}
+      <Paper elevation={1} sx={{ p: 1, mb: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+          <Button
+            startIcon={<HomeIcon />}
+            size="small"
+            onClick={() => handleHome(rootFolderId)}
+            sx={{ mr: 1 }}
+          >
+            Racine
+          </Button>
+
+          <Button
+            startIcon={<ArrowBackIcon />}
+            size="small"
+            onClick={handleBack}
+            disabled={folderHistory.length === 0}
+            sx={{ mr: 1 }}
+          >
+            Retour
+          </Button>
+
+          <Breadcrumbs
+            separator={<NavigateNextIcon fontSize="small" />}
+            aria-label="breadcrumb"
+          >
+            {folderPath.map((folder, index) => (
+              <Link
+                key={folder.id}
+                color="inherit"
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleBreadcrumbNavigation(folder.id, index);
+                }}
+                sx={{
+                  textDecoration: "none",
+                  fontWeight:
+                    index === folderPath.length - 1 ? "bold" : "normal",
+                  color:
+                    index === folderPath.length - 1
+                      ? "text.primary"
+                      : "inherit",
+                }}
+              >
+                {folder.name}
+              </Link>
+            ))}
+          </Breadcrumbs>
+        </Box>
+
+        {loading && <LinearProgress sx={{ mt: 1 }} />}
+      </Paper>
 
       {/* Résumé de la sélection de fichiers */}
-      <FileSelectionSummary
-        selectedAudioFile={selectedAudioFile}
-        selectedTranscriptionFile={selectedTranscriptionFile}
-        onClearAudioFile={() => setSelectedAudioFile(null)}
-        onClearTranscriptionFile={() => setSelectedTranscriptionFile(null)}
-      />
+      {(selectedAudioFile || selectedTranscriptionFile) && (
+        <Paper
+          elevation={2}
+          sx={{ p: 2, mb: 2, bgcolor: "background.default" }}
+        >
+          <Typography variant="subtitle1" gutterBottom fontWeight="bold">
+            Fichiers sélectionnés
+          </Typography>
+
+          <Box sx={{ mb: 1 }}>
+            {selectedAudioFile ? (
+              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                <AudioFileIcon color="secondary" sx={{ mr: 1 }} />
+                <Typography variant="body2" sx={{ mr: 1 }}>
+                  Audio :{" "}
+                  {selectedAudioFile.attributes?.name || "Fichier audio"}
+                </Typography>
+                <Chip
+                  label="Désélectionner"
+                  size="small"
+                  onDelete={() => setSelectedAudioFile(null)}
+                  color="secondary"
+                  variant="outlined"
+                />
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                Aucun fichier audio sélectionné
+              </Typography>
+            )}
+
+            {selectedTranscriptionFile ? (
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <DescriptionIcon color="primary" sx={{ mr: 1 }} />
+                <Typography variant="body2" sx={{ mr: 1 }}>
+                  Transcription :{" "}
+                  {selectedTranscriptionFile.attributes?.name ||
+                    "Transcription"}
+                </Typography>
+                <Chip
+                  label="Désélectionner"
+                  size="small"
+                  onDelete={() => setSelectedTranscriptionFile(null)}
+                  color="primary"
+                  variant="outlined"
+                />
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                Aucune transcription sélectionnée
+              </Typography>
+            )}
+          </Box>
+
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleImportFiles}
+            disabled={processingImport || !selectedAudioFile}
+            fullWidth
+            sx={{ mt: 1 }}
+          >
+            {processingImport
+              ? "Importation en cours..."
+              : "Importer les fichiers sélectionnés"}
+          </Button>
+        </Paper>
+      )}
 
       {/* Liste des fichiers */}
       <FileList
@@ -182,12 +316,35 @@ export default function SimpleWorkdriveExplorer({
       />
 
       {/* Notifications */}
-      <Notifications
-        error={error}
-        successMessage={successMessage}
-        onCloseError={() => setError(null)}
-        onCloseSuccess={() => setSuccessMessage(null)}
-      />
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setError(null)}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={6000}
+        onClose={() => setSuccessMessage(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSuccessMessage(null)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          {successMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

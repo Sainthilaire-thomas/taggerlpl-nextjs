@@ -1,5 +1,6 @@
 import supabase from "@/lib/supabaseClient"; // Importez votre client Supabase ici
 import { generateSignedUrl } from "./signedUrls";
+import { insertTranscriptionWords } from "./transcriptionProcessor";
 
 // Define types for the functions
 interface Word {
@@ -83,19 +84,9 @@ export const addTranscription = async (
 
   const transcriptId = transcriptData[0].transcriptid;
 
-  if (transcriptionText?.words) {
-    const wordsData = transcriptionText.words.map((word) => ({
-      transcriptid: transcriptId,
-      ...word,
-    }));
-
-    const { error: wordsError } = await supabase.from("word").insert(wordsData);
-
-    if (wordsError) {
-      throw new Error(
-        "Erreur lors de l'insertion dans 'word': " + wordsError.message
-      );
-    }
+  // Utilisez la nouvelle fonction au lieu de l'insertion directe
+  if (transcriptionText) {
+    await insertTranscriptionWords(transcriptId, transcriptionText, supabase);
   }
 
   return transcriptId;
@@ -191,8 +182,19 @@ export const handleCallSubmission = async ({
   try {
     // Step 1: Upload the audio file (if provided)
     if (audioFile) {
-      filePath = await uploadAudio(audioFile); // Télécharger le fichier audio
-      audioUrl = await generateSignedUrl(filePath, 60); // Générer l'URL signée
+      filePath = await uploadAudio(audioFile);
+      audioUrl = await generateSignedUrl(filePath, 60);
+    }
+
+    let parsedTranscription = null;
+    // Analyser le texte de transcription s'il est fourni
+    if (transcriptionText) {
+      try {
+        parsedTranscription = JSON.parse(transcriptionText);
+      } catch (err) {
+        console.error("Erreur lors du parsing JSON:", err);
+        throw new Error("Le format de la transcription est invalide");
+      }
     }
 
     // Step 2: Insert the call into the database
@@ -204,9 +206,7 @@ export const handleCallSubmission = async ({
           filename: audioFile ? audioFile.name : null,
           filepath: filePath,
           description: description || null,
-          transcription: transcriptionText
-            ? JSON.parse(transcriptionText)
-            : null,
+          transcription: parsedTranscription, // Stocker le JSONB tel quel
           upload: !!audioFile,
           is_tagging_call: true,
           preparedfortranscript: true,
@@ -224,7 +224,7 @@ export const handleCallSubmission = async ({
     const callId = callData[0].callid;
 
     // Step 3: Insert transcription (if provided)
-    if (transcriptionText) {
+    if (parsedTranscription) {
       const { data: transcriptData, error: transcriptError } = await supabase
         .from("transcript")
         .insert([{ callid: callId }])
@@ -239,24 +239,12 @@ export const handleCallSubmission = async ({
 
       const transcriptId = transcriptData[0].transcriptid;
 
-      // Insert words associated with the transcription
-      const parsedTranscription = JSON.parse(
-        transcriptionText
-      ) as TranscriptionData;
-      const wordsData = parsedTranscription.words.map((word) => ({
-        transcriptid: transcriptId,
-        ...word,
-      }));
-
-      const { error: wordsError } = await supabase
-        .from("word")
-        .insert(wordsData);
-
-      if (wordsError) {
-        throw new Error(
-          "Erreur lors de l'insertion dans 'word': " + wordsError.message
-        );
-      }
+      // Utilisez la nouvelle fonction au lieu de l'insertion directe
+      await insertTranscriptionWords(
+        transcriptId,
+        parsedTranscription,
+        supabase
+      );
     }
 
     // Callback for successful upload
