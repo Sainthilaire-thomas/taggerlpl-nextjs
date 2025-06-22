@@ -1,4 +1,4 @@
-// components/auth/ProtectedRoute.jsx
+// components/auth/ProtectedRoute.tsx
 "use client";
 
 import { useSupabase } from "@/context/SupabaseContext";
@@ -6,9 +6,16 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Box, CircularProgress, Typography } from "@mui/material";
 
-export default function ProtectedRoute({ children }) {
+// ✅ Interface pour les props du composant
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
+
+// ✅ Typage explicite des props
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { supabase } = useSupabase();
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  // ✅ Correction du type du state pour permettre boolean | null
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const router = useRouter();
 
   useEffect(() => {

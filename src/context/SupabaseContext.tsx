@@ -1,14 +1,31 @@
-// context/SupabaseContext.jsx
+// context/SupabaseContext.tsx
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import supabase from "@/lib/supabaseClient"; // Import de l'instance singleton
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { Session } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabaseClient"; // Import de l'instance singleton
 
-// Create context
-const SupabaseContext = createContext(null);
+// Define the shape of the context
+interface SupabaseContextType {
+  supabase: typeof supabase;
+  session: Session | null;
+}
 
-export function SupabaseProvider({ children }) {
-  const [session, setSession] = useState(null);
+// Create context with proper typing
+const SupabaseContext = createContext<SupabaseContextType | null>(null);
+
+interface SupabaseProviderProps {
+  children: ReactNode;
+}
+
+export function SupabaseProvider({ children }: SupabaseProviderProps) {
+  const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
     // Get initial session
@@ -38,9 +55,9 @@ export function SupabaseProvider({ children }) {
   );
 }
 
-export const useSupabase = () => {
+export const useSupabase = (): SupabaseContextType => {
   const context = useContext(SupabaseContext);
-  if (context === undefined) {
+  if (context === null) {
     throw new Error("useSupabase must be used within a SupabaseProvider");
   }
   return context;

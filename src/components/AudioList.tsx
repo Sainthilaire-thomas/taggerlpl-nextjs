@@ -80,6 +80,22 @@ const AudioList: FC<AudioListProps> = ({ onFileSelect }) => {
     }
   };
 
+  // ✅ Amélioration : fonction de callback typée pour FolderTreeView
+  const handleFolderTreeFileSelect = (file: any, type: any) => {
+    // Type guard pour s'assurer que le fichier a les propriétés requises
+    if (file && typeof file === "object" && "name" in file) {
+      const zohoFile: ZohoFile = {
+        originalId: file.originalId || undefined,
+        name: file.name || "Fichier sans nom",
+        ...file, // Spread les autres propriétés
+      };
+
+      onFileSelect(zohoFile, String(type));
+    } else {
+      console.warn("Fichier sélectionné invalide:", file);
+    }
+  };
+
   return (
     <div>
       <h2>Fichiers Audio</h2>
@@ -146,16 +162,7 @@ const AudioList: FC<AudioListProps> = ({ onFileSelect }) => {
           <Typography variant="h6" component="h2" gutterBottom>
             Arborescence des Dossiers
           </Typography>
-          <FolderTreeView
-            onFileSelect={(file, type) => {
-              // Ensure file has the required properties before passing to onFileSelect
-              if (file.originalId) {
-                onFileSelect(file as ZohoFile, type as string);
-              } else {
-                console.warn("File selected without originalId:", file);
-              }
-            }}
-          />
+          <FolderTreeView onFileSelect={handleFolderTreeFileSelect} />
         </Box>
       </Modal>
     </div>

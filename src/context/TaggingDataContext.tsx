@@ -13,59 +13,69 @@ import {
 import { useSupabase } from "./SupabaseContext";
 
 // Define types for your data models
-interface Tag {
-  id: number;
-  tag: string;
-  color: string;
-  [key: string]: any; // For any additional properties
+export interface Tag {
+  id?: number;
+  label: string; // ✅ Correspond à votre DB lpltag.label
+  color?: string;
+  description?: string;
+  family?: string;
+  callCount?: number;
+  turnCount?: number;
+  [key: string]: any;
 }
 
-interface TaggingCall {
+export interface TaggingCall {
   callid: string;
   is_tagging_call: boolean;
   preparedfortranscript: boolean;
   audiourl: string;
-  [key: string]: any; // For any additional properties
+  [key: string]: any;
 }
 
-interface Word {
+export interface Word {
   id: number;
   transcriptid: string;
   word: string;
+  text: string; // ✅ Ajout de cette propriété (alias de word)
   startTime: number;
   endTime: number;
   speaker: string;
-  [key: string]: any; // For any additional properties
+  turn: string; // ✅ Ajout de cette propriété manquante
+  index?: number; // ✅ Ajout de cette propriété optionnelle
+  [key: string]: any;
 }
 
-interface Postit {
+export interface Postit {
   id: number;
   callid: string;
   content: string;
-  [key: string]: any; // For any additional properties
+  [key: string]: any;
 }
 
-interface TaggedTurn {
+export interface TaggedTurn {
   id: number;
   call_id: string;
   start_time: number;
   end_time: number;
   tag: string;
+  verbatim: string;
   next_turn_verbatim: string;
+  next_turn_tag?: string; // ✅ Ajout du champ
+  speaker: string; // ✅ Ajout du champ
   color: string;
-  lpltag?: {
-    color: string;
-  };
-  [key: string]: any; // For any additional properties
+  [key: string]: any;
 }
 
-interface NewTag {
+export interface NewTag {
   call_id: string;
   start_time: number;
   end_time: number;
   tag: string;
+  verbatim: string; // ✅ Ajout obligatoire
   next_turn_verbatim?: string;
-  [key: string]: any; // For any additional properties
+  speaker: string; // ✅ Ajout obligatoire
+  next_turn_tag?: string; // ✅ Ajout optionnel
+  [key: string]: any;
 }
 
 // Define the shape of your context
@@ -80,7 +90,7 @@ interface TaggingDataContextType {
   taggingPostits: Postit[];
   audioSrc: string | null;
   setAudioSrc: React.Dispatch<React.SetStateAction<string | null>>;
-  playerRef: React.RefObject<HTMLAudioElement>;
+  playerRef: React.RefObject<HTMLAudioElement | null>;
   playAudioAtTimestamp: (timestamp: number) => void;
   updateCurrentWord: (word: Word | null) => void;
   currentWord: Word | null;
@@ -90,9 +100,11 @@ interface TaggingDataContextType {
   deleteTurnTag: (id: number) => Promise<void>;
   tags: Tag[];
   setTags: React.Dispatch<React.SetStateAction<Tag[]>>;
+  calculateAllNextTurnTags: (callId: string) => Promise<number>;
+  refreshTaggingCalls?: () => Promise<void>;
 }
 
-// Create the context with a default undefined value, but cast as our type
+// Create the context with a default undefined value
 const TaggingDataContext = createContext<TaggingDataContextType | undefined>(
   undefined
 );
@@ -113,7 +125,9 @@ interface TaggingDataProviderProps {
 export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
   children,
 }) => {
+  // Destructurer directement le hook useSupabase
   const { supabase } = useSupabase();
+
   const [taggingCalls, setTaggingCalls] = useState<TaggingCall[]>([]);
   const [selectedTaggingCall, setSelectedTaggingCall] =
     useState<TaggingCall | null>(null);
@@ -130,7 +144,29 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     console.log("Current word updated:", word);
   };
 
+  const mapWordToTranscriptWord = (word: any): Word => {
+    console.log("Mappage du mot:", word); // Debug log
+
+    return {
+      ...word, // Garder toutes les propriétés originales
+      text: word.text || word.word || "", // Utiliser text si disponible, sinon word
+      turn: word.turn || word.speaker || "Inconnu", // Utiliser turn si disponible, sinon speaker
+      word: word.word || word.text || "", // Assurer que word existe
+      speaker: word.speaker || word.turn || "Inconnu", // Assurer que speaker existe
+      startTime: word.startTime || 0,
+      endTime: word.endTime || 0,
+      // Conserver l'index s'il existe
+      index: word.index,
+    };
+  };
+
   useEffect(() => {
+    // Vérifier que supabase est disponible
+    if (!supabase) {
+      console.warn("Supabase client not available yet");
+      return;
+    }
+
     // Fetch les tags une seule fois au chargement
     const fetchTags = async (): Promise<void> => {
       try {
@@ -141,15 +177,23 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
           setTags(data || []);
         }
       } catch (err) {
-        console.error("Erreur inattendue :", (err as Error).message);
+        console.error(
+          "Erreur inattendue :",
+          err instanceof Error ? err.message : String(err)
+        );
       }
     };
 
     fetchTags();
-  }, [supabase]); // Exécuté une seule fois au montage
+  }, [supabase]);
 
   // Fetch des appels de tagging depuis Supabase
   const fetchTaggingCalls = useCallback(async () => {
+    if (!supabase) {
+      console.warn("Supabase not available");
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from("call")
@@ -166,15 +210,43 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     } catch (err) {
       console.error(
         "Erreur inattendue lors du fetch des appels de tagging :",
-        err.message
+        err instanceof Error ? err.message : String(err)
       );
+    }
+  }, [supabase]);
+
+  // Dans TaggingDataContext.tsx, ajoutez cette fonction
+  const refreshTaggingCalls = useCallback(async () => {
+    if (!supabase) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("call")
+        .select("*")
+        .eq("is_tagging_call", true)
+        .eq("preparedfortranscript", true);
+
+      if (error) {
+        console.error("Erreur lors du refresh des appels:", error);
+      } else {
+        setTaggingCalls(data || []);
+      }
+    } catch (err) {
+      console.error("Erreur inattendue lors du refresh:", err);
     }
   }, [supabase]);
 
   // Fetch des transcriptions pour un appel spécifique
   const fetchTaggingTranscription = useCallback(
     async (callId: string): Promise<void> => {
+      if (!supabase) {
+        console.warn("Supabase not available");
+        return;
+      }
+
       try {
+        console.log("🔍 Début fetchTaggingTranscription pour callId:", callId);
+
         // Étape 1 : Obtenir le transcriptid à partir du callid
         const { data: transcriptData, error: transcriptError } = await supabase
           .from("transcript")
@@ -192,6 +264,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
         }
 
         const transcriptId = transcriptData?.transcriptid;
+        console.log("📄 TranscriptId trouvé:", transcriptId);
 
         if (!transcriptId) {
           console.warn("Aucun transcriptid trouvé pour callid :", callId);
@@ -212,13 +285,29 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
           return;
         }
 
-        // Met à jour le contexte avec les mots récupérés
-        setTaggingTranscription(wordsData || []);
-        console.log("Words récupérés :", wordsData);
+        console.log("📝 Données words brutes récupérées:", wordsData);
+        console.log("📊 Nombre de mots récupérés:", wordsData?.length || 0);
+
+        if (!wordsData || wordsData.length === 0) {
+          console.warn("Aucun mot trouvé pour transcriptId:", transcriptId);
+          setTaggingTranscription([]);
+          return;
+        }
+
+        // ✅ Mappez les données pour inclure les propriétés manquantes
+        const mappedWords = wordsData.map(mapWordToTranscriptWord);
+        console.log("🔄 Mots après mappage:", mappedWords.slice(0, 3)); // Log des 3 premiers pour debug
+
+        setTaggingTranscription(mappedWords);
+        console.log(
+          "✅ TaggingTranscription mis à jour avec",
+          mappedWords.length,
+          "mots"
+        );
       } catch (err) {
         console.error(
           "Erreur inattendue lors du fetchTaggingTranscription :",
-          err
+          err instanceof Error ? err.message : String(err)
         );
         setTaggingTranscription([]);
       }
@@ -229,6 +318,11 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
   // Fetch des post-its liés à un appel
   const fetchTaggingPostits = useCallback(
     async (callId: string): Promise<void> => {
+      if (!supabase) {
+        console.warn("Supabase not available");
+        return;
+      }
+
       try {
         const { data, error } = await supabase
           .from("postit")
@@ -242,7 +336,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
       } catch (err) {
         console.error(
           "Erreur inattendue lors du fetch des post-its :",
-          (err as Error).message
+          err instanceof Error ? err.message : String(err)
         );
       }
     },
@@ -250,20 +344,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
   );
 
   // Sélectionner un appel pour le tagging
-  // Accès direct au callId
   const callId = selectedTaggingCall?.callid;
-
-  const selectTaggingCall = useCallback(
-    (call: TaggingCall): void => {
-      setSelectedTaggingCall(call);
-      if (call?.callid) {
-        fetchTaggingTranscription(call.callid);
-        fetchTaggingPostits(call.callid);
-        setAudioSrc(call.audiourl);
-      }
-    },
-    [fetchTaggingTranscription, fetchTaggingPostits]
-  );
 
   // Fonction pour jouer l'audio à un timestamp donné
   const playAudioAtTimestamp = (timestamp: number): void => {
@@ -279,89 +360,271 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
   }, [fetchTaggingCalls]);
 
   // Fonction pour récupérer les tags
+  // Fonction fetchTaggedTurns simplifiée dans TaggingDataContext.tsx
+
   const fetchTaggedTurns = useCallback(
     async (callId: string): Promise<void> => {
+      if (!supabase) {
+        console.warn("Supabase not available");
+        return;
+      }
+
       try {
-        const { data, error } = await supabase
+        console.log("=== FETCH TAGGED TURNS ===");
+        console.log("Call ID:", callId);
+
+        // Récupérer tous les tags avec leurs couleurs en une seule requête
+        const { data: enrichedTags, error } = await supabase
           .from("turntagged")
           .select(
             `
-              id,
-              call_id,
-              start_time,
-              end_time,
-              tag,
-              next_turn_verbatim, 
-              lpltag(color)
-            `
+          *,
+          lpltag:tag (color)
+        `
           )
-          .eq("call_id", callId);
+          .eq("call_id", callId)
+          .order("start_time", { ascending: true });
 
         if (error) {
-          console.error("Erreur lors du fetch des tags :", error);
-        } else {
-          const enrichedTags = data.map((tag) => ({
-            ...tag,
-            color: tag.lpltag?.color || "transparent",
-          }));
-
-          setTaggedTurns(enrichedTags);
-          console.log("Tags enrichis :", enrichedTags);
+          console.error("Erreur fetch tags:", error);
+          throw error;
         }
-      } catch (err) {
-        console.error(
-          "Erreur inattendue lors du fetch des tags :",
-          (err as Error).message
+
+        // Traiter les données pour avoir la structure attendue
+        const processedTags: TaggedTurn[] = (enrichedTags || []).map(
+          (tag: any) => ({
+            ...tag,
+            color: tag.lpltag?.color || "#gray",
+            verbatim: tag.verbatim || "",
+          })
         );
+
+        console.log(`✅ ${processedTags.length} tags récupérés`);
+
+        // Mise à jour de l'état en une seule fois
+        setTaggedTurns(processedTags);
+      } catch (err) {
+        console.error("Erreur dans fetchTaggedTurns:", err);
+        setTaggedTurns([]); // État par défaut en cas d'erreur
       }
     },
     [supabase]
   );
 
+  // Dans TaggingDataContext.tsx - Remplacer la fonction selectTaggingCall
+
+  const selectTaggingCall = useCallback(
+    (call: TaggingCall): void => {
+      console.log("=== SELECT TAGGING CALL ===");
+      console.log("Call selected:", call.callid);
+
+      setSelectedTaggingCall(call);
+
+      if (call?.callid) {
+        // ✅ Charger TOUTES les données nécessaires en parallèle
+        Promise.all([
+          fetchTaggingTranscription(call.callid),
+          fetchTaggedTurns(call.callid), // ✅ AJOUT CRUCIAL
+          fetchTaggingPostits(call.callid),
+        ])
+          .then(() => {
+            console.log(
+              "✅ Toutes les données chargées pour l'appel",
+              call.callid
+            );
+          })
+          .catch((error) => {
+            console.error("❌ Erreur lors du chargement des données:", error);
+          });
+
+        setAudioSrc(call.audiourl);
+      }
+    },
+    [fetchTaggingTranscription, fetchTaggedTurns, fetchTaggingPostits] // ✅ Ajouter fetchTaggedTurns aux dépendances
+  );
   // Fonction pour ajouter un tag
+  // Fonction addTag robuste dans TaggingDataContext.tsx
+
   const addTag = useCallback(
     async (newTag: NewTag): Promise<TaggedTurn | null> => {
+      if (!supabase) return null;
+
       try {
-        // Insérer directement le tag dans Supabase
-        const { data: insertedData, error: insertError } = await supabase
+        console.log("=== ADD TAG OPTIMISÉ ===");
+
+        // Vérifier doublons
+        const { data: existingTags, error: checkError } = await supabase
           .from("turntagged")
-          .insert([newTag]).select(`
-              id,
-              call_id,
-              start_time,
-              end_time,
-              tag,
-              next_turn_verbatim,
-              lpltag(color)
-            `);
+          .select("*")
+          .eq("call_id", newTag.call_id)
+          .eq("speaker", newTag.speaker)
+          .gte("start_time", newTag.start_time - 0.1)
+          .lte("end_time", newTag.end_time + 0.1);
 
-        if (insertError) {
-          console.error("Erreur lors de l'ajout du tag :", insertError);
-          return null;
+        if (checkError) throw checkError;
+
+        let result: TaggedTurn;
+
+        if (existingTags && existingTags.length > 0) {
+          // Mise à jour
+          const existingTag = existingTags[0];
+          const { data: updatedData, error: updateError } = await supabase
+            .from("turntagged")
+            .update({
+              tag: newTag.tag,
+              verbatim: newTag.verbatim,
+              next_turn_verbatim: newTag.next_turn_verbatim,
+            })
+            .eq("id", existingTag.id)
+            .select("*")
+            .single();
+
+          if (updateError) throw updateError;
+          result = updatedData;
+          console.log("✅ Tag mis à jour:", result.id);
+        } else {
+          // Création
+          const { data: insertedData, error: insertError } = await supabase
+            .from("turntagged")
+            .insert([newTag])
+            .select("*")
+            .single();
+
+          if (insertError) throw insertError;
+          result = insertedData;
+          console.log("✅ Nouveau tag créé:", result.id);
         }
 
-        if (insertedData && insertedData.length > 0) {
-          const enrichedTag = {
-            ...insertedData[0],
-            color: insertedData[0].lpltag?.color || "transparent",
-          };
+        // Récupérer couleur
+        const { data: tagData } = await supabase
+          .from("lpltag")
+          .select("color")
+          .eq("label", newTag.tag)
+          .single();
 
-          setTaggedTurns((prev) => [...prev, enrichedTag]);
-          return enrichedTag;
-        }
+        const enrichedTag: TaggedTurn = {
+          ...result,
+          color: tagData?.color || "#gray",
+          verbatim: result.verbatim || "",
+        };
+
+        // ✅ Mise à jour intelligente de l'état local SANS fetchTaggedTurns
+        setTaggedTurns((prevTags) => {
+          // Supprimer l'ancien tag s'il existe
+          const filteredTags = prevTags.filter(
+            (tag) => tag.id !== enrichedTag.id
+          );
+          // Ajouter le nouveau/mis à jour
+          const newState = [...filteredTags, enrichedTag];
+          console.log(
+            `État local mis à jour: ${prevTags.length} → ${newState.length} tags`
+          );
+          return newState;
+        });
+
+        return enrichedTag;
       } catch (err) {
-        console.error(
-          "Erreur inattendue lors de l'ajout du tag :",
-          (err as Error).message
-        );
+        console.error("Erreur dans addTag:", err);
+        return null;
       }
-      return null;
     },
     [supabase]
+  );
+
+  // Fonction pour calculer tous les next_turn_tag d'un appel
+  const calculateAllNextTurnTags = useCallback(
+    async (callId: string): Promise<number> => {
+      if (!supabase) {
+        console.warn("Supabase not available");
+        return 0;
+      }
+
+      try {
+        console.log("=== CALCUL BATCH NEXT_TURN_TAG ===");
+        console.log("Call ID:", callId);
+
+        // 1. Récupérer tous les tags de cet appel, triés par temps
+        const { data: allTags, error: tagsError } = await supabase
+          .from("turntagged")
+          .select("id, start_time, end_time, tag, speaker, next_turn_tag")
+          .eq("call_id", callId)
+          .order("start_time", { ascending: true });
+
+        if (tagsError) {
+          console.error("Erreur récupération tags:", tagsError);
+          return 0;
+        }
+
+        if (!allTags || allTags.length === 0) {
+          console.log("Aucun tag trouvé pour cet appel");
+          return 0;
+        }
+
+        console.log(`Traitement de ${allTags.length} tags`);
+
+        let updatedCount = 0;
+
+        // 2. Pour chaque tag, trouver le tag suivant du speaker différent
+        for (let i = 0; i < allTags.length; i++) {
+          const currentTag = allTags[i];
+
+          // Trouver le prochain tag d'un speaker différent après ce tag
+          const nextTag = allTags
+            .slice(i + 1) // Tags suivants seulement
+            .find(
+              (tag) =>
+                tag.speaker !== currentTag.speaker &&
+                tag.start_time > currentTag.end_time
+            );
+
+          const nextTurnTag = nextTag ? nextTag.tag : null;
+
+          // 3. Mettre à jour seulement si différent de l'existant
+          if (currentTag.next_turn_tag !== nextTurnTag) {
+            const { error: updateError } = await supabase
+              .from("turntagged")
+              .update({ next_turn_tag: nextTurnTag })
+              .eq("id", currentTag.id);
+
+            if (updateError) {
+              console.error(
+                `Erreur mise à jour tag ${currentTag.id}:`,
+                updateError
+              );
+            } else {
+              console.log(
+                `✅ Tag ${currentTag.id} (${currentTag.tag}): next_turn_tag = ${
+                  nextTurnTag || "NULL"
+                }`
+              );
+              updatedCount++;
+            }
+          }
+        }
+
+        console.log(`=== CALCUL TERMINÉ: ${updatedCount} tags mis à jour ===`);
+
+        // 4. Rafraîchir l'état local si des tags ont été mis à jour
+        if (updatedCount > 0) {
+          await fetchTaggedTurns(callId);
+        }
+
+        return updatedCount;
+      } catch (err) {
+        console.error("Erreur dans calculateAllNextTurnTags:", err);
+        return 0;
+      }
+    },
+    [supabase, fetchTaggedTurns]
   );
 
   const deleteTurnTag = useCallback(
     async (id: number): Promise<void> => {
+      if (!supabase) {
+        console.warn("Supabase not available");
+        return;
+      }
+
       try {
         const { error } = await supabase
           .from("turntagged")
@@ -379,7 +642,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
       } catch (err) {
         console.error(
           "Erreur inattendue lors de la suppression du tag :",
-          (err as Error).message
+          err instanceof Error ? err.message : String(err)
         );
       }
     },
@@ -409,6 +672,8 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
         deleteTurnTag,
         tags,
         setTags,
+        calculateAllNextTurnTags,
+        refreshTaggingCalls,
       }}
     >
       {children}

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import {
   Box,
   Typography,
-  Grid,
   Card,
   CardContent,
   Select,
@@ -13,6 +12,7 @@ import {
   InputLabel,
   Button,
   Alert,
+  SelectChangeEvent,
 } from "@mui/material";
 import { useTaggingData } from "@/context/TaggingDataContext";
 import TranscriptLPL from "@/components/TranscriptLPL";
@@ -37,7 +37,7 @@ export default function NewTaggingPage() {
     }
   }, [selectedTaggingCall]);
 
-  const handleCallChange = async (event) => {
+  const handleCallChange = async (event: SelectChangeEvent<string>) => {
     const callId = event.target.value;
     setSelectedCallId(callId);
     setIsLoading(true);
@@ -113,53 +113,51 @@ export default function NewTaggingPage() {
         l'ancienne version à tout moment.
       </Alert>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Card sx={{ mb: 2 }}>
-            <CardContent>
-              <FormControl fullWidth variant="outlined">
-                <InputLabel id="call-select-label">
-                  Sélectionner un appel
-                </InputLabel>
-                <Select
-                  labelId="call-select-label"
-                  id="call-select"
-                  value={selectedCallId}
-                  onChange={handleCallChange}
-                  label="Sélectionner un appel"
-                  disabled={isLoading}
-                >
-                  <MenuItem value="">
-                    <em>Choisir un appel</em>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        <Card sx={{ mb: 2 }}>
+          <CardContent>
+            <FormControl fullWidth variant="outlined">
+              <InputLabel id="call-select-label">
+                Sélectionner un appel
+              </InputLabel>
+              <Select
+                labelId="call-select-label"
+                id="call-select"
+                value={selectedCallId}
+                onChange={handleCallChange}
+                label="Sélectionner un appel"
+                disabled={isLoading}
+              >
+                <MenuItem value="">
+                  <em>Choisir un appel</em>
+                </MenuItem>
+                {taggingCalls.map((call) => (
+                  <MenuItem key={call.callid} value={call.callid}>
+                    {call.filename || call.description || call.callid}
                   </MenuItem>
-                  {taggingCalls.map((call) => (
-                    <MenuItem key={call.callid} value={call.callid}>
-                      {call.filename || call.description || call.callid}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                ))}
+              </Select>
+            </FormControl>
 
-              {!taggingCalls.length && (
-                <Box sx={{ mt: 2, textAlign: "center" }}>
-                  <Typography variant="body2" color="textSecondary">
-                    Aucun appel disponible pour le tagging.
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{ mt: 1 }}
-                    href="/calls"
-                  >
-                    Importer des appels
-                  </Button>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+            {!taggingCalls.length && (
+              <Box sx={{ mt: 2, textAlign: "center" }}>
+                <Typography variant="body2" color="textSecondary">
+                  Aucun appel disponible pour le tagging.
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  sx={{ mt: 1 }}
+                  href="/calls"
+                >
+                  Importer des appels
+                </Button>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
 
-        <Grid item xs={12}>
+        <Box>
           {selectedTaggingCall ? (
             <TranscriptLPL
               callId={selectedTaggingCall.callid}
@@ -174,8 +172,8 @@ export default function NewTaggingPage() {
               </CardContent>
             </Card>
           )}
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Box>
   );
 }

@@ -44,7 +44,7 @@ const SnackbarManager: React.FC<SnackbarManagerProps> = ({
     setOpen(false);
   };
 
-  const handleExited = () => {
+  const handleTransitionExited = () => {
     setMessageInfo(undefined);
   };
 
@@ -54,7 +54,9 @@ const SnackbarManager: React.FC<SnackbarManagerProps> = ({
       open={open}
       autoHideDuration={6000}
       onClose={handleClose}
-      onExited={handleExited}
+      TransitionProps={{
+        onExited: handleTransitionExited,
+      }}
       message={messageInfo?.message}
     />
   );

@@ -1,6 +1,13 @@
 // components/NavigationControls.tsx
 import React from "react";
-import { Box, IconButton, Breadcrumbs, Link, Button } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  Breadcrumbs,
+  Link,
+  Button,
+  CircularProgress,
+} from "@mui/material";
 import {
   ArrowBack as BackIcon,
   Home as HomeIcon,

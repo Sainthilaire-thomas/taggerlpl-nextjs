@@ -16,12 +16,13 @@ interface TagData {
   count: number;
 }
 
+// Correction du type pour correspondre à la structure retournée par Supabase
 interface TurnTaggedRecord {
   tag: string | null;
   next_turn_tag: string | null;
   lpltag: {
     family: string;
-  };
+  }[]; // Correction: lpltag est retourné comme un tableau par Supabase
 }
 
 interface AggregatedData {
@@ -86,6 +87,11 @@ const TagStats: FC<TagStatsProps> = ({ family }) => {
         const aggregatedData = (
           data as TurnTaggedRecord[]
         ).reduce<AggregatedData>((acc, item) => {
+          // Vérifier que lpltag existe et n'est pas vide
+          if (!item.lpltag || item.lpltag.length === 0) {
+            return acc;
+          }
+
           const tag = item.tag || "Non spécifié";
           const nextTurnTag = item.next_turn_tag || "Aucun";
           const key = `${tag}-${nextTurnTag}`;

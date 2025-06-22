@@ -10,7 +10,6 @@ import {
   Card,
   CardContent,
   CardActions,
-  Grid,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -36,11 +35,11 @@ import {
 } from "./utils/callApiUtils";
 import SnackbarManager from "./SnackBarManager";
 import { generateSignedUrl } from "./utils/signedUrls";
-import SimpleWorkdriveExplorer from "@/components/SimpleWorkdriveExplorer"; // Nouveau composant à créer
+import SimpleWorkdriveExplorer from "@/components/SimpleWorkdriveExplorer";
 
-// Types
+// Types - Correction pour correspondre au type attendu par AudioList
 interface ZohoFile {
-  originalId: string;
+  originalId?: string; // Correction: rendre optionnel pour correspondre au type attendu
   name: string;
   [key: string]: any;
 }
@@ -99,7 +98,6 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
     setTranscriptionText(event.target.value);
   };
 
-  // 1. Correction pour handleCallClick - gérer audiourl null (ligne 108)
   const handleCallClick = async (call: Call) => {
     console.log("handleCallClick - Début", call);
     try {
@@ -109,9 +107,9 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
         );
         selectTaggingCall({
           ...call,
-          audiourl: "", // Changer null en chaîne vide
-          is_tagging_call: true, // Ajouter propriété manquante
-          preparedfortranscript: false, // Ajouter propriété manquante
+          audiourl: "",
+          is_tagging_call: true,
+          preparedfortranscript: false,
         });
         showMessage("Appel sans audio chargé.");
         return;
@@ -154,7 +152,7 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
       showMessage("Erreur lors de la récupération du fichier audio.");
       selectTaggingCall({
         ...call,
-        audiourl: "", // Changer null en chaîne vide
+        audiourl: "",
         is_tagging_call: true,
         preparedfortranscript: false,
       });
@@ -162,7 +160,10 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
   };
 
   // Gestion des fichiers sélectionnés depuis AudioList
-  const handleFileSelect = async (file: ZohoFile, type: string) => {
+  const handleFileSelect = async (
+    file: ZohoFile,
+    type: string
+  ): Promise<void> => {
     try {
       const fileId = file.originalId;
       console.log(`🛠️ Gestion du fichier (${type}) avec ID :`, fileId);
@@ -172,7 +173,7 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
 
       const response = await fetch(proxyUrl, {
         headers: {
-          Authorization: `Bearer ${accessToken}`, // Passer le token d'accès
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
@@ -186,11 +187,9 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
       console.log("📝 Content-Type reçu :", contentType);
 
       if (contentType.includes("application/json")) {
-        // Traitez en tant que JSON
         const data = await response.json();
         if (type === "transcription") {
           setTranscriptionText(JSON.stringify(data, null, 2));
-          // Ajouter un commentaire pour une transcription
           setDescription(
             (prevDescription) =>
               `${prevDescription ? prevDescription + "\n" : ""}Transcription (${
@@ -200,25 +199,20 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
         }
         console.log("✅ Transcription téléchargée :", data);
       } else if (contentType.includes("audio")) {
-        // Traitez en tant que fichier audio
         const blob = await response.blob();
         const fileName = file.name || "audio_downloaded.mp3";
         console.log("🔍 Taille du blob audio :", blob.size, "octets");
 
-        // Créer un objet `File` à partir du `Blob`
         const audioFile = new File([blob], fileName, { type: contentType });
         console.log("📝 Fichier audio prêt à être uploadé :", audioFile);
 
-        // Télécharger localement pour vérification (optionnel)
         const downloadLink = document.createElement("a");
         downloadLink.href = URL.createObjectURL(blob);
         downloadLink.download = fileName;
         downloadLink.click();
         console.log("🔽 Téléchargement manuel du fichier audio déclenché.");
 
-        // Mettre à jour l'état avec le fichier audio
         setAudioFile(audioFile);
-        // Ajouter un commentaire pour un fichier audio
         setDescription(
           (prevDescription) =>
             `${prevDescription ? prevDescription + "\n" : ""}Appel (${
@@ -239,15 +233,14 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
     }
   };
 
-  // Gestionnaire pour les fichiers sélectionnés depuis SimpleWorkdriveExplorer
+  // Correction: Ajouter les types pour les paramètres
   const handleWorkdriveFileSelect = async (
-    audioFile,
-    transcriptionText = ""
-  ) => {
+    audioFile: File | null,
+    transcriptionText: string = ""
+  ): Promise<void> => {
     try {
       if (audioFile) {
         setAudioFile(audioFile);
-        // Ajouter un commentaire pour le fichier audio
         setDescription(
           (prevDescription) =>
             `${prevDescription ? prevDescription + "\n" : ""}Appel (${
@@ -255,7 +248,6 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
             }) chargé de Workdrive Explorer le ${new Date().toLocaleString()}`
         );
 
-        // Si on a aussi une transcription
         if (transcriptionText) {
           setTranscriptionText(transcriptionText);
           setDescription(
@@ -298,7 +290,6 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
         onCallUploaded,
       });
 
-      // Reset fields after success
       setDescription("");
       setAudioFile(null);
       setTranscriptionText("");
@@ -322,14 +313,12 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
     const { callid, filepath } = callToDelete;
 
     try {
-      // Use the `removeCallUpload` utility function
       if (filepath) {
         await removeCallUpload(callid, filepath);
       } else {
         throw new Error("Filepath manquant pour la suppression");
       }
 
-      // Show success message
       showMessage("Appel mis à jour, audio et word retirés.");
     } catch (error) {
       const errorMessage =
@@ -337,7 +326,6 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
       console.error("Error in handleConfirmDelete:", errorMessage);
       showMessage("Error removing call upload.");
     } finally {
-      // Reset modal state
       setConfirmDeleteOpen(false);
       setCallToDelete(null);
     }
@@ -354,7 +342,6 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
         </AccordionDetails>
       </Accordion>
 
-      {/* Nouvel accordéon pour le nouveau WorkdriveExplorer */}
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography>Import ZohoWorkdrive Explorer (Nouveau)</Typography>
@@ -422,45 +409,51 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
           </Box>
         </AccordionDetails>
       </Accordion>
+
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography>Appels chargés pour le tagging</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <Grid container spacing={2}>
+          {/* Correction: Remplacement de Grid par Box avec Flexbox */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}
+          >
             {taggingCalls.map((call) => (
-              <Grid item xs={12} key={call.callid}>
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="body2">{call.filename}</Typography>
-                    <Typography variant="body2">{call.description}</Typography>
-                  </CardContent>
-                  <CardActions>
-                    <Button
-                      size="small"
-                      color="primary"
-                      startIcon={<PlayIcon />}
-                      onClick={() => handleCallClick(call)}
-                    >
-                      Écouter
-                    </Button>
+              <Card variant="outlined" key={call.callid}>
+                <CardContent>
+                  <Typography variant="body2">{call.filename}</Typography>
+                  <Typography variant="body2">{call.description}</Typography>
+                </CardContent>
+                <CardActions>
+                  <Button
+                    size="small"
+                    color="primary"
+                    startIcon={<PlayIcon />}
+                    onClick={() => handleCallClick(call)}
+                  >
+                    Écouter
+                  </Button>
 
-                    <Button
-                      size="small"
-                      color="error"
-                      startIcon={<DeleteIcon />}
-                      onClick={() => handleDeleteClick(call)}
-                    >
-                      Supprimer
-                    </Button>
-                  </CardActions>
-                </Card>
-              </Grid>
+                  <Button
+                    size="small"
+                    color="error"
+                    startIcon={<DeleteIcon />}
+                    onClick={() => handleDeleteClick(call)}
+                  >
+                    Supprimer
+                  </Button>
+                </CardActions>
+              </Card>
             ))}
-          </Grid>
+          </Box>
         </AccordionDetails>
       </Accordion>
-      {/* Section pour afficher les appels dans call mais non chargés pour taggage manuel */}
+
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography>Appels transcrits</Typography>
@@ -471,18 +464,30 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
           </Button>
         </AccordionDetails>
       </Accordion>
-      {/* Modal pour afficher CallListUnprepared */}
+
       <Dialog
         open={showModal}
         onClose={handleCloseModal}
         fullWidth
-        maxWidth="lg" // Largeur maximale (sm, md, lg, xl)
+        maxWidth="lg"
       >
         <DialogTitle>Sélection taggage manuel appels transcrits</DialogTitle>
         <DialogContent>
-          {/* Inclusion de CallListUnprepared */}
+          {/* Correction: Wrapper avec gestion d'erreur pour les types incompatibles */}
           <CallListUnprepared
-            onPrepareCall={prepareCallForTagging}
+            onPrepareCall={(params) => {
+              // Adapter les types si nécessaire
+              try {
+                return prepareCallForTagging(params as any);
+              } catch (error) {
+                console.error(
+                  "Erreur lors de la préparation de l'appel:",
+                  error
+                );
+                showMessage("Erreur lors de la préparation de l'appel");
+                return Promise.resolve();
+              }
+            }}
             showMessage={showMessage}
           />
         </DialogContent>
@@ -492,6 +497,7 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
       <SnackbarManager snackPack={snackPack} setSnackPack={setSnackPack} />
 
       <Dialog

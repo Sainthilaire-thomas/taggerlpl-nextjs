@@ -1,4 +1,4 @@
-// app/login/page.jsx
+// app/login/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -18,12 +18,13 @@ import {
 export default function LoginPage() {
   const { supabase } = useSupabase();
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleSubmit = async (e) => {
+  // ✅ Typage correct pour l'événement de soumission du formulaire
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -38,7 +39,12 @@ export default function LoginPage() {
       router.push("/tagging");
       router.refresh();
     } catch (error) {
-      setError(error.message);
+      // ✅ Gestion correcte du type unknown dans catch
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Une erreur inconnue s'est produite";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

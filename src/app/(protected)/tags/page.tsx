@@ -8,7 +8,15 @@ import { supabase } from "@/lib/supabaseClient";
 import TagTreeView from "@/components/TagTreeView";
 import TagHistoryView from "@/components/TagHistoryView";
 
-function TabPanel(props) {
+// ✅ Interface pour les props du TabPanel
+interface TabPanelProps {
+  children?: React.ReactNode;
+  value: number;
+  index: number;
+}
+
+// ✅ Typage explicite des props
+function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
 
   return (
@@ -25,9 +33,9 @@ function TabPanel(props) {
 }
 
 export default function TagsAdminPage() {
-  const [tabValue, setTabValue] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [tagsCount, setTagsCount] = useState(0);
+  const [tabValue, setTabValue] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [tagsCount, setTagsCount] = useState<number>(0);
 
   useEffect(() => {
     const fetchTagsCount = async () => {
@@ -51,7 +59,8 @@ export default function TagsAdminPage() {
     fetchTagsCount();
   }, []);
 
-  const handleTabChange = (event, newValue) => {
+  // ✅ Typage explicite des paramètres
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 

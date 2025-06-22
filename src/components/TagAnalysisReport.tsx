@@ -11,10 +11,11 @@ interface LPLTag {
   icon: string;
 }
 
+// Type correct pour les données retournées par Supabase avec join
 interface TurnTaggedItem {
   tag: string;
   next_turn_tag: string | null;
-  lpltag: LPLTag;
+  lpltag: LPLTag[]; // Supabase retourne un tableau avec les jointures !inner
 }
 
 interface TagCountData {
@@ -67,22 +68,25 @@ const TagAnalysisReport: FC<TagAnalysisReportProps> = ({ family }) => {
         }
 
         // Exécution de la requête
-        const { data, error } = await query;
+        const { data: rawData, error } = await query;
 
         if (error) {
           throw new Error(`Erreur Supabase: ${error.message}`);
         }
 
         // Agréger les données pour chaque tag
-        const aggregatedData = (data as TurnTaggedItem[]).reduce(
+        const aggregatedData = (rawData as TurnTaggedItem[]).reduce(
           (acc: AggregatedData, item) => {
             const tag = item.tag || "Non spécifié";
             const nextTurnTag = item.next_turn_tag || "Aucun";
 
+            // Prendre le premier élément du tableau lpltag (avec !inner, il n'y en aura qu'un)
+            const lpltagData = item.lpltag[0];
+
             if (!acc[tag]) {
               acc[tag] = {
-                family: item.lpltag.family,
-                icon: item.lpltag.icon,
+                family: lpltagData.family,
+                icon: lpltagData.icon,
                 counts: {},
               };
             }

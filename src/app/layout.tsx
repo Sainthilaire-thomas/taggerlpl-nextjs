@@ -5,7 +5,7 @@ import { TaggingDataProvider } from "@/context/TaggingDataContext";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ZohoProvider } from "@/context/ZohoContext";
-import { ThemeModeProvider, ThemeToggle } from "@/context/ThemeContext";
+import { ThemeModeProvider } from "@/context/ThemeContext";
 import GlobalNavbar from "@/components/layout/GlobalNavbar";
 import { SupabaseProvider } from "@/context/SupabaseContext";
 
@@ -32,9 +32,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
                   right: 20,
                   zIndex: 1300,
                 }}
-              >
-                <ThemeToggle />
-              </div>
+              ></div>
 
               <CssBaseline />
               <ZohoProvider>

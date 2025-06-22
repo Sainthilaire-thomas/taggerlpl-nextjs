@@ -6,7 +6,15 @@ import TagStats from "@/components/TagStats";
 import TagAnalysisReport from "@/components/TagAnalysisReport";
 import TagAnalysisGraphs from "@/components/TagAnalysisGraph";
 
-function TabPanel(props) {
+// ✅ Interface pour les props du TabPanel
+interface TabPanelProps {
+  children?: React.ReactNode;
+  value: number;
+  index: number;
+}
+
+// ✅ Typage explicite des props
+function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
 
   return (
@@ -23,10 +31,12 @@ function TabPanel(props) {
 }
 
 export default function AnalysisPage() {
-  const [tabValue, setTabValue] = useState(0);
-  const [selectedFamily, setSelectedFamily] = useState(null);
+  const [tabValue, setTabValue] = useState<number>(0);
+  // ✅ Changement du type de null vers string | null pour permettre les deux
+  const [selectedFamily, setSelectedFamily] = useState<string | null>(null);
 
-  const handleTabChange = (event, newValue) => {
+  // ✅ Typage explicite des paramètres de la fonction
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -101,7 +111,8 @@ export default function AnalysisPage() {
       </TabPanel>
 
       <TabPanel value={tabValue} index={1}>
-        <TagAnalysisReport family={selectedFamily} />
+        {/* ✅ Gestion du cas où selectedFamily est null */}
+        <TagAnalysisReport family={selectedFamily || undefined} />
       </TabPanel>
 
       <TabPanel value={tabValue} index={2}>

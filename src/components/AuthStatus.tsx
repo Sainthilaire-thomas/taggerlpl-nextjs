@@ -14,12 +14,15 @@ import {
 import { AccountCircle, Login } from "@mui/icons-material";
 import Link from "next/link";
 import { useSupabase } from "@/context/SupabaseContext";
+import { User } from "@supabase/supabase-js";
 
 export default function AuthStatus() {
   const { supabase } = useSupabase();
-  const [user, setUser] = React.useState(null);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  // ✅ Correction 1: Typage correct pour user
+  const [user, setUser] = React.useState<User | null>(null);
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
+  // ✅ Correction 2: Typage correct pour anchorEl
+  const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
 
   // Charger les données utilisateur au montage du composant
   React.useEffect(() => {
@@ -65,7 +68,8 @@ export default function AuthStatus() {
     };
   }, [supabase]);
 
-  const handleMenu = (event) => {
+  // ✅ Correction 3: Typage correct pour l'événement
+  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 

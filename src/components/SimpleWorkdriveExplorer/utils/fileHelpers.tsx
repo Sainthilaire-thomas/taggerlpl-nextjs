@@ -40,7 +40,11 @@ export const isTranscriptionFile = (file: ZohoFile): boolean => {
   // Liste des extensions de fichiers de transcription possibles
   const transcriptionExtensions = ["json", "txt", "docx", "doc", "pdf", "csv"];
 
-  return extension && transcriptionExtensions.includes(extension.toLowerCase());
+  // Correction du type : s'assurer que extension est une string avant d'utiliser includes()
+  return (
+    typeof extension === "string" &&
+    transcriptionExtensions.includes(extension.toLowerCase())
+  );
 };
 
 /**
@@ -155,7 +159,9 @@ export const downloadTranscription = async (
 /**
  * Détermine le type MIME à partir de l'extension du fichier
  */
-const getMimeTypeFromExtension = (extension: string): string | null => {
+const getMimeTypeFromExtension = (
+  extension: string | undefined
+): string | null => {
   const mimeTypes: Record<string, string> = {
     mp3: "audio/mpeg",
     wav: "audio/wav",
@@ -172,7 +178,9 @@ const getMimeTypeFromExtension = (extension: string): string | null => {
     csv: "text/csv",
   };
 
-  return extension && mimeTypes[extension.toLowerCase()]
+  return extension &&
+    typeof extension === "string" &&
+    mimeTypes[extension.toLowerCase()]
     ? mimeTypes[extension.toLowerCase()]
     : null;
 };

@@ -6,7 +6,8 @@ import { supabase } from "@/lib/supabaseClient"; // Adapté pour Next.js avec ch
 
 // Définition de l'interface pour Tag
 interface Tag {
-  label?: string;
+  id?: number;
+  label: string; // ✅ Obligatoire, pas optionnel
   description?: string;
   family?: string;
   color?: string;
@@ -17,17 +18,20 @@ interface Tag {
 // Définition des props pour le composant
 interface TagEditorProps {
   tag?: Tag;
-  onUpdate: (updatedTag: Tag) => void;
+  onUpdate: (updatedTag: Tag) => Promise<void>; // ✅ Ajout Promise<void>
   onCancel: () => void;
 }
 
-const TagEditor: FC<TagEditorProps> = ({ tag = {}, onUpdate, onCancel }) => {
+const TagEditor: FC<TagEditorProps> = ({ tag, onUpdate, onCancel }) => {
+  // ✅ Supprimez = {}
   console.log("tag dans TagEditor", tag);
 
-  const [name, setName] = useState<string>(tag.label || "");
-  const [description, setDescription] = useState<string>(tag.description || "");
-  const [family, setFamily] = useState<string>(tag.family || "");
-  const [color, setColor] = useState<string>(tag.color || "#000000");
+  const [name, setName] = useState<string>(tag?.label || "");
+  const [description, setDescription] = useState<string>(
+    tag?.description || ""
+  );
+  const [family, setFamily] = useState<string>(tag?.family || "");
+  const [color, setColor] = useState<string>(tag?.color || "#000000");
   const [families, setFamilies] = useState<string[]>([]); // État pour stocker les familles
 
   useEffect(() => {
@@ -67,12 +71,12 @@ const TagEditor: FC<TagEditorProps> = ({ tag = {}, onUpdate, onCancel }) => {
     }
 
     onUpdate({
-      ...tag,
+      ...tag, // ✅ Spread de tag (peut être undefined)
       label: name,
       color,
       description,
       family, // Inclure la famille lors de la sauvegarde
-    });
+    } as Tag); // ✅ Cast explicite en Tag
   };
 
   const availableFamilies =

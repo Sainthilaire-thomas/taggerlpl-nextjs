@@ -21,7 +21,7 @@ import { ExpandMore, ChevronRight } from "@mui/icons-material";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import CallUploaderTaggerLPL from "./CallUploaderTaggerLPL";
 import TranscriptLPL from "./TranscriptLPL";
-import { useTaggingData } from "@/context/TaggingDataContext";
+
 import { supabase } from "@/lib/supabaseClient";
 import { getFamilyIcon } from "./utils/iconUtils";
 import { useTheme } from "@mui/material/styles";
@@ -30,17 +30,23 @@ import TagStats from "./TagStats";
 import TagAnalysisReport from "./TagAnalysisReport";
 import TagAnalysisGraphs from "./TagAnalysisGraph";
 import TurntaggedTable from "./TurnTaggedTable";
+import {
+  useTaggingData,
+  type Tag,
+  type TaggingCall,
+  type Word,
+} from "@/context/TaggingDataContext";
 
 // Définir les interfaces
-interface Tag {
-  id?: number;
-  label: string;
-  color?: string;
-  description?: string;
-  family?: string;
-  callCount?: number;
-  turnCount?: number;
-}
+// interface Tag {
+//   id?: number;
+//   label: string; // ✅ Obligatoire (supprimez le ?)
+//   color?: string;
+//   description?: string;
+//   family?: string;
+//   callCount?: number;
+//   turnCount?: number;
+// }
 
 interface FamilyNode {
   family: string;
@@ -178,7 +184,7 @@ const TaggerLPL: FC = () => {
       const { error: updateNextTagError } = await supabase
         .from("turntagged")
         .update({ next_turn_tag: newTag.label })
-        .eq("next_turn_tag", oldLabel);
+        .eq("next_turn_tag", oldTag.label);
 
       if (updateNextTagError) {
         console.error(
@@ -422,8 +428,8 @@ const TaggerLPL: FC = () => {
         // Sauvegarder les modifications
         await saveTagModification(
           "rename",
-          { label: oldLabel },
-          { label: newLabel },
+          { id: editingTag.id, label: oldLabel }, // ✅ Structure complète
+          { id: 0, label: newLabel }, // ✅ Structure complète
           affectedTurns || []
         );
 
@@ -589,10 +595,11 @@ const TaggerLPL: FC = () => {
           const family = acc.find((item) => item.family === tag.family);
           if (family) {
             family.children.push({
-              label: tag.label,
+              id: tag.id || 0, // ✅ Ajout id
+              label: tag.label, // ✅ Conserve label
               color: tag.color,
-              callCount, // Nombre d'appels
-              turnCount, // Nombre de turns taggés
+              callCount,
+              turnCount,
               family: tag.family,
             });
           } else {
@@ -601,7 +608,8 @@ const TaggerLPL: FC = () => {
               icon: tag.icon || "divers",
               children: [
                 {
-                  label: tag.label,
+                  id: tag.id || 0, // ✅ Ajout id
+                  label: tag.label, // ✅ Conserve label
                   color: tag.color,
                   callCount,
                   turnCount,
@@ -918,7 +926,7 @@ const TaggerLPL: FC = () => {
 
       <Modal open={showModal} onClose={() => setShowModal(false)}>
         <Box sx={{ padding: 2, backgroundColor: "white" }}>
-          <TagAnalysisReport family={selectedFamily} />
+          <TagAnalysisReport family={selectedFamily || ""} />
         </Box>
       </Modal>
 

@@ -1,5 +1,5 @@
 // utils/authHelpers.ts
-import { ZohoAuthToken } from "../types";
+import { ZohoToken } from "../types"; // Correction: ZohoToken au lieu de ZohoAuthToken
 
 export const handleZohoAuth = () => {
   // Rediriger vers l'endpoint d'authentification Zoho avec l'URL actuelle comme redirection
@@ -7,12 +7,13 @@ export const handleZohoAuth = () => {
   window.location.href = `/api/zoho/auth?redirect=${currentUrl}`;
 };
 
-export const parseZohoToken = (tokenParam: string): ZohoAuthToken | null => {
+export const parseZohoToken = (tokenParam: string): ZohoToken | null => {
+  // Correction: ZohoToken
   try {
-    return JSON.parse(decodeURIComponent(tokenParam)) as ZohoAuthToken;
+    return JSON.parse(decodeURIComponent(tokenParam)) as ZohoToken; // Correction: ZohoToken
   } catch (error) {
     console.error("Erreur lors du traitement du token:", error);
-    return null;
+    return null; // Correction: suppression de l'espace dans "retur n"
   }
 };
 

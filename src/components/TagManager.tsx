@@ -12,12 +12,14 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { SketchPicker } from "react-color";
 import { useTaggingData } from "../context/TaggingDataContext";
 import supabase from "@/lib/supabaseClient";
 
-// Interfaces TypeScript
-interface Tag {
+// Suppression temporaire de react-color pour éviter les erreurs
+// import { SketchPicker } from "react-color";
+
+// Interfaces TypeScript - renommage pour éviter les conflits
+interface LPLTag {
   id?: number;
   label: string;
   family: string;
@@ -30,18 +32,18 @@ interface TagManagerProps {
 }
 
 interface GroupedTags {
-  ENGAGEMENT: Tag[];
-  REFLET: Tag[];
-  EXPLICATION: Tag[];
-  OUVERTURE: Tag[];
-  CLIENT: Tag[];
-  OTHERS: Tag[];
+  ENGAGEMENT: LPLTag[];
+  REFLET: LPLTag[];
+  EXPLICATION: LPLTag[];
+  OUVERTURE: LPLTag[];
+  CLIENT: LPLTag[];
+  OTHERS: LPLTag[];
 }
 
 const TagManager: React.FC<TagManagerProps> = ({ onClose }) => {
   const { tags, setTags, fetchTaggedTurns, callId } = useTaggingData();
 
-  const [newLPLTag, setNewLPLTag] = useState<Tag>({
+  const [newLPLTag, setNewLPLTag] = useState<LPLTag>({
     label: "",
     family: "",
     color: "#6c757d", // Couleur par défaut : gris
@@ -120,7 +122,7 @@ const TagManager: React.FC<TagManagerProps> = ({ onClose }) => {
     }
   };
 
-  const handleEditLPLTag = (tag: Tag) => {
+  const handleEditLPLTag = (tag: LPLTag) => {
     setNewLPLTag(tag);
     setIsEditing(true);
   };
@@ -142,35 +144,39 @@ const TagManager: React.FC<TagManagerProps> = ({ onClose }) => {
     }
   };
 
-  const cleanTagObject = (tag: Tag): Omit<Tag, "id"> => {
+  const cleanTagObject = (tag: LPLTag): Omit<LPLTag, "id"> => {
     const { label, family, color, description } = tag; // Liste des colonnes valides
     return { label, family, color, description }; // Ne garde que les colonnes nécessaires
   };
 
-  const groupedTags: GroupedTags = tags.reduce(
-    (acc: GroupedTags, tag) => {
-      if (
-        ["ENGAGEMENT", "REFLET", "EXPLICATION", "OUVERTURE", "CLIENT"].includes(
-          tag.family
-        )
-      ) {
-        acc[tag.family as keyof GroupedTags].push(tag);
-      } else {
-        acc.OTHERS.push(tag);
-      }
-      return acc;
-    },
-    {
-      ENGAGEMENT: [],
-      REFLET: [],
-      EXPLICATION: [],
-      OUVERTURE: [],
-      CLIENT: [],
-      OTHERS: [],
-    }
-  );
+  // Simplification du groupedTags
+  const groupedTags: GroupedTags = {
+    ENGAGEMENT: [],
+    REFLET: [],
+    EXPLICATION: [],
+    OUVERTURE: [],
+    CLIENT: [],
+    OTHERS: [],
+  };
 
-  const renderTagGrid = (tags: Tag[], title: string) => (
+  // Groupement manuel plus simple - cast via unknown pour éviter l'erreur TypeScript
+  (tags as unknown as LPLTag[]).forEach((tag) => {
+    if (tag.family === "ENGAGEMENT") {
+      groupedTags.ENGAGEMENT.push(tag);
+    } else if (tag.family === "REFLET") {
+      groupedTags.REFLET.push(tag);
+    } else if (tag.family === "EXPLICATION") {
+      groupedTags.EXPLICATION.push(tag);
+    } else if (tag.family === "OUVERTURE") {
+      groupedTags.OUVERTURE.push(tag);
+    } else if (tag.family === "CLIENT") {
+      groupedTags.CLIENT.push(tag);
+    } else {
+      groupedTags.OTHERS.push(tag);
+    }
+  });
+
+  const renderTagGrid = (tags: LPLTag[], title: string) => (
     <Box sx={{ marginBottom: 2 }}>
       <Typography variant="subtitle1" sx={{ marginBottom: 1 }}>
         {title}
@@ -302,15 +308,19 @@ const TagManager: React.FC<TagManagerProps> = ({ onClose }) => {
             fullWidth
             sx={{ marginBottom: 2 }}
           />
-          <Typography variant="subtitle2" sx={{ marginBottom: 1 }}>
-            Couleur
-          </Typography>
-          <SketchPicker
-            color={newLPLTag.color}
-            onChangeComplete={(color) =>
-              setNewLPLTag((prev) => ({ ...prev, color: color.hex }))
+
+          {/* Sélecteur de couleur simple en attendant */}
+          <TextField
+            label="Couleur (hex)"
+            type="color"
+            value={newLPLTag.color}
+            onChange={(e) =>
+              setNewLPLTag((prev) => ({ ...prev, color: e.target.value }))
             }
+            fullWidth
+            sx={{ marginBottom: 2 }}
           />
+
           <Box sx={{ display: "flex", gap: 2, marginTop: 2 }}>
             <Button variant="contained" onClick={handleSaveLPLTag}>
               {isEditing ? "Sauvegarder" : "Ajouter"}

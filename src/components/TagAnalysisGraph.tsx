@@ -223,11 +223,14 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
         >
       );
 
-      const sankeyNodes: SankeyNode[] = Array.from(
+      // ✅ Correction 1: Typage explicite pour Array.from avec string[]
+      const uniqueValues = Array.from(
         new Set([...Object.values(tagToFamily), ...allowedDestinations])
-      ).map((name) => ({
+      ) as string[];
+
+      const sankeyNodes: SankeyNode[] = uniqueValues.map((name: string) => ({
         name: labelTranslations[name] || name, // traduction ici
-        rawName: name, // optionnel si besoin de garder la version FR pour un mapping
+        rawName: name, // ✅ Correction 2: Typage explicite comme string
         itemStyle: {
           color: familyColors[name] || destinationColors[name] || "gray",
         },
@@ -621,11 +624,15 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
           </List>
         </Box>
       </Drawer>
+      {/* ✅ Correction 3: Suppression de la prop onSave inexistante */}
       {selectedTurnTag && (
         <TurnTagEditor
-          turnTag={selectedTurnTag}
+          turnTag={{
+            ...selectedTurnTag,
+            id: parseInt(selectedTurnTag.id), // Conversion string → number
+            call_id: parseInt(selectedTurnTag.call_id), // Conversion string → number
+          }}
           onClose={() => setSelectedTurnTag(null)}
-          onSave={() => console.log("Données mises à jour")}
         />
       )}
     </Box>

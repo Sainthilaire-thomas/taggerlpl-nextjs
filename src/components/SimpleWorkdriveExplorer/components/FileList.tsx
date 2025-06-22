@@ -1,7 +1,6 @@
 // components/FileList.tsx
 import React, { useEffect } from "react";
 import {
-  Grid,
   Card,
   CardContent,
   Typography,
@@ -53,18 +52,26 @@ export const FileList: React.FC<FileListProps> = ({
 
   if (!files || files.length === 0) {
     return (
-      <Grid item xs={12}>
-        <Paper sx={{ p: 3, textAlign: "center" }}>
-          <Typography color="textSecondary">
-            Aucun fichier dans ce dossier
-          </Typography>
-        </Paper>
-      </Grid>
+      <Paper sx={{ p: 3, textAlign: "center" }}>
+        <Typography color="textSecondary">
+          Aucun fichier dans ce dossier
+        </Typography>
+      </Paper>
     );
   }
 
   return (
-    <Grid container spacing={2}>
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: {
+          xs: "1fr", // 1 colonne sur mobile
+          sm: "repeat(2, 1fr)", // 2 colonnes sur tablette
+          md: "repeat(3, 1fr)", // 3 colonnes sur desktop
+        },
+        gap: 2,
+      }}
+    >
       {files.map((file) => {
         if (!file || !file.id) {
           console.warn("Fichier invalide dans la liste:", file);
@@ -88,107 +95,106 @@ export const FileList: React.FC<FileListProps> = ({
           "Sans nom";
 
         return (
-          <Grid item xs={12} sm={6} md={4} key={file.id}>
-            <Card
-              variant="outlined"
-              sx={{
-                backgroundColor:
-                  selectedAudioFile?.id === file.id ||
-                  selectedTranscriptionFile?.id === file.id
-                    ? "rgba(25, 118, 210, 0.08)"
-                    : "inherit",
-              }}
-            >
-              <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                  {isFolder ? (
-                    <FolderIcon color="primary" sx={{ mr: 1 }} />
-                  ) : isAudio ? (
-                    <AudioFileIcon color="secondary" sx={{ mr: 1 }} />
-                  ) : isTranscription ? (
-                    <DescriptionIcon color="info" sx={{ mr: 1 }} />
-                  ) : (
-                    <DescriptionIcon color="action" sx={{ mr: 1 }} />
-                  )}
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      fontWeight: isFolder ? "bold" : "normal",
-                    }}
-                  >
-                    {fileName}
-                  </Typography>
-                </Box>
-
-                <Box
+          <Card
+            key={file.id}
+            variant="outlined"
+            sx={{
+              backgroundColor:
+                selectedAudioFile?.id === file.id ||
+                selectedTranscriptionFile?.id === file.id
+                  ? "rgba(25, 118, 210, 0.08)"
+                  : "inherit",
+            }}
+          >
+            <CardContent>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                {isFolder ? (
+                  <FolderIcon color="primary" sx={{ mr: 1 }} />
+                ) : isAudio ? (
+                  <AudioFileIcon color="secondary" sx={{ mr: 1 }} />
+                ) : isTranscription ? (
+                  <DescriptionIcon color="info" sx={{ mr: 1 }} />
+                ) : (
+                  <DescriptionIcon color="action" sx={{ mr: 1 }} />
+                )}
+                <Typography
+                  variant="body1"
                   sx={{
-                    mt: 1,
-                    display: "flex",
-                    justifyContent: "space-between",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    fontWeight: isFolder ? "bold" : "normal",
                   }}
                 >
-                  {isFolder ? (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="primary"
-                      onClick={() => onFolderClick(file.id, fileName)}
-                      fullWidth
-                      startIcon={<FolderIcon />}
-                    >
-                      Ouvrir
-                    </Button>
-                  ) : (
-                    <Box
-                      sx={{
-                        display: "flex",
-                        width: "100%",
-                        justifyContent: "space-around",
-                      }}
-                    >
-                      {isAudio && (
-                        <Button
-                          size="small"
-                          variant={
-                            selectedAudioFile?.id === file.id
-                              ? "contained"
-                              : "outlined"
-                          }
-                          color="secondary"
-                          onClick={() => onSelectAudioFile(file)}
-                        >
-                          {selectedAudioFile?.id === file.id
-                            ? "Audio ✓"
-                            : "Sélect. Audio"}
-                        </Button>
-                      )}
-                      {isTranscription && (
-                        <Button
-                          size="small"
-                          variant={
-                            selectedTranscriptionFile?.id === file.id
-                              ? "contained"
-                              : "outlined"
-                          }
-                          color="primary"
-                          onClick={() => onSelectTranscriptionFile(file)}
-                        >
-                          {selectedTranscriptionFile?.id === file.id
-                            ? "Transcript. ✓"
-                            : "Sélect. Transcript."}
-                        </Button>
-                      )}
-                    </Box>
-                  )}
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+                  {fileName}
+                </Typography>
+              </Box>
+
+              <Box
+                sx={{
+                  mt: 1,
+                  display: "flex",
+                  justifyContent: "space-between",
+                }}
+              >
+                {isFolder ? (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="primary"
+                    onClick={() => onFolderClick(file.id, fileName)}
+                    fullWidth
+                    startIcon={<FolderIcon />}
+                  >
+                    Ouvrir
+                  </Button>
+                ) : (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      width: "100%",
+                      justifyContent: "space-around",
+                    }}
+                  >
+                    {isAudio && (
+                      <Button
+                        size="small"
+                        variant={
+                          selectedAudioFile?.id === file.id
+                            ? "contained"
+                            : "outlined"
+                        }
+                        color="secondary"
+                        onClick={() => onSelectAudioFile(file)}
+                      >
+                        {selectedAudioFile?.id === file.id
+                          ? "Audio ✓"
+                          : "Sélect. Audio"}
+                      </Button>
+                    )}
+                    {isTranscription && (
+                      <Button
+                        size="small"
+                        variant={
+                          selectedTranscriptionFile?.id === file.id
+                            ? "contained"
+                            : "outlined"
+                        }
+                        color="primary"
+                        onClick={() => onSelectTranscriptionFile(file)}
+                      >
+                        {selectedTranscriptionFile?.id === file.id
+                          ? "Transcript. ✓"
+                          : "Sélect. Transcript."}
+                      </Button>
+                    )}
+                  </Box>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
         );
       })}
-    </Grid>
+    </Box>
   );
 };
