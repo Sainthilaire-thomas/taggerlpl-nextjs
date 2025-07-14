@@ -1,135 +1,289 @@
-"use client";
-
+import { memo, useCallback, FC } from "react";
 import {
-  Paper,
-  Box,
+  Card,
+  CardContent,
+  CardActions,
   Typography,
-  Stack,
-  Chip,
   IconButton,
+  Chip,
+  Box,
   Collapse,
+  Checkbox,
+  Divider,
   Button,
 } from "@mui/material";
 import {
-  PlayArrow as PlayIcon,
-  Delete as DeleteIcon,
-  AudioFile as AudioFileIcon,
-  VolumeOff as NoAudioIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
+  PlayArrow as PlayIcon,
+  Delete as DeleteIcon,
+  AudioFile as AudioIcon,
+  VolumeOff as NoAudioIcon,
   AccessTime as TimeIcon,
+  Label as LabelIcon,
 } from "@mui/icons-material";
-import { Call } from "./types";
-import { formatDuration, getStatusColor } from "./utils";
+import { MobileCallCardProps } from "./types";
 
-interface MobileCallCardProps {
-  call: Call;
-  isExpanded: boolean;
-  onToggleExpansion: (callid: string) => void;
-  onCallClick: (call: Call) => void;
-  onDeleteClick: (call: Call) => void;
-}
+// 🚀 OPTIMISATION: Composant mémoïsé pour les cartes mobiles
+const MobileCallCard: FC<MobileCallCardProps> = memo(
+  ({
+    call,
+    isExpanded,
+    onToggleExpansion,
+    onCallClick,
+    onDeleteClick,
+    isSelected = false,
+    onSelectionChange,
+    disabled = false,
+  }) => {
+    // 🚀 OPTIMISATION: Données formatées mémoïsées
+    const displayData = {
+      filename: call.filename || "Fichier sans nom",
+      duree: call.duree || "0:00",
+      status: call.status || "inconnu",
+      origine: call.origine || "Non définie",
+      description: call.description || "Aucune description",
+      hasAudio: Boolean(call.upload && call.filepath),
+    };
 
-const MobileCallCard = ({
-  call,
-  isExpanded,
-  onToggleExpansion,
-  onCallClick,
-  onDeleteClick,
-}: MobileCallCardProps) => {
-  return (
-    <Paper variant="outlined" sx={{ p: 2 }}>
-      <Box
+    // Handlers optimisés
+    const handleToggleExpansion = useCallback(() => {
+      if (!disabled) {
+        onToggleExpansion(call.callid);
+      }
+    }, [call.callid, onToggleExpansion, disabled]);
+
+    const handleSelectionChange = useCallback(
+      (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (onSelectionChange && !disabled) {
+          event.stopPropagation();
+          onSelectionChange(call.callid, event.target.checked);
+        }
+      },
+      [call.callid, onSelectionChange, disabled]
+    );
+
+    const handlePlayClick = useCallback(
+      (event: React.MouseEvent) => {
+        event.stopPropagation();
+        if (!disabled) {
+          onCallClick(call);
+        }
+      },
+      [call, onCallClick, disabled]
+    );
+
+    const handleDeleteClick = useCallback(
+      (event: React.MouseEvent) => {
+        event.stopPropagation();
+        if (!disabled) {
+          onDeleteClick(call);
+        }
+      },
+      [call, onDeleteClick, disabled]
+    );
+
+    const handleCardClick = useCallback(() => {
+      if (!disabled && displayData.hasAudio) {
+        onCallClick(call);
+      }
+    }, [call, onCallClick, disabled, displayData.hasAudio]);
+
+    // Couleur de statut
+    const getStatusColor = (status: string) => {
+      switch (status) {
+        case "completed":
+          return "success";
+        case "processing":
+          return "warning";
+        case "error":
+          return "error";
+        default:
+          return "default";
+      }
+    };
+
+    return (
+      <Card
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
+          backgroundColor: isSelected ? "action.selected" : "background.paper",
+          opacity: disabled ? 0.6 : 1,
+          cursor: disabled
+            ? "default"
+            : displayData.hasAudio
+            ? "pointer"
+            : "default",
+          border: isSelected ? 2 : 1,
+          borderColor: isSelected ? "primary.main" : "divider",
+          "&:hover": {
+            backgroundColor: disabled
+              ? "inherit"
+              : isSelected
+              ? "action.selected"
+              : "action.hover",
+            boxShadow: disabled ? 1 : 2,
+          },
+          transition: "all 0.2s ease-in-out",
         }}
+        onClick={handleCardClick}
       >
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle1" noWrap>
-            {call.filename || "Sans nom"}
-          </Typography>
-          <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-            <Chip
-              size="small"
-              label={call.status || "Non supervisé"}
-              color={getStatusColor(call.status)}
-            />
-            {call.upload ? (
-              <Chip
-                size="small"
-                icon={<AudioFileIcon />}
-                label="Audio"
-                color="primary"
-              />
-            ) : (
-              <Chip size="small" icon={<NoAudioIcon />} label="Pas d'audio" />
-            )}
-            {call.duree && (
-              <Chip
-                size="small"
-                icon={<TimeIcon />}
-                label={formatDuration(call.duree)}
-              />
-            )}
-          </Stack>
-        </Box>
-        <IconButton size="small" onClick={() => onToggleExpansion(call.callid)}>
-          {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-        </IconButton>
-      </Box>
-
-      <Collapse in={isExpanded}>
-        <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: "divider" }}>
-          {call.description && (
-            <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
-              {call.description}
-            </Typography>
-          )}
-          <Typography
-            variant="caption"
-            display="block"
-            color="textSecondary"
-            sx={{ mb: 1 }}
+        <CardContent sx={{ pb: 1 }}>
+          {/* En-tête avec sélection et informations principales */}
+          <Box
+            sx={{ display: "flex", alignItems: "flex-start", gap: 1, mb: 1 }}
           >
-            ID: {String(call.callid).substring(0, 8)}...
-          </Typography>
-          {call.origine && (
-            <Typography
-              variant="caption"
-              display="block"
-              color="textSecondary"
-              sx={{ mb: 2 }}
-            >
-              Origine: {call.origine}
-            </Typography>
-          )}
+            {/* Checkbox de sélection */}
+            <Checkbox
+              checked={isSelected}
+              onChange={handleSelectionChange}
+              disabled={disabled}
+              size="small"
+              sx={{ p: 0.5 }}
+              onClick={(e) => e.stopPropagation()}
+            />
 
-          <Stack direction="row" spacing={1}>
-            <Button
+            {/* Icône audio */}
+            <Box sx={{ mt: 0.5 }}>
+              {displayData.hasAudio ? (
+                <AudioIcon color="primary" fontSize="small" />
+              ) : (
+                <NoAudioIcon color="disabled" fontSize="small" />
+              )}
+            </Box>
+
+            {/* Informations principales */}
+            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+              <Typography
+                variant="subtitle2"
+                noWrap
+                sx={{
+                  fontWeight: "bold",
+                  mb: 0.5,
+                }}
+              >
+                {displayData.filename}
+              </Typography>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 1,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
+                <Chip
+                  icon={<TimeIcon />}
+                  label={displayData.duree}
+                  size="small"
+                  variant="outlined"
+                  color={displayData.duree !== "0:00" ? "primary" : "default"}
+                />
+
+                <Chip
+                  label={displayData.status}
+                  size="small"
+                  color={getStatusColor(displayData.status) as any}
+                />
+              </Box>
+            </Box>
+
+            {/* Bouton d'expansion */}
+            <IconButton
               size="small"
-              variant="contained"
-              startIcon={<PlayIcon />}
-              onClick={() => onCallClick(call)}
-              disabled={!call.upload}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleExpansion();
+              }}
+              disabled={disabled}
+              sx={{ p: 0.5 }}
             >
-              Écouter
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              color="error"
-              startIcon={<DeleteIcon />}
-              onClick={() => onDeleteClick(call)}
-            >
-              Supprimer
-            </Button>
-          </Stack>
-        </Box>
-      </Collapse>
-    </Paper>
-  );
-};
+              {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </IconButton>
+          </Box>
+
+          {/* Origine - toujours visible */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+            <LabelIcon fontSize="small" color="action" />
+            <Typography variant="body2" color="text.secondary">
+              Origine: <strong>{displayData.origine}</strong>
+            </Typography>
+          </Box>
+
+          {/* Contenu expansible */}
+          <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+            <Divider sx={{ my: 1 }} />
+
+            {/* Description */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                <strong>Description:</strong>
+              </Typography>
+              <Typography variant="body2" sx={{ pl: 1 }}>
+                {displayData.description}
+              </Typography>
+            </Box>
+
+            {/* Informations techniques */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                <strong>Informations techniques:</strong>
+              </Typography>
+              <Box
+                sx={{
+                  pl: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 0.5,
+                }}
+              >
+                <Typography variant="caption">ID: {call.callid}</Typography>
+                <Typography variant="caption">
+                  Fichier:{" "}
+                  {displayData.hasAudio ? "Disponible" : "Non disponible"}
+                </Typography>
+                {call.filepath && (
+                  <Typography variant="caption" sx={{ wordBreak: "break-all" }}>
+                    Chemin: {call.filepath}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          </Collapse>
+        </CardContent>
+
+        {/* Actions */}
+        <CardActions sx={{ pt: 0, justifyContent: "space-between" }}>
+          <Box sx={{ display: "flex", gap: 1 }}>
+            {displayData.hasAudio && (
+              <Button
+                size="small"
+                startIcon={<PlayIcon />}
+                onClick={handlePlayClick}
+                disabled={disabled}
+                variant="contained"
+                color="primary"
+              >
+                Charger
+              </Button>
+            )}
+          </Box>
+
+          <IconButton
+            size="small"
+            color="error"
+            onClick={handleDeleteClick}
+            disabled={disabled}
+            sx={{ ml: "auto" }}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </CardActions>
+      </Card>
+    );
+  }
+);
+
+MobileCallCard.displayName = "MobileCallCard";
 
 export default MobileCallCard;

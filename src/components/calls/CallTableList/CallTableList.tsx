@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, FC } from "react";
+import { useState, useCallback, memo, FC } from "react";
 import {
   Box,
   Button,
@@ -21,6 +21,8 @@ import {
   DialogTitle,
   useMediaQuery,
   useTheme,
+  Checkbox,
+  LinearProgress,
 } from "@mui/material";
 import { useTaggingData } from "@/context/TaggingDataContext";
 import { removeCallUpload } from "../../utils/removeCallUpload";
@@ -31,52 +33,17 @@ import { updateCallOrigine } from "../../utils/updateCallOrigine";
 import CallTableFilters from "./CallTableFilters";
 import CallTableRow from "./CallTableRow";
 import MobileCallCard from "./MobileCallCard";
+import BulkActionsToolbar from "./BulkActionsToolbar";
 
 // Imports des types et utils
-import {
-  Call,
-  CallTableListProps,
-  FilterState,
-  SortState,
-  PaginationState,
-  Order,
-  OrderBy,
-} from "./types";
-import { getComparator, filterCalls } from "./utils";
+import { Call, CallTableListProps, PaginationState, OrderBy } from "./types";
+import { createBatches, delay } from "./utils";
+import { useBulkActions } from "./hooks/useBulkActions";
+import { useOptimizedCallData } from "./hooks/useOptimizedCallData";
 
 const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
-  // États pour les filtres
-  const [filters, setFilters] = useState<FilterState>({
-    searchTerm: "",
-    statusFilter: "all",
-    audioFilter: "all",
-    origineFilter: "all",
-  });
-
-  // États pour le tri
-  const [sortState, setSortState] = useState<SortState>({
-    order: "desc",
-    orderBy: "callid",
-  });
-
-  // États pour la pagination
-  const [paginationState, setPaginationState] = useState<PaginationState>({
-    page: 0,
-    rowsPerPage: 25,
-  });
-
-  // États pour l'édition inline de l'origine - SIMPLIFIÉ
-  const [editingOrigine, setEditingOrigine] = useState<string | null>(null);
-
-  // États pour le dialog de suppression
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState<boolean>(false);
-  const [callToDelete, setCallToDelete] = useState<Call | null>(null);
-
-  // État pour l'expansion des lignes sur mobile
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const {
     taggingCalls,
@@ -85,138 +52,318 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
     refreshTaggingCalls,
   } = useTaggingData();
 
-  // Calcul des origines uniques
-  const uniqueOrigines = useMemo(() => {
-    const origines = taggingCalls
-      .map((call) => call.origine)
-      .filter(Boolean)
-      .filter((value, index, self) => self.indexOf(value) === index)
-      .sort();
-    return origines;
-  }, [taggingCalls]);
+  // 🚀 OPTIMISATION: Utilisation du hook optimisé pour les données
+  const {
+    filteredAndSortedCalls,
+    uniqueOrigines,
+    filters,
+    sortState,
+    updateFilters,
+    updateSort,
+    cacheStats,
+    clearCache,
+  } = useOptimizedCallData({
+    taggingCalls,
+    cacheTimeout: 30000, // 30 secondes
+  });
 
-  // Filtrage et tri des données
-  const filteredAndSortedCalls = useMemo(() => {
-    const filtered = filterCalls(
-      taggingCalls,
-      filters.searchTerm,
-      filters.statusFilter,
-      filters.audioFilter,
-      filters.origineFilter
-    );
+  // 🚀 OPTIMISATION: Hook pour les actions en lot
+  const {
+    selectedCalls,
+    selectedCount,
+    isBulkProcessing,
+    setIsBulkProcessing,
+    actions: bulkActions,
+  } = useBulkActions();
 
-    const comparator = getComparator(sortState.order, sortState.orderBy);
-    filtered.sort(comparator);
+  // États pour la pagination
+  const [paginationState, setPaginationState] = useState<PaginationState>({
+    page: 0,
+    rowsPerPage: 25,
+  });
 
-    return filtered;
-  }, [taggingCalls, filters, sortState]);
+  // États pour l'édition inline de l'origine
+  const [editingOrigine, setEditingOrigine] = useState<string | null>(null);
+  const [bulkOrigineValue, setBulkOrigineValue] = useState<string>("");
 
-  // Pagination
-  const paginatedCalls = useMemo(() => {
+  // États pour les dialogs de suppression
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState<boolean>(false);
+  const [callToDelete, setCallToDelete] = useState<Call | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState<boolean>(false);
+
+  // État pour l'expansion des lignes sur mobile
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  // 🚀 OPTIMISATION: Pagination calculée à partir des données optimisées
+  const paginatedCalls = (() => {
     const startIndex = paginationState.page * paginationState.rowsPerPage;
     return filteredAndSortedCalls.slice(
       startIndex,
       startIndex + paginationState.rowsPerPage
     );
-  }, [filteredAndSortedCalls, paginationState]);
+  })();
 
-  // Handlers pour les filtres
-  const handleFiltersChange = (newFilters: FilterState) => {
-    setFilters(newFilters);
-    setPaginationState((prev) => ({ ...prev, page: 0 }));
-  };
+  // 🚀 OPTIMISATION: Handler pour les filtres utilisant le hook optimisé
+  const handleFiltersChange = useCallback(
+    (newFilters: typeof filters) => {
+      updateFilters(newFilters);
+      setPaginationState((prev) => ({ ...prev, page: 0 }));
+      bulkActions.clearSelection();
+    },
+    [updateFilters, bulkActions]
+  );
 
-  // Handlers pour le tri
-  const handleRequestSort = (property: OrderBy) => {
-    const isAsc = sortState.orderBy === property && sortState.order === "asc";
-    setSortState({
-      order: isAsc ? "desc" : "asc",
-      orderBy: property,
-    });
-  };
+  // 🚀 OPTIMISATION: Handler pour le tri utilisant le hook optimisé
+  const handleRequestSort = useCallback(
+    (property: OrderBy) => {
+      updateSort(property);
+    },
+    [updateSort]
+  );
 
-  // 🚀 HANDLERS SIMPLIFIÉS pour l'édition d'origine
-  const handleStartEditOrigine = (callid: string) => {
-    setEditingOrigine(callid);
-  };
+  // 🚀 NOUVEAU: Handlers pour les actions en lot
+  const handleCallSelection = useCallback(
+    (callid: string | number, isSelected: boolean) => {
+      const callIdStr = String(callid); // ✅ Conversion sécurisée
+      if (isSelected) {
+        bulkActions.selectCall(callIdStr);
+      } else {
+        bulkActions.deselectCall(callIdStr);
+      }
+    },
+    [bulkActions]
+  );
 
-  const handleCancelEditOrigine = () => {
-    setEditingOrigine(null);
-  };
+  const handleSelectAll = useCallback(() => {
+    if (selectedCount === paginatedCalls.length && paginatedCalls.length > 0) {
+      bulkActions.clearSelection();
+    } else {
+      const allCallIds = paginatedCalls.map((call) => String(call.callid)); // ✅ Conversion sécurisée
+      bulkActions.selectAll(allCallIds);
+    }
+  }, [selectedCount, paginatedCalls, bulkActions]);
 
-  const handleSaveOrigine = async (callid: string, newOrigine: string) => {
+  const handleBulkOrigineChange = useCallback(
+    async (newOrigine: string) => {
+      if (!newOrigine || selectedCount === 0) {
+        setBulkOrigineValue(newOrigine);
+        return;
+      }
+
+      setIsBulkProcessing(true);
+      setBulkOrigineValue(newOrigine);
+
+      try {
+        const selectedCallIds = Array.from(selectedCalls);
+
+        // Traitement en lot avec limite
+        const batches = createBatches(selectedCallIds, 5);
+        let processedCount = 0;
+
+        for (const batch of batches) {
+          await Promise.all(
+            batch.map(async (callid) => {
+              await updateCallOrigine(callid, newOrigine);
+              processedCount++;
+            })
+          );
+
+          // Délai entre les lots
+          if (batches.length > 1) {
+            await delay(100);
+          }
+        }
+
+        await refreshTaggingCalls?.();
+
+        // Vider le cache après mise à jour
+        clearCache();
+
+        showMessage(
+          `${processedCount} appel(s) mis à jour avec l'origine: ${newOrigine}`
+        );
+
+        // Réinitialiser
+        bulkActions.clearSelection();
+        setBulkOrigineValue("");
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Erreur inconnue";
+        console.error("Erreur lors de la mise à jour en lot:", error);
+        showMessage(`Erreur lors de la mise à jour en lot: ${errorMessage}`);
+      } finally {
+        setIsBulkProcessing(false);
+      }
+    },
+    [
+      selectedCalls,
+      selectedCount,
+      refreshTaggingCalls,
+      showMessage,
+      bulkActions,
+      setIsBulkProcessing,
+      clearCache,
+    ]
+  );
+
+  const handleBulkDelete = useCallback(() => {
+    if (selectedCount === 0) return;
+    setBulkDeleteOpen(true);
+  }, [selectedCount]);
+
+  const handleConfirmBulkDelete = useCallback(async () => {
+    setIsBulkProcessing(true);
+
     try {
-      await updateCallOrigine(callid, newOrigine);
+      const selectedCallsData = paginatedCalls.filter(
+        (call) => selectedCalls.has(String(call.callid)) // ✅ Conversion sécurisée
+      );
+
+      const batches = createBatches(selectedCallsData, 3);
+      let processedCount = 0;
+
+      for (const batch of batches) {
+        await Promise.all(
+          batch.map(async (call) => {
+            if (call.filepath) {
+              await removeCallUpload(String(call.callid), call.filepath); // ✅ Conversion sécurisée
+              processedCount++;
+            }
+          })
+        );
+
+        if (batches.length > 1) {
+          await delay(200);
+        }
+      }
+
       await refreshTaggingCalls?.();
-      setEditingOrigine(null);
-      showMessage(`Origine mise à jour avec succès: ${newOrigine}`);
+
+      // Vider le cache après suppression
+      clearCache();
+
+      showMessage(`${processedCount} appel(s) supprimé(s) avec succès`);
+
+      bulkActions.clearSelection();
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erreur inconnue";
-      console.error("Erreur lors de la mise à jour de l'origine:", error);
-      showMessage(`Erreur lors de la mise à jour: ${errorMessage}`);
+      console.error("Erreur lors de la suppression en lot:", error);
+      showMessage(`Erreur lors de la suppression en lot: ${errorMessage}`);
+    } finally {
+      setIsBulkProcessing(false);
+      setBulkDeleteOpen(false);
     }
-  };
+  }, [
+    selectedCalls,
+    paginatedCalls,
+    refreshTaggingCalls,
+    showMessage,
+    bulkActions,
+    setIsBulkProcessing,
+    clearCache,
+  ]);
 
-  // Handler pour le clic sur un appel
-  const handleCallClick = async (call: Call) => {
-    try {
-      if (!call.upload) {
+  // Handlers pour l'édition individuelle (optimisés)
+  const handleStartEditOrigine = useCallback((callid: string | number) => {
+    setEditingOrigine(String(callid)); // ✅ Conversion sécurisée
+  }, []);
+
+  const handleCancelEditOrigine = useCallback(() => {
+    setEditingOrigine(null);
+  }, []);
+
+  const handleSaveOrigine = useCallback(
+    async (callid: string | number, newOrigine: string) => {
+      try {
+        await updateCallOrigine(String(callid), newOrigine); // ✅ Conversion sécurisée
+        await refreshTaggingCalls?.();
+
+        // Vider le cache après mise à jour
+        clearCache();
+
+        setEditingOrigine(null);
+        showMessage(`Origine mise à jour avec succès: ${newOrigine}`);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Erreur inconnue";
+        console.error("Erreur lors de la mise à jour de l'origine:", error);
+        showMessage(`Erreur lors de la mise à jour: ${errorMessage}`);
+      }
+    },
+    [refreshTaggingCalls, showMessage, clearCache]
+  );
+
+  // Handler pour le clic sur un appel (optimisé)
+  const handleCallClick = useCallback(
+    async (call: Call) => {
+      try {
+        if (!call.upload) {
+          selectTaggingCall({
+            ...call,
+            callid: String(call.callid), // ✅ Conversion sécurisée pour TaggingCall
+            audiourl: "",
+            is_tagging_call: true,
+            preparedfortranscript: false,
+          });
+          showMessage("Appel sans audio chargé.");
+          return;
+        }
+
+        if (!call.filepath) {
+          showMessage("Chemin du fichier audio manquant.");
+          return;
+        }
+
+        const audioUrl = await generateSignedUrl(call.filepath);
         selectTaggingCall({
           ...call,
+          callid: String(call.callid), // ✅ Conversion sécurisée pour TaggingCall
+          audiourl: audioUrl,
+          is_tagging_call: true,
+          preparedfortranscript: false,
+        });
+
+        await fetchTaggingTranscription(String(call.callid)); // ✅ Conversion sécurisée
+        showMessage("Appel chargé avec succès.");
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Erreur inconnue";
+        console.error(
+          "Erreur lors de la génération de l'URL signée",
+          errorMessage
+        );
+        showMessage("Erreur lors de la récupération du fichier audio.");
+        selectTaggingCall({
+          ...call,
+          callid: String(call.callid), // ✅ Conversion sécurisée pour TaggingCall
           audiourl: "",
           is_tagging_call: true,
           preparedfortranscript: false,
         });
-        showMessage("Appel sans audio chargé.");
-        return;
       }
+    },
+    [selectTaggingCall, fetchTaggingTranscription, showMessage]
+  );
 
-      if (!call.filepath) {
-        showMessage("Chemin du fichier audio manquant.");
-        return;
-      }
-
-      const audioUrl = await generateSignedUrl(call.filepath);
-      selectTaggingCall({
-        ...call,
-        audiourl: audioUrl,
-        is_tagging_call: true,
-        preparedfortranscript: false,
-      });
-
-      await fetchTaggingTranscription(call.callid);
-      showMessage("Appel chargé avec succès.");
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Erreur inconnue";
-      console.error(
-        "Erreur lors de la génération de l'URL signée",
-        errorMessage
-      );
-      showMessage("Erreur lors de la récupération du fichier audio.");
-      selectTaggingCall({
-        ...call,
-        audiourl: "",
-        is_tagging_call: true,
-        preparedfortranscript: false,
-      });
-    }
-  };
-
-  // Handlers pour la suppression
-  const handleDeleteClick = (call: Call) => {
+  // Handlers pour la suppression individuelle
+  const handleDeleteClick = useCallback((call: Call) => {
     setCallToDelete(call);
     setConfirmDeleteOpen(true);
-  };
+  }, []);
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (!callToDelete) return;
     const { callid, filepath } = callToDelete;
 
     try {
       if (filepath) {
-        await removeCallUpload(callid, filepath);
+        await removeCallUpload(String(callid), filepath); // ✅ Conversion sécurisée
+        await refreshTaggingCalls?.();
+
+        // Vider le cache après suppression
+        clearCache();
+
         showMessage("Appel mis à jour, audio et word retirés.");
       } else {
         throw new Error("Filepath manquant pour la suppression");
@@ -230,30 +377,50 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
       setConfirmDeleteOpen(false);
       setCallToDelete(null);
     }
-  };
+  }, [callToDelete, showMessage, refreshTaggingCalls, clearCache]);
 
   // Handler pour l'expansion des lignes sur mobile
-  const toggleRowExpansion = (callid: string) => {
-    const newExpanded = new Set(expandedRows);
-    if (newExpanded.has(callid)) {
-      newExpanded.delete(callid);
-    } else {
-      newExpanded.add(callid);
-    }
-    setExpandedRows(newExpanded);
-  };
-
-  // Handlers pour la pagination
-  const handleChangePage = (_: unknown, newPage: number) => {
-    setPaginationState((prev) => ({ ...prev, page: newPage }));
-  };
-
-  const handleChangeRowsPerPage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPaginationState({
-      page: 0,
-      rowsPerPage: parseInt(e.target.value, 10),
+  const toggleRowExpansion = useCallback((callid: string | number) => {
+    setExpandedRows((prev) => {
+      const newExpanded = new Set(prev);
+      const callIdStr = String(callid); // ✅ Conversion sécurisée
+      if (newExpanded.has(callIdStr)) {
+        newExpanded.delete(callIdStr);
+      } else {
+        newExpanded.add(callIdStr);
+      }
+      return newExpanded;
     });
-  };
+  }, []);
+
+  // Handlers pour la pagination (optimisés)
+  const handleChangePage = useCallback(
+    (_: unknown, newPage: number) => {
+      setPaginationState((prev) => ({ ...prev, page: newPage }));
+      bulkActions.clearSelection();
+    },
+    [bulkActions]
+  );
+
+  const handleChangeRowsPerPage = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setPaginationState({
+        page: 0,
+        rowsPerPage: parseInt(e.target.value, 10),
+      });
+      bulkActions.clearSelection();
+    },
+    [bulkActions]
+  );
+
+  // Calculer si tout est sélectionné
+  const isSelectAll =
+    selectedCount === paginatedCalls.length && paginatedCalls.length > 0;
+
+  // 🚀 DEBUG: Affichage des stats de cache en développement
+  if (process.env.NODE_ENV === "development") {
+    console.log("📊 Cache Stats:", cacheStats);
+  }
 
   // Interface mobile avec cartes condensées
   if (isMobile) {
@@ -271,6 +438,28 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
           isMobile={true}
         />
 
+        {/* 🚀 NOUVEAU: Toolbar pour les actions en lot (mobile) */}
+        <BulkActionsToolbar
+          selectedCount={selectedCount}
+          onSelectAll={handleSelectAll}
+          onClearSelection={bulkActions.clearSelection}
+          onBulkDelete={handleBulkDelete}
+          onBulkOrigineChange={handleBulkOrigineChange}
+          bulkOrigineValue={bulkOrigineValue}
+          uniqueOrigines={uniqueOrigines}
+          isBulkProcessing={isBulkProcessing}
+        />
+
+        {/* Indicateur de chargement pour les actions en lot */}
+        {isBulkProcessing && (
+          <Box sx={{ mb: 2 }}>
+            <LinearProgress />
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              Traitement en cours...
+            </Typography>
+          </Box>
+        )}
+
         {filteredAndSortedCalls.length === 0 ? (
           <Typography variant="body2" color="textSecondary">
             Aucun appel trouvé avec les critères sélectionnés.
@@ -281,10 +470,13 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
               <MobileCallCard
                 key={call.callid}
                 call={call}
-                isExpanded={expandedRows.has(call.callid)}
+                isExpanded={expandedRows.has(String(call.callid))}
                 onToggleExpansion={toggleRowExpansion}
                 onCallClick={handleCallClick}
                 onDeleteClick={handleDeleteClick}
+                isSelected={selectedCalls.has(String(call.callid))}
+                onSelectionChange={handleCallSelection}
+                disabled={isBulkProcessing}
               />
             ))}
           </Box>
@@ -300,7 +492,7 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
           labelRowsPerPage="Appels par page"
         />
 
-        {/* Dialog de confirmation pour la suppression */}
+        {/* Dialogs de confirmation */}
         <Dialog
           open={confirmDeleteOpen}
           onClose={() => setConfirmDeleteOpen(false)}
@@ -316,6 +508,27 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
             <Button onClick={() => setConfirmDeleteOpen(false)}>Annuler</Button>
             <Button onClick={handleConfirmDelete} color="primary" autoFocus>
               Confirmer
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={bulkDeleteOpen} onClose={() => setBulkDeleteOpen(false)}>
+          <DialogTitle>Confirmer la suppression en lot</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Êtes-vous sûr de vouloir supprimer {selectedCount} appel(s) ?
+              Cette action est irréversible.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setBulkDeleteOpen(false)}>Annuler</Button>
+            <Button
+              onClick={handleConfirmBulkDelete}
+              color="primary"
+              autoFocus
+              disabled={isBulkProcessing}
+            >
+              Confirmer la suppression
             </Button>
           </DialogActions>
         </Dialog>
@@ -338,6 +551,28 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
         isMobile={false}
       />
 
+      {/* 🚀 NOUVEAU: Toolbar pour les actions en lot */}
+      <BulkActionsToolbar
+        selectedCount={selectedCount}
+        onSelectAll={handleSelectAll}
+        onClearSelection={bulkActions.clearSelection}
+        onBulkDelete={handleBulkDelete}
+        onBulkOrigineChange={handleBulkOrigineChange}
+        bulkOrigineValue={bulkOrigineValue}
+        uniqueOrigines={uniqueOrigines}
+        isBulkProcessing={isBulkProcessing}
+      />
+
+      {/* Indicateur de chargement pour les actions en lot */}
+      {isBulkProcessing && (
+        <Box sx={{ mb: 2 }}>
+          <LinearProgress />
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            Traitement en cours... ({selectedCount} appel(s))
+          </Typography>
+        </Box>
+      )}
+
       {filteredAndSortedCalls.length === 0 ? (
         <Paper sx={{ p: 3, textAlign: "center" }}>
           <Typography variant="body2" color="textSecondary">
@@ -357,6 +592,15 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
             <Table size="small" stickyHeader>
               <TableHead>
                 <TableRow>
+                  {/* 🚀 NOUVELLE COLONNE: Checkbox de sélection */}
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      indeterminate={selectedCount > 0 && !isSelectAll}
+                      checked={isSelectAll}
+                      onChange={handleSelectAll}
+                      disabled={isBulkProcessing}
+                    />
+                  </TableCell>
                   <TableCell>
                     <TableSortLabel
                       active={sortState.orderBy === "filename"}
@@ -422,6 +666,9 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
                     onCancelEditOrigine={handleCancelEditOrigine}
                     onCallClick={handleCallClick}
                     onDeleteClick={handleDeleteClick}
+                    isSelected={selectedCalls.has(String(call.callid))}
+                    onSelectionChange={handleCallSelection}
+                    disabled={isBulkProcessing}
                   />
                 ))}
               </TableBody>
@@ -444,7 +691,7 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
         </>
       )}
 
-      {/* Dialog de confirmation pour la suppression */}
+      {/* Dialogs de confirmation */}
       <Dialog
         open={confirmDeleteOpen}
         onClose={() => setConfirmDeleteOpen(false)}
@@ -463,8 +710,29 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Dialog open={bulkDeleteOpen} onClose={() => setBulkDeleteOpen(false)}>
+        <DialogTitle>Confirmer la suppression en lot</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Êtes-vous sûr de vouloir supprimer {selectedCount} appel(s) ? Cette
+            action est irréversible.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBulkDeleteOpen(false)}>Annuler</Button>
+          <Button
+            onClick={handleConfirmBulkDelete}
+            color="primary"
+            autoFocus
+            disabled={isBulkProcessing}
+          >
+            Confirmer la suppression
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
 
-export default CallTableList;
+export default memo(CallTableList);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, FC } from "react";
+import { useEffect, useState, useRef, FC, useMemo } from "react";
 import {
   Box,
   CircularProgress,
@@ -14,6 +14,7 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
+  Paper,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import * as echarts from "echarts";
@@ -35,20 +36,21 @@ const allowedDestinations: string[] = [
   "CLIENT NEGATIF",
 ];
 
-const familyColors: Record<string, string> = {
-  ENGAGEMENT: "green",
-  OUVERTURE: "green",
-  REFLET: "green",
-  EXPLICATION: "red",
-};
+// 🎨 Couleurs adaptatives selon le thème
+const getFamilyColors = (isDarkMode: boolean): Record<string, string> => ({
+  ENGAGEMENT: isDarkMode ? "#4CAF50" : "#43A047",
+  OUVERTURE: isDarkMode ? "#4CAF50" : "#43A047",
+  REFLET: isDarkMode ? "#4CAF50" : "#43A047",
+  EXPLICATION: isDarkMode ? "#F44336" : "#E53935",
+});
 
-const destinationColors: Record<string, string> = {
-  "CLIENT POSITIF": "green",
-  "CLIENT NEUTRE": "gray",
-  "CLIENT NEGATIF": "red",
-};
+const getDestinationColors = (isDarkMode: boolean): Record<string, string> => ({
+  "CLIENT POSITIF": isDarkMode ? "#4CAF50" : "#43A047",
+  "CLIENT NEUTRE": isDarkMode ? "#9E9E9E" : "#757575",
+  "CLIENT NEGATIF": isDarkMode ? "#F44336" : "#E53935",
+});
 
-// Types
+// Types (inchangés)
 interface TurnTaggedItem {
   id: string;
   call_id: string;
@@ -97,6 +99,16 @@ const labelTranslations: Record<string, string> = {
 };
 
 const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === "dark";
+
+  // 🎨 Couleurs adaptatives mémorisées
+  const familyColors = useMemo(() => getFamilyColors(isDarkMode), [isDarkMode]);
+  const destinationColors = useMemo(
+    () => getDestinationColors(isDarkMode),
+    [isDarkMode]
+  );
+
   const [data, setData] = useState<SankeyData>({ nodes: [], links: [] });
   const [refletData, setRefletData] = useState<SankeyData>({
     nodes: [],
@@ -112,10 +124,9 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
   );
   const sankeyRef = useRef<HTMLDivElement>(null);
   const refletSankeyRef = useRef<HTMLDivElement>(null);
-  const theme = useTheme();
   const [origins, setOrigins] = useState<string[]>([]);
   const [selectedOrigin, setSelectedOrigin] = useState<string | null>(null);
-  const [clickedPath, setClickedPath] = useState<string>(""); // Stocke le chemin cliqué
+  const [clickedPath, setClickedPath] = useState<string>("");
 
   useEffect(() => {
     const fetchOrigins = async () => {
@@ -131,7 +142,6 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
           );
           throw originsError;
         }
-        console.log("originsData", originsData);
 
         const uniqueOrigins = [
           ...new Set(originsData.map((item) => item.origine)),
@@ -223,16 +233,18 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
         >
       );
 
-      // ✅ Correction 1: Typage explicite pour Array.from avec string[]
       const uniqueValues = Array.from(
         new Set([...Object.values(tagToFamily), ...allowedDestinations])
       ) as string[];
 
       const sankeyNodes: SankeyNode[] = uniqueValues.map((name: string) => ({
-        name: labelTranslations[name] || name, // traduction ici
-        rawName: name, // ✅ Correction 2: Typage explicite comme string
+        name: labelTranslations[name] || name,
+        rawName: name,
         itemStyle: {
-          color: familyColors[name] || destinationColors[name] || "gray",
+          color:
+            familyColors[name] ||
+            destinationColors[name] ||
+            (isDarkMode ? "#9E9E9E" : "#757575"),
         },
       }));
 
@@ -240,8 +252,8 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
         ([key, value]) => {
           const [source, target] = key.split("-");
           return {
-            source: labelTranslations[source] || source, // traduit ici
-            target: labelTranslations[target] || target, // traduit ici
+            source: labelTranslations[source] || source,
+            target: labelTranslations[target] || target,
             value: value.count,
             detailedData: (turnTaggedData as TurnTaggedItem[])
               .filter(
@@ -288,7 +300,7 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
       const refletNodes: SankeyNode[] = Array.from(
         new Set([
           ...Object.keys(refletData).map((key) => key.split("-")[0]),
-          ...sortedDestinations, // Ajoutez les destinations explicitement
+          ...sortedDestinations,
         ])
       )
         .sort((a, b) => {
@@ -305,8 +317,11 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
           itemStyle: {
             color:
               tagToFamily[name] === "REFLET"
-                ? "green"
-                : destinationColors[name] || "gray",
+                ? isDarkMode
+                  ? "#4CAF50"
+                  : "#43A047"
+                : destinationColors[name] ||
+                  (isDarkMode ? "#9E9E9E" : "#757575"),
           },
         }));
 
@@ -360,6 +375,7 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
     fetchData();
   }, [selectedOrigin]);
 
+  // 🎨 Configuration du Sankey avec thème adaptatif
   const configureSankey = (
     chartRef: HTMLDivElement | null,
     graphData: SankeyData,
@@ -386,22 +402,32 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
 
       return {
         ...link,
-        proportionFromSource: ((link.value / totalSource) * 100).toFixed(2), // %
-        proportionInTarget: ((link.value / totalTarget) * 100).toFixed(2), // %
+        proportionFromSource: ((link.value / totalSource) * 100).toFixed(2),
+        proportionInTarget: ((link.value / totalTarget) * 100).toFixed(2),
       };
     });
 
     const chart = echarts.init(chartRef);
 
+    // 🎨 Configuration ECharts adaptée au thème
     chart.setOption({
       title: {
         text: chartTitle,
         left: "center",
-        textStyle: { color: "#000000" },
+        textStyle: {
+          color: theme.palette.text.primary, // ✅ Adapté au thème
+          fontSize: 16,
+          fontFamily: theme.typography.fontFamily,
+        },
       },
-      backgroundColor: "#ffffff",
+      backgroundColor: theme.palette.background.paper, // ✅ Fond adapté au thème
       tooltip: {
         trigger: "item",
+        backgroundColor: theme.palette.background.paper, // ✅ Tooltip adapté
+        borderColor: theme.palette.divider,
+        textStyle: {
+          color: theme.palette.text.primary, // ✅ Texte adapté
+        },
         formatter: (params: any) => {
           if (params.dataType === "edge") {
             const {
@@ -412,7 +438,7 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
               proportionInTarget,
             } = params.data;
             return `
-              <b>${source} → ${target}</b><br/>
+              <b style="color: ${theme.palette.text.primary}">${source} → ${target}</b><br/>
               Total : ${value}<br/>
               ${proportionFromSource}% du total de "${source}"<br/>
               ${proportionInTarget}% du total de "${target}"<br/>
@@ -425,16 +451,20 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
         {
           type: "sankey",
           data: graphData.nodes,
-          links: linksWithProportions, // Utiliser les liens mis à jour
-          lineStyle: { color: "gradient", opacity: 0.8, curveness: 0.5 },
+          links: linksWithProportions,
+          lineStyle: {
+            color: "gradient",
+            opacity: isDarkMode ? 0.9 : 0.8, // ✅ Opacité adaptée
+            curveness: 0.5,
+          },
           emphasis: {
             focus: "adjacency",
           },
           label: {
             show: true,
-            fontSize: 20,
+            fontSize: 14,
             fontWeight: "bold",
-            color: "#141414",
+            color: theme.palette.text.primary, // ✅ Labels adaptés
             position: "inside",
           },
         },
@@ -443,7 +473,7 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
 
     chart.on("click", (params: any) => {
       if (params.dataType === "edge") {
-        setDetailedData(params.data.detailedData || []); // Associe les verbatim au Drawer
+        setDetailedData(params.data.detailedData || []);
         setClickedPath(`${params.data.source} → ${params.data.target}`);
         setDrawerOpen(true);
       }
@@ -456,10 +486,10 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
 
     if (refletData.nodes.length > 0 && refletSankeyRef.current)
       configureSankey(refletSankeyRef.current, refletData, "Détail REFLET");
-  }, [data, refletData]);
+  }, [data, refletData, theme]); // ✅ Ajout de theme aux dépendances
 
   const handleVerbatimClick = (item: TurnTaggedItem) => {
-    setSelectedTurnTag(item); // Passe les données sélectionnées à TurnTagEditor
+    setSelectedTurnTag(item);
   };
 
   const handleOriginChange = (event: SelectChangeEvent<string>) => {
@@ -490,12 +520,15 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
         maxHeight: "100vh",
         overflowY: "auto",
         padding: 2,
-        backgroundColor: "#ffffff",
-        color: "#000000",
+        backgroundColor: theme.palette.background.default, // ✅ Fond adapté
+        color: theme.palette.text.primary, // ✅ Texte adapté
       }}
     >
-      <Box sx={{ marginBottom: 2 }}>
-        <Typography variant="h6">Filtrer par origine</Typography>
+      {/* Filtre par origine dans un Paper */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Filtrer par origine
+        </Typography>
         <Select
           value={selectedOrigin || ""}
           onChange={handleOriginChange}
@@ -511,19 +544,37 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
             </MenuItem>
           ))}
         </Select>
-      </Box>
-      <Box ref={sankeyRef} sx={{ width: "100%", height: 600, ml: 10 }} />
+      </Paper>
+
+      {/* Graphiques dans des Papers */}
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Box ref={sankeyRef} sx={{ width: "100%", height: 600 }} />
+      </Paper>
+
       <DepartureTable links={data.links} />
       <ArrivalTable links={data.links} />
-      <Box ref={refletSankeyRef} sx={{ width: "100%", height: 300 }} />
+
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Box ref={refletSankeyRef} sx={{ width: "100%", height: 300 }} />
+      </Paper>
+
       <DepartureTable links={refletData.links} />
       <ArrivalTable links={refletData.links} />
+
+      {/* Drawer adapté au thème */}
       <Drawer
         anchor="right"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
       >
-        <Box sx={{ width: 400, p: 2 }}>
+        <Box
+          sx={{
+            width: 400,
+            p: 2,
+            backgroundColor: theme.palette.background.default, // ✅ Fond drawer adapté
+            height: "100%",
+          }}
+        >
           <IconButton
             onClick={() => setDrawerOpen(false)}
             sx={{ float: "right" }}
@@ -533,7 +584,7 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
           <Typography variant="h6" gutterBottom>
             Données Sous-jacentes
           </Typography>
-          {/* Affichage du chemin cliqué */}
+
           <Typography
             variant="body1"
             sx={{
@@ -554,32 +605,27 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
                   flexDirection: "column",
                   alignItems: "flex-start",
                   mb: 2,
-                  backgroundColor:
-                    theme.palette.mode === "dark"
-                      ? theme.palette.background.paper
-                      : "#f5f5f5", // Fond clair ou sombre
+                  backgroundColor: theme.palette.background.paper, // ✅ Fond adapté
                   borderRadius: 2,
                   p: 2,
-                  boxShadow:
-                    theme.palette.mode === "dark"
-                      ? "0px 2px 5px rgba(255,255,255,0.1)"
-                      : "0px 2px 5px rgba(0,0,0,0.1)", // Ombres adaptées
+                  boxShadow: theme.shadows[2], // ✅ Ombre adaptée
+                  cursor: "pointer",
+                  "&:hover": {
+                    backgroundColor: theme.palette.action.hover, // ✅ Hover adapté
+                  },
                 }}
               >
-                {/* Verbatim en évidence */}
                 <Typography
-                  variant="body1" // Vous pouvez choisir "body1" pour une taille plus standard
+                  variant="body1"
                   sx={{
-                    // fontStyle: "italic", // Met la police en italique
-                    fontSize: "1.05rem", // Ajustez la taille ici (plus petit que par défaut)
-                    color: theme.palette.text.primary, // Couleur adaptée au mode sombre/clair
+                    fontSize: "1.05rem",
+                    color: theme.palette.text.primary,
                     mb: 1,
                   }}
                 >
                   {item.verbatim || "Verbatim non disponible"}
                 </Typography>
 
-                {/* Champs secondaires dans un Grid */}
                 <Box sx={{ width: "100%" }}>
                   <Typography
                     variant="body2"
@@ -624,13 +670,13 @@ const TagAnalysisGraphs: FC<TagAnalysisGraphsProps> = () => {
           </List>
         </Box>
       </Drawer>
-      {/* ✅ Correction 3: Suppression de la prop onSave inexistante */}
+
       {selectedTurnTag && (
         <TurnTagEditor
           turnTag={{
             ...selectedTurnTag,
-            id: parseInt(selectedTurnTag.id), // Conversion string → number
-            call_id: parseInt(selectedTurnTag.call_id), // Conversion string → number
+            id: parseInt(selectedTurnTag.id),
+            call_id: parseInt(selectedTurnTag.call_id),
           }}
           onClose={() => setSelectedTurnTag(null)}
         />

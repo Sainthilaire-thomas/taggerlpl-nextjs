@@ -531,7 +531,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     [supabase]
   );
 
-  // Fonction pour calculer tous les next_turn_tag d'un appel
+  // Fonction calculateAllNextTurnTags corrigée (lignes ~520)
   const calculateAllNextTurnTags = useCallback(
     async (callId: string): Promise<number> => {
       if (!supabase) {
@@ -540,10 +540,26 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
       }
 
       try {
-        console.log("=== CALCUL BATCH NEXT_TURN_TAG ===");
+        console.log("=== CALCUL BATCH NEXT_TURN_TAG AVEC VALIDATION ===");
         console.log("Call ID:", callId);
 
-        // 1. Récupérer tous les tags de cet appel, triés par temps
+        // 1. Récupérer tous les tags valides de lpltag d'abord
+        const { data: validTags, error: validTagsError } = await supabase
+          .from("lpltag")
+          .select("label")
+          .not("label", "is", null);
+
+        if (validTagsError) {
+          console.error("Erreur récupération tags valides:", validTagsError);
+          return 0;
+        }
+
+        const validTagLabels = new Set(
+          validTags?.map((tag) => tag.label) || []
+        );
+        console.log(`📋 ${validTagLabels.size} tags valides dans lpltag`);
+
+        // 2. Récupérer tous les tags de cet appel, triés par temps
         const { data: allTags, error: tagsError } = await supabase
           .from("turntagged")
           .select("id, start_time, end_time, tag, speaker, next_turn_tag")
@@ -563,8 +579,9 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
         console.log(`Traitement de ${allTags.length} tags`);
 
         let updatedCount = 0;
+        let rejectedCount = 0;
 
-        // 2. Pour chaque tag, trouver le tag suivant du speaker différent
+        // 3. Pour chaque tag, trouver le tag suivant du speaker différent
         for (let i = 0; i < allTags.length; i++) {
           const currentTag = allTags[i];
 
@@ -577,9 +594,20 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
                 tag.start_time > currentTag.end_time
             );
 
-          const nextTurnTag = nextTag ? nextTag.tag : null;
+          let nextTurnTag = null;
 
-          // 3. Mettre à jour seulement si différent de l'existant
+          if (nextTag) {
+            // ✅ VALIDATION : Vérifier que le tag existe dans lpltag
+            if (validTagLabels.has(nextTag.tag)) {
+              nextTurnTag = nextTag.tag;
+            } else {
+              console.warn(`🚫 Tag rejeté (non dans lpltag): "${nextTag.tag}"`);
+              rejectedCount++;
+              // nextTurnTag reste null
+            }
+          }
+
+          // 4. Mettre à jour seulement si différent de l'existant
           if (currentTag.next_turn_tag !== nextTurnTag) {
             const { error: updateError } = await supabase
               .from("turntagged")
@@ -602,9 +630,11 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
           }
         }
 
-        console.log(`=== CALCUL TERMINÉ: ${updatedCount} tags mis à jour ===`);
+        console.log(`=== CALCUL TERMINÉ ===`);
+        console.log(`✅ ${updatedCount} tags mis à jour`);
+        console.log(`🚫 ${rejectedCount} tags rejetés (non valides)`);
 
-        // 4. Rafraîchir l'état local si des tags ont été mis à jour
+        // 5. Rafraîchir l'état local si des tags ont été mis à jour
         if (updatedCount > 0) {
           await fetchTaggedTurns(callId);
         }

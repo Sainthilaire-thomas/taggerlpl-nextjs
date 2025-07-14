@@ -5,7 +5,6 @@ import {
   Box,
   Drawer,
   List,
-  ListItem,
   ListItemIcon,
   ListItemText,
   Toolbar,
@@ -14,13 +13,13 @@ import {
   useMediaQuery,
   useTheme,
   Divider,
-  Button,
   Tooltip,
   ListItemButton,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PhoneIcon from "@mui/icons-material/Phone";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
@@ -28,23 +27,19 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import { useRouter, usePathname } from "next/navigation";
 
-// Définition des modules de l'application
 const modules = [
   { name: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
   { name: "Gestion des appels", icon: <PhoneIcon />, path: "/calls" },
   { name: "Tagging (Nouveau)", icon: <LocalOfferIcon />, path: "/new-tagging" },
+  { name: "Supervision", icon: <VisibilityIcon />, path: "/supervision" },
   { name: "Tagging (Classique)", icon: <LocalOfferIcon />, path: "/tagging" },
-  {
-    name: "Administration des tags",
-    icon: <SettingsIcon />,
-    path: "/tags",
-  },
+  { name: "Administration des tags", icon: <SettingsIcon />, path: "/tags" },
   { name: "Analyse et rapports", icon: <BarChartIcon />, path: "/analysis" },
 ];
 
 const expandedDrawerWidth = 240;
-const collapsedDrawerWidth = 64; // Largeur réduite pour afficher uniquement les icônes
-const navbarHeight = 48; // Hauteur de la GlobalNavbar en mode minimal
+const collapsedDrawerWidth = 64;
+const navbarHeight = 48;
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -54,18 +49,21 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [drawerExpanded, setDrawerExpanded] = useState(true);
+
+  // ✅ RESET: Commencer avec sidebar rétractée
+  const [drawerExpanded, setDrawerExpanded] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
-  // Récupérer la préférence utilisateur du localStorage (seulement côté client)
+  // ✅ RESET: Vider le localStorage au premier chargement
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const savedState = localStorage.getItem("drawerExpanded");
-      if (savedState !== null) {
-        setDrawerExpanded(savedState === "true");
-      }
+      // Reset forcé
+      localStorage.removeItem("drawerExpanded");
+      localStorage.setItem("drawerExpanded", "false");
+
+      console.log("🔄 RESET: localStorage vidé, sidebar forcée à rétractée");
     }
   }, []);
 
@@ -73,6 +71,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("drawerExpanded", String(drawerExpanded));
+      console.log("💾 localStorage mis à jour:", drawerExpanded);
     }
   }, [drawerExpanded]);
 
@@ -81,17 +80,22 @@ export default function AppLayout({ children }: AppLayoutProps) {
   };
 
   const toggleDrawerExpanded = () => {
-    // Assurez-vous que l'état est bien mis à jour
-    setDrawerExpanded((prevState) => !prevState);
-    // Réinitialisez l'état de survol pour éviter les conflits
+    setDrawerExpanded((prevState) => {
+      const newState = !prevState;
+      console.log(
+        "🔄 Toggle drawer - Ancien état:",
+        prevState,
+        "→ Nouveau état:",
+        newState
+      );
+      return newState;
+    });
     setIsHovering(false);
-
-    // Log pour le débogage
-    console.log("Toggle drawer clicked, new state will be:", !drawerExpanded);
   };
 
   const handleDrawerHover = (hovering: boolean) => {
     if (!isMobile) {
+      console.log("🖱️ Hover:", hovering);
       setIsHovering(hovering);
     }
   };
@@ -103,12 +107,22 @@ export default function AppLayout({ children }: AppLayoutProps) {
     }
   };
 
-  // Déterminer la largeur actuelle du drawer
+  // ✅ Largeur effective du drawer
   const currentDrawerWidth = isMobile
-    ? expandedDrawerWidth
+    ? 0
     : drawerExpanded || isHovering
     ? expandedDrawerWidth
     : collapsedDrawerWidth;
+
+  // ✅ Debug détaillé
+  console.log("📐 AppLayout State:", {
+    drawerExpanded,
+    isHovering,
+    currentDrawerWidth,
+    isMobile,
+    "Sidebar devrait être":
+      drawerExpanded || isHovering ? "ÉTENDUE (240px)" : "RÉTRACTÉE (64px)",
+  });
 
   const drawer = (
     <div
@@ -147,7 +161,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
             placement="right"
             key={`tooltip-${module.name}`}
           >
-            {/* Utilisation de ListItemButton au lieu de ListItem avec button=true */}
             <ListItemButton
               key={module.name}
               onClick={() => navigateTo(module.path)}
@@ -197,7 +210,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 }}
               />
 
-              {/* Badge pour indiquer la nouvelle version */}
+              {/* Badges */}
               {module.path === "/new-tagging" &&
                 (drawerExpanded || isHovering || isMobile) && (
                   <Box
@@ -217,7 +230,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   </Box>
                 )}
 
-              {/* Badge pour indiquer la version classique */}
               {module.path === "/tagging" &&
                 (drawerExpanded || isHovering || isMobile) && (
                   <Box
@@ -243,115 +255,107 @@ export default function AppLayout({ children }: AppLayoutProps) {
   );
 
   return (
-    <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
-      {/* La AppBar est enlevée, GlobalNavbar prend sa place */}
-      <Box
-        component="nav"
-        sx={{
-          width: { sm: currentDrawerWidth },
-          flexShrink: { sm: 0 },
-          transition: theme.transitions.create("width", {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-          }),
-          // Augmenter le z-index pour qu'il soit au-dessus du contenu mais sous la GlobalNavbar
-          zIndex: 1200,
+    <Box sx={{ display: "flex", height: "100vh" }}>
+      {/* ✅ SIDEBAR - Simplifiée */}
+      <Drawer
+        variant={isMobile ? "temporary" : "permanent"}
+        open={isMobile ? mobileOpen : true}
+        onClose={handleDrawerToggle}
+        ModalProps={{
+          keepMounted: true,
         }}
-        aria-label="modules"
+        sx={{
+          "& .MuiDrawer-paper": {
+            boxSizing: "border-box",
+            width: isMobile
+              ? expandedDrawerWidth
+              : drawerExpanded || isHovering
+              ? expandedDrawerWidth
+              : collapsedDrawerWidth,
+            marginTop: `${navbarHeight}px`,
+            height: `calc(100% - ${navbarHeight}px)`,
+            transition: theme.transitions.create("width", {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
+            overflowX: "hidden",
+            position: "fixed",
+            zIndex: 1200,
+          },
+        }}
       >
-        {/* Drawer mobile */}
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true, // Meilleure performance sur mobile
-          }}
-          sx={{
-            display: { xs: "block", sm: "none" },
-            "& .MuiDrawer-paper": {
-              boxSizing: "border-box",
-              width: expandedDrawerWidth,
-              // Décaler le drawer sous la GlobalNavbar
-              marginTop: `${navbarHeight}px`,
-              height: `calc(100% - ${navbarHeight}px)`,
-            },
-          }}
-        >
-          {drawer}
-        </Drawer>
-        {/* Drawer permanent (desktop) */}
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: "none", sm: "block" },
-            "& .MuiDrawer-paper": {
-              boxSizing: "border-box",
-              width: currentDrawerWidth,
-              overflowX: "hidden",
-              // Décaler le drawer sous la GlobalNavbar
-              marginTop: `${navbarHeight}px`,
-              height: `calc(100% - ${navbarHeight}px)`,
-              transition: theme.transitions.create("width", {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.enteringScreen,
-              }),
-            },
-          }}
-          open
-        >
-          {drawer}
-        </Drawer>
-      </Box>
+        {drawer}
+      </Drawer>
 
-      {/* Contenu principal - CORRIGÉ */}
+      {/* ✅ CONTENU PRINCIPAL - Simplifié */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          // Supprimer le padding général
-          padding: 0,
-          // N'ajouter du padding que pour la navbar
-          pt: `${navbarHeight}px`,
-          //   width: { sm: `calc(100% - ${currentDrawerWidth}px)` },
-          //   ml: { xs: 0, sm: `${currentDrawerWidth}px` },
-          width: "100%",
-          ml: 0,
-          // Utiliser display flex pour un meilleur positionnement
-          display: "flex",
-          flexDirection: "column",
-          height: "100vh",
-          overflow: "auto",
-          transition: theme.transitions.create(["width", "margin"], {
+          marginLeft: {
+            xs: 0,
+            sm: `${currentDrawerWidth}px`,
+          },
+          paddingTop: `${navbarHeight}px`,
+          minHeight: "100vh",
+          transition: theme.transitions.create("margin-left", {
             easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
+            duration: theme.transitions.duration.enteringScreen,
           }),
+          // ✅ Debug visuel
+          backgroundColor: "background.default",
         }}
       >
-        {/* Bouton de toggle pour mobile */}
-        <IconButton
-          color="primary"
-          aria-label="open drawer"
-          edge="start"
-          onClick={handleDrawerToggle}
+        {/* Debug info visuel */}
+        <Box
           sx={{
             position: "fixed",
-            top: navbarHeight + 8,
-            left: 8,
-            display: { sm: "none" },
-            zIndex: 1100,
-            backgroundColor: "background.paper",
-            boxShadow: 1,
-            "&:hover": {
-              backgroundColor: "background.default",
-            },
+            top: 60,
+            right: 10,
+            background: "rgba(0,0,0,0.8)",
+            color: "white",
+            p: 1,
+            borderRadius: 1,
+            fontSize: "0.8rem",
+            zIndex: 9999,
           }}
         >
-          <MenuIcon />
-        </IconButton>
+          Width: {currentDrawerWidth}px
+          <br />
+          Expanded: {drawerExpanded ? "OUI" : "NON"}
+          <br />
+          Hover: {isHovering ? "OUI" : "NON"}
+        </Box>
 
-        {/* Contenu de la page avec padding approprié mais sans décalage vertical excessif */}
-        <Box sx={{ p: 3, flex: 1 }}>{children}</Box>
+        {/* Bouton mobile */}
+        {isMobile && (
+          <IconButton
+            color="primary"
+            aria-label="open drawer"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{
+              position: "fixed",
+              top: navbarHeight + 8,
+              left: 8,
+              zIndex: 1100,
+              backgroundColor: "background.paper",
+              boxShadow: 1,
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+        )}
+
+        {/* Contenu avec padding réduit */}
+        <Box
+          sx={{
+            px: 2, // Padding horizontal réduit (16px au lieu de 24px)
+            py: 2, // Padding vertical réduit
+          }}
+        >
+          {children}
+        </Box>
       </Box>
     </Box>
   );
