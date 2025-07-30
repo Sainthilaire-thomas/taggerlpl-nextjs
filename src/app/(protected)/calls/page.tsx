@@ -6,6 +6,8 @@ import CallTableList from "@/components/calls/CallTableList/CallTableList";
 import CallPreparation from "@/components/calls/CallPreparation";
 import SnackbarManager from "@/components/SnackBarManager";
 import SimpleWorkdriveExplorer from "@/components/SimpleWorkdriveExplorer";
+import { DuplicateDialog } from "@/components/calls/DuplicateDialog"; // ✅ NOUVEAU
+import { handleCallSubmission } from "@/components/utils/callApiUtils";
 
 // ✅ Interface pour les props du TabPanel
 interface TabPanelProps {
@@ -42,6 +44,20 @@ export default function CallsPage() {
   // ✅ Typage correct pour snackPack
   const [snackPack, setSnackPack] = useState<SnackbarMessage[]>([]);
 
+  // ✅ NOUVEAU: État pour le dialog des doublons
+  const [duplicateDialog, setDuplicateDialog] = useState<{
+    open: boolean;
+    data?: any;
+    newImport?: {
+      hasAudio: boolean;
+      hasTranscription: boolean;
+      filename?: string;
+    };
+    resolve?: (action: "upgrade" | "create_new" | "cancel") => void;
+  }>({
+    open: false,
+  });
+
   // ✅ Typage explicite des paramètres
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -52,29 +68,129 @@ export default function CallsPage() {
     setSnackPack((prev) => [...prev, { message, key: new Date().getTime() }]);
   };
 
-  // Handler pour l'import de fichiers depuis WorkDrive
+  // ✅ NOUVEAU: Gestionnaire de doublons avec dialog
+  const handleDuplicateFound = async (
+    duplicateData: any
+  ): Promise<"upgrade" | "create_new" | "cancel"> => {
+    console.log("🔄 Dialog doublon ouvert avec data:", duplicateData);
+
+    // ✅ CORRECTION: Meilleure détection du contenu du nouvel import
+    const hasNewAudio = !!duplicateData.newAudioFile;
+    const hasNewTranscription = !!(
+      duplicateData.newTranscriptionText &&
+      duplicateData.newTranscriptionText.length > 0
+    );
+
+    console.log("🔍 Analyse nouvel import:", {
+      hasNewAudio,
+      hasNewTranscription,
+      audioFileName: duplicateData.newAudioFile?.name,
+      transcriptionLength: duplicateData.newTranscriptionText?.length || 0,
+    });
+
+    return new Promise((resolve) => {
+      setDuplicateDialog({
+        open: true,
+        data: duplicateData,
+        newImport: {
+          hasAudio: hasNewAudio,
+          hasTranscription: hasNewTranscription,
+          filename: duplicateData.newAudioFile?.name || "Transcription JSON",
+        },
+        resolve,
+      });
+    });
+  };
+
+  // ✅ NOUVEAU: Gestionnaire d'action du dialog
+  const handleDialogAction = (action: "upgrade" | "create_new" | "cancel") => {
+    console.log("🎯 Action choisie dans le dialog:", action);
+
+    if (duplicateDialog.resolve) {
+      duplicateDialog.resolve(action);
+    }
+    setDuplicateDialog({ open: false });
+  };
+
+  // ✅ MODIFIÉ: Handler pour l'import avec gestion des doublons
   const handleWorkdriveFilesSelect = async (
     audioFile: File | null,
-    transcriptionText: string = ""
+    transcriptionText: string = "",
+    workdriveFileName?: string // ✅ NOUVEAU: Recevoir le nom WorkDrive
   ): Promise<void> => {
-    try {
-      if (audioFile) {
-        // Logique d'import personnalisée si nécessaire
-        // Pour l'instant, on affiche juste un message
-        showMessage(`Fichiers importés depuis WorkDrive: ${audioFile.name}`);
+    console.log("🔍 CallsPage - Fichiers reçus:", {
+      audioFile: audioFile?.name,
+      transcriptionText: transcriptionText
+        ? `${transcriptionText.length} caractères`
+        : "Vide",
+      workdriveFileName, // ✅ NOUVEAU: Logger le nom WorkDrive
+      hasAudio: !!audioFile,
+      hasTranscription: !!transcriptionText,
+    });
 
-        // Ici vous pourriez appeler une fonction d'import spécifique
-        // comme handleCallSubmission ou une autre fonction utilitaire
+    try {
+      // Vérifier qu'au moins un fichier est présent
+      if (!audioFile && !transcriptionText) {
+        showMessage("Aucun fichier à importer");
+        return;
       }
+
+      // Appeler handleCallSubmission avec callback doublons
+      console.log("📥 Appel de handleCallSubmission...");
+
+      await handleCallSubmission({
+        audioFile,
+        description: generateDescription(
+          audioFile,
+          transcriptionText,
+          workdriveFileName
+        ),
+        transcriptionText,
+        workdriveFileName, // ✅ NOUVEAU: Transmettre à handleCallSubmission
+        showMessage,
+        onCallUploaded: (callId) => {
+          console.log("✅ Appel créé avec ID:", callId);
+          showMessage(`Appel importé avec succès (ID: ${callId})`);
+        },
+        onDuplicateFound: handleDuplicateFound,
+      });
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erreur inconnue";
       console.error(
-        "Erreur lors de l'importation depuis WorkDrive:",
+        "❌ Erreur lors de l'importation depuis WorkDrive:",
         errorMessage
       );
-      showMessage("Erreur lors de l'importation depuis WorkDrive");
+      showMessage(`Erreur lors de l'importation: ${errorMessage}`);
     }
+  };
+
+  // ✅ Fonction utilitaire pour générer une description
+  const generateDescription = (
+    audioFile: File | null,
+    transcriptionText: string,
+    workdriveFileName?: string // ✅ NOUVEAU: Paramètre ajouté
+  ): string => {
+    const timestamp = new Date().toLocaleString("fr-FR");
+    const parts = [];
+
+    if (audioFile) {
+      parts.push(`Audio: ${audioFile.name}`);
+    } else if (workdriveFileName) {
+      parts.push(`Fichier: ${workdriveFileName}`); // ✅ Utiliser le nom WorkDrive
+    }
+
+    if (transcriptionText) {
+      try {
+        const parsed = JSON.parse(transcriptionText);
+        const wordCount = parsed.words?.length || 0;
+        parts.push(`Transcription (${wordCount} mots)`);
+      } catch {
+        parts.push("Transcription");
+      }
+    }
+
+    return `Import WorkDrive [${parts.join(" + ")}] - ${timestamp}`;
   };
 
   return (
@@ -90,19 +206,19 @@ export default function CallsPage() {
           aria-label="calls management tabs"
         >
           <Tab
-            label="Import d'appels"
+            label="📥 Import d'appels"
             id="calls-tab-0"
             aria-controls="calls-tabpanel-0"
           />
           <Tab
-            label="Liste des appels"
-            id="calls-tab-1"
-            aria-controls="calls-tabpanel-1"
-          />
-          <Tab
-            label="Préparation"
+            label="🔧 Préparation"
             id="calls-tab-2"
             aria-controls="calls-tabpanel-2"
+          />
+          <Tab
+            label="🏷️ Liste des appels"
+            id="calls-tab-1"
+            aria-controls="calls-tabpanel-1"
           />
         </Tabs>
       </Box>
@@ -120,17 +236,39 @@ export default function CallsPage() {
 
       <TabPanel value={tabValue} index={1}>
         <Typography variant="h6" gutterBottom>
-          Liste des appels chargés
+          Préparation des appels pour le tagging
         </Typography>
-        <CallTableList showMessage={showMessage} />
+        <Typography variant="body2" color="textSecondary" paragraph>
+          Gérez vos appels importés et préparez-les pour l'analyse.
+        </Typography>
+        <CallPreparation showMessage={showMessage} />
       </TabPanel>
 
       <TabPanel value={tabValue} index={2}>
         <Typography variant="h6" gutterBottom>
-          Préparation des appels pour le tagging
+          Appels prêts pour le tagging
         </Typography>
-        <CallPreparation showMessage={showMessage} />
+        <Typography variant="body2" color="textSecondary" paragraph>
+          Liste des appels préparés et prêts pour l'analyse et le tagging.
+        </Typography>
+        <CallTableList showMessage={showMessage} />
       </TabPanel>
+
+      {/* ✅ NOUVEAU: Dialog de gestion des doublons */}
+      {duplicateDialog.data && (
+        <DuplicateDialog
+          open={duplicateDialog.open}
+          onClose={() => handleDialogAction("cancel")}
+          duplicateData={duplicateDialog.data}
+          newImport={
+            duplicateDialog.newImport || {
+              hasAudio: false,
+              hasTranscription: false,
+            }
+          }
+          onAction={handleDialogAction}
+        />
+      )}
 
       <SnackbarManager snackPack={snackPack} setSnackPack={setSnackPack} />
     </Box>

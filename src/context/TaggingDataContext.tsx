@@ -102,6 +102,7 @@ interface TaggingDataContextType {
   setTags: React.Dispatch<React.SetStateAction<Tag[]>>;
   calculateAllNextTurnTags: (callId: string) => Promise<number>;
   refreshTaggingCalls?: () => Promise<void>;
+  fetchTaggingCalls: () => Promise<void>;
 }
 
 // Create the context with a default undefined value
@@ -704,6 +705,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
         setTags,
         calculateAllNextTurnTags,
         refreshTaggingCalls,
+        fetchTaggingCalls,
       }}
     >
       {children}
