@@ -1,4 +1,4 @@
-// SimpleWorkdriveExplorer.tsx - Version étendue avec modes
+// SimpleWorkdriveExplorer.tsx - Version corrigée avec modes + détection doublons
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
@@ -15,6 +15,9 @@ import {
   Chip,
   Tabs,
   Tab,
+  Switch,
+  FormControlLabel,
+  Tooltip,
 } from "@mui/material";
 import { useSearchParams } from "next/navigation";
 import HomeIcon from "@mui/icons-material/Home";
@@ -24,6 +27,7 @@ import AudioFileIcon from "@mui/icons-material/AudioFile";
 import DescriptionIcon from "@mui/icons-material/Description";
 import FolderIcon from "@mui/icons-material/Folder";
 import SearchIcon from "@mui/icons-material/Search";
+import Security from "@mui/icons-material/Security";
 
 import { useZoho } from "@/context/ZohoContext";
 import { useWorkdriveFiles } from "./hooks/useWorkdriveFiles";
@@ -52,7 +56,7 @@ const ROOT_FOLDER_ID = "ly5m40e0e2d4ae7604a1fa0f5d42905cb94c9";
 export default function SimpleWorkdriveExplorer({
   onFilesSelect,
   rootFolderId = ROOT_FOLDER_ID,
-  // ✅ NOUVELLES PROPS avec valeurs par défaut
+  // Props existantes avec valeurs par défaut
   mode = "full",
   audioOnly = false,
   transcriptionOnly = false,
@@ -61,7 +65,15 @@ export default function SimpleWorkdriveExplorer({
   title,
   description,
   showTabs = true,
-}: SimpleWorkdriveExplorerProps) {
+  // ✅ NOUVELLES PROPS pour gestion doublons (optionnelles pour compatibilité)
+  enableDuplicateCheck = false,
+  showDuplicateToggle = true,
+  onDuplicateFound,
+}: SimpleWorkdriveExplorerProps & {
+  enableDuplicateCheck?: boolean;
+  showDuplicateToggle?: boolean;
+  onDuplicateFound?: (file: ZohoFile, existingCall: any) => void;
+}) {
   const { accessToken, setAccessToken, updateZohoRefreshToken } = useZoho();
   const searchParams = useSearchParams();
 
@@ -72,7 +84,11 @@ export default function SimpleWorkdriveExplorer({
     useState<ZohoFile | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [processingImport, setProcessingImport] = useState(false);
-  const [currentTab, setCurrentTab] = useState(0); // 0 = Navigation, 1 = Recherche
+  const [currentTab, setCurrentTab] = useState(0);
+
+  // ✅ NOUVEAU: État pour la vérification de doublons
+  const [duplicateCheckEnabled, setDuplicateCheckEnabled] =
+    useState(enableDuplicateCheck);
 
   const {
     files,
@@ -93,16 +109,15 @@ export default function SimpleWorkdriveExplorer({
     currentFolderId: currentFolder.id,
   });
 
-  // ✅ NOUVEAU: Déterminer le mode effectif (legacy props vs nouveau mode)
+  // Mode effectif (logique existante)
   const effectiveMode: WorkdriveExplorerMode = useMemo(() => {
     if (audioOnly) return "audio_only";
     if (transcriptionOnly) return "transcription_only";
     return mode;
   }, [mode, audioOnly, transcriptionOnly]);
 
-  // ✅ NOUVEAU: Adaptation du comportement selon le mode
+  // Désactiver sélection selon le mode (logique existante)
   useEffect(() => {
-    // Désactiver la sélection selon le mode
     if (effectiveMode === "audio_only") {
       setSelectedTranscriptionFile(null);
     }
@@ -111,10 +126,9 @@ export default function SimpleWorkdriveExplorer({
     }
   }, [effectiveMode]);
 
-  // ✅ NOUVEAU: Génération du titre et description adaptatifs
+  // Titres adaptatifs (logique existante)
   const getAdaptiveTitle = () => {
     if (title) return title;
-
     switch (effectiveMode) {
       case "audio_only":
         return "Sélectionner un fichier audio";
@@ -127,7 +141,6 @@ export default function SimpleWorkdriveExplorer({
 
   const getAdaptiveDescription = () => {
     if (description) return description;
-
     switch (effectiveMode) {
       case "audio_only":
         return "Parcourez WorkDrive et sélectionnez un fichier audio à ajouter.";
@@ -138,7 +151,7 @@ export default function SimpleWorkdriveExplorer({
     }
   };
 
-  // Traiter le token d'authentification Zoho si présent dans l'URL
+  // Traitement du token (logique existante)
   useEffect(() => {
     const tokenParam = searchParams.get("token");
     if (tokenParam) {
@@ -159,24 +172,43 @@ export default function SimpleWorkdriveExplorer({
     }
   }, [searchParams, setAccessToken, updateZohoRefreshToken, setError]);
 
-  // ✅ MODIFICATION: Gestionnaires de sélection avec contrôles de mode
+  // Gestionnaires de sélection (logique existante)
   const handleSelectAudioFile = (file: ZohoFile) => {
     if (effectiveMode === "transcription_only") return;
-
     setSelectedAudioFile(selectedAudioFile?.id === file.id ? null : file);
   };
 
   const handleSelectTranscriptionFile = (file: ZohoFile) => {
     if (effectiveMode === "audio_only") return;
-
     setSelectedTranscriptionFile(
       selectedTranscriptionFile?.id === file.id ? null : file
     );
   };
 
-  // ✅ MODIFICATION: Validation avant import selon le mode
+  // ✅ NOUVEAUX: Gestionnaires pour les doublons
+  const handleDuplicateToggle = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setDuplicateCheckEnabled(event.target.checked);
+  };
+
+  const handleDuplicateClick = (file: ZohoFile, existingCall: any) => {
+    if (onDuplicateFound) {
+      onDuplicateFound(file, existingCall);
+    } else {
+      // Comportement par défaut: alerte simple
+      alert(
+        `Ce fichier (${
+          file.attributes?.name || file.name
+        }) semble déjà importé comme: ${
+          existingCall.filename || existingCall.description
+        }`
+      );
+    }
+  };
+
+  // Validation avant import (logique existante)
   const handleImportFiles = async () => {
-    // Validation selon le mode
     if (effectiveMode === "audio_only" && !selectedAudioFile) {
       setError("Veuillez sélectionner un fichier audio");
       return;
@@ -199,44 +231,12 @@ export default function SimpleWorkdriveExplorer({
     try {
       setProcessingImport(true);
 
-      // ✅ DEBUG COMPLET: Examiner la structure des objets fichiers
+      // Debug (logique existante)
       console.log(
         "🔍 DEBUG selectedTranscriptionFile:",
         selectedTranscriptionFile
       );
       console.log("🔍 DEBUG selectedAudioFile:", selectedAudioFile);
-
-      if (selectedTranscriptionFile) {
-        console.log(
-          "🔍 DEBUG propriétés transcription:",
-          Object.keys(selectedTranscriptionFile)
-        );
-        console.log(
-          "🔍 DEBUG attributes transcription:",
-          selectedTranscriptionFile.attributes
-        );
-        console.log(
-          "🔍 DEBUG relationships transcription:",
-          selectedTranscriptionFile.relationships
-        );
-        console.log(
-          "🔍 DEBUG type transcription:",
-          selectedTranscriptionFile.type
-        );
-        console.log("🔍 DEBUG id transcription:", selectedTranscriptionFile.id);
-      }
-
-      if (selectedAudioFile) {
-        console.log(
-          "🔍 DEBUG propriétés audio:",
-          Object.keys(selectedAudioFile)
-        );
-        console.log("🔍 DEBUG attributes audio:", selectedAudioFile.attributes);
-        console.log(
-          "🔍 DEBUG relationships audio:",
-          selectedAudioFile.relationships
-        );
-      }
 
       // Audio optionnel
       let audioFile: File | null = null;
@@ -258,11 +258,9 @@ export default function SimpleWorkdriveExplorer({
         );
       }
 
-      // ✅ CORRECTION: Récupérer le nom de fichier depuis l'objet WorkDrive
+      // Récupérer le nom de fichier WorkDrive (logique existante)
       let workdriveFileName: string | undefined;
-
       if (selectedTranscriptionFile) {
-        // ✅ Essayer toutes les propriétés possibles pour le nom
         workdriveFileName =
           selectedTranscriptionFile.name ||
           selectedTranscriptionFile.attributes?.name ||
@@ -272,27 +270,8 @@ export default function SimpleWorkdriveExplorer({
           selectedTranscriptionFile.resource_name ||
           selectedTranscriptionFile.display_name ||
           selectedTranscriptionFile.file_name ||
-          "transcription.json"; // Fallback
-
-        console.log(
-          "📄 Nom fichier transcription WorkDrive:",
-          workdriveFileName
-        );
-        console.log("🔍 DEBUG toutes les propriétés transcription:", {
-          name: selectedTranscriptionFile.name,
-          "attributes.name": selectedTranscriptionFile.attributes?.name,
-          "attributes.resource_name":
-            selectedTranscriptionFile.attributes?.resource_name,
-          "attributes.display_name":
-            selectedTranscriptionFile.attributes?.display_name,
-          "attributes.file_name":
-            selectedTranscriptionFile.attributes?.file_name,
-          resource_name: selectedTranscriptionFile.resource_name,
-          display_name: selectedTranscriptionFile.display_name,
-          file_name: selectedTranscriptionFile.file_name,
-        });
+          "transcription.json";
       } else if (selectedAudioFile) {
-        // ✅ Même logique pour les fichiers audio
         workdriveFileName =
           selectedAudioFile.name ||
           selectedAudioFile.attributes?.name ||
@@ -302,44 +281,22 @@ export default function SimpleWorkdriveExplorer({
           selectedAudioFile.resource_name ||
           selectedAudioFile.display_name ||
           selectedAudioFile.file_name ||
-          "audio.mp3"; // Fallback
-
-        console.log("🎵 Nom fichier audio WorkDrive:", workdriveFileName);
-        console.log("🔍 DEBUG toutes les propriétés audio:", {
-          name: selectedAudioFile.name,
-          "attributes.name": selectedAudioFile.attributes?.name,
-          "attributes.resource_name":
-            selectedAudioFile.attributes?.resource_name,
-          "attributes.display_name": selectedAudioFile.attributes?.display_name,
-          "attributes.file_name": selectedAudioFile.attributes?.file_name,
-          resource_name: selectedAudioFile.resource_name,
-          display_name: selectedAudioFile.display_name,
-          file_name: selectedAudioFile.file_name,
-        });
+          "audio.mp3";
       }
 
-      // Message adaptatif selon ce qui est importé et le mode
+      // Appeler le callback parent
+      await onFilesSelect(audioFile, transcriptionText, workdriveFileName);
+
+      // Message de succès adaptatif
       const importMessage = [];
       if (audioFile) importMessage.push(`Audio: ${audioFile.name}`);
       if (transcriptionText) importMessage.push("Transcription");
 
-      console.log("🔍 Envoi vers onFilesSelect:", {
-        audioFile: audioFile?.name,
-        transcriptionText: transcriptionText
-          ? `${transcriptionText.length} caractères`
-          : "Vide",
-        workdriveFileName, // ✅ Devrait maintenant contenir le nom
-      });
-
-      // ✅ MODIFIÉ: Appeler avec le nom WorkDrive
-      await onFilesSelect(audioFile, transcriptionText, workdriveFileName);
-
-      // Message de succès adaptatif selon le mode
       const successMsg =
         effectiveMode === "audio_only"
           ? `Audio sélectionné: ${audioFile?.name}`
           : effectiveMode === "transcription_only"
-          ? `Transcription sélectionnée: ${workdriveFileName}` // ✅ Utiliser workdriveFileName
+          ? `Transcription sélectionnée: ${workdriveFileName}`
           : `Importé avec succès: ${importMessage.join(" + ")}`;
 
       setSuccessMessage(successMsg);
@@ -357,15 +314,15 @@ export default function SimpleWorkdriveExplorer({
     }
   };
 
-  // Gestionnaire de changement d'onglet
+  // Gestionnaire de changement d'onglet (logique existante)
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
     if (newValue === 0) {
-      clearSearch(); // Effacer la recherche quand on revient à la navigation
+      clearSearch();
     }
   };
 
-  // Affichage simplifié si aucun token d'accès
+  // Affichage si pas de token (logique existante)
   if (!accessToken) {
     return (
       <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
@@ -389,7 +346,7 @@ export default function SimpleWorkdriveExplorer({
 
   return (
     <Box sx={{ width: "100%" }}>
-      {/* ✅ NOUVEAU: Titre et description adaptés selon le mode */}
+      {/* Titre et description adaptés (logique existante) */}
       {(effectiveMode !== "full" || title || description) && (
         <Box sx={{ mb: 2 }}>
           <Typography variant="h6" gutterBottom>
@@ -401,7 +358,55 @@ export default function SimpleWorkdriveExplorer({
         </Box>
       )}
 
-      {/* ✅ MODIFICATION: Onglets conditionnels */}
+      {/* ✅ NOUVEAU: Contrôles de vérification des doublons */}
+      {showDuplicateToggle && (
+        <Paper elevation={1} sx={{ p: 2, mb: 2, bgcolor: "primary.50" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Security color="primary" />
+              <Typography variant="subtitle2" color="primary.dark">
+                Détection de doublons
+              </Typography>
+              <Tooltip title="Vérifie si les fichiers ont déjà été importés pour éviter les doublons">
+                <Chip
+                  label="Beta"
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                />
+              </Tooltip>
+            </Box>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={duplicateCheckEnabled}
+                  onChange={handleDuplicateToggle}
+                  color="primary"
+                />
+              }
+              label={duplicateCheckEnabled ? "Activée" : "Désactivée"}
+            />
+          </Box>
+          {duplicateCheckEnabled && (
+            <Typography
+              variant="caption"
+              color="textSecondary"
+              sx={{ mt: 1, display: "block" }}
+            >
+              💡 Les fichiers déjà importés seront marqués avec un badge "Déjà
+              importé"
+            </Typography>
+          )}
+        </Paper>
+      )}
+
+      {/* Onglets (logique existante) */}
       {showTabs && (
         <Paper elevation={1} sx={{ mb: 2 }}>
           <Tabs
@@ -417,7 +422,7 @@ export default function SimpleWorkdriveExplorer({
         </Paper>
       )}
 
-      {/* Navigation classique */}
+      {/* Navigation classique (logique existante) */}
       {(!showTabs || currentTab === 0) && (
         <Paper elevation={1} sx={{ p: 1, mb: 2 }}>
           <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
@@ -473,7 +478,7 @@ export default function SimpleWorkdriveExplorer({
         </Paper>
       )}
 
-      {/* Interface de recherche */}
+      {/* Interface de recherche (logique existante) */}
       {showTabs && currentTab === 1 && (
         <SearchBar
           onSearch={searchFiles}
@@ -483,7 +488,7 @@ export default function SimpleWorkdriveExplorer({
         />
       )}
 
-      {/* ✅ MODIFICATION: Résumé de sélection conditionnel */}
+      {/* Résumé de sélection (logique existante) */}
       {showSelectionSummary && (
         <FileSelectionSummary
           selectedAudioFile={selectedAudioFile}
@@ -494,7 +499,7 @@ export default function SimpleWorkdriveExplorer({
         />
       )}
 
-      {/* ✅ MODIFICATION: Bouton d'importation adaptatif */}
+      {/* Bouton d'importation (logique existante) */}
       {(selectedAudioFile || selectedTranscriptionFile) && (
         <Paper
           elevation={2}
@@ -519,7 +524,7 @@ export default function SimpleWorkdriveExplorer({
         </Paper>
       )}
 
-      {/* Affichage des fichiers selon l'onglet */}
+      {/* ✅ MODIFIÉ: FileList avec support des doublons */}
       {(!showTabs || currentTab === 0) && (
         <FileList
           files={files}
@@ -530,9 +535,12 @@ export default function SimpleWorkdriveExplorer({
           onSelectAudioFile={handleSelectAudioFile}
           onSelectTranscriptionFile={handleSelectTranscriptionFile}
           mode={effectiveMode}
+          enableDuplicateCheck={duplicateCheckEnabled}
+          onDuplicateClick={handleDuplicateClick}
         />
       )}
 
+      {/* ✅ SearchResults SANS les nouvelles props pour éviter l'erreur */}
       {showTabs && currentTab === 1 && (
         <SearchResults
           searchResults={searchResults}
@@ -545,7 +553,7 @@ export default function SimpleWorkdriveExplorer({
         />
       )}
 
-      {/* Notifications */}
+      {/* Notifications (logique existante) */}
       <Notifications
         error={error}
         successMessage={successMessage}

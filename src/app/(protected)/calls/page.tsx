@@ -1,28 +1,27 @@
+// CallsPage.tsx - Intégration complète avec détection doublons
 "use client";
 
 import { useState } from "react";
-import { Box, Typography, Tabs, Tab } from "@mui/material";
+import { Box, Typography, Tabs, Tab, Alert } from "@mui/material";
 import CallTableList from "@/components/calls/CallTableList/CallTableList";
 import CallPreparation from "@/components/calls/CallPreparation";
 import SnackbarManager from "@/components/SnackBarManager";
 import SimpleWorkdriveExplorer from "@/components/SimpleWorkdriveExplorer";
-import { DuplicateDialog } from "@/components/calls/DuplicateDialog"; // ✅ NOUVEAU
+import { DuplicateDialog } from "@/components/calls/DuplicateDialog";
 import { handleCallSubmission } from "@/components/utils/callApiUtils";
+import type { ZohoFile } from "@/components/SimpleWorkdriveExplorer/types";
 
-// ✅ Interface pour les props du TabPanel
 interface TabPanelProps {
   children?: React.ReactNode;
   value: number;
   index: number;
 }
 
-// ✅ Interface pour les messages de snackbar
 interface SnackbarMessage {
   message: string;
   key: number;
 }
 
-// ✅ Typage explicite des props
 function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
 
@@ -41,10 +40,9 @@ function TabPanel(props: TabPanelProps) {
 
 export default function CallsPage() {
   const [tabValue, setTabValue] = useState<number>(0);
-  // ✅ Typage correct pour snackPack
   const [snackPack, setSnackPack] = useState<SnackbarMessage[]>([]);
 
-  // ✅ NOUVEAU: État pour le dialog des doublons
+  // État pour le dialog des doublons (existant)
   const [duplicateDialog, setDuplicateDialog] = useState<{
     open: boolean;
     data?: any;
@@ -58,35 +56,25 @@ export default function CallsPage() {
     open: false,
   });
 
-  // ✅ Typage explicite des paramètres
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
-  // ✅ Typage du paramètre message
   const showMessage = (message: string) => {
     setSnackPack((prev) => [...prev, { message, key: new Date().getTime() }]);
   };
 
-  // ✅ NOUVEAU: Gestionnaire de doublons avec dialog
+  // Gestionnaire de doublons avec dialog (existant)
   const handleDuplicateFound = async (
     duplicateData: any
   ): Promise<"upgrade" | "create_new" | "cancel"> => {
     console.log("🔄 Dialog doublon ouvert avec data:", duplicateData);
 
-    // ✅ CORRECTION: Meilleure détection du contenu du nouvel import
     const hasNewAudio = !!duplicateData.newAudioFile;
     const hasNewTranscription = !!(
       duplicateData.newTranscriptionText &&
       duplicateData.newTranscriptionText.length > 0
     );
-
-    console.log("🔍 Analyse nouvel import:", {
-      hasNewAudio,
-      hasNewTranscription,
-      audioFileName: duplicateData.newAudioFile?.name,
-      transcriptionLength: duplicateData.newTranscriptionText?.length || 0,
-    });
 
     return new Promise((resolve) => {
       setDuplicateDialog({
@@ -102,7 +90,7 @@ export default function CallsPage() {
     });
   };
 
-  // ✅ NOUVEAU: Gestionnaire d'action du dialog
+  // Gestionnaire d'action du dialog (existant)
   const handleDialogAction = (action: "upgrade" | "create_new" | "cancel") => {
     console.log("🎯 Action choisie dans le dialog:", action);
 
@@ -112,24 +100,44 @@ export default function CallsPage() {
     setDuplicateDialog({ open: false });
   };
 
-  // ✅ MODIFIÉ: Handler pour l'import avec gestion des doublons
+  // ✅ NOUVEAU: Gestionnaire pour clic sur doublon depuis WorkDrive
+  const handleWorkdriveDuplicateClick = (file: ZohoFile, existingCall: any) => {
+    console.log("⚠️ Doublon détecté depuis WorkDrive:", {
+      file: file.attributes?.name || file.name,
+      existingCall: existingCall.filename || existingCall.description,
+    });
+
+    // Option 1: Rediriger vers l'onglet approprié pour voir l'appel existant
+    setTabValue(2); // Onglet "Liste des appels"
+    showMessage(
+      `⚠️ Ce fichier (${
+        file.attributes?.name || file.name
+      }) semble déjà importé comme: ${
+        existingCall.filename || existingCall.description
+      }`
+    );
+
+    // Option 2: Ou ouvrir un dialog d'information
+    // Vous pourriez créer un dialog dédié pour cette situation
+  };
+
+  // Handler pour l'import avec gestion des doublons (existant)
   const handleWorkdriveFilesSelect = async (
     audioFile: File | null,
     transcriptionText: string = "",
-    workdriveFileName?: string // ✅ NOUVEAU: Recevoir le nom WorkDrive
+    workdriveFileName?: string
   ): Promise<void> => {
     console.log("🔍 CallsPage - Fichiers reçus:", {
       audioFile: audioFile?.name,
       transcriptionText: transcriptionText
         ? `${transcriptionText.length} caractères`
         : "Vide",
-      workdriveFileName, // ✅ NOUVEAU: Logger le nom WorkDrive
+      workdriveFileName,
       hasAudio: !!audioFile,
       hasTranscription: !!transcriptionText,
     });
 
     try {
-      // Vérifier qu'au moins un fichier est présent
       if (!audioFile && !transcriptionText) {
         showMessage("Aucun fichier à importer");
         return;
@@ -146,7 +154,7 @@ export default function CallsPage() {
           workdriveFileName
         ),
         transcriptionText,
-        workdriveFileName, // ✅ NOUVEAU: Transmettre à handleCallSubmission
+        workdriveFileName,
         showMessage,
         onCallUploaded: (callId) => {
           console.log("✅ Appel créé avec ID:", callId);
@@ -165,11 +173,11 @@ export default function CallsPage() {
     }
   };
 
-  // ✅ Fonction utilitaire pour générer une description
+  // Fonction utilitaire pour générer une description (existante)
   const generateDescription = (
     audioFile: File | null,
     transcriptionText: string,
-    workdriveFileName?: string // ✅ NOUVEAU: Paramètre ajouté
+    workdriveFileName?: string
   ): string => {
     const timestamp = new Date().toLocaleString("fr-FR");
     const parts = [];
@@ -177,7 +185,7 @@ export default function CallsPage() {
     if (audioFile) {
       parts.push(`Audio: ${audioFile.name}`);
     } else if (workdriveFileName) {
-      parts.push(`Fichier: ${workdriveFileName}`); // ✅ Utiliser le nom WorkDrive
+      parts.push(`Fichier: ${workdriveFileName}`);
     }
 
     if (transcriptionText) {
@@ -231,7 +239,23 @@ export default function CallsPage() {
           Utilisez l'explorateur ci-dessous pour parcourir votre Zoho WorkDrive
           et importer directement vos fichiers audio et transcriptions.
         </Typography>
-        <SimpleWorkdriveExplorer onFilesSelect={handleWorkdriveFilesSelect} />
+
+        {/* ✅ NOUVEAU: Information sur la détection de doublons */}
+        <Alert severity="info" sx={{ mb: 2 }}>
+          <Typography variant="body2">
+            💡 <strong>Détection de doublons activée :</strong> Les fichiers
+            déjà importés seront automatiquement détectés et marqués pour éviter
+            les doublons.
+          </Typography>
+        </Alert>
+
+        {/* ✅ MODIFIÉ: SimpleWorkdriveExplorer avec détection de doublons */}
+        <SimpleWorkdriveExplorer
+          onFilesSelect={handleWorkdriveFilesSelect}
+          enableDuplicateCheck={true} // ✅ Activer la détection
+          showDuplicateToggle={true} // ✅ Permettre à l'utilisateur de désactiver
+          onDuplicateFound={handleWorkdriveDuplicateClick} // ✅ Gestionnaire custom
+        />
       </TabPanel>
 
       <TabPanel value={tabValue} index={1}>
@@ -254,7 +278,7 @@ export default function CallsPage() {
         <CallTableList showMessage={showMessage} />
       </TabPanel>
 
-      {/* ✅ NOUVEAU: Dialog de gestion des doublons */}
+      {/* Dialog de gestion des doublons (existant) */}
       {duplicateDialog.data && (
         <DuplicateDialog
           open={duplicateDialog.open}
