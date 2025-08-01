@@ -5,6 +5,7 @@ import {
   StatusCount,
   CallActions,
   PreparationFilters,
+  CallsByOrigin,
 } from "./types";
 import { STATUS_COLORS, DEFAULT_FILTERS } from "./constants";
 
@@ -199,15 +200,60 @@ export const getContentLabel = (call: Call): string => {
 /**
  * Groupe les appels par origine
  */
-export const groupCallsByOrigin = (
-  calls: Call[]
-): { [origin: string]: Call[] } => {
-  return calls.reduce<{ [origin: string]: Call[] }>((acc, call) => {
-    const origin = call.origine || "Inconnue";
-    if (!acc[origin]) acc[origin] = [];
-    acc[origin].push(call);
-    return acc;
-  }, {});
+export const groupCallsByOrigin = (calls: Call[]): CallsByOrigin => {
+  const grouped: CallsByOrigin = {};
+
+  calls.forEach((call) => {
+    // ✅ NOUVEAU: Normaliser toutes les valeurs "vides" vers une clé unique
+    let originKey: string;
+
+    if (!call.origine || call.origine.trim() === "") {
+      // Toutes les origines null, undefined, ou chaînes vides → "Aucune origine"
+      originKey = "Aucune origine";
+    } else if (call.origine.toLowerCase() === "inconnue") {
+      // Les origines "Inconnue" (existantes) → "Aucune origine" aussi
+      originKey = "Aucune origine";
+    } else {
+      // Origines normales → utiliser la valeur
+      originKey = call.origine;
+    }
+
+    // Initialiser le groupe si nécessaire
+    if (!grouped[originKey]) {
+      grouped[originKey] = [];
+    }
+
+    // Ajouter l'appel au groupe
+    grouped[originKey].push(call);
+  });
+
+  return grouped;
+};
+
+// ✅ BONUS: Fonction utilitaire pour normaliser une origine
+export const normalizeOrigin = (origine: string | null | undefined): string => {
+  if (
+    !origine ||
+    origine.trim() === "" ||
+    origine.toLowerCase() === "inconnue"
+  ) {
+    return "Aucune origine";
+  }
+  return origine;
+};
+
+// ✅ BONUS: Fonction pour obtenir le libellé d'affichage d'une origine
+export const getOriginDisplayLabel = (
+  origine: string | null | undefined
+): string => {
+  if (
+    !origine ||
+    origine.trim() === "" ||
+    origine.toLowerCase() === "inconnue"
+  ) {
+    return "Aucune origine";
+  }
+  return origine;
 };
 
 /**

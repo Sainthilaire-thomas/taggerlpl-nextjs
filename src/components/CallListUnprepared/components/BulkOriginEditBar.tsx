@@ -1,7 +1,4 @@
-// =================================
-// 3. COMPOSANT BARRE ÉDITION EN LOT - components/BulkOriginEditBar.tsx
-// =================================
-
+// components/BulkOriginEditBar.tsx - SUPPORT OPTION VIDE
 import React from "react";
 import {
   Box,
@@ -50,13 +47,39 @@ const BulkOriginEditBar: React.FC<BulkOriginEditBarProps> = ({
   onSelectAll,
   isAllSelected,
 }) => {
+  // ✅ NOUVEAU: Gestion de l'affichage de l'option vide
+  const getOptionLabel = (option: string) => {
+    if (option === "") {
+      return "Aucune origine"; // ✅ Libellé pour l'option vide
+    }
+    return option;
+  };
+
+  // ✅ NOUVEAU: Rendu personnalisé des options
+  const renderOption = (props: any, option: string) => (
+    <li {...props} key={option || "empty"}>
+      {option === "" ? (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography
+            variant="body2"
+            sx={{ fontStyle: "italic", color: "text.secondary" }}
+          >
+            Aucune origine
+          </Typography>
+        </Box>
+      ) : (
+        <Typography variant="body2">{option}</Typography>
+      )}
+    </li>
+  );
+
   return (
     <Fade in={visible}>
       <Paper
         elevation={3}
         sx={{
           position: "sticky",
-          top: 60, // Sous la navbar
+          top: 60,
           zIndex: 1000,
           p: 2,
           mb: 2,
@@ -105,36 +128,50 @@ const BulkOriginEditBar: React.FC<BulkOriginEditBarProps> = ({
             </Button>
           ) : (
             <>
-              {/* Sélecteur d'origine */}
+              {/* ✅ NOUVEAU: Sélecteur d'origine avec support option vide */}
               <Autocomplete
                 size="small"
                 value={pendingOrigin}
                 onChange={(_, value) => onOriginChange(value || "")}
                 options={availableOrigins}
+                getOptionLabel={getOptionLabel} // ✅ Libellé personnalisé
+                renderOption={renderOption} // ✅ Rendu personnalisé
                 freeSolo
-                sx={{ minWidth: 200 }}
+                sx={{ minWidth: 250 }} // ✅ Plus large pour "Aucune origine"
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    placeholder="Nouvelle origine..."
+                    placeholder="Choisir une origine..."
                     variant="outlined"
                     size="small"
                     sx={{
                       backgroundColor: "background.paper",
                       borderRadius: 1,
                     }}
+                    // ✅ NOUVEAU: Affichage personnalisé dans le champ
+                    value={pendingOrigin === "" ? "" : pendingOrigin}
                   />
                 )}
+                // ✅ NOUVEAU: Placeholder personnalisé selon la valeur
+                inputValue={pendingOrigin === "" ? "" : pendingOrigin}
+                onInputChange={(_, newInputValue) => {
+                  onOriginChange(newInputValue);
+                }}
               />
 
-              {/* Actions de sauvegarde */}
+              {/* ✅ NOUVEAU: Actions de sauvegarde - permettre sauvegarde même si vide */}
               <Button
                 startIcon={<SaveIcon />}
                 variant="contained"
                 size="small"
                 onClick={() => onSave(pendingOrigin)}
-                disabled={isProcessing || !pendingOrigin.trim()}
+                disabled={isProcessing} // ✅ Plus de vérification !pendingOrigin.trim()
                 color="success"
+                title={
+                  pendingOrigin === ""
+                    ? "Supprimer l'origine des appels sélectionnés"
+                    : `Appliquer l'origine "${pendingOrigin}" aux appels sélectionnés`
+                }
               >
                 {isProcessing ? "Sauvegarde..." : "Sauvegarder"}
               </Button>
@@ -148,6 +185,15 @@ const BulkOriginEditBar: React.FC<BulkOriginEditBarProps> = ({
                 <CloseIcon />
               </IconButton>
             </>
+          )}
+
+          {/* ✅ NOUVEAU: Indication de l'action en cours */}
+          {isEditing && (
+            <Typography variant="caption" sx={{ opacity: 0.8 }}>
+              {pendingOrigin === ""
+                ? "⚠️ Supprimera l'origine"
+                : `Appliquera: "${pendingOrigin}"`}
+            </Typography>
           )}
         </Box>
       </Paper>

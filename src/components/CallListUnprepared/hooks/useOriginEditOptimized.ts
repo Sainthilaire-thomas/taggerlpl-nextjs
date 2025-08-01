@@ -1,40 +1,26 @@
-// hooks/useOriginEditOptimized.ts - VERSION CORRIGÉE COMPATIBLE
+// hooks/useOriginEditOptimized.ts - VERSION DB UNIQUEMENT + OPTION VIDE
 import { useState, useCallback, useMemo } from "react";
 import { Call } from "../types";
 
-// ✅ CORRECTION: Interface compatible avec vos composants existants
 export interface UseOriginEditReturn {
-  // État de sélection
   selectedCalls: Set<string>;
   selectedCount: number;
   hasSelection: boolean;
   isAllSelected: boolean;
-
-  // État d'édition - COMPATIBLE avec l'ancien hook
   editingCallId?: string;
   isBulkEditing: boolean;
   pendingOrigin: string;
   isProcessing: boolean;
-
-  // Origines disponibles
   availableOrigins: string[];
-
-  // Actions de sélection
   handleSelectCall: (callId: string, selected: boolean) => void;
   handleSelectAll: () => void;
-
-  // Actions d'édition par ligne - COMPATIBLE avec l'ancien hook
   handleStartEdit: (callId: string) => void;
   handleSaveEdit: (callId: string, newOrigin: string) => Promise<void>;
   handleCancelEdit: () => void;
   setPendingOrigin: (origin: string) => void;
-
-  // Actions d'édition en lot
   handleStartBulkEdit: () => void;
   handleSaveBulkEdit: () => Promise<void>;
   handleCancelBulkEdit: () => void;
-
-  // Actions supplémentaires
   clearSelection?: () => void;
 }
 
@@ -43,42 +29,42 @@ export const useOriginEditOptimized = (
   updateCall: (callId: string, updates: Partial<Call>) => Promise<void>,
   showMessage: (message: string) => void
 ): UseOriginEditReturn => {
-  // 🚀 OPTIMISATION 1: État local simple et stable
   const [selectedCalls, setSelectedCalls] = useState<Set<string>>(new Set());
   const [editingCallId, setEditingCallId] = useState<string | undefined>();
   const [isBulkEditing, setIsBulkEditing] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [pendingOrigin, setPendingOrigin] = useState("");
 
-  // 🚀 OPTIMISATION 2: Cache des origines disponibles
+  // 🚀 OPTIMISATION: Cache des origines - UNIQUEMENT de la DB + option vide
   const availableOrigins = useMemo(() => {
     console.time("availableOrigins-computation");
-    const origins = Array.from(
+
+    // ✅ NOUVEAU: Extraire les origines existantes en excluant les valeurs "vides"
+    const existingOrigins = Array.from(
       new Set(
         allCalls
           .map((call) => call.origine)
-          .filter((origine): origine is string => Boolean(origine))
+          .filter((origine): origine is string => {
+            return (
+              typeof origine === "string" && // ✅ Vérification de type explicite
+              origine.trim() !== "" && // ✅ Maintenant TypeScript sait que c'est string
+              origine.toLowerCase() !== "inconnue" // ✅ Plus d'erreur
+            );
+          })
       )
     ).sort();
 
-    // Suggestions courantes + origines existantes
-    const suggestions = [
-      "Personnel",
-      "Professionnel",
-      "Partenaire",
-      "Support",
-      "Commercial",
-    ];
-
-    const allOrigins = [...suggestions, ...origins]
-      .filter((origine, index, arr) => arr.indexOf(origine) === index)
-      .sort();
+    // ✅ NOUVEAU: Ajouter l'option "vide" en premier (sera affiché comme "Aucune origine")
+    const allOrigins = ["", ...existingOrigins];
 
     console.timeEnd("availableOrigins-computation");
+    console.log(
+      `🔄 Origines disponibles: ${allOrigins.length} (${existingOrigins.length} de la DB + option vide)`
+    );
+
     return allOrigins;
   }, [allCalls]);
 
-  // 🚀 OPTIMISATION 3: Calculs dérivés stables
   const derivedState = useMemo(() => {
     const hasSelection = selectedCalls.size > 0;
     const selectedCount = selectedCalls.size;
@@ -92,29 +78,24 @@ export const useOriginEditOptimized = (
     };
   }, [selectedCalls.size, allCalls.length]);
 
-  // 🚀 OPTIMISATION 4: Handler de sélection ultra-optimisé
-  const handleSelectCall = useCallback(
-    (callId: string, selected: boolean) => {
-      console.time(`select-optimized-${callId}`);
+  const handleSelectCall = useCallback((callId: string, selected: boolean) => {
+    console.time(`select-optimized-${callId}`);
 
-      setSelectedCalls((prev) => {
-        const newSelection = new Set(prev);
-        if (selected) {
-          newSelection.add(callId);
-        } else {
-          newSelection.delete(callId);
-        }
-        return newSelection;
-      });
+    setSelectedCalls((prev) => {
+      const newSelection = new Set(prev);
+      if (selected) {
+        newSelection.add(callId);
+      } else {
+        newSelection.delete(callId);
+      }
+      return newSelection;
+    });
 
-      requestAnimationFrame(() => {
-        console.timeEnd(`select-optimized-${callId}`);
-      });
-    },
-    [] // ✅ CORRECTION: Dépendances vides pour stabilité maximale
-  );
+    requestAnimationFrame(() => {
+      console.timeEnd(`select-optimized-${callId}`);
+    });
+  }, []);
 
-  // 🚀 OPTIMISATION 5: Select All optimisé
   const handleSelectAll = useCallback(() => {
     console.time("select-all-optimized");
 
@@ -130,7 +111,6 @@ export const useOriginEditOptimized = (
     });
   }, [derivedState.isAllSelected, allCalls]);
 
-  // ✅ NOUVEAU: Actions d'édition par ligne (compatibilité)
   const handleStartEdit = useCallback(
     (callId: string) => {
       setEditingCallId(callId);
@@ -142,19 +122,22 @@ export const useOriginEditOptimized = (
 
   const handleSaveEdit = useCallback(
     async (callId: string, newOrigin: string) => {
-      if (!newOrigin.trim()) {
-        showMessage("L'origine ne peut pas être vide");
-        return;
-      }
-
+      // ✅ NOUVEAU: Permettre d'enregistrer une origine vide
       setIsProcessing(true);
       console.time(`save-edit-${callId}`);
 
       try {
-        await updateCall(callId, { origine: newOrigin.trim() });
+        // ✅ NOUVEAU: Convertir chaîne vide en null pour la DB
+        const originValue = newOrigin.trim() === "" ? null : newOrigin.trim();
+
+        await updateCall(callId, { origine: originValue });
         setEditingCallId(undefined);
         setPendingOrigin("");
-        showMessage("✅ Origine mise à jour avec succès");
+
+        const message = originValue
+          ? `✅ Origine mise à jour: "${originValue}"`
+          : "✅ Origine supprimée (aucune origine)";
+        showMessage(message);
       } catch (error) {
         console.error("❌ Erreur lors de la mise à jour:", error);
         const errorMessage =
@@ -173,7 +156,6 @@ export const useOriginEditOptimized = (
     setPendingOrigin("");
   }, []);
 
-  // Actions d'édition en lot optimisées
   const handleStartBulkEdit = useCallback(() => {
     if (selectedCalls.size === 0) {
       showMessage("❌ Aucun appel sélectionné");
@@ -184,11 +166,7 @@ export const useOriginEditOptimized = (
   }, [selectedCalls.size, showMessage]);
 
   const handleSaveBulkEdit = useCallback(async () => {
-    if (!pendingOrigin.trim()) {
-      showMessage("❌ L'origine ne peut pas être vide");
-      return;
-    }
-
+    // ✅ NOUVEAU: Permettre de sauvegarder une origine vide en lot
     if (selectedCalls.size === 0) {
       showMessage("❌ Aucun appel sélectionné");
       return;
@@ -201,13 +179,15 @@ export const useOriginEditOptimized = (
       const selectedCallIds = Array.from(selectedCalls);
       const batchSize = 20;
 
+      // ✅ NOUVEAU: Convertir chaîne vide en null pour la DB
+      const originValue =
+        pendingOrigin.trim() === "" ? null : pendingOrigin.trim();
+
       for (let i = 0; i < selectedCallIds.length; i += batchSize) {
         const batch = selectedCallIds.slice(i, i + batchSize);
 
         await Promise.all(
-          batch.map((callId) =>
-            updateCall(callId, { origine: pendingOrigin.trim() })
-          )
+          batch.map((callId) => updateCall(callId, { origine: originValue }))
         );
 
         if (i + batchSize < selectedCallIds.length) {
@@ -215,11 +195,12 @@ export const useOriginEditOptimized = (
         }
       }
 
-      showMessage(
-        `✅ ${selectedCallIds.length} appel(s) mis à jour avec succès`
-      );
+      // ✅ NOUVEAU: Message adapté selon l'origine
+      const message = originValue
+        ? `✅ ${selectedCallIds.length} appel(s) mis à jour avec l'origine "${originValue}"`
+        : `✅ ${selectedCallIds.length} appel(s) mis à jour (origine supprimée)`;
+      showMessage(message);
 
-      // Réinitialisation
       setSelectedCalls(new Set());
       setIsBulkEditing(false);
       setPendingOrigin("");
@@ -246,7 +227,6 @@ export const useOriginEditOptimized = (
   }, []);
 
   return {
-    // État
     selectedCalls,
     selectedCount: derivedState.selectedCount,
     hasSelection: derivedState.hasSelection,
@@ -256,26 +236,17 @@ export const useOriginEditOptimized = (
     pendingOrigin,
     isProcessing,
     availableOrigins,
-
-    // Actions de sélection
     handleSelectCall,
     handleSelectAll,
-
-    // Actions d'édition par ligne
     handleStartEdit,
     handleSaveEdit,
     handleCancelEdit,
     setPendingOrigin,
-
-    // Actions d'édition en lot
     handleStartBulkEdit,
     handleSaveBulkEdit,
     handleCancelBulkEdit,
-
-    // Actions supplémentaires
     clearSelection,
   };
 };
 
-// Export par défaut
 export default useOriginEditOptimized;
