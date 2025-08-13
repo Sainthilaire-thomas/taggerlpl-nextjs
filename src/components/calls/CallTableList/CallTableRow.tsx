@@ -35,9 +35,12 @@ const CallTableRow: FC<CallTableRowProps> = memo(
     isSelected = false,
     onSelectionChange,
     disabled = false,
+    // ✅ NOUVELLES PROPS DESTRUCTURÉES
+    relationsStatusChip,
+    relationsTooltip,
   }) => {
     const [tempOrigine, setTempOrigine] = useState(call.origine || "");
-    const isEditing = editingOrigine === String(call.callid); // ✅ Conversion sécurisée
+    const isEditing = editingOrigine === String(call.callid);
 
     // 🚀 OPTIMISATION: Handler mémoïsé pour la sélection
     const handleSelectionChange = useCallback(
@@ -124,7 +127,7 @@ const CallTableRow: FC<CallTableRowProps> = memo(
         sx={rowStyles}
         onClick={handleRowClick}
       >
-        {/* 🚀 NOUVELLE COLONNE: Checkbox de sélection */}
+        {/* Checkbox de sélection */}
         <TableCell padding="checkbox">
           <Checkbox
             checked={isSelected}
@@ -205,6 +208,25 @@ const CallTableRow: FC<CallTableRowProps> = memo(
                 : "default"
             }
           />
+        </TableCell>
+
+        {/* ✅ NOUVELLE CELLULE: Relations */}
+        <TableCell align="center">
+          {relationsTooltip ? (
+            <Tooltip title={relationsTooltip} placement="top">
+              <Box>{relationsStatusChip}</Box>
+            </Tooltip>
+          ) : (
+            relationsStatusChip || (
+              <Chip
+                label="N/A"
+                size="small"
+                variant="outlined"
+                color="default"
+                sx={{ minWidth: 90 }}
+              />
+            )
+          )}
         </TableCell>
 
         {/* Origine (avec édition inline) */}

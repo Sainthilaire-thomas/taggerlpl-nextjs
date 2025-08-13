@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Alert, Snackbar } from "@mui/material";
 import {
   Box,
   TextField,
@@ -8,6 +9,7 @@ import {
   AccordionDetails,
   Typography,
   IconButton,
+  MenuItem,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import EditIcon from "@mui/icons-material/Edit";
@@ -26,7 +28,7 @@ interface LPLTag {
   label: string;
   family: string;
   color: string;
-  description?: string;
+  description?: string | null; // ✅ Accepte null ET undefined
 }
 
 interface TagManagerProps {
@@ -78,6 +80,12 @@ interface TagStatsDisplay {
   error: string | null;
 }
 
+interface NotificationState {
+  open: boolean;
+  message: string;
+  severity: "success" | "error" | "warning" | "info";
+}
+
 const TagManager: React.FC<TagManagerProps> = ({ onClose }) => {
   const { tags, setTags, fetchTaggedTurns, callId } = useTaggingData();
 
@@ -91,9 +99,15 @@ const TagManager: React.FC<TagManagerProps> = ({ onClose }) => {
     useState<TagStatsDisplay | null>(null);
 
   const resetForm = () => {
-    setNewLPLTag({ label: "", family: "", color: "#6c757d" });
+    setNewLPLTag({
+      label: "",
+      family: "",
+      color: "#6c757d",
+      description: "",
+    });
     setIsEditing(false);
     setTagStatsDisplay(null);
+    console.log("🔄 Formulaire réinitialisé");
   };
 
   const handleFamilyChange = (family: string) => {
@@ -111,6 +125,15 @@ const TagManager: React.FC<TagManagerProps> = ({ onClose }) => {
       color: defaultColors[family] || "#6c757d",
     }));
   };
+
+  // ✅ NOUVEAU - État pour les notifications
+  const [notification, setNotification] = useState<NotificationState>({
+    open: false,
+    message: "",
+    severity: "info",
+  });
+
+  const [isSaving, setIsSaving] = useState(false); // État de chargement
 
   // ========================================
   // FONCTIONS UTILITAIRES
@@ -289,6 +312,87 @@ const TagManager: React.FC<TagManagerProps> = ({ onClose }) => {
     }
   };
 
+  // ✅ FONCTION DE VALIDATION
+  const validateTag = (tag: LPLTag): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+
+    // Validation du label (obligatoire)
+    if (!tag.label || tag.label.trim().length === 0) {
+      errors.push("Le nom du tag est obligatoire");
+    } else if (tag.label.trim().length < 2) {
+      errors.push("Le nom du tag doit contenir au moins 2 caractères");
+    } else if (tag.label.trim().length > 50) {
+      errors.push("Le nom du tag ne peut pas dépasser 50 caractères");
+    }
+
+    // Validation de la famille (obligatoire)
+    if (!tag.family || tag.family.trim().length === 0) {
+      errors.push("La famille est obligatoire");
+    }
+
+    // Validation de la couleur
+    const colorRegex = /^#[0-9A-Fa-f]{6}$/;
+    if (!tag.color || !colorRegex.test(tag.color)) {
+      errors.push("La couleur doit être au format hexadécimal (#000000)");
+    }
+
+    // Validation de la description (optionnelle mais si présente, limitée)
+    if (tag.description && tag.description.length > 255) {
+      errors.push("La description ne peut pas dépasser 255 caractères");
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+    };
+  };
+
+  // ✅ FONCTION DE VÉRIFICATION DES DOUBLONS
+  const checkDuplicateTag = async (
+    label: string,
+    excludeId?: number
+  ): Promise<boolean> => {
+    try {
+      let query = supabase
+        .from("lpltag")
+        .select("id, label")
+        .ilike("label", label); // Recherche insensible à la casse
+
+      // Exclure l'ID actuel en cas d'édition
+      if (excludeId) {
+        query = query.neq("id", excludeId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Erreur lors de la vérification des doublons:", error);
+        return false;
+      }
+
+      return data && data.length > 0;
+    } catch (error) {
+      console.error("Erreur lors de la vérification des doublons:", error);
+      return false;
+    }
+  };
+
+  // ✅ FONCTION DE NOTIFICATION
+  const showNotification = (
+    message: string,
+    severity: NotificationState["severity"] = "info"
+  ) => {
+    setNotification({
+      open: true,
+      message,
+      severity,
+    });
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, open: false }));
+  };
+
   // ========================================
   // HANDLERS (fonctions existantes abrégées pour l'exemple)
   // ========================================
@@ -311,11 +415,143 @@ const TagManager: React.FC<TagManagerProps> = ({ onClose }) => {
     console.log("Tag nettoyé pour édition:", cleanedTag);
   };
 
+  // ✅ IMPLÉMENTATION COMPLÈTE DE handleSaveLPLTag
   const handleSaveLPLTag = async () => {
-    // Logique de sauvegarde (conservée du code original)
-    console.log("Sauvegarde du tag:", newLPLTag);
-    // ... logique complète de sauvegarde
-    resetForm();
+    setIsSaving(true);
+
+    try {
+      console.log("🚀 Début de sauvegarde du tag:", newLPLTag);
+
+      // 1. NETTOYAGE DES DONNÉES
+      const cleanedTag: LPLTag = {
+        ...newLPLTag,
+        label: newLPLTag.label.trim(),
+        family: newLPLTag.family.trim(),
+        description: newLPLTag.description?.trim() || null,
+      };
+
+      // 2. VALIDATION
+      const validation = validateTag(cleanedTag);
+      if (!validation.isValid) {
+        showNotification(
+          `Erreurs de validation: ${validation.errors.join(", ")}`,
+          "error"
+        );
+        return;
+      }
+
+      // 3. VÉRIFICATION DES DOUBLONS
+      const isDuplicate = await checkDuplicateTag(
+        cleanedTag.label,
+        cleanedTag.id
+      );
+      if (isDuplicate) {
+        showNotification(
+          `Un tag avec le nom "${cleanedTag.label}" existe déjà`,
+          "warning"
+        );
+        return;
+      }
+
+      // 4. PRÉPARATION DES DONNÉES POUR SUPABASE
+      const tagData = {
+        label: cleanedTag.label,
+        description: cleanedTag.description,
+        family: cleanedTag.family,
+        color: cleanedTag.color,
+        // Valeurs par défaut pour les nouveaux champs
+        icon: null, // Pas d'icône par défaut
+        originespeaker: "conseiller", // Valeur par défaut - ajustez selon vos besoins
+        // created_at sera automatiquement défini par Supabase
+      };
+
+      let result;
+
+      // 5. INSERTION OU MISE À JOUR
+      if (isEditing && cleanedTag.id) {
+        // ✅ MODE ÉDITION
+        console.log(`📝 Mise à jour du tag ID ${cleanedTag.id}`);
+
+        result = await supabase
+          .from("lpltag")
+          .update(tagData)
+          .eq("id", cleanedTag.id)
+          .select("*")
+          .single();
+
+        if (result.error) {
+          throw new Error(
+            `Erreur lors de la mise à jour: ${result.error.message}`
+          );
+        }
+
+        showNotification("Tag mis à jour avec succès !", "success");
+        console.log("✅ Tag mis à jour:", result.data);
+      } else {
+        // ✅ MODE CRÉATION
+        console.log("🆕 Création d'un nouveau tag");
+
+        result = await supabase
+          .from("lpltag")
+          .insert([tagData])
+          .select("*")
+          .single();
+
+        if (result.error) {
+          throw new Error(
+            `Erreur lors de la création: ${result.error.message}`
+          );
+        }
+
+        showNotification("Nouveau tag créé avec succès !", "success");
+        console.log("✅ Nouveau tag créé:", result.data);
+      }
+
+      // 6. MISE À JOUR DE L'ÉTAT GLOBAL
+      if (result.data) {
+        // Convertir le résultat Supabase au format attendu par le context
+        const updatedTag = {
+          id: result.data.id,
+          label: result.data.label,
+          description: result.data.description,
+          family: result.data.family,
+          color: result.data.color,
+          // Mapping des nouvelles propriétés si nécessaire
+          callCount: 0, // À calculer si besoin
+          turnCount: 0, // À calculer si besoin
+        };
+
+        if (isEditing) {
+          // Mettre à jour le tag existant dans la liste
+          setTags((prevTags) =>
+            prevTags.map((tag) => (tag.id === updatedTag.id ? updatedTag : tag))
+          );
+        } else {
+          // Ajouter le nouveau tag à la liste
+          setTags((prevTags) => [...prevTags, updatedTag]);
+        }
+
+        // 7. ACTUALISER LES DONNÉES SI UN APPEL EST SÉLECTIONNÉ
+        if (callId && fetchTaggedTurns) {
+          console.log("🔄 Actualisation des tours taggés...");
+          await fetchTaggedTurns(callId);
+        }
+      }
+
+      // 8. RESET DU FORMULAIRE
+      resetForm();
+    } catch (error) {
+      console.error("❌ Erreur lors de la sauvegarde:", error);
+
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Erreur inconnue lors de la sauvegarde";
+
+      showNotification(`Erreur: ${errorMessage}`, "error");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDeleteLPLTag = async (tagId: number) => {
@@ -503,23 +739,37 @@ const TagManager: React.FC<TagManagerProps> = ({ onClose }) => {
         </AccordionSummary>
         <AccordionDetails>
           <TextField
-            label="Label"
+            label="Label *"
             value={newLPLTag.label}
             onChange={(e) =>
               setNewLPLTag((prev) => ({ ...prev, label: e.target.value }))
             }
             fullWidth
+            required
+            error={newLPLTag.label.length > 50}
+            helperText={`${newLPLTag.label.length}/50 caractères`}
             sx={{ marginBottom: 2 }}
           />
+
           <TextField
-            label="Famille"
+            label="Famille *"
+            select
             value={newLPLTag.family}
             onChange={(e) => handleFamilyChange(e.target.value)}
             fullWidth
+            required
             sx={{ marginBottom: 2 }}
-          />
+          >
+            <MenuItem value="ENGAGEMENT">ENGAGEMENT</MenuItem>
+            <MenuItem value="REFLET">REFLET</MenuItem>
+            <MenuItem value="EXPLICATION">EXPLICATION</MenuItem>
+            <MenuItem value="OUVERTURE">OUVERTURE</MenuItem>
+            <MenuItem value="CLIENT">CLIENT</MenuItem>
+            <MenuItem value="OTHERS">AUTRES</MenuItem>
+          </TextField>
+
           <TextField
-            label="Couleur (hex)"
+            label="Couleur"
             type="color"
             value={newLPLTag.color}
             onChange={(e) =>
@@ -528,18 +778,62 @@ const TagManager: React.FC<TagManagerProps> = ({ onClose }) => {
             fullWidth
             sx={{ marginBottom: 2 }}
           />
+
+          <TextField
+            label="Description (optionnelle)"
+            value={newLPLTag.description || ""}
+            onChange={(e) =>
+              setNewLPLTag((prev) => ({ ...prev, description: e.target.value }))
+            }
+            fullWidth
+            multiline
+            rows={2}
+            error={(newLPLTag.description?.length || 0) > 255}
+            helperText={`${newLPLTag.description?.length || 0}/255 caractères`}
+            sx={{ marginBottom: 2 }}
+          />
+
           <Box sx={{ display: "flex", gap: 2, marginTop: 2 }}>
-            <Button variant="contained" onClick={handleSaveLPLTag}>
-              {isEditing ? "Sauvegarder" : "Ajouter"}
+            <Button
+              variant="contained"
+              onClick={handleSaveLPLTag}
+              disabled={
+                isSaving || !newLPLTag.label.trim() || !newLPLTag.family.trim()
+              }
+            >
+              {isSaving
+                ? "Sauvegarde..."
+                : isEditing
+                ? "Sauvegarder"
+                : "Ajouter"}
             </Button>
             {isEditing && (
-              <Button variant="outlined" color="error" onClick={resetForm}>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={resetForm}
+                disabled={isSaving}
+              >
                 Annuler
               </Button>
             )}
           </Box>
         </AccordionDetails>
       </Accordion>
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={4000}
+        onClose={closeNotification}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={closeNotification}
+          severity={notification.severity}
+          variant="filled"
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
 
       {onClose && (
         <Button variant="outlined" onClick={onClose} sx={{ marginTop: 2 }}>

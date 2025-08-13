@@ -46,19 +46,22 @@ export interface BulkActionState {
 }
 
 // Props pour CallTableRow
+
 export interface CallTableRowProps {
   call: Call;
   index: number;
   editingOrigine: string | null;
-  onStartEditOrigine: (callid: string | number) => void; // ✅ Accepte les deux types
-  onSaveOrigine: (callid: string | number, newOrigine: string) => void; // ✅ Accepte les deux types
+  onStartEditOrigine: (callid: string | number) => void;
+  onSaveOrigine: (callid: string | number, origine: string) => void;
   onCancelEditOrigine: () => void;
   onCallClick: (call: Call) => void;
   onDeleteClick: (call: Call) => void;
-  // Nouveaux props pour la sélection
   isSelected?: boolean;
-  onSelectionChange?: (callid: string | number, isSelected: boolean) => void; // ✅ Accepte les deux types
+  onSelectionChange?: (callid: string | number, isSelected: boolean) => void;
   disabled?: boolean;
+  // ✅ NOUVELLES PROPS
+  relationsStatusChip?: React.ReactNode;
+  relationsTooltip?: string;
 }
 
 // Props pour MobileCallCard

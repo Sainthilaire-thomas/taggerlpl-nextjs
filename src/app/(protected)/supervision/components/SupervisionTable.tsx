@@ -13,6 +13,7 @@ import {
   Box,
   Tooltip,
   CircularProgress,
+  Stack,
 } from "@mui/material";
 import {
   Edit,
@@ -32,6 +33,81 @@ interface SupervisionTableProps {
   onProcessingClick?: (row: SupervisionTurnTagged) => void;
 }
 
+// Composant pour afficher les verbatims de manière compacte
+const VerbatimDisplay: React.FC<{
+  verbatim: string;
+  tag: string;
+  color: string;
+  maxLength?: number;
+}> = ({ verbatim, tag, color, maxLength = 60 }) => {
+  const truncated = truncateText(verbatim, maxLength);
+
+  return (
+    <Tooltip title={`${tag}: "${verbatim}"`} arrow placement="top">
+      <Box
+        sx={{
+          p: 1,
+          borderRadius: 1,
+          backgroundColor: `${color}15`, // Couleur très légère
+          borderLeft: `3px solid ${color}`,
+          minHeight: 40,
+          display: "flex",
+          alignItems: "center",
+          cursor: "help",
+          "&:hover": {
+            backgroundColor: `${color}25`,
+          },
+        }}
+      >
+        <Typography
+          variant="body2"
+          sx={{ fontSize: "0.875rem", lineHeight: 1.2 }}
+        >
+          {truncated}
+        </Typography>
+      </Box>
+    </Tooltip>
+  );
+};
+
+// Composant pour les tags avec couleurs
+const TagChips: React.FC<{
+  tag: string;
+  nextTurnTag?: string;
+  color: string;
+  nextTurnColor?: string;
+}> = ({ tag, nextTurnTag, color, nextTurnColor }) => {
+  return (
+    <Stack spacing={0.5} direction="column" alignItems="flex-start">
+      <Chip
+        label={tag}
+        size="small"
+        sx={{
+          backgroundColor: color,
+          color: "white",
+          fontWeight: "bold",
+          fontSize: "0.75rem",
+          height: 24,
+        }}
+      />
+      {nextTurnTag && (
+        <Chip
+          label={`→ ${nextTurnTag}`}
+          size="small"
+          variant="outlined"
+          sx={{
+            borderColor: nextTurnColor || "#1976d2",
+            color: nextTurnColor || "#1976d2",
+            fontSize: "0.7rem",
+            height: 20,
+            backgroundColor: "rgba(25, 118, 210, 0.05)",
+          }}
+        />
+      )}
+    </Stack>
+  );
+};
+
 export const SupervisionTable: React.FC<SupervisionTableProps> = ({
   data,
   onRowClick,
@@ -50,18 +126,50 @@ export const SupervisionTable: React.FC<SupervisionTableProps> = ({
   };
 
   return (
-    <TableContainer component={Paper}>
-      <Table size="small">
+    <TableContainer component={Paper} sx={{ maxHeight: "70vh" }}>
+      <Table size="small" stickyHeader>
         <TableHead>
           <TableRow>
-            <TableCell>Tag</TableCell>
-            <TableCell>Call ID</TableCell>
-            <TableCell>Speaker</TableCell>
-            <TableCell>Verbatim</TableCell>
-            <TableCell>Next Turn</TableCell>
-            <TableCell>Temps</TableCell>
-            <TableCell>Statut</TableCell>
-            <TableCell>Actions</TableCell>
+            <TableCell sx={{ minWidth: 120 }}>
+              <Typography variant="subtitle2" fontWeight="bold">
+                Tags
+              </Typography>
+            </TableCell>
+            <TableCell sx={{ minWidth: 100 }}>
+              <Typography variant="subtitle2" fontWeight="bold">
+                Call ID
+              </Typography>
+            </TableCell>
+            <TableCell sx={{ minWidth: 80 }}>
+              <Typography variant="subtitle2" fontWeight="bold">
+                Speaker
+              </Typography>
+            </TableCell>
+            <TableCell sx={{ minWidth: 200 }}>
+              <Typography variant="subtitle2" fontWeight="bold">
+                Tour Principal
+              </Typography>
+            </TableCell>
+            <TableCell sx={{ minWidth: 200 }}>
+              <Typography variant="subtitle2" fontWeight="bold">
+                Tour Suivant
+              </Typography>
+            </TableCell>
+            <TableCell sx={{ minWidth: 100 }}>
+              <Typography variant="subtitle2" fontWeight="bold">
+                Temps
+              </Typography>
+            </TableCell>
+            <TableCell sx={{ minWidth: 80 }}>
+              <Typography variant="subtitle2" fontWeight="bold">
+                Statut
+              </Typography>
+            </TableCell>
+            <TableCell sx={{ minWidth: 80 }}>
+              <Typography variant="subtitle2" fontWeight="bold">
+                Actions
+              </Typography>
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -80,64 +188,118 @@ export const SupervisionTable: React.FC<SupervisionTableProps> = ({
                   backgroundColor: isCurrentlyProcessing
                     ? "action.hover"
                     : "transparent",
+                  "&:hover": {
+                    backgroundColor: "action.hover",
+                  },
                 }}
                 onClick={() => handleTableRowClick(row)}
               >
+                {/* Colonne Tags */}
                 <TableCell>
-                  <Chip
-                    label={row.tag}
-                    size="small"
-                    sx={{
-                      backgroundColor: row.color,
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
+                  <TagChips
+                    tag={row.tag}
+                    nextTurnTag={row.next_turn_tag}
+                    color={row.color}
+                    nextTurnColor={row.next_turn_color}
                   />
                 </TableCell>
+
+                {/* Colonne Call ID */}
                 <TableCell>
-                  <Typography variant="body2">{row.call_id}</Typography>
+                  <Typography variant="body2" fontWeight="medium">
+                    {row.call_id}
+                  </Typography>
                   {row.filename && (
-                    <Typography variant="caption" color="text.secondary">
-                      {truncateText(row.filename, 30)}
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      display="block"
+                    >
+                      {truncateText(row.filename, 25)}
                     </Typography>
                   )}
                 </TableCell>
+
+                {/* Colonne Speaker */}
                 <TableCell>
-                  <Typography variant="body2">{row.speaker}</Typography>
+                  <Chip
+                    label={row.speaker}
+                    size="small"
+                    variant="outlined"
+                    color={
+                      row.speaker === "conseiller" ? "primary" : "secondary"
+                    }
+                    sx={{ fontSize: "0.75rem" }}
+                  />
                 </TableCell>
+
+                {/* Colonne Tour Principal */}
                 <TableCell>
-                  <Typography variant="body2">
-                    {truncateText(row.verbatim, 80)}
+                  <VerbatimDisplay
+                    verbatim={row.verbatim}
+                    tag={row.tag}
+                    color={row.color}
+                    maxLength={80}
+                  />
+                </TableCell>
+
+                {/* Colonne Tour Suivant */}
+                <TableCell>
+                  {row.next_turn_verbatim && (
+                    <VerbatimDisplay
+                      verbatim={row.next_turn_verbatim}
+                      tag={row.next_turn_tag || "Non taggé"}
+                      color={row.next_turn_color || "#9e9e9e"}
+                      maxLength={80}
+                    />
+                  )}
+                </TableCell>
+
+                {/* Colonne Temps */}
+                <TableCell>
+                  <Typography variant="caption" display="block">
+                    {formatTime(row.start_time)}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                  >
+                    {formatTime(row.end_time)}
+                  </Typography>
+                  <Typography variant="caption" color="primary" display="block">
+                    {Math.round(row.end_time - row.start_time)}s
                   </Typography>
                 </TableCell>
+
+                {/* Colonne Statut */}
                 <TableCell>
-                  <Typography variant="body2" color="text.secondary">
-                    {truncateText(row.next_turn_verbatim, 60)}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="caption">
-                    {formatTime(row.start_time)} - {formatTime(row.end_time)}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Box sx={{ display: "flex", gap: 0.5, alignItems: "center" }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      gap: 0.5,
+                      alignItems: "center",
+                      flexDirection: "column",
+                    }}
+                  >
                     {isCurrentlyProcessing ? (
                       <Tooltip title={job?.message || "Traitement en cours"}>
                         <CircularProgress size={16} />
                       </Tooltip>
                     ) : (
                       <>
-                        {row.hasAudio && (
-                          <Tooltip title="Audio disponible">
-                            <AudioFile fontSize="small" color="success" />
-                          </Tooltip>
-                        )}
-                        {row.hasTranscript && (
-                          <Tooltip title="Transcription disponible">
-                            <Assignment fontSize="small" color="success" />
-                          </Tooltip>
-                        )}
+                        <Box sx={{ display: "flex", gap: 0.5 }}>
+                          {row.hasAudio && (
+                            <Tooltip title="Audio disponible">
+                              <AudioFile fontSize="small" color="success" />
+                            </Tooltip>
+                          )}
+                          {row.hasTranscript && (
+                            <Tooltip title="Transcription disponible">
+                              <Assignment fontSize="small" color="success" />
+                            </Tooltip>
+                          )}
+                        </Box>
                         {(!row.hasAudio || !row.hasTranscript) && (
                           <Tooltip
                             title={`Manque: ${!row.hasAudio ? "audio" : ""} ${
@@ -151,6 +313,8 @@ export const SupervisionTable: React.FC<SupervisionTableProps> = ({
                     )}
                   </Box>
                 </TableCell>
+
+                {/* Colonne Actions */}
                 <TableCell>
                   {isCurrentlyProcessing ? (
                     <Typography variant="caption" color="text.secondary">

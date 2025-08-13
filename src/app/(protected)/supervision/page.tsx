@@ -45,6 +45,9 @@ export default function SupervisionPage() {
     resetFilters,
     uniqueFamilies,
     uniqueSpeakers,
+    uniqueCallIds,
+    uniqueOrigines, // ← AJOUTER
+    callIdToFilename, // ← AJOUTER
   } = useSupervisionFilters(supervisionData);
 
   // États pour la pagination
@@ -224,6 +227,9 @@ export default function SupervisionPage() {
           tagStats={tagStats}
           uniqueFamilies={uniqueFamilies}
           uniqueSpeakers={uniqueSpeakers}
+          uniqueCallIds={uniqueCallIds}
+          uniqueOrigines={uniqueOrigines} // ← AJOUTER
+          callIdToFilename={callIdToFilename} // ← AJOUTER
           onPageReset={handlePageReset}
         />
 

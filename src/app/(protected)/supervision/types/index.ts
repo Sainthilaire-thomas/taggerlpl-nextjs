@@ -1,3 +1,5 @@
+// supervision/types.ts
+
 // Interface existante étendue
 export interface SupervisionTurnTagged {
   id: number;
@@ -5,17 +7,19 @@ export interface SupervisionTurnTagged {
   tag: string;
   verbatim: string;
   next_turn_verbatim: string;
+  next_turn_tag?: string;
   speaker: string;
   start_time: number;
   end_time: number;
   color: string;
+  next_turn_color?: string;
   family: string;
   filename?: string;
+  origine?: string; // ← NOUVEAU CHAMP
   hasTranscript: boolean;
   hasAudio: boolean;
   audioUrl?: string;
   duration?: number;
-  // Nouveaux champs pour le traitement à la demande
   missingResources?: ("audio" | "transcript")[];
   canBeProcessed?: boolean;
   processingStatus?: "idle" | "processing" | "completed" | "error";
@@ -32,6 +36,8 @@ export interface SupervisionFilters {
   selectedTag: string;
   selectedFamily: string;
   selectedSpeaker: string;
+  selectedCallId: string;
+  selectedOrigine: string; // ← NOUVEAU FILTRE
   searchText: string;
   hasAudio: boolean | null;
   hasTranscript: boolean | null;
@@ -40,10 +46,13 @@ export interface SupervisionFilters {
 export interface SupervisionMetrics {
   total: number;
   uniqueTags: number;
+  uniqueCallIds: number; // Nouveau métrique
   withAudio: number;
   withTranscript: number;
   modifiable: number;
   needsProcessing: number;
+  avgTagsPerCall: number; // Nouvelle métrique
+  callsWithMultipleTags: number; // Nouvelle métrique
 }
 
 export interface SupervisionDataHook {
@@ -62,6 +71,9 @@ export interface SupervisionFiltersHook {
   resetFilters: () => void;
   uniqueFamilies: string[];
   uniqueSpeakers: string[];
+  uniqueCallIds: string[];
+  uniqueOrigines: string[]; // ← NOUVEAU
+  callIdToFilename: Map<string, string>; // ← NOUVEAU
 }
 
 // Nouveaux types pour le traitement
@@ -104,4 +116,25 @@ export interface ProcessingModalProps {
   onClose: () => void;
   selectedRow: SupervisionTurnTagged | null;
   onProcessingComplete: () => void;
+}
+
+// Nouveau type pour les statistiques de cohérence
+export interface CoherenceMetrics {
+  totalTransitions: number;
+  taggedTransitions: number;
+  coherenceRate: number;
+  mostCommonTransitions: Array<{
+    from: string;
+    to: string;
+    count: number;
+    examples: string[];
+  }>;
+  inconsistentTransitions: Array<{
+    from: string;
+    to: string;
+    verbatim: string;
+    next_verbatim: string;
+    call_id: string;
+    confidence: number;
+  }>;
 }

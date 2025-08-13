@@ -20,14 +20,17 @@ export const useSupervisionData = (): SupervisionDataHook => {
   >([]);
   const [tagStats, setTagStats] = useState<TagGroupStats[]>([]);
   const [stats, setStats] = useState<SupervisionMetrics>({
-    // ← Changé de SupervisionStats à SupervisionMetrics
     total: 0,
     uniqueTags: 0,
+    uniqueCallIds: 0, // ← AJOUTER
     withAudio: 0,
     withTranscript: 0,
     modifiable: 0,
     needsProcessing: 0,
+    avgTagsPerCall: 0, // ← AJOUTER
+    callsWithMultipleTags: 0, // ← AJOUTER
   });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,6 +52,7 @@ export const useSupervisionData = (): SupervisionDataHook => {
         tag,
         verbatim,
         next_turn_verbatim,
+        next_turn_tag,
         speaker,
         start_time,
         end_time,
@@ -121,7 +125,7 @@ export const useSupervisionData = (): SupervisionDataHook => {
       const [callsQueryResult, transcriptsQueryResult] = await Promise.all([
         supabase
           .from("call")
-          .select("callid, filename, filepath, upload, duree")
+          .select("callid, filename, filepath, upload, duree, origine") // ← AJOUTER origine
           .in("callid", callIdsAsNumbers),
         supabase
           .from("transcript")

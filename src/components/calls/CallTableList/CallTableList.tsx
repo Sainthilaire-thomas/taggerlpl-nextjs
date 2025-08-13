@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, memo, FC } from "react";
+import { useState, useCallback, useEffect, memo, FC } from "react";
 import {
   Box,
   Button,
@@ -23,8 +23,10 @@ import {
   useTheme,
   Checkbox,
   LinearProgress,
+  Chip,
+  Tooltip,
 } from "@mui/material";
-import { useTaggingData } from "@/context/TaggingDataContext";
+import { RelationsStatus, useTaggingData } from "@/context/TaggingDataContext";
 import { removeCallUpload } from "../../utils/removeCallUpload";
 import { generateSignedUrl } from "../../utils/signedUrls";
 import { updateCallOrigine } from "../../utils/updateCallOrigine";
@@ -50,6 +52,7 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
     selectTaggingCall,
     fetchTaggingTranscription,
     refreshTaggingCalls,
+    getRelationsStatus, // ✅ AJOUT
   } = useTaggingData();
 
   // 🚀 OPTIMISATION: Utilisation du hook optimisé pour les données
@@ -94,6 +97,14 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
   // État pour l'expansion des lignes sur mobile
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
+  //Etatpour le calcul du next turn tag
+  const [relationsStatusCache, setRelationsStatusCache] = useState<
+    Map<string, RelationsStatus | null>
+  >(new Map());
+  const [loadingRelations, setLoadingRelations] = useState<Set<string>>(
+    new Set()
+  );
+
   // 🚀 OPTIMISATION: Pagination calculée à partir des données optimisées
   const paginatedCalls = (() => {
     const startIndex = paginationState.page * paginationState.rowsPerPage;
@@ -119,6 +130,151 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
       updateSort(property);
     },
     [updateSort]
+  );
+
+  // Ajouter cette fonction pour charger le statut des relations
+  const loadRelationsStatus = useCallback(
+    async (callId: string | number) => {
+      const callIdStr = String(callId);
+
+      // Éviter les chargements multiples
+      if (
+        loadingRelations.has(callIdStr) ||
+        relationsStatusCache.has(callIdStr)
+      ) {
+        return;
+      }
+
+      setLoadingRelations((prev) => new Set(prev).add(callIdStr));
+
+      try {
+        const status = await getRelationsStatus(callIdStr);
+        setRelationsStatusCache((prev) => new Map(prev).set(callIdStr, status));
+      } catch (error) {
+        console.error(
+          `Erreur lors du chargement du statut pour ${callIdStr}:`,
+          error
+        );
+        setRelationsStatusCache((prev) => new Map(prev).set(callIdStr, null));
+      } finally {
+        setLoadingRelations((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(callIdStr);
+          return newSet;
+        });
+      }
+    },
+    [getRelationsStatus, loadingRelations, relationsStatusCache]
+  );
+
+  // Charger les statuts pour les appels visibles
+  useEffect(() => {
+    // Charger seulement pour les appels paginés (pour éviter trop de requêtes)
+    paginatedCalls.forEach((call) => {
+      const callIdStr = String(call.callid);
+      if (
+        !relationsStatusCache.has(callIdStr) &&
+        !loadingRelations.has(callIdStr)
+      ) {
+        loadRelationsStatus(call.callid);
+      }
+    });
+  }, [paginatedCalls, loadRelationsStatus]);
+
+  // Fonction pour obtenir le chip de statut des relations
+  const getRelationsStatusChip = useCallback(
+    (callId: string | number) => {
+      const callIdStr = String(callId);
+      const status = relationsStatusCache.get(callIdStr);
+      const isLoading = loadingRelations.has(callIdStr);
+
+      if (isLoading) {
+        return (
+          <Chip
+            label="Vérification..."
+            size="small"
+            variant="outlined"
+            color="default"
+            sx={{ minWidth: 90 }}
+          />
+        );
+      }
+
+      if (!status) {
+        return (
+          <Chip
+            label="Inconnu"
+            size="small"
+            variant="outlined"
+            color="default"
+            sx={{ minWidth: 90 }}
+          />
+        );
+      }
+
+      if (status.totalTags === 0) {
+        return (
+          <Chip
+            label="Pas de tags"
+            size="small"
+            variant="outlined"
+            color="default"
+            sx={{ minWidth: 90 }}
+          />
+        );
+      }
+
+      if (status.isCalculated) {
+        return (
+          <Chip
+            label={`✅ ${status.completenessPercent.toFixed(0)}%`}
+            size="small"
+            variant="filled"
+            color="success"
+            sx={{ minWidth: 90 }}
+          />
+        );
+      } else if (status.completenessPercent > 50) {
+        return (
+          <Chip
+            label={`⚠️ ${status.completenessPercent.toFixed(0)}%`}
+            size="small"
+            variant="outlined"
+            color="warning"
+            sx={{ minWidth: 90 }}
+          />
+        );
+      } else {
+        return (
+          <Chip
+            label={`❌ ${status.completenessPercent.toFixed(0)}%`}
+            size="small"
+            variant="outlined"
+            color="error"
+            sx={{ minWidth: 90 }}
+          />
+        );
+      }
+    },
+    [relationsStatusCache, loadingRelations]
+  );
+
+  const getRelationsTooltip = useCallback(
+    (callId: string | number) => {
+      const callIdStr = String(callId);
+      const status = relationsStatusCache.get(callIdStr);
+
+      if (!status || status.totalTags === 0) {
+        return "Aucune information sur les relations";
+      }
+
+      return `Relations: ${status.tagsWithNextTurn}/${
+        status.totalTags
+      } (${status.completenessPercent.toFixed(1)}%)
+${status.missingRelations} relations manquantes
+Dernière vérification: ${status.lastChecked.toLocaleTimeString()}`;
+    },
+    [relationsStatusCache]
   );
 
   // 🚀 NOUVEAU: Handlers pour les actions en lot
@@ -592,7 +748,7 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
             <Table size="small" stickyHeader>
               <TableHead>
                 <TableRow>
-                  {/* 🚀 NOUVELLE COLONNE: Checkbox de sélection */}
+                  {/* Checkbox de sélection */}
                   <TableCell padding="checkbox">
                     <Checkbox
                       indeterminate={selectedCount > 0 && !isSelectAll}
@@ -601,6 +757,8 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
                       disabled={isBulkProcessing}
                     />
                   </TableCell>
+
+                  {/* Nom du fichier */}
                   <TableCell>
                     <TableSortLabel
                       active={sortState.orderBy === "filename"}
@@ -614,7 +772,11 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
                       Nom du fichier
                     </TableSortLabel>
                   </TableCell>
+
+                  {/* Audio */}
                   <TableCell align="center">Audio</TableCell>
+
+                  {/* Durée */}
                   <TableCell>
                     <TableSortLabel
                       active={sortState.orderBy === "duree"}
@@ -626,6 +788,8 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
                       Durée
                     </TableSortLabel>
                   </TableCell>
+
+                  {/* Statut */}
                   <TableCell>
                     <TableSortLabel
                       active={sortState.orderBy === "status"}
@@ -637,6 +801,15 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
                       Statut
                     </TableSortLabel>
                   </TableCell>
+
+                  {/* ✅ NOUVELLE COLONNE: Relations */}
+                  <TableCell align="center">
+                    <Tooltip title="Statut des relations next_turn_tag calculées">
+                      <span>Relations</span>
+                    </Tooltip>
+                  </TableCell>
+
+                  {/* Origine */}
                   <TableCell>
                     <TableSortLabel
                       active={sortState.orderBy === "origine"}
@@ -650,7 +823,11 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
                       Origine
                     </TableSortLabel>
                   </TableCell>
+
+                  {/* Description */}
                   <TableCell>Description</TableCell>
+
+                  {/* Actions */}
                   <TableCell align="center">Actions</TableCell>
                 </TableRow>
               </TableHead>
@@ -669,6 +846,9 @@ const CallTableList: FC<CallTableListProps> = ({ showMessage }) => {
                     isSelected={selectedCalls.has(String(call.callid))}
                     onSelectionChange={handleCallSelection}
                     disabled={isBulkProcessing}
+                    // ✅ NOUVELLES PROPS
+                    relationsStatusChip={getRelationsStatusChip(call.callid)}
+                    relationsTooltip={getRelationsTooltip(call.callid)}
                   />
                 ))}
               </TableBody>

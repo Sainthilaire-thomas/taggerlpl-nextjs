@@ -10,6 +10,7 @@ import StrategyAnalysisContainer from "./components/StrategyAnalysisContainer";
 import TagAnalysisGraph from "@/components/TagAnalysisGraph";
 import TagAnalysisReport from "@/components/TagAnalysisReport";
 import TagStats from "@/components/TagStats";
+import CognitiveMetrics from "./components/CognitiveMetrics/CognitiveMetrics";
 
 // ✅ Import du nouveau composant de métriques
 import ImprovedGlobalMetrics from "./components/ImprovedGlobalMetrics";
@@ -115,7 +116,7 @@ export default function AnalysisPage() {
             <Tab label="📊 Efficacité des Stratégies" {...a11yProps(0)} />
             <Tab label="🔄 Flux Conversationnels" {...a11yProps(1)} />
             <Tab label="📈 Statistiques par Famille" {...a11yProps(2)} />
-            <Tab label="📋 Rapports Détaillés" {...a11yProps(3)} />
+            <Tab label="🧠 Métriques Cognitives" {...a11yProps(3)} />
             {/* 🚀 NOUVEAU : Onglet pour l'analyse temporelle */}
             <Tab label="📍 Analyse Temporelle" {...a11yProps(4)} />
           </Tabs>
@@ -180,53 +181,7 @@ export default function AnalysisPage() {
         </TabPanel>
 
         <TabPanel value={tabValue} index={3}>
-          {/* Interface de génération de rapports */}
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Génération de Rapports
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Sélectionnez les critères pour générer un rapport personnalisé
-            </Typography>
-
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-                gap: 2,
-                mb: 3,
-              }}
-            >
-              <Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
-                <Typography variant="subtitle1" gutterBottom>
-                  📊 Rapport Global
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Toutes les familles de tags
-                </Typography>
-              </Paper>
-
-              <Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
-                <Typography variant="subtitle1" gutterBottom>
-                  🎯 Rapport par Famille
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Focus sur une famille spécifique
-                </Typography>
-              </Paper>
-
-              <Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
-                <Typography variant="subtitle1" gutterBottom>
-                  📈 Rapport d'Évolution
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Analyse temporelle des performances
-                </Typography>
-              </Paper>
-            </Box>
-          </Paper>
-
-          <TagAnalysisReport />
+          <CognitiveMetrics />
         </TabPanel>
 
         {/* 🚀 NOUVEAU : Onglet d'analyse temporelle */}

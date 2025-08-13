@@ -192,12 +192,6 @@ const CallRowItem = memo(
       [createExternalCallHandler, handleViewContent]
     );
 
-    console.log(
-      `🔄 Render CallRowItem: ${
-        call.callid
-      } (selected: ${originEdit.selectedCalls.has(call.callid)})`
-    );
-
     return (
       <TableRow sx={{ "&:hover": { backgroundColor: "action.hover" } }}>
         {/* ✅ CELLULE D'ORIGINE SIMPLIFIÉE */}
@@ -404,8 +398,6 @@ const CallTableRow: React.FC<CallTableRowProps> = memo(
         isDeleting,
       ]
     );
-
-    console.log(`🔄 Render CallTableRow - ${calls.length} appels`);
 
     return (
       <TableContainer component={Paper}>
