@@ -42,6 +42,51 @@ export interface CognitiveMetricsProps {
   };
 }
 
+// NOUVEAUX TYPES pour l'analyse par famille
+export interface FamilyImpactMetrics {
+  family: string;
+  totalUsage: number;
+  acceptanceRate: number;
+  immediateAcceptance: number;
+  resistanceRate: number;
+  cognitiveLoad: number;
+  averageReactionLength: number;
+  reactionSpeed: number;
+  positiveMarkers: number;
+  negativeMarkers: number;
+  effortMarkers: number;
+  examples: {
+    positive: string[];
+    negative: string[];
+    neutral: string[];
+  };
+}
+
+export interface CognitiveAnalysisResult {
+  familyMetrics: FamilyImpactMetrics[];
+  globalMetrics: {
+    mostEffective: string;
+    leastResistance: string;
+    highestCognitiveLoad: string;
+  };
+  comparativeAnalysis: {
+    refletVsExplication: number;
+    ouvertureVsEngagement: number;
+  };
+  loading: boolean;
+  error: string | null;
+}
+
+// Garder les types existants pour compatibilité
+export interface IndicatorDescription {
+  title: string;
+  description: string;
+  formula: string;
+  interpretation: string;
+  examples: string;
+  references: string;
+}
+
 export type IndicatorKey =
   | "fluiditeCognitive"
   | "reactionsDirectes"
