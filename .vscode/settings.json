@@ -1,0 +1,23 @@
+{
+  "cSpell.enabled": false,
+  "files.encoding": "utf8",
+  "files.eol": "\n",
+  "files.autoGuessEncoding": false,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "files.associations": {
+    "*.ts": "typescript",
+    "*.tsx": "typescriptreact"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "files.encoding": "utf8"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode", 
+    "files.encoding": "utf8"
+  }
+}

@@ -142,6 +142,10 @@ const CallImporter: FC<CallImporterProps> = ({ showMessage }) => {
     audioFile: File | null,
     transcriptionText: string = ""
   ): Promise<void> => {
+    console.log("🔍 Fichiers reçus dans CallImporter:", {
+      audioFile,
+      transcriptionText,
+    });
     try {
       if (audioFile) {
         setAudioFile(audioFile);

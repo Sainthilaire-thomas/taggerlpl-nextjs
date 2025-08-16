@@ -78,6 +78,15 @@ export interface NewTag {
   [key: string]: any;
 }
 
+export interface RelationsStatus {
+  totalTags: number;
+  tagsWithNextTurn: number;
+  completenessPercent: number;
+  isCalculated: boolean;
+  missingRelations: number;
+  lastChecked: Date;
+}
+
 // Define the shape of your context
 interface TaggingDataContextType {
   taggingCalls: TaggingCall[];
@@ -102,6 +111,11 @@ interface TaggingDataContextType {
   setTags: React.Dispatch<React.SetStateAction<Tag[]>>;
   calculateAllNextTurnTags: (callId: string) => Promise<number>;
   refreshTaggingCalls?: () => Promise<void>;
+  fetchTaggingCalls: () => Promise<void>;
+  checkRelationsCompleteness: (
+    callId: string
+  ) => Promise<RelationsStatus | null>;
+  getRelationsStatus: (callId: string) => Promise<RelationsStatus | null>;
 }
 
 // Create the context with a default undefined value
@@ -343,6 +357,76 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     [supabase]
   );
 
+  const checkRelationsCompleteness = useCallback(
+    async (callId: string): Promise<RelationsStatus | null> => {
+      if (!supabase) {
+        console.warn("Supabase not available");
+        return null;
+      }
+
+      try {
+        console.log("🔍 Vérification complétude relations pour:", callId);
+
+        // Récupérer tous les tags de l'appel
+        const { data: tags, error } = await supabase
+          .from("turntagged")
+          .select("id, next_turn_tag, speaker, start_time, end_time, tag")
+          .eq("call_id", callId)
+          .order("start_time", { ascending: true });
+
+        if (error) {
+          console.error("Erreur lors de la vérification:", error);
+          return null;
+        }
+
+        if (!tags || tags.length === 0) {
+          console.log("Aucun tag trouvé pour cet appel");
+          return {
+            totalTags: 0,
+            tagsWithNextTurn: 0,
+            completenessPercent: 100, // 100% si pas de tags
+            isCalculated: true,
+            missingRelations: 0,
+            lastChecked: new Date(),
+          };
+        }
+
+        // Analyser les relations
+        const totalTags = tags.length;
+        const tagsWithNextTurn = tags.filter(
+          (tag) => tag.next_turn_tag && tag.next_turn_tag.trim() !== ""
+        ).length;
+
+        // Calculer le pourcentage de complétude
+        const completenessPercent =
+          totalTags > 0 ? (tagsWithNextTurn / totalTags) * 100 : 100;
+
+        // Seuil pour considérer comme "calculé" : 85%
+        // (car certains tags en fin de conversation n'auront jamais de next_turn)
+        const isCalculated = completenessPercent >= 85;
+        const missingRelations = totalTags - tagsWithNextTurn;
+
+        const status: RelationsStatus = {
+          totalTags,
+          tagsWithNextTurn,
+          completenessPercent: Math.round(completenessPercent * 100) / 100, // Arrondir à 2 décimales
+          isCalculated,
+          missingRelations,
+          lastChecked: new Date(),
+        };
+
+        console.log("📊 Analyse complétude:", status);
+        return status;
+      } catch (err) {
+        console.error("Erreur lors de l'analyse de complétude:", err);
+        return null;
+      }
+    },
+    [supabase]
+  );
+
+  const getRelationsStatus = checkRelationsCompleteness;
+
   // Sélectionner un appel pour le tagging
   const callId = selectedTaggingCall?.callid;
 
@@ -531,7 +615,39 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     [supabase]
   );
 
-  // Fonction pour calculer tous les next_turn_tag d'un appel
+  // ✅ FONCTION pour valider si un tag peut être un "next turn"
+  function isValidNextTurnCandidate(
+    currentTag: any,
+    candidateTag: any,
+    tolerance: number
+  ): boolean {
+    // Cas 1: Tag candidat commence après la fin du tag actuel (cas classique)
+    if (candidateTag.start_time >= currentTag.end_time - tolerance) {
+      return true;
+    }
+
+    // Cas 2: Chevauchement partiel acceptable (le candidat commence pendant le tag actuel mais continue après)
+    if (
+      candidateTag.start_time < currentTag.end_time &&
+      candidateTag.end_time > currentTag.end_time
+    ) {
+      console.log(
+        `⚠️ Chevauchement détecté entre ${currentTag.id} et ${candidateTag.id}`
+      );
+      return true;
+    }
+
+    // Cas 3: Tags très proches dans le temps (conversation rapide)
+    const timeGap = candidateTag.start_time - currentTag.end_time;
+    if (timeGap >= -tolerance && timeGap <= 0.5) {
+      // Tolérance de 500ms
+      return true;
+    }
+
+    return false;
+  }
+  // Fonction calculateAllNextTurnTags corrigée (lignes ~520)
+  // ✅ VERSION SIMPLIFIÉE ET CORRECTE du calcul next_turn_tag
   const calculateAllNextTurnTags = useCallback(
     async (callId: string): Promise<number> => {
       if (!supabase) {
@@ -540,15 +656,32 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
       }
 
       try {
-        console.log("=== CALCUL BATCH NEXT_TURN_TAG ===");
+        console.log("=== CALCUL NEXT_TURN_TAG SIMPLIFIÉ ===");
         console.log("Call ID:", callId);
 
-        // 1. Récupérer tous les tags de cet appel, triés par temps
+        // 1. Récupérer les tags valides de lpltag
+        const { data: validTags, error: validTagsError } = await supabase
+          .from("lpltag")
+          .select("label")
+          .not("label", "is", null);
+
+        if (validTagsError) {
+          console.error("Erreur récupération tags valides:", validTagsError);
+          return 0;
+        }
+
+        const validTagLabels = new Set(
+          validTags?.map((tag) => tag.label) || []
+        );
+        console.log(`📋 ${validTagLabels.size} tags valides dans lpltag`);
+
+        // 2. Récupérer TOUS les tags triés par temps (ordre chronologique strict)
         const { data: allTags, error: tagsError } = await supabase
           .from("turntagged")
           .select("id, start_time, end_time, tag, speaker, next_turn_tag")
           .eq("call_id", callId)
-          .order("start_time", { ascending: true });
+          .order("start_time", { ascending: true })
+          .order("id", { ascending: true }); // Tri secondaire pour stabilité
 
         if (tagsError) {
           console.error("Erreur récupération tags:", tagsError);
@@ -563,24 +696,58 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
         console.log(`Traitement de ${allTags.length} tags`);
 
         let updatedCount = 0;
+        let rejectedCount = 0;
 
-        // 2. Pour chaque tag, trouver le tag suivant du speaker différent
+        // 3. ✅ LOGIQUE SIMPLE : pour chaque tag, trouver le prochain tag d'un speaker différent
         for (let i = 0; i < allTags.length; i++) {
           const currentTag = allTags[i];
 
-          // Trouver le prochain tag d'un speaker différent après ce tag
-          const nextTag = allTags
-            .slice(i + 1) // Tags suivants seulement
-            .find(
-              (tag) =>
-                tag.speaker !== currentTag.speaker &&
-                tag.start_time > currentTag.end_time
+          console.log(
+            `\n🔍 Tag ${i + 1}/${allTags.length}: ${currentTag.id} (${
+              currentTag.start_time
+            }s) - ${currentTag.tag} [${currentTag.speaker}]`
+          );
+
+          // Chercher le PROCHAIN tag d'un speaker différent
+          let nextTurnTag = null;
+          let nextTagFound = null;
+
+          for (let j = i + 1; j < allTags.length; j++) {
+            const candidateTag = allTags[j];
+
+            // ✅ CONDITION SIMPLE : speaker différent
+            if (candidateTag.speaker !== currentTag.speaker) {
+              console.log(
+                `   → Candidat trouvé: ${candidateTag.id} (${candidateTag.start_time}s) - ${candidateTag.tag} [${candidateTag.speaker}]`
+              );
+
+              // Valider que le tag existe dans lpltag
+              if (validTagLabels.has(candidateTag.tag)) {
+                nextTurnTag = candidateTag.tag;
+                nextTagFound = candidateTag;
+                console.log(`   ✅ Next turn validé: "${nextTurnTag}"`);
+                break; // Prendre le PREMIER trouvé (le plus proche chronologiquement)
+              } else {
+                console.log(
+                  `   🚫 Tag "${candidateTag.tag}" rejeté (pas dans lpltag)`
+                );
+                rejectedCount++;
+              }
+            }
+          }
+
+          if (!nextTagFound) {
+            console.log(
+              `   ❌ Aucun next turn trouvé (fin de conversation ou même speaker)`
+            );
+          }
+
+          // 4. Mettre à jour SEULEMENT si différent de l'existant
+          if (currentTag.next_turn_tag !== nextTurnTag) {
+            console.log(
+              `   🔄 Mise à jour: "${currentTag.next_turn_tag}" → "${nextTurnTag}"`
             );
 
-          const nextTurnTag = nextTag ? nextTag.tag : null;
-
-          // 3. Mettre à jour seulement si différent de l'existant
-          if (currentTag.next_turn_tag !== nextTurnTag) {
             const { error: updateError } = await supabase
               .from("turntagged")
               .update({ next_turn_tag: nextTurnTag })
@@ -588,36 +755,150 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
 
             if (updateError) {
               console.error(
-                `Erreur mise à jour tag ${currentTag.id}:`,
+                `   ❌ Erreur mise à jour tag ${currentTag.id}:`,
                 updateError
               );
             } else {
-              console.log(
-                `✅ Tag ${currentTag.id} (${currentTag.tag}): next_turn_tag = ${
-                  nextTurnTag || "NULL"
-                }`
-              );
+              console.log(`   ✅ Tag ${currentTag.id} mis à jour avec succès`);
               updatedCount++;
             }
+          } else {
+            console.log(`   ⏸️ Pas de changement nécessaire`);
           }
         }
 
-        console.log(`=== CALCUL TERMINÉ: ${updatedCount} tags mis à jour ===`);
+        console.log(`\n=== RÉSULTATS FINAUX ===`);
+        console.log(`✅ ${updatedCount} tags mis à jour`);
+        console.log(`🚫 ${rejectedCount} tags rejetés (invalides)`);
+        console.log(`⏸️ ${allTags.length - updatedCount} tags inchangés`);
 
-        // 4. Rafraîchir l'état local si des tags ont été mis à jour
+        // 5. Rafraîchir l'état local si des changements
         if (updatedCount > 0) {
+          console.log("🔄 Rafraîchissement de l'état local...");
           await fetchTaggedTurns(callId);
         }
 
         return updatedCount;
       } catch (err) {
-        console.error("Erreur dans calculateAllNextTurnTags:", err);
+        console.error("❌ Erreur dans calculateAllNextTurnTags:", err);
         return 0;
       }
     },
     [supabase, fetchTaggedTurns]
   );
 
+  // ✅ FONCTION HELPER pour trouver le next_turn_tag
+  function findNextTurnTag(
+    currentTag: any,
+    allTags: any[],
+    currentIndex: number
+  ) {
+    console.log(
+      `🔍 Recherche next_turn pour tag ${currentTag.id} (${currentTag.speaker}, ${currentTag.start_time}-${currentTag.end_time})`
+    );
+
+    const OVERLAP_TOLERANCE = 0.1; // Tolérance de 100ms pour les chevauchements
+
+    // ✅ STRATÉGIE 1: Chercher le tag le plus proche chronologiquement d'un autre speaker
+    let bestCandidate = null;
+    let minTimeGap = Infinity;
+
+    for (let j = currentIndex + 1; j < allTags.length; j++) {
+      const candidateTag = allTags[j];
+
+      // Ignorer les tags du même speaker
+      if (candidateTag.speaker === currentTag.speaker) {
+        continue;
+      }
+
+      // ✅ LOGIQUE AMÉLIORÉE pour déterminer si c'est un "tour suivant"
+      const isValidNextTurn = isValidNextTurnCandidate(
+        currentTag,
+        candidateTag,
+        OVERLAP_TOLERANCE
+      );
+
+      if (isValidNextTurn) {
+        // Calculer la proximité temporelle
+        const timeGap = candidateTag.start_time - currentTag.end_time;
+
+        if (timeGap < minTimeGap) {
+          minTimeGap = timeGap;
+          bestCandidate = candidateTag;
+        }
+
+        // ✅ Si on trouve un tag très proche (< 2 secondes), on l'utilise
+        if (timeGap >= -OVERLAP_TOLERANCE && timeGap <= 2.0) {
+          console.log(
+            `✅ Next turn trouvé: ${candidateTag.id} (gap: ${timeGap.toFixed(
+              2
+            )}s)`
+          );
+          return candidateTag;
+        }
+      }
+    }
+
+    if (bestCandidate) {
+      console.log(
+        `✅ Meilleur candidat: ${bestCandidate.id} (gap: ${minTimeGap.toFixed(
+          2
+        )}s)`
+      );
+      return bestCandidate;
+    }
+
+    console.log(`❌ Aucun next turn trouvé pour tag ${currentTag.id}`);
+    return null;
+  }
+
+  // ✅ FONCTION DE DIAGNOSTIC (optionnelle)
+  async function diagnoseNextTurnCalculation(callId: string) {
+    console.log("=== DIAGNOSTIC NEXT_TURN_TAG ===");
+
+    const { data: tags } = await supabase
+      .from("turntagged")
+      .select("*")
+      .eq("call_id", callId)
+      .order("start_time", { ascending: true });
+
+    if (!tags) return;
+
+    console.log("📊 Analyse des patterns:");
+
+    // Analyser les gaps temporels
+    const gaps = [];
+    for (let i = 0; i < tags.length - 1; i++) {
+      const gap = tags[i + 1].start_time - tags[i].end_time;
+      gaps.push(gap);
+    }
+
+    console.log(
+      `⏱️ Gaps temporels: min=${Math.min(...gaps).toFixed(2)}s, max=${Math.max(
+        ...gaps
+      ).toFixed(2)}s, moyenne=${(
+        gaps.reduce((a, b) => a + b, 0) / gaps.length
+      ).toFixed(2)}s`
+    );
+
+    // Analyser les speakers
+    const speakers = [...new Set(tags.map((t) => t.speaker))];
+    console.log(`👥 Speakers détectés: ${speakers.join(", ")}`);
+
+    // Analyser les chevauchements
+    let overlaps = 0;
+    for (let i = 0; i < tags.length - 1; i++) {
+      for (let j = i + 1; j < tags.length; j++) {
+        if (
+          tags[i].end_time > tags[j].start_time &&
+          tags[i].start_time < tags[j].end_time
+        ) {
+          overlaps++;
+        }
+      }
+    }
+    console.log(`🔄 Chevauchements détectés: ${overlaps}`);
+  }
   const deleteTurnTag = useCallback(
     async (id: number): Promise<void> => {
       if (!supabase) {
@@ -674,6 +955,9 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
         setTags,
         calculateAllNextTurnTags,
         refreshTaggingCalls,
+        fetchTaggingCalls,
+        checkRelationsCompleteness,
+        getRelationsStatus,
       }}
     >
       {children}

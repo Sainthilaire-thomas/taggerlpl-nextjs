@@ -53,8 +53,24 @@ export function useTaggingLogic(callId: string) {
   // ✅ Fonction pour mettre à jour les tags précédents (rétroactif)
   const updatePreviousTagsNextTurnTag = async (newTag: TaggedTurn) => {
     try {
-      console.log("=== MISE À JOUR RÉTROACTIVE ===");
+      console.log("=== MISE À JOUR RÉTROACTIVE AVEC VALIDATION ===");
       console.log("Nouveau tag créé:", newTag);
+
+      // ✅ AJOUT : Vérifier que le nouveau tag existe dans lpltag
+      const { data: tagExists, error: validationError } = await supabase
+        .from("lpltag")
+        .select("label")
+        .eq("label", newTag.tag)
+        .single();
+
+      if (validationError || !tagExists) {
+        console.warn(
+          `🚫 Tag "${newTag.tag}" non trouvé dans lpltag - abandon mise à jour rétroactive`
+        );
+        return;
+      }
+
+      console.log(`✅ Tag "${newTag.tag}" validé dans lpltag`);
 
       // Trouver les tags qui se terminent avant ce nouveau tag
       const potentialPreviousTags = taggedTurns.filter(
@@ -114,6 +130,7 @@ export function useTaggingLogic(callId: string) {
   // Version ultra-simple de handleSaveTag dans useTaggingLogic.tsx
   // handleSaveTag optimisé dans useTaggingLogic.tsx
 
+  // Correction dans useTaggingLogic.tsx - handleSaveTag
   const handleSaveTag = useCallback(
     async (tag: LPLTag) => {
       console.log("=== DÉBUT HANDLE SAVE TAG ===");
@@ -193,6 +210,14 @@ export function useTaggingLogic(callId: string) {
         if (savedTag) {
           console.log("✅ Tag sauvegardé:", savedTag.id);
 
+          // ✅ AJOUT : Mise à jour rétroactive des tags précédents
+          try {
+            await updatePreviousTagsNextTurnTag(savedTag);
+          } catch (retroError) {
+            console.error("Erreur mise à jour rétroactive:", retroError);
+            // Ne pas faire échouer la sauvegarde pour autant
+          }
+
           // Nettoyer l'interface
           setSelectedText("");
           setSelectedWords([]);
@@ -208,7 +233,7 @@ export function useTaggingLogic(callId: string) {
         alert("Erreur lors de la sauvegarde du tag. Veuillez réessayer.");
       }
     },
-    [callId, selectedWords, selectedText, taggingTranscription, addTag]
+    [callId, selectedWords, selectedText, taggingTranscription, addTag] // ✅ Ajouter updatePreviousTagsNextTurnTag aux dépendances si nécessaire
   );
 
   // Handler pour la modification d'un tag existant

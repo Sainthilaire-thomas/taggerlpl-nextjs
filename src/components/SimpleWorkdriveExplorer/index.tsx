@@ -1,6 +1,7 @@
+// SimpleWorkdriveExplorer.tsx - Version corrigée avec modes + détection doublons
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Button,
@@ -12,6 +13,11 @@ import {
   Breadcrumbs,
   Link,
   Chip,
+  Tabs,
+  Tab,
+  Switch,
+  FormControlLabel,
+  Tooltip,
 } from "@mui/material";
 import { useSearchParams } from "next/navigation";
 import HomeIcon from "@mui/icons-material/Home";
@@ -19,9 +25,13 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AudioFileIcon from "@mui/icons-material/AudioFile";
 import DescriptionIcon from "@mui/icons-material/Description";
+import FolderIcon from "@mui/icons-material/Folder";
+import SearchIcon from "@mui/icons-material/Search";
+import Security from "@mui/icons-material/Security";
 
 import { useZoho } from "@/context/ZohoContext";
 import { useWorkdriveFiles } from "./hooks/useWorkdriveFiles";
+import { useWorkdriveSearch } from "./hooks/useWorkdriveSearch";
 import {
   parseZohoToken,
   handleZohoAuth,
@@ -29,21 +39,41 @@ import {
 } from "./utils/authHelpers";
 import { downloadFile, downloadTranscription } from "./utils/fileHelpers";
 
-import { AuthPrompt } from "./components/AuthPrompt";
-import { NavigationControls } from "./components/NavigationControls";
+import { SearchBar } from "./components/SearchBar";
+import { SearchResults } from "./components/SearchResults";
 import { FileSelectionSummary } from "./components/FileSelectionSummary";
 import { FileList } from "./components/FileList";
 import { Notifications } from "./components/Notifications";
 
-import { SimpleWorkdriveExplorerProps, ZohoFile } from "./types";
+import {
+  SimpleWorkdriveExplorerProps,
+  ZohoFile,
+  WorkdriveExplorerMode,
+} from "./types";
 
-// ID du dossier racine de votre Workdrive (à adapter selon votre configuration)
 const ROOT_FOLDER_ID = "ly5m40e0e2d4ae7604a1fa0f5d42905cb94c9";
 
 export default function SimpleWorkdriveExplorer({
   onFilesSelect,
   rootFolderId = ROOT_FOLDER_ID,
-}: SimpleWorkdriveExplorerProps) {
+  // Props existantes avec valeurs par défaut
+  mode = "full",
+  audioOnly = false,
+  transcriptionOnly = false,
+  showSelectionSummary = true,
+  maxSelections = { audio: 1, transcription: 1 },
+  title,
+  description,
+  showTabs = true,
+  // ✅ NOUVELLES PROPS pour gestion doublons (optionnelles pour compatibilité)
+  enableDuplicateCheck = false,
+  showDuplicateToggle = true,
+  onDuplicateFound,
+}: SimpleWorkdriveExplorerProps & {
+  enableDuplicateCheck?: boolean;
+  showDuplicateToggle?: boolean;
+  onDuplicateFound?: (file: ZohoFile, existingCall: any) => void;
+}) {
   const { accessToken, setAccessToken, updateZohoRefreshToken } = useZoho();
   const searchParams = useSearchParams();
 
@@ -54,6 +84,11 @@ export default function SimpleWorkdriveExplorer({
     useState<ZohoFile | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [processingImport, setProcessingImport] = useState(false);
+  const [currentTab, setCurrentTab] = useState(0);
+
+  // ✅ NOUVEAU: État pour la vérification de doublons
+  const [duplicateCheckEnabled, setDuplicateCheckEnabled] =
+    useState(enableDuplicateCheck);
 
   const {
     files,
@@ -69,28 +104,67 @@ export default function SimpleWorkdriveExplorer({
     setError,
   } = useWorkdriveFiles(rootFolderId);
 
-  // Traiter le token d'authentification Zoho si présent dans l'URL
+  const { searchResults, searchFiles, clearSearch } = useWorkdriveSearch({
+    accessToken,
+    currentFolderId: currentFolder.id,
+  });
+
+  // Mode effectif (logique existante)
+  const effectiveMode: WorkdriveExplorerMode = useMemo(() => {
+    if (audioOnly) return "audio_only";
+    if (transcriptionOnly) return "transcription_only";
+    return mode;
+  }, [mode, audioOnly, transcriptionOnly]);
+
+  // Désactiver sélection selon le mode (logique existante)
+  useEffect(() => {
+    if (effectiveMode === "audio_only") {
+      setSelectedTranscriptionFile(null);
+    }
+    if (effectiveMode === "transcription_only") {
+      setSelectedAudioFile(null);
+    }
+  }, [effectiveMode]);
+
+  // Titres adaptatifs (logique existante)
+  const getAdaptiveTitle = () => {
+    if (title) return title;
+    switch (effectiveMode) {
+      case "audio_only":
+        return "Sélectionner un fichier audio";
+      case "transcription_only":
+        return "Sélectionner une transcription";
+      default:
+        return "Import de nouveaux appels depuis Zoho WorkDrive";
+    }
+  };
+
+  const getAdaptiveDescription = () => {
+    if (description) return description;
+    switch (effectiveMode) {
+      case "audio_only":
+        return "Parcourez WorkDrive et sélectionnez un fichier audio à ajouter.";
+      case "transcription_only":
+        return "Parcourez WorkDrive et sélectionnez une transcription à ajouter.";
+      default:
+        return "Utilisez l'explorateur ci-dessous pour parcourir votre Zoho WorkDrive et importer directement vos fichiers audio et transcriptions.";
+    }
+  };
+
+  // Traitement du token (logique existante)
   useEffect(() => {
     const tokenParam = searchParams.get("token");
-
     if (tokenParam) {
       const parsedToken = parseZohoToken(tokenParam);
-
       if (parsedToken) {
         console.log("Token Zoho reçu:", parsedToken);
-
-        // Mettre à jour le contexte avec les tokens
         if (parsedToken.access_token) {
           setAccessToken(parsedToken.access_token);
         }
-
         if (parsedToken.refresh_token) {
           updateZohoRefreshToken(parsedToken.refresh_token);
         }
-
-        // Nettoyer l'URL
         cleanAuthTokenFromUrl();
-
         setSuccessMessage("Connexion à Zoho WorkDrive réussie!");
       } else {
         setError("Erreur lors de la connexion à Zoho WorkDrive");
@@ -98,54 +172,138 @@ export default function SimpleWorkdriveExplorer({
     }
   }, [searchParams, setAccessToken, updateZohoRefreshToken, setError]);
 
-  // Gestionnaire pour sélectionner un fichier audio
+  // Gestionnaires de sélection (logique existante)
   const handleSelectAudioFile = (file: ZohoFile) => {
+    if (effectiveMode === "transcription_only") return;
     setSelectedAudioFile(selectedAudioFile?.id === file.id ? null : file);
   };
 
-  // Gestionnaire pour sélectionner un fichier de transcription
   const handleSelectTranscriptionFile = (file: ZohoFile) => {
+    if (effectiveMode === "audio_only") return;
     setSelectedTranscriptionFile(
       selectedTranscriptionFile?.id === file.id ? null : file
     );
   };
 
-  // Télécharger et préparer les fichiers sélectionnés
+  // ✅ NOUVEAUX: Gestionnaires pour les doublons
+  const handleDuplicateToggle = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setDuplicateCheckEnabled(event.target.checked);
+  };
+
+  const handleDuplicateClick = (file: ZohoFile, existingCall: any) => {
+    if (onDuplicateFound) {
+      onDuplicateFound(file, existingCall);
+    } else {
+      // Comportement par défaut: alerte simple
+      alert(
+        `Ce fichier (${
+          file.attributes?.name || file.name
+        }) semble déjà importé comme: ${
+          existingCall.filename || existingCall.description
+        }`
+      );
+    }
+  };
+
+  // Validation avant import (logique existante)
   const handleImportFiles = async () => {
-    if (!selectedAudioFile) {
+    if (effectiveMode === "audio_only" && !selectedAudioFile) {
       setError("Veuillez sélectionner un fichier audio");
+      return;
+    }
+    if (effectiveMode === "transcription_only" && !selectedTranscriptionFile) {
+      setError("Veuillez sélectionner une transcription");
+      return;
+    }
+    if (
+      effectiveMode === "full" &&
+      !selectedAudioFile &&
+      !selectedTranscriptionFile
+    ) {
+      setError(
+        "Veuillez sélectionner au moins un fichier (audio ou transcription)"
+      );
       return;
     }
 
     try {
       setProcessingImport(true);
 
-      // Télécharger le fichier audio
-      const audioFile = await downloadFile(
-        selectedAudioFile,
-        accessToken || ""
+      // Debug (logique existante)
+      console.log(
+        "🔍 DEBUG selectedTranscriptionFile:",
+        selectedTranscriptionFile
       );
+      console.log("🔍 DEBUG selectedAudioFile:", selectedAudioFile);
 
-      // Télécharger le fichier de transcription s'il est sélectionné
+      // Audio optionnel
+      let audioFile: File | null = null;
+      if (selectedAudioFile) {
+        audioFile = await downloadFile(selectedAudioFile, accessToken || "");
+        console.log("🔍 Fichier audio téléchargé:", audioFile.name);
+      }
+
+      // Transcription optionnelle
       let transcriptionText = "";
       if (selectedTranscriptionFile) {
         transcriptionText = await downloadTranscription(
           selectedTranscriptionFile,
           accessToken || ""
         );
+        console.log(
+          "🔍 Transcription téléchargée, longueur:",
+          transcriptionText.length
+        );
       }
 
-      // Appeler le callback avec les fichiers préparés
-      onFilesSelect(audioFile, transcriptionText);
+      // Récupérer le nom de fichier WorkDrive (logique existante)
+      let workdriveFileName: string | undefined;
+      if (selectedTranscriptionFile) {
+        workdriveFileName =
+          selectedTranscriptionFile.name ||
+          selectedTranscriptionFile.attributes?.name ||
+          selectedTranscriptionFile.attributes?.resource_name ||
+          selectedTranscriptionFile.attributes?.display_name ||
+          selectedTranscriptionFile.attributes?.file_name ||
+          selectedTranscriptionFile.resource_name ||
+          selectedTranscriptionFile.display_name ||
+          selectedTranscriptionFile.file_name ||
+          "transcription.json";
+      } else if (selectedAudioFile) {
+        workdriveFileName =
+          selectedAudioFile.name ||
+          selectedAudioFile.attributes?.name ||
+          selectedAudioFile.attributes?.resource_name ||
+          selectedAudioFile.attributes?.display_name ||
+          selectedAudioFile.attributes?.file_name ||
+          selectedAudioFile.resource_name ||
+          selectedAudioFile.display_name ||
+          selectedAudioFile.file_name ||
+          "audio.mp3";
+      }
 
-      // Afficher un message de succès
-      setSuccessMessage("Fichiers importés avec succès");
+      // Appeler le callback parent
+      await onFilesSelect(audioFile, transcriptionText, workdriveFileName);
 
-      // Réinitialiser les sélections
+      // Message de succès adaptatif
+      const importMessage = [];
+      if (audioFile) importMessage.push(`Audio: ${audioFile.name}`);
+      if (transcriptionText) importMessage.push("Transcription");
+
+      const successMsg =
+        effectiveMode === "audio_only"
+          ? `Audio sélectionné: ${audioFile?.name}`
+          : effectiveMode === "transcription_only"
+          ? `Transcription sélectionnée: ${workdriveFileName}`
+          : `Importé avec succès: ${importMessage.join(" + ")}`;
+
+      setSuccessMessage(successMsg);
       setSelectedAudioFile(null);
       setSelectedTranscriptionFile(null);
     } catch (error) {
-      console.error("Erreur lors de l'importation:", error);
+      console.error("❌ Erreur lors de l'importation:", error);
       setError(
         `Erreur lors de l'importation: ${
           error instanceof Error ? error.message : "Erreur inconnue"
@@ -156,7 +314,15 @@ export default function SimpleWorkdriveExplorer({
     }
   };
 
-  // Affichage simplifié si aucun token d'accès
+  // Gestionnaire de changement d'onglet (logique existante)
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setCurrentTab(newValue);
+    if (newValue === 0) {
+      clearSearch();
+    }
+  };
+
+  // Affichage si pas de token (logique existante)
   if (!accessToken) {
     return (
       <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
@@ -180,171 +346,220 @@ export default function SimpleWorkdriveExplorer({
 
   return (
     <Box sx={{ width: "100%" }}>
-      {/* Affichage du chemin de navigation (breadcrumb) */}
-      <Paper elevation={1} sx={{ p: 1, mb: 2 }}>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-          <Button
-            startIcon={<HomeIcon />}
-            size="small"
-            onClick={() => handleHome(rootFolderId)}
-            sx={{ mr: 1 }}
-          >
-            Racine
-          </Button>
-
-          <Button
-            startIcon={<ArrowBackIcon />}
-            size="small"
-            onClick={handleBack}
-            disabled={folderHistory.length === 0}
-            sx={{ mr: 1 }}
-          >
-            Retour
-          </Button>
-
-          <Breadcrumbs
-            separator={<NavigateNextIcon fontSize="small" />}
-            aria-label="breadcrumb"
-          >
-            {folderPath.map((folder, index) => (
-              <Link
-                key={folder.id}
-                color="inherit"
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleBreadcrumbNavigation(folder.id, index);
-                }}
-                sx={{
-                  textDecoration: "none",
-                  fontWeight:
-                    index === folderPath.length - 1 ? "bold" : "normal",
-                  color:
-                    index === folderPath.length - 1
-                      ? "text.primary"
-                      : "inherit",
-                }}
-              >
-                {folder.name}
-              </Link>
-            ))}
-          </Breadcrumbs>
+      {/* Titre et description adaptés (logique existante) */}
+      {(effectiveMode !== "full" || title || description) && (
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            {getAdaptiveTitle()}
+          </Typography>
+          <Typography variant="body2" color="textSecondary" paragraph>
+            {getAdaptiveDescription()}
+          </Typography>
         </Box>
+      )}
 
-        {loading && <LinearProgress sx={{ mt: 1 }} />}
-      </Paper>
+      {/* ✅ NOUVEAU: Contrôles de vérification des doublons */}
+      {showDuplicateToggle && (
+        <Paper elevation={1} sx={{ p: 2, mb: 2, bgcolor: "primary.50" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Security color="primary" />
+              <Typography variant="subtitle2" color="primary.dark">
+                Détection de doublons
+              </Typography>
+              <Tooltip title="Vérifie si les fichiers ont déjà été importés pour éviter les doublons">
+                <Chip
+                  label="Beta"
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                />
+              </Tooltip>
+            </Box>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={duplicateCheckEnabled}
+                  onChange={handleDuplicateToggle}
+                  color="primary"
+                />
+              }
+              label={duplicateCheckEnabled ? "Activée" : "Désactivée"}
+            />
+          </Box>
+          {duplicateCheckEnabled && (
+            <Typography
+              variant="caption"
+              color="textSecondary"
+              sx={{ mt: 1, display: "block" }}
+            >
+              💡 Les fichiers déjà importés seront marqués avec un badge "Déjà
+              importé"
+            </Typography>
+          )}
+        </Paper>
+      )}
 
-      {/* Résumé de la sélection de fichiers */}
+      {/* Onglets (logique existante) */}
+      {showTabs && (
+        <Paper elevation={1} sx={{ mb: 2 }}>
+          <Tabs
+            value={currentTab}
+            onChange={handleTabChange}
+            variant="fullWidth"
+            indicatorColor="primary"
+            textColor="primary"
+          >
+            <Tab icon={<FolderIcon />} label="Navigation" />
+            <Tab icon={<SearchIcon />} label="Recherche" />
+          </Tabs>
+        </Paper>
+      )}
+
+      {/* Navigation classique (logique existante) */}
+      {(!showTabs || currentTab === 0) && (
+        <Paper elevation={1} sx={{ p: 1, mb: 2 }}>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+            <Button
+              startIcon={<HomeIcon />}
+              size="small"
+              onClick={() => handleHome(rootFolderId)}
+              sx={{ mr: 1 }}
+            >
+              Racine
+            </Button>
+
+            <Button
+              startIcon={<ArrowBackIcon />}
+              size="small"
+              onClick={handleBack}
+              disabled={folderHistory.length === 0}
+              sx={{ mr: 1 }}
+            >
+              Retour
+            </Button>
+
+            <Breadcrumbs
+              separator={<NavigateNextIcon fontSize="small" />}
+              aria-label="breadcrumb"
+            >
+              {folderPath.map((folder, index) => (
+                <Link
+                  key={folder.id}
+                  color="inherit"
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleBreadcrumbNavigation(folder.id, index);
+                  }}
+                  sx={{
+                    textDecoration: "none",
+                    fontWeight:
+                      index === folderPath.length - 1 ? "bold" : "normal",
+                    color:
+                      index === folderPath.length - 1
+                        ? "text.primary"
+                        : "inherit",
+                  }}
+                >
+                  {folder.name}
+                </Link>
+              ))}
+            </Breadcrumbs>
+          </Box>
+
+          {loading && <LinearProgress sx={{ mt: 1 }} />}
+        </Paper>
+      )}
+
+      {/* Interface de recherche (logique existante) */}
+      {showTabs && currentTab === 1 && (
+        <SearchBar
+          onSearch={searchFiles}
+          onClear={clearSearch}
+          isSearching={searchResults.isSearching}
+          searchResults={searchResults}
+        />
+      )}
+
+      {/* Résumé de sélection (logique existante) */}
+      {showSelectionSummary && (
+        <FileSelectionSummary
+          selectedAudioFile={selectedAudioFile}
+          selectedTranscriptionFile={selectedTranscriptionFile}
+          onClearAudioFile={() => setSelectedAudioFile(null)}
+          onClearTranscriptionFile={() => setSelectedTranscriptionFile(null)}
+          mode={effectiveMode}
+        />
+      )}
+
+      {/* Bouton d'importation (logique existante) */}
       {(selectedAudioFile || selectedTranscriptionFile) && (
         <Paper
           elevation={2}
           sx={{ p: 2, mb: 2, bgcolor: "background.default" }}
         >
-          <Typography variant="subtitle1" gutterBottom fontWeight="bold">
-            Fichiers sélectionnés
-          </Typography>
-
-          <Box sx={{ mb: 1 }}>
-            {selectedAudioFile ? (
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <AudioFileIcon color="secondary" sx={{ mr: 1 }} />
-                <Typography variant="body2" sx={{ mr: 1 }}>
-                  Audio :{" "}
-                  {selectedAudioFile.attributes?.name || "Fichier audio"}
-                </Typography>
-                <Chip
-                  label="Désélectionner"
-                  size="small"
-                  onDelete={() => setSelectedAudioFile(null)}
-                  color="secondary"
-                  variant="outlined"
-                />
-              </Box>
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                Aucun fichier audio sélectionné
-              </Typography>
-            )}
-
-            {selectedTranscriptionFile ? (
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <DescriptionIcon color="primary" sx={{ mr: 1 }} />
-                <Typography variant="body2" sx={{ mr: 1 }}>
-                  Transcription :{" "}
-                  {selectedTranscriptionFile.attributes?.name ||
-                    "Transcription"}
-                </Typography>
-                <Chip
-                  label="Désélectionner"
-                  size="small"
-                  onDelete={() => setSelectedTranscriptionFile(null)}
-                  color="primary"
-                  variant="outlined"
-                />
-              </Box>
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                Aucune transcription sélectionnée
-              </Typography>
-            )}
-          </Box>
-
           <Button
             variant="contained"
             color="primary"
             onClick={handleImportFiles}
-            disabled={processingImport || !selectedAudioFile}
+            disabled={processingImport}
             fullWidth
             sx={{ mt: 1 }}
           >
             {processingImport
-              ? "Importation en cours..."
+              ? "Sélection en cours..."
+              : effectiveMode === "audio_only"
+              ? "Sélectionner cet audio"
+              : effectiveMode === "transcription_only"
+              ? "Sélectionner cette transcription"
               : "Importer les fichiers sélectionnés"}
           </Button>
         </Paper>
       )}
 
-      {/* Liste des fichiers */}
-      <FileList
-        files={files}
-        loading={loading}
-        selectedAudioFile={selectedAudioFile}
-        selectedTranscriptionFile={selectedTranscriptionFile}
-        onFolderClick={handleFolderClick}
-        onSelectAudioFile={handleSelectAudioFile}
-        onSelectTranscriptionFile={handleSelectTranscriptionFile}
+      {/* ✅ MODIFIÉ: FileList avec support des doublons */}
+      {(!showTabs || currentTab === 0) && (
+        <FileList
+          files={files}
+          loading={loading}
+          selectedAudioFile={selectedAudioFile}
+          selectedTranscriptionFile={selectedTranscriptionFile}
+          onFolderClick={handleFolderClick}
+          onSelectAudioFile={handleSelectAudioFile}
+          onSelectTranscriptionFile={handleSelectTranscriptionFile}
+          mode={effectiveMode}
+          enableDuplicateCheck={duplicateCheckEnabled}
+          onDuplicateClick={handleDuplicateClick}
+        />
+      )}
+
+      {/* ✅ SearchResults SANS les nouvelles props pour éviter l'erreur */}
+      {showTabs && currentTab === 1 && (
+        <SearchResults
+          searchResults={searchResults}
+          selectedAudioFile={selectedAudioFile}
+          selectedTranscriptionFile={selectedTranscriptionFile}
+          onSelectAudioFile={handleSelectAudioFile}
+          onSelectTranscriptionFile={handleSelectTranscriptionFile}
+          allFiles={files}
+          mode={effectiveMode}
+        />
+      )}
+
+      {/* Notifications (logique existante) */}
+      <Notifications
+        error={error}
+        successMessage={successMessage}
+        onCloseError={() => setError(null)}
+        onCloseSuccess={() => setSuccessMessage(null)}
       />
-
-      {/* Notifications */}
-      <Snackbar
-        open={!!error}
-        autoHideDuration={6000}
-        onClose={() => setError(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={() => setError(null)}
-          severity="error"
-          sx={{ width: "100%" }}
-        >
-          {error}
-        </Alert>
-      </Snackbar>
-
-      <Snackbar
-        open={!!successMessage}
-        autoHideDuration={6000}
-        onClose={() => setSuccessMessage(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={() => setSuccessMessage(null)}
-          severity="success"
-          sx={{ width: "100%" }}
-        >
-          {successMessage}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

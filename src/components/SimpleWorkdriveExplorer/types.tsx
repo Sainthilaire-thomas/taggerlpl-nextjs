@@ -1,5 +1,4 @@
-// types.ts
-
+// types.ts - Version étendue avec nouveaux modes
 /**
  * Interface représentant un fichier Zoho Workdrive
  */
@@ -29,11 +28,36 @@ export interface ZohoFile {
 }
 
 /**
- * Props pour le composant SimpleWorkdriveExplorer
+ * ✅ NOUVEAU: Types de modes pour SimpleWorkdriveExplorer
+ */
+export type WorkdriveExplorerMode =
+  | "full"
+  | "audio_only"
+  | "transcription_only";
+
+/**
+ * ✅ MISE À JOUR: Props étendues pour le composant SimpleWorkdriveExplorer
  */
 export interface SimpleWorkdriveExplorerProps {
-  onFilesSelect: (audioFile: File, transcriptionText?: string) => void;
+  onFilesSelect: (
+    audioFile: File | null,
+    transcriptionText?: string,
+    workdriveFileName?: string
+  ) => void;
   rootFolderId?: string;
+  // ✅ NOUVELLES PROPS
+  mode?: WorkdriveExplorerMode; // Mode d'utilisation
+  audioOnly?: boolean; // Legacy support - sera mappé vers mode
+  transcriptionOnly?: boolean; // Legacy support - sera mappé vers mode
+  showSelectionSummary?: boolean; // Afficher/masquer le résumé de sélection
+  maxSelections?: {
+    audio: number;
+    transcription: number;
+  };
+  // ✅ Props pour personnalisation de l'interface
+  title?: string; // Titre personnalisé
+  description?: string; // Description personnalisée
+  showTabs?: boolean; // Afficher les onglets Navigation/Recherche
 }
 
 /**
@@ -52,4 +76,15 @@ export interface ZohoToken {
   refresh_token?: string;
   expires_in?: number;
   token_type?: string;
+}
+
+/**
+ * ✅ NOUVEAU: Interface pour les résultats de recherche
+ */
+export interface SearchResult {
+  files: ZohoFile[];
+  totalFound: number;
+  searchedFolders: number;
+  isSearching: boolean;
+  searchQuery: string;
 }

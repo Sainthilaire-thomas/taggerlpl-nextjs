@@ -2,7 +2,7 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { Box, Typography, Button } from "@mui/material";
 import { useTaggingData } from "../context/TaggingDataContext";
-import TagManager from "./TagManager";
+import TagManager from "../app/(protected)/tags/components/TagManager";
 
 // Import dynamique pour why-did-you-render (uniquement en développement)
 // Next.js utilise un système d'import différent de Vite
