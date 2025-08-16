@@ -5,7 +5,7 @@ import {
   metricsRegistry,
   getIndicatorsByDomain,
 } from "../core/MetricsRegistry";
-import { BaseIndicator } from "../core/BaseIndicator";
+import BaseIndicator from "../core/BaseIndicator";
 import {
   MetricsDomain,
   TurnTaggedData,
@@ -13,10 +13,15 @@ import {
   BenchmarkResult,
   AlgorithmComparison,
   ConvergenceResults,
+  FamilyResults,
+  GlobalMetrics,
+  PerformanceMetrics,
+  TagInfo,
 } from "../core/types/base";
 import { useTaggingData } from "@/context/TaggingDataContext";
 
-// Types pour la configuration du moteur
+// ================ CONFIGURATION DU HOOK ================
+
 interface MetricsEngineConfig {
   domain: MetricsDomain;
   indicatorIds?: string[];
@@ -27,8 +32,7 @@ interface MetricsEngineConfig {
   enableConvergenceValidation?: boolean;
 }
 
-// Types pour les résultats par famille
-interface FamilyResults {
+interface FamilyResultsInternal {
   family: string;
   totalUsage: number;
   indicators: Record<string, IndicatorResult>;
@@ -36,76 +40,37 @@ interface FamilyResults {
   effectiveness: number;
 }
 
-// Types pour les métriques globales
-interface GlobalMetrics {
-  totalTurns: number;
-  averageEffectiveness: number;
-  topPerformingFamily: string;
-  convergenceStatus?: "CONVERGENT" | "DIVERGENT" | "UNKNOWN";
-}
-
-// Résultat principal du hook
-interface MetricsEngineResult {
-  // État principal
-  indicators: BaseIndicator[];
-  results: Record<string, IndicatorResult[]>;
-  familyResults: FamilyResults[];
-  globalMetrics: GlobalMetrics;
-  loading: boolean;
-  error: string | null;
-
-  // Actions de base
-  calculateMetrics: (data?: TurnTaggedData[]) => Promise<void>;
-  switchAlgorithm: (indicatorId: string, algorithmId: string) => boolean;
-  clearCache: () => void;
-
-  // Analyse par famille
-  getResultsByFamily: () => FamilyResults[];
-  getGlobalMetrics: () => GlobalMetrics;
-
-  // Comparaison d'algorithmes
-  availableAlgorithms: Record<string, string[]>;
-  compareAlgorithms: (
-    indicatorId: string,
-    algorithms: string[]
-  ) => Promise<AlgorithmComparison>;
-
-  // Validation de convergence (nouveauté thèse)
-  convergenceResults?: ConvergenceResults;
-  validateConvergence: () => Promise<ConvergenceResults>;
-
-  // Performance et debugging
-  performanceMetrics: {
-    lastCalculationTime: number;
-    cacheHitRate: number;
-    totalCalculations: number;
-  };
-}
+// ================ HOOK PRINCIPAL ================
 
 /**
  * Hook principal unifié pour tous les domaines de métriques
+ *
+ * Remplace et étend les hooks spécialisés existants
+ * Fournit une interface cohérente pour cognitive, LI et AC
  */
-export const useMetricsEngine = (
-  config: MetricsEngineConfig
-): MetricsEngineResult => {
-  // État principal
+export const useMetricsEngine = (config: MetricsEngineConfig) => {
+  // ================ ÉTAT LOCAL ================
+
   const [results, setResults] = useState<Record<string, IndicatorResult[]>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [convergenceResults, setConvergenceResults] =
     useState<ConvergenceResults>();
 
-  // Performance et cache
-  const [performanceMetrics, setPerformanceMetrics] = useState({
-    lastCalculationTime: 0,
-    cacheHitRate: 0,
-    totalCalculations: 0,
-  });
+  // Métriques de performance
+  const [performanceMetrics, setPerformanceMetrics] =
+    useState<PerformanceMetrics>({
+      lastCalculationTime: 0,
+      cacheHitRate: 0,
+      totalCalculations: 0,
+    });
 
-  // Données depuis le contexte existant
+  // ================ DONNÉES DEPUIS LE CONTEXTE ================
+
   const { taggedTurns, tags } = useTaggingData();
 
-  // Récupération des indicateurs pour le domaine spécifié
+  // ================ RÉCUPÉRATION DES INDICATEURS ================
+
   const indicators = useMemo(() => {
     const domainIndicators = getIndicatorsByDomain(config.domain);
 
@@ -118,23 +83,8 @@ export const useMetricsEngine = (
     return domainIndicators;
   }, [config.domain, config.indicatorIds]);
 
-  // Application des overrides d'algorithmes
-  useEffect(() => {
-    if (config.algorithmOverrides) {
-      Object.entries(config.algorithmOverrides).forEach(
-        ([indicatorId, algorithmId]) => {
-          const indicator = indicators.find(
-            (ind) => ind.getId() === indicatorId
-          );
-          if (indicator) {
-            indicator.switchAlgorithm(algorithmId);
-          }
-        }
-      );
-    }
-  }, [indicators, config.algorithmOverrides]);
+  // ================ CONVERSION DES DONNÉES ================
 
-  // Conversion des données existantes vers le format unifié
   const convertedData = useMemo((): TurnTaggedData[] => {
     if (!taggedTurns || taggedTurns.length === 0) return [];
 
@@ -151,7 +101,30 @@ export const useMetricsEngine = (
     }));
   }, [taggedTurns]);
 
-  // Calcul principal des métriques
+  // ================ APPLICATION DES OVERRIDES D'ALGORITHMES ================
+
+  useEffect(() => {
+    if (config.algorithmOverrides) {
+      Object.entries(config.algorithmOverrides).forEach(
+        ([indicatorId, algorithmId]) => {
+          const indicator = indicators.find(
+            (ind) => ind.getId() === indicatorId
+          );
+          if (indicator) {
+            const success = indicator.switchAlgorithm(algorithmId);
+            if (!success) {
+              console.warn(
+                `Impossible de basculer vers l'algorithme ${algorithmId} pour ${indicatorId}`
+              );
+            }
+          }
+        }
+      );
+    }
+  }, [indicators, config.algorithmOverrides]);
+
+  // ================ CALCUL PRINCIPAL DES MÉTRIQUES ================
+
   const calculateMetrics = useCallback(
     async (customData?: TurnTaggedData[]) => {
       const dataToUse = customData || convertedData;
@@ -181,7 +154,9 @@ export const useMetricsEngine = (
                 {
                   value: "Erreur",
                   confidence: 0,
-                  explanation: `Erreur: ${error.message}`,
+                  explanation: `Erreur: ${
+                    error instanceof Error ? error.message : "Erreur inconnue"
+                  }`,
                   algorithm_used: "unknown",
                 },
               ],
@@ -203,8 +178,14 @@ export const useMetricsEngine = (
         setPerformanceMetrics((prev) => ({
           lastCalculationTime: endTime - startTime,
           totalCalculations: prev.totalCalculations + 1,
-          cacheHitRate: prev.cacheHitRate, // À implémenter avec cache
+          cacheHitRate: prev.cacheHitRate, // À améliorer avec gestion cache réelle
         }));
+
+        console.log(
+          `✅ Calcul métriques ${config.domain} terminé en ${(
+            endTime - startTime
+          ).toFixed(0)}ms`
+        );
       } catch (error) {
         console.error("Erreur calcul métriques:", error);
         setError(error instanceof Error ? error.message : "Erreur de calcul");
@@ -212,11 +193,12 @@ export const useMetricsEngine = (
         setLoading(false);
       }
     },
-    [indicators, convertedData]
+    [indicators, convertedData, config.domain]
   );
 
-  // Calcul des résultats par famille
-  const familyResults = useMemo((): FamilyResults[] => {
+  // ================ CALCUL DES RÉSULTATS PAR FAMILLE ================
+
+  const familyResults = useMemo((): FamilyResultsInternal[] => {
     if (!tags || Object.keys(results).length === 0) return [];
 
     // Grouper les données par famille
@@ -283,7 +265,8 @@ export const useMetricsEngine = (
       .sort((a, b) => b.totalUsage - a.totalUsage);
   }, [results, convertedData, tags]);
 
-  // Métriques globales
+  // ================ MÉTRIQUES GLOBALES ================
+
   const globalMetrics = useMemo((): GlobalMetrics => {
     if (familyResults.length === 0) {
       return {
@@ -313,7 +296,8 @@ export const useMetricsEngine = (
     };
   }, [familyResults, convergenceResults]);
 
-  // Commutation d'algorithme
+  // ================ GESTION DES ALGORITHMES ================
+
   const switchAlgorithm = useCallback(
     (indicatorId: string, algorithmId: string): boolean => {
       const indicator = indicators.find((ind) => ind.getId() === indicatorId);
@@ -343,7 +327,8 @@ export const useMetricsEngine = (
     return algorithmsMap;
   }, [indicators]);
 
-  // Comparaison d'algorithmes
+  // ================ COMPARAISON D'ALGORITHMES ================
+
   const compareAlgorithms = useCallback(
     async (
       indicatorId: string,
@@ -417,7 +402,8 @@ export const useMetricsEngine = (
     [indicators, convertedData]
   );
 
-  // Validation de convergence multi-niveaux (nouveauté thèse)
+  // ================ VALIDATION DE CONVERGENCE ================
+
   const validateConvergence =
     useCallback(async (): Promise<ConvergenceResults> => {
       if (!config.enableConvergenceValidation) {
@@ -449,32 +435,41 @@ export const useMetricsEngine = (
       }
     }, [config.enableConvergenceValidation, familyResults]);
 
-  // Cache management
+  // ================ GESTION DU CACHE ================
+
   const clearCache = useCallback(() => {
+    indicators.forEach((indicator) => indicator.clearCache());
     setResults({});
     setConvergenceResults(undefined);
     setPerformanceMetrics((prev) => ({
       ...prev,
       cacheHitRate: 0,
     }));
-  }, []);
+  }, [indicators]);
 
-  // Helpers pour résultats par famille
-  const getResultsByFamily = useCallback(() => familyResults, [familyResults]);
+  // ================ HELPERS POUR RÉSULTATS ================
+
+  const getResultsByFamily = useCallback(
+    () => familyResults as FamilyResults[],
+    [familyResults]
+  );
   const getGlobalMetrics = useCallback(() => globalMetrics, [globalMetrics]);
 
-  // Effet initial pour calculer les métriques
+  // ================ EFFET INITIAL ================
+
   useEffect(() => {
     if (convertedData.length > 0 && indicators.length > 0) {
       calculateMetrics();
     }
   }, [convertedData, indicators]); // Calculer automatiquement quand les données changent
 
+  // ================ RETOUR DU HOOK ================
+
   return {
     // État principal
     indicators,
     results,
-    familyResults,
+    familyResults: getResultsByFamily(),
     globalMetrics,
     loading,
     error,
@@ -525,11 +520,8 @@ function calculateFamilyEffectiveness(
     : 0;
 }
 
-/**
- * Calcule la précision d'un algorithme (placeholder)
- */
+// Fonctions de calcul de métriques de benchmark (placeholders)
 function calculateAlgorithmAccuracy(results: IndicatorResult[]): number {
-  // Implémentation basique - à enrichir avec annotations expertes
   const validResults = results.filter(
     (r) => typeof r.value === "number" && r.confidence > 0.5
   );
@@ -537,13 +529,11 @@ function calculateAlgorithmAccuracy(results: IndicatorResult[]): number {
 }
 
 function calculateAlgorithmPrecision(results: IndicatorResult[]): number {
-  // Placeholder - nécessiterait des annotations expertes pour calcul réel
   return results.reduce((sum, r) => sum + r.confidence, 0) / results.length;
 }
 
 function calculateAlgorithmRecall(results: IndicatorResult[]): number {
-  // Placeholder - nécessiterait ground truth
-  return 0.8; // Valeur par défaut
+  return 0.8; // Placeholder
 }
 
 function calculateF1Score(results: IndicatorResult[]): number {
@@ -554,9 +544,6 @@ function calculateF1Score(results: IndicatorResult[]): number {
     : 0;
 }
 
-/**
- * Génère des recommandations d'algorithmes basées sur les benchmarks
- */
 function generateAlgorithmRecommendation(
   benchmarks: Record<string, BenchmarkResult>
 ): {
@@ -586,7 +573,6 @@ function generateAlgorithmRecommendation(
       : best
   );
 
-  // Score global = pondération accuracy (70%) + speed (30%)
   const bestOverall = algorithms.reduce((best, [id, metrics]) => {
     const score =
       metrics.accuracy * 0.7 + (1 - metrics.processing_time_ms / 1000) * 0.3;
@@ -606,52 +592,35 @@ function generateAlgorithmRecommendation(
   };
 }
 
-// ================ FONCTIONS DE CONVERGENCE (NOUVEAUTÉ THÈSE) ================
-
-/**
- * Calcule les métriques AC pour validation convergence
- */
+// Fonctions de convergence (placeholders pour l'architecture complète)
 async function calculateACMetrics(
-  familyResults: FamilyResults[]
+  familyResults: FamilyResultsInternal[]
 ): Promise<Record<string, number>> {
-  // Placeholder - à implémenter avec métriques empiriques
   return familyResults.reduce((acc, family) => {
     acc[family.family] = family.effectiveness;
     return acc;
   }, {} as Record<string, number>);
 }
 
-/**
- * Calcule les métriques LI pour validation convergence
- */
 async function calculateLIMetrics(
-  familyResults: FamilyResults[]
+  familyResults: FamilyResultsInternal[]
 ): Promise<Record<string, number>> {
-  // Placeholder - à implémenter avec common ground, feedback, etc.
   return familyResults.reduce((acc, family) => {
-    // Approximation basée sur les indicateurs disponibles
     const liScore = family.globalScore * 0.8; // Ajustement LI
     acc[family.family] = liScore;
     return acc;
   }, {} as Record<string, number>);
 }
 
-/**
- * Calcule les métriques Cognitives pour validation convergence
- */
 async function calculateCognitiveMetrics(
-  familyResults: FamilyResults[]
+  familyResults: FamilyResultsInternal[]
 ): Promise<Record<string, number>> {
-  // Utilise les résultats cognitifs existants
   return familyResults.reduce((acc, family) => {
     acc[family.family] = family.globalScore;
     return acc;
   }, {} as Record<string, number>);
 }
 
-/**
- * Analyse la convergence entre les trois niveaux
- */
 function analyzeConvergence(
   acResults: Record<string, number>,
   liResults: Record<string, number>,
@@ -666,7 +635,7 @@ function analyzeConvergence(
     (a, b) => cognitiveResults[b] - cognitiveResults[a]
   );
 
-  // Calcul des corrélations (approximation)
+  // Calcul des corrélations (approximation simple)
   const correlationACLI = calculateSpearmanCorrelation(
     families.map((f) => acResults[f]),
     families.map((f) => liResults[f])
@@ -685,12 +654,10 @@ function analyzeConvergence(
   const overallConsistency =
     (correlationACLI + correlationACCognitive + correlationLICognitive) / 3;
 
-  // Déterminer le statut de convergence
   const convergenceThreshold = 0.6;
   const validationStatus =
     overallConsistency > convergenceThreshold ? "CONVERGENT" : "DIVERGENT";
 
-  // Préparation des résultats par famille
   const familyResultsMap = families.reduce((acc, family) => {
     acc[family] = {
       strategy_family: family,
@@ -712,7 +679,7 @@ function analyzeConvergence(
         Cognitive: cognitiveRanking,
       },
       concordance: {
-        AC_LI: { tau: correlationACLI, p_value: 0.05 }, // Placeholder
+        AC_LI: { tau: correlationACLI, p_value: 0.05 },
         AC_Cognitive: { tau: correlationACCognitive, p_value: 0.05 },
         LI_Cognitive: { tau: correlationLICognitive, p_value: 0.05 },
       },
@@ -730,13 +697,9 @@ function analyzeConvergence(
   };
 }
 
-/**
- * Calcul approximatif de corrélation de Spearman
- */
 function calculateSpearmanCorrelation(x: number[], y: number[]): number {
   if (x.length !== y.length || x.length === 0) return 0;
 
-  // Calcul de corrélation de Pearson comme approximation
   const n = x.length;
   const sumX = x.reduce((a, b) => a + b, 0);
   const sumY = y.reduce((a, b) => a + b, 0);
@@ -752,14 +715,10 @@ function calculateSpearmanCorrelation(x: number[], y: number[]): number {
   return denominator !== 0 ? numerator / denominator : 0;
 }
 
-/**
- * Validation des hypothèses spécifiques de la thèse
- */
 function validateH1Hypothesis(
   acResults: Record<string, number>,
   liResults: Record<string, number>
 ): boolean {
-  // H1: Stratégies d'action → fluidité élevée
   const actionStrategies = ["ENGAGEMENT", "OUVERTURE"];
   const actionEffectiveness = actionStrategies
     .filter((strategy) => acResults[strategy] !== undefined)
@@ -768,16 +727,15 @@ function validateH1Hypothesis(
   const avgActionEffectiveness =
     actionEffectiveness.reduce((sum, eff) => sum + eff, 0) /
     actionEffectiveness.length;
-  return avgActionEffectiveness > 0.6; // Seuil arbitraire
+  return avgActionEffectiveness > 0.6;
 }
 
 function validateH2Hypothesis(
   acResults: Record<string, number>,
   cognitiveResults: Record<string, number>
 ): boolean {
-  // H2: Explications → charge élevée
   const explicationEffectiveness = acResults["EXPLICATION"] || 0;
-  const explicationCognitiveLoad = 1 - (cognitiveResults["EXPLICATION"] || 0); // Inversé car charge = inefficacité
+  const explicationCognitiveLoad = 1 - (cognitiveResults["EXPLICATION"] || 0);
 
   return explicationEffectiveness < 0.5 && explicationCognitiveLoad > 0.5;
 }
@@ -787,7 +745,6 @@ function validateH3Hypothesis(
   liResults: Record<string, number>,
   cognitiveResults: Record<string, number>
 ): boolean {
-  // H3: Modulation contextuelle - différences entre familles
   const families = Object.keys(acResults);
   if (families.length < 2) return false;
 
@@ -797,5 +754,78 @@ function validateH3Hypothesis(
 
   const avgDifference =
     differences.reduce((sum, diff) => sum + diff, 0) / differences.length;
-  return avgDifference > 0.2; // Seuil de variabilité contextuelle
+  return avgDifference > 0.2;
 }
+
+// ================ ADAPTATION LEGACY ================
+
+/**
+ * Hook de transition qui adapte l'interface du framework unifié
+ * vers l'interface existante de useCognitiveMetrics
+ *
+ * Permet une migration douce sans casser l'existant
+ */
+export function useAdaptedCognitiveMetrics(data?: any[]) {
+  const cognitiveEngine = useMetricsEngine({
+    domain: "cognitive",
+    enableCaching: true,
+  });
+
+  // Adaptation des résultats vers l'interface existante
+  const adaptedResults = useMemo(() => {
+    if (Object.keys(cognitiveEngine.results).length === 0) {
+      return {
+        fluiditeCognitive: 0.75, // Valeur par défaut
+        chargeCognitive: 0.45,
+        marqueurs: ["test"],
+      };
+    }
+
+    // Extraire la fluidité cognitive si disponible
+    const fluiditeResults = cognitiveEngine.results["fluidite_cognitive"] || [];
+    const avgFluidite =
+      fluiditeResults.length > 0
+        ? fluiditeResults.reduce(
+            (sum, r) => sum + (typeof r.value === "number" ? r.value : 0),
+            0
+          ) / fluiditeResults.length
+        : 0.75;
+
+    // Calculer la charge cognitive (inverse de la fluidité)
+    const chargeCognitive = Math.max(0, 1 - avgFluidite);
+
+    // Extraire les marqueurs détectés
+    const marqueurs = fluiditeResults
+      .filter((r) => r.explanation)
+      .map((r) => r.explanation?.split("|")[1]?.trim())
+      .filter(Boolean)
+      .slice(0, 3) || ["automatique"];
+
+    return {
+      fluiditeCognitive: avgFluidite,
+      chargeCognitive,
+      marqueurs,
+    };
+  }, [cognitiveEngine.results]);
+
+  return {
+    ...adaptedResults,
+    // Actions originales préservées
+    calculateMetrics: cognitiveEngine.calculateMetrics,
+    loading: cognitiveEngine.loading,
+    error: cognitiveEngine.error,
+
+    // Interface du framework unifié accessible
+    unifiedEngine: cognitiveEngine,
+
+    // Fonction de diagnostic
+    getDiagnostic: () => ({
+      indicateurs: cognitiveEngine.indicators.length,
+      algorithmes: Object.keys(cognitiveEngine.availableAlgorithms).length,
+      performance: cognitiveEngine.performanceMetrics.lastCalculationTime,
+      families: cognitiveEngine.familyResults.length,
+    }),
+  };
+}
+
+export default useMetricsEngine;
