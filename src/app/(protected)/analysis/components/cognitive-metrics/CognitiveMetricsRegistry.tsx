@@ -1,7 +1,7 @@
 // src/app/(protected)/analysis/components/cognitive-metrics/CognitiveMetricsRegistry.ts
 
 import { metricsRegistry } from "../metrics-framework/core/MetricsRegistry";
-import { FluiditeCognitiveIndicator } from "./indicators/FluiditeCognitiveIndicator";
+import { FluiditeCognitiveIndicator } from "./indicators/FluiditeCognitiveIndicator/FluiditeCognitiveIndicator";
 
 /**
  * Registre spécialisé pour les métriques cognitives

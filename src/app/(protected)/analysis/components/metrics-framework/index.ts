@@ -52,7 +52,7 @@ export { useMetricsEngine } from "./hooks/useMetricsEngine";
 export {
   FluiditeCognitiveIndicator,
   createFluiditeCognitiveIndicator,
-} from "../cognitive-metrics/indicators/FluiditeCognitiveIndicator";
+} from "../cognitive-metrics/indicators/FluiditeCognitiveIndicator/FluiditeCognitiveIndicator";
 
 // ================ REGISTRES SPÉCIALISÉS ================
 
@@ -267,7 +267,7 @@ export function welcomeMessage(): string {
 
 // Import des exports pour le default export
 import { useMetricsEngine } from "./hooks/useMetricsEngine";
-import { FluiditeCognitiveIndicator } from "../cognitive-metrics/indicators/FluiditeCognitiveIndicator";
+import { FluiditeCognitiveIndicator } from "../cognitive-metrics/indicators/FluiditeCognitiveIndicator/FluiditeCognitiveIndicator";
 
 const defaultExport = {
   // Core

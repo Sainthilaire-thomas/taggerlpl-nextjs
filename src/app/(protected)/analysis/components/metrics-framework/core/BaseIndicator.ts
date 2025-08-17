@@ -5,7 +5,7 @@ import {
   AlgorithmConfig,
   IndicatorResult,
   TurnTaggedData,
-  AnnotationData,
+  AnnotatedData, // CORRECTION 1: AnnotationData → AnnotatedData
   BenchmarkResult,
   MetricsDomain,
   ImplementationStatus,
@@ -121,7 +121,7 @@ export abstract class BaseIndicator {
    */
   async benchmarkAlgorithms(
     testData: TurnTaggedData[],
-    annotations: AnnotationData[]
+    annotations: AnnotatedData[] // CORRECTION 2: Type corrigé
   ): Promise<Record<string, BenchmarkResult>> {
     const results: Record<string, BenchmarkResult> = {};
     const originalAlgorithm = this.activeAlgorithm?.getId();
@@ -193,9 +193,8 @@ export abstract class BaseIndicator {
     return this.config.implementationStatus;
   }
 
-  getDescription(): string {
-    return this.config.description;
-  }
+  // CORRECTION 3: Suppression de getDescription() car 'description' n'existe pas dans BaseIndicatorConfig
+  // Si vous avez besoin d'une description, utilisez theoreticalFoundation ou ajoutez description à BaseIndicatorConfig
 
   getTheoreticalFoundation(): string {
     return this.config.theoreticalFoundation || "";
@@ -267,7 +266,7 @@ export abstract class BaseIndicator {
    */
   private calculateBenchmarkMetrics(
     predictions: IndicatorResult[],
-    annotations: AnnotationData[],
+    annotations: AnnotatedData[], // CORRECTION 4: Type corrigé
     dataSize: number,
     processingTime: number
   ): Omit<BenchmarkResult, "algorithm_id" | "test_data_size"> {

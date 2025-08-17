@@ -35,7 +35,7 @@ import {
 // Imports du framework
 import { metricsRegistry } from "./metrics-framework/core/MetricsRegistry";
 import { useMetricsEngine } from "./metrics-framework/hooks/useMetricsEngine";
-import { FluiditeCognitiveIndicator } from "./cognitive-metrics/indicators/FluiditeCognitiveIndicator";
+import { FluiditeCognitiveIndicator } from "./cognitive-metrics/indicators/FluiditeCognitiveIndicator/FluiditeCognitiveIndicator";
 
 // Import du composant de migration
 import CognitiveMetricsMigration from "./cognitive-metrics/migration/CognitiveMetricsMigration";

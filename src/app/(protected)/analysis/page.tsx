@@ -22,7 +22,6 @@ import TagAnalysisReport from "@/components/TagAnalysisReport";
 import TagStats from "@/components/TagStats";
 import CognitiveMetrics from "./components/cognitive-metrics/CognitiveMetrics";
 import LinguisticInteractionalMetrics from "./components/li-metrics/LinguisticInteractionalMetrics";
-
 // ✅ Import du nouveau composant de métriques
 import ImprovedGlobalMetrics from "./components/ImprovedGlobalMetrics";
 

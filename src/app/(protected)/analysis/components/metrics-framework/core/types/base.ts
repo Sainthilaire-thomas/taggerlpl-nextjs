@@ -1,79 +1,19 @@
-// src/app/(protected)/analysis/components/metrics-framework/core/types/base.ts
-
 /**
- * Types fondamentaux pour le framework unifié de métriques
- * Version corrigée - Suppression des exports en double
+ * Types fondamentaux du framework de métriques
  */
 
-// ================ DOMAINES ET CATEGORIES ================
+// Domaines d'analyse supportés
+export type MetricsDomain = "li" | "cognitive" | "conversational_analysis";
 
-export type MetricsDomain = "cognitive" | "li" | "conversational_analysis";
-
-export type ImplementationStatus = "implemented" | "partial" | "missing";
-
+// Types d'algorithmes
 export type AlgorithmType =
   | "rule_based"
   | "nlp_enhanced"
   | "ml_supervised"
   | "hybrid";
 
-// ================ DONNEES SOURCES ================
-
-/**
- * Structure unifiée des données de turns taggés depuis Supabase
- */
-export interface TurnTaggedData {
-  id: number;
-  call_id: string;
-  start_time: number;
-  end_time: number;
-  tag: string;
-  verbatim: string;
-  next_turn_verbatim: string;
-  next_turn_tag?: string;
-  speaker: string;
-}
-
-/**
- * Information sur un tag depuis lpltag
- */
-export interface TagInfo {
-  id: number;
-  label: string;
-  family: string;
-  originespeaker: string;
-  color: string;
-  description: string;
-  icon?: string;
-}
-
-// ================ CONFIGURATION INDICATEURS ================
-
-/**
- * Exigences de données pour un indicateur
- */
-export interface DataRequirement {
-  table: string;
-  columns: string[];
-  optional?: boolean;
-  conditions?: Record<string, any>;
-}
-
-/**
- * Configuration de base pour tous les indicateurs
- */
-export interface BaseIndicatorConfig {
-  id: string;
-  name: string;
-  domain: MetricsDomain;
-  category: string;
-  implementationStatus: ImplementationStatus;
-  description: string;
-  theoreticalFoundation?: string;
-  dataRequirements: DataRequirement[];
-}
-
-// ================ ALGORITHMES ================
+// Statut d'implémentation
+export type ImplementationStatus = "implemented" | "partial" | "missing";
 
 /**
  * Configuration d'un algorithme
@@ -86,34 +26,99 @@ export interface AlgorithmConfig {
   description: string;
   requiresTraining: boolean;
   supportedDomains: MetricsDomain[];
+
+  // Configuration optionnelle
   parameters?: Record<string, any>;
+  thresholds?: Record<string, number>;
+  features?: string[];
 }
 
-// ================ RESULTATS ================
+/**
+ * Structure des données d'entrée (depuis Supabase turntagged)
+ */
+export interface TurnTaggedData {
+  id: number;
+  call_id: string;
+  start_time: number;
+  end_time: number;
+  tag: string;
+  verbatim: string;
+  next_turn_verbatim?: string;
+  next_turn_tag?: string;
+  speaker: string;
+
+  // Champs calculés optionnels
+  duration?: number;
+  word_count?: number;
+  speaker_normalized?: string;
+
+  // Index signature pour accès dynamique
+  [key: string]: any;
+}
 
 /**
- * Résultat standard d'un indicateur
+ * Résultat de base d'un indicateur
  */
 export interface IndicatorResult {
   value: string | number;
   confidence: number; // 0-1
   explanation?: string;
   algorithm_used: string;
-  processing_time_ms?: number;
+
+  // Métadonnées optionnelles
   features_used?: Record<string, any>;
-  raw_data?: any;
+  processing_time_ms?: number;
+  error?: boolean;
+  debug_info?: Record<string, any>;
 }
 
 /**
- * Résultats agrégés par famille de stratégies
+ * Configuration d'un indicateur
+ */
+export interface BaseIndicatorConfig {
+  id: string;
+  name: string;
+  domain: MetricsDomain;
+  category: string;
+  implementationStatus: ImplementationStatus;
+  theoreticalFoundation: string;
+  dataRequirements: DataRequirement[];
+
+  // Configuration avancée - CORRECTION : Suppression des doublons
+  defaultAlgorithm?: string;
+  availableAlgorithms: string[];
+  outputType: "categorical" | "numerical" | "boolean" | "composite";
+  validationCriteria?: ValidationCriteria;
+}
+
+/**
+ * Exigences de données pour un indicateur
+ */
+export interface DataRequirement {
+  table: string;
+  columns: string[];
+  optional?: boolean;
+  description?: string;
+}
+
+/**
+ * Critères de validation pour un indicateur
+ */
+export interface ValidationCriteria {
+  minSampleSize: number;
+  requiredFields: string[];
+  dataQualityThresholds: Record<string, number>;
+  performanceThresholds: Record<string, number>;
+}
+
+/**
+ * Résultats d'analyse par famille
  */
 export interface FamilyResults {
-  family: string;
-  totalUsage: number;
+  familyName: string;
   indicators: Record<string, IndicatorResult>;
-  globalScore: number;
-  effectiveness: number;
-  convergence_status?: "CONVERGENT" | "DIVERGENT";
+  aggregatedScore?: number;
+  summary?: string;
 }
 
 /**
@@ -121,32 +126,45 @@ export interface FamilyResults {
  */
 export interface GlobalMetrics {
   totalTurns: number;
-  averageEffectiveness: number;
-  topPerformingFamily: string;
-  convergenceStatus?: "CONVERGENT" | "DIVERGENT" | "UNKNOWN";
-  validationDate?: Date;
+  totalCalls: number;
+  coverageRate: number;
+  averageConfidence: number;
+  processingTime: number;
+
+  // Métriques par domaine
+  domainMetrics: Record<MetricsDomain, DomainMetrics>;
 }
 
-// ================ VALIDATION ET CONVERGENCE ================
-
 /**
- * Données d'annotation experte
+ * Métriques spécifiques à un domaine
  */
-export interface AnnotationData {
-  turn_id: number;
-  domain: MetricsDomain;
-  indicator_id: string;
-  human_label: string;
-  algorithm_prediction?: string;
-  algorithm_confidence?: number;
-  annotator_id: string;
-  difficulty_rating?: number;
-  notes?: string;
-  annotation_time_seconds?: number;
+export interface DomainMetrics {
+  indicatorCount: number;
+  algorithmCount: number;
+  averageAccuracy: number;
+  averageProcessingTime: number;
+  totalCalculations: number;
 }
 
 /**
- * Résultats de benchmark d'algorithme
+ * Configuration du moteur de métriques
+ */
+export interface MetricsEngineConfig {
+  domain: MetricsDomain;
+  indicatorIds?: string[];
+  algorithmOverrides?: Record<string, string>;
+  enableCaching?: boolean;
+  enableBenchmarking?: boolean;
+  enableRealTimeComparison?: boolean;
+
+  // Paramètres de performance
+  maxConcurrentCalculations?: number;
+  cacheTimeout?: number;
+  processingTimeout?: number;
+}
+
+/**
+ * Résultats de benchmarking
  */
 export interface BenchmarkResult {
   algorithm_id: string;
@@ -155,11 +173,13 @@ export interface BenchmarkResult {
   recall: number;
   f1_score: number;
   processing_time_ms: number;
+  memory_usage_mb?: number;
   test_data_size: number;
-  confidence_intervals?: {
-    accuracy: [number, number];
-    f1_score: [number, number];
-  };
+
+  // Métriques spécifiques
+  mae?: number; // Mean Absolute Error (pour régression)
+  rmse?: number; // Root Mean Square Error
+  correlation?: number; // Coefficient de corrélation
 }
 
 /**
@@ -169,68 +189,53 @@ export interface AlgorithmComparison {
   indicator_id: string;
   algorithms: string[];
   results: Record<string, IndicatorResult[]>;
-  benchmark: Record<string, BenchmarkResult>;
+  benchmarks: Record<string, BenchmarkResult>;
   recommendation: {
     best_accuracy: string;
     best_speed: string;
     best_overall: string;
     reasoning: string;
   };
+
+  // Analyse statistique
+  statistical_tests?: StatisticalTestResults;
 }
 
 /**
- * Données de convergence par famille de stratégies
+ * Résultats de tests statistiques
  */
-export interface FamilyConvergenceData {
-  strategy_family: string;
-  ac_effectiveness: number; // Mesure empirique AC
-  li_effectiveness: number; // Score composite LI
-  cognitive_effectiveness: number; // Score composite Cognitif
-  sample_size: number;
+export interface StatisticalTestResults {
+  significant_differences: boolean;
+  p_values: Record<string, number>;
+  effect_sizes: Record<string, number>;
+  confidence_intervals: Record<string, [number, number]>;
 }
 
 /**
- * Résultats de validation de convergence (spécifique thèse)
+ * Données annotées pour l'entraînement supervisé
  */
-export interface ConvergenceResults {
-  validation_status: "CONVERGENT" | "DIVERGENT" | "UNKNOWN";
-  family_results: Record<string, FamilyConvergenceData>;
-  consistency_tests: {
-    rankings: {
-      AC: string[];
-      LI: string[];
-      Cognitive: string[];
-    };
-    concordance: {
-      AC_LI: { tau: number; p_value: number };
-      AC_Cognitive: { tau: number; p_value: number };
-      LI_Cognitive: { tau: number; p_value: number };
-    };
-    overall_consistency: number;
-  };
-  hypothesis_tests?: {
-    H1_validation: boolean; // Action → efficacité
-    H2_validation: boolean; // Explication → difficulté
-    H3_validation: boolean; // Modulation contextuelle
-  };
-  improvement_suggestions?: string[];
-}
+export interface AnnotatedData {
+  turn_id: number;
+  domain: MetricsDomain;
+  indicator_id: string;
+  human_label: string;
+  algorithm_prediction?: string;
+  algorithm_confidence?: number;
+  annotator_id: string;
 
-// ================ PERFORMANCE ET MONITORING ================
+  // Métadonnées annotation
+  annotation_time_seconds?: number;
+  difficulty_rating?: number; // 1-5
+  notes?: string;
+  context_needed?: boolean;
 
-/**
- * Métriques de performance système
- */
-export interface PerformanceMetrics {
-  lastCalculationTime: number;
-  cacheHitRate: number;
-  totalCalculations: number;
-  memoryUsage?: number;
-  errorRate?: number;
+  // Données contextuelles
+  turn_data: TurnTaggedData;
+  surrounding_context?: TurnTaggedData[];
 }
 
 /**
- * Configuration de test A/B
+ * Configuration pour les tests A/B
  */
 export interface ABTestConfig {
   name: string;
@@ -238,61 +243,107 @@ export interface ABTestConfig {
   indicator_id: string;
   algorithm_a: string;
   algorithm_b: string;
-  traffic_split_percent: number;
+  traffic_split_percent: number; // 0-100
   target_sample_size: number;
-  success_metric: "accuracy" | "f1_score" | "processing_time";
+  success_metric: string;
+  minimum_effect_size: number;
 }
 
 /**
- * Résultats de test A/B
+ * Résultats d'un test A/B
  */
 export interface ABTestResults {
   test_id: string;
+  status: "running" | "completed" | "stopped";
   current_sample_size: number;
   statistical_significance: number;
   winner: "algorithm_a" | "algorithm_b" | "inconclusive";
   improvement_percent: number;
-  confidence_level: number;
+  confidence_interval: [number, number];
+
+  // Détails par algorithme
+  algorithm_a_metrics: PerformanceMetrics;
+  algorithm_b_metrics: PerformanceMetrics;
 }
 
-// ================ TYPE GUARDS ================
+/**
+ * Métriques de performance détaillées
+ */
+export interface PerformanceMetrics {
+  accuracy: number;
+  processing_time_ms: number;
+  memory_usage_mb: number;
+  throughput_per_second: number;
+  error_rate: number;
+
+  // Métriques utilisateur
+  user_satisfaction?: number;
+  annotation_agreement?: number;
+}
 
 /**
- * Type guards pour validation runtime
+ * Résultat d'entraînement de modèle ML
  */
-export const isValidMetricsDomain = (
-  domain: string
-): domain is MetricsDomain => {
-  return ["cognitive", "li", "conversational_analysis"].includes(domain);
-};
+export interface TrainingResult {
+  model_id: string;
+  algorithm_id: string;
+  training_accuracy: number;
+  validation_accuracy: number;
+  training_time_minutes: number;
+  model_size_mb: number;
 
-export const isValidImplementationStatus = (
-  status: string
-): status is ImplementationStatus => {
-  return ["implemented", "partial", "missing"].includes(status);
-};
+  // Détails de l'entraînement
+  training_data_size: number;
+  validation_data_size: number;
+  features_used: string[];
+  hyperparameters: Record<string, any>;
 
-export const isValidAlgorithmType = (type: string): type is AlgorithmType => {
-  return ["rule_based", "nlp_enhanced", "ml_supervised", "hybrid"].includes(
-    type
-  );
-};
+  // Métriques de qualité
+  confusion_matrix?: number[][];
+  feature_importance?: Record<string, number>;
+  learning_curve?: { epoch: number; accuracy: number }[];
+}
 
-// ================ CONSTANTES ================
+/**
+ * Configuration pour l'annotation supervisée
+ */
+export interface AnnotationWorkflowConfig {
+  domain: MetricsDomain;
+  indicator_id: string;
+  selection_strategy:
+    | "random"
+    | "active_learning"
+    | "disagreement"
+    | "uncertainty";
+  batch_size: number;
+  target_annotations: number;
 
-export const METRICS_DOMAINS = [
-  "cognitive",
-  "li",
-  "conversational_analysis",
-] as const;
-export const IMPLEMENTATION_STATUSES = [
-  "implemented",
-  "partial",
-  "missing",
-] as const;
-export const ALGORITHM_TYPES = [
-  "rule_based",
-  "nlp_enhanced",
-  "ml_supervised",
-  "hybrid",
-] as const;
+  // Critères de qualité
+  min_inter_annotator_agreement: number;
+  max_annotation_time_seconds: number;
+  required_annotators_per_case: number;
+}
+
+/**
+ * Statistiques d'annotation
+ */
+export interface AnnotationStats {
+  total_cases: number;
+  annotated_cases: number;
+  completion_rate: number;
+  average_annotation_time: number;
+  inter_annotator_agreement: number;
+
+  // Répartition par difficulté
+  difficulty_distribution: Record<number, number>;
+
+  // Répartition par annotateur
+  annotator_stats: Record<
+    string,
+    {
+      annotations_count: number;
+      average_time: number;
+      agreement_rate: number;
+    }
+  >;
+}

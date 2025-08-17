@@ -432,7 +432,7 @@ const OverviewTab: React.FC<{
 }> = ({ familyResults }) => (
   <Paper sx={{ p: 3 }}>
     <Typography variant="h5" gutterBottom>
-      📊 Résultats par Famille de Stratégies
+      📊 Résultats 5 par Famille de Stratégies
     </Typography>
 
     <Box

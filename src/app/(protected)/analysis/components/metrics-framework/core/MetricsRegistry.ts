@@ -1,551 +1,493 @@
 // src/app/(protected)/analysis/components/metrics-framework/core/MetricsRegistry.ts
 
-import BaseIndicator from "./BaseIndicator";
 import {
-  MetricsDomain,
   BaseIndicatorConfig,
+  MetricsDomain,
+  AlgorithmConfig,
   ImplementationStatus,
 } from "./types/base";
 
 /**
- * Registre central pour tous les indicateurs du framework
+ * Registre central de tous les indicateurs et algorithmes du framework
  *
- * Permet l'enregistrement dynamique et la découverte d'indicateurs
- * pour tous les domaines (cognitive, LI, AC)
+ * Gère l'enregistrement, la découverte et la configuration des métriques
  */
-class MetricsRegistry {
-  private indicators: Map<string, BaseIndicator> = new Map();
-  private domainIndicators: Map<MetricsDomain, string[]> = new Map();
-  private categoryIndicators: Map<string, string[]> = new Map();
+export class MetricsRegistry {
+  private static instance: MetricsRegistry;
+  private indicators: Map<string, BaseIndicatorConfig> = new Map();
+  private algorithms: Map<string, AlgorithmConfig> = new Map();
+  private domainMappings: Map<MetricsDomain, string[]> = new Map();
 
-  constructor() {
-    // Initialiser les maps pour chaque domaine
-    this.domainIndicators.set("cognitive", []);
-    this.domainIndicators.set("li", []);
-    this.domainIndicators.set("conversational_analysis", []);
+  private constructor() {
+    this.initializeDefaultIndicators();
+    this.initializeDefaultAlgorithms();
   }
 
-  // ================ ENREGISTREMENT D'INDICATEURS ================
-
-  /**
-   * Enregistre un nouvel indicateur dans le registre
-   */
-  register(indicator: BaseIndicator): boolean {
-    const id = indicator.getId();
-    const domain = indicator.getDomain();
-    const category = indicator.getCategory();
-
-    if (this.indicators.has(id)) {
-      console.warn(`Indicateur ${id} déjà enregistré - écrasement`);
+  public static getInstance(): MetricsRegistry {
+    if (!MetricsRegistry.instance) {
+      MetricsRegistry.instance = new MetricsRegistry();
     }
-
-    try {
-      // Enregistrer l'indicateur
-      this.indicators.set(id, indicator);
-
-      // Indexer par domaine
-      if (!this.domainIndicators.has(domain)) {
-        this.domainIndicators.set(domain, []);
-      }
-      const domainList = this.domainIndicators.get(domain)!;
-      if (!domainList.includes(id)) {
-        domainList.push(id);
-      }
-
-      // Indexer par catégorie
-      if (!this.categoryIndicators.has(category)) {
-        this.categoryIndicators.set(category, []);
-      }
-      const categoryList = this.categoryIndicators.get(category)!;
-      if (!categoryList.includes(id)) {
-        categoryList.push(id);
-      }
-
-      console.log(
-        `✅ Indicateur ${id} enregistré avec succès (${domain}/${category})`
-      );
-      return true;
-    } catch (error) {
-      console.error(`❌ Erreur enregistrement ${id}:`, error);
-      return false;
-    }
+    return MetricsRegistry.instance;
   }
 
   /**
-   * Enregistre plusieurs indicateurs en batch
+   * Enregistrement d'un nouvel indicateur
    */
-  registerBatch(indicators: BaseIndicator[]): {
-    success: number;
-    failed: number;
-  } {
-    let success = 0;
-    let failed = 0;
+  public registerIndicator(config: BaseIndicatorConfig): void {
+    this.indicators.set(config.id, config);
 
-    for (const indicator of indicators) {
-      if (this.register(indicator)) {
-        success++;
-      } else {
-        failed++;
-      }
+    // Mise à jour des mappings par domaine
+    const domainIndicators = this.domainMappings.get(config.domain) || [];
+    if (!domainIndicators.includes(config.id)) {
+      domainIndicators.push(config.id);
+      this.domainMappings.set(config.domain, domainIndicators);
     }
 
-    console.log(`📊 Enregistrement batch: ${success} succès, ${failed} échecs`);
-    return { success, failed };
+    console.log(
+      `[MetricsRegistry] Indicateur enregistré: ${config.id} (${config.domain})`
+    );
   }
 
-  // ================ RECUPERATION D'INDICATEURS ================
+  /**
+   * Enregistrement d'un nouvel algorithme
+   */
+  public registerAlgorithm(config: AlgorithmConfig): void {
+    this.algorithms.set(config.id, config);
+    console.log(
+      `[MetricsRegistry] Algorithme enregistré: ${config.id} (${config.type})`
+    );
+  }
 
   /**
-   * Récupère un indicateur par son ID
+   * Récupération d'un indicateur par ID
    */
-  get(id: string): BaseIndicator | undefined {
+  public getIndicator(id: string): BaseIndicatorConfig | undefined {
     return this.indicators.get(id);
   }
 
   /**
-   * Récupère tous les indicateurs d'un domaine
+   * Récupération d'un algorithme par ID
    */
-  getByDomain(domain: MetricsDomain): BaseIndicator[] {
-    const ids = this.domainIndicators.get(domain) || [];
-    return ids.map((id) => this.indicators.get(id)!).filter(Boolean);
+  public getAlgorithm(id: string): AlgorithmConfig | undefined {
+    return this.algorithms.get(id);
   }
 
   /**
-   * Récupère tous les indicateurs d'une catégorie
+   * Récupération de tous les indicateurs d'un domaine
    */
-  getByCategory(category: string): BaseIndicator[] {
-    const ids = this.categoryIndicators.get(category) || [];
-    return ids.map((id) => this.indicators.get(id)!).filter(Boolean);
+  public getIndicatorsByDomain(domain: MetricsDomain): BaseIndicatorConfig[] {
+    const indicatorIds = this.domainMappings.get(domain) || [];
+    return indicatorIds
+      .map((id) => this.indicators.get(id))
+      .filter(
+        (indicator): indicator is BaseIndicatorConfig => indicator !== undefined
+      );
   }
 
   /**
-   * Récupère tous les indicateurs avec un statut d'implémentation donné
+   * Récupération de tous les algorithmes compatibles avec un domaine
    */
-  getByStatus(status: ImplementationStatus): BaseIndicator[] {
-    return Array.from(this.indicators.values()).filter(
-      (indicator) => indicator.getImplementationStatus() === status
+  public getAlgorithmsByDomain(domain: MetricsDomain): AlgorithmConfig[] {
+    return Array.from(this.algorithms.values()).filter((algorithm) =>
+      algorithm.supportedDomains.includes(domain)
     );
   }
 
   /**
-   * Récupère tous les indicateurs
+   * Récupération des algorithmes disponibles pour un indicateur spécifique
    */
-  getAll(): BaseIndicator[] {
+  public getAlgorithmsForIndicator(indicatorId: string): AlgorithmConfig[] {
+    const indicator = this.getIndicator(indicatorId);
+    if (!indicator) {
+      return [];
+    }
+
+    return indicator.availableAlgorithms
+      .map((algId) => this.algorithms.get(algId))
+      .filter(
+        (algorithm): algorithm is AlgorithmConfig => algorithm !== undefined
+      );
+  }
+
+  /**
+   * Récupération de tous les domaines disponibles
+   */
+  public getAvailableDomains(): MetricsDomain[] {
+    return Array.from(this.domainMappings.keys());
+  }
+
+  /**
+   * Récupération de tous les indicateurs
+   */
+  public getAllIndicators(): BaseIndicatorConfig[] {
     return Array.from(this.indicators.values());
   }
 
-  // ================ RECHERCHE ET FILTRAGE ================
-
   /**
-   * Recherche des indicateurs par nom ou description
+   * Récupération de tous les algorithmes
    */
-  search(query: string): BaseIndicator[] {
-    const lowerQuery = query.toLowerCase();
-    return Array.from(this.indicators.values()).filter(
-      (indicator) =>
-        indicator.getName().toLowerCase().includes(lowerQuery) ||
-        indicator.getDescription().toLowerCase().includes(lowerQuery) ||
-        indicator.getId().toLowerCase().includes(lowerQuery)
-    );
+  public getAllAlgorithms(): AlgorithmConfig[] {
+    return Array.from(this.algorithms.values());
   }
 
   /**
-   * Filtre les indicateurs selon des critères multiples
+   * Validation de la compatibilité indicateur-algorithme
    */
-  filter(criteria: {
-    domain?: MetricsDomain;
-    category?: string;
-    status?: ImplementationStatus;
-    hasAlgorithms?: boolean;
-  }): BaseIndicator[] {
-    let results = Array.from(this.indicators.values());
+  public isCompatible(indicatorId: string, algorithmId: string): boolean {
+    const indicator = this.getIndicator(indicatorId);
+    const algorithm = this.getAlgorithm(algorithmId);
 
-    if (criteria.domain) {
-      results = results.filter((ind) => ind.getDomain() === criteria.domain);
-    }
-
-    if (criteria.category) {
-      results = results.filter(
-        (ind) => ind.getCategory() === criteria.category
-      );
-    }
-
-    if (criteria.status) {
-      results = results.filter(
-        (ind) => ind.getImplementationStatus() === criteria.status
-      );
-    }
-
-    if (criteria.hasAlgorithms !== undefined) {
-      results = results.filter((ind) => {
-        const hasAlgs = ind.getAvailableAlgorithms().length > 0;
-        return criteria.hasAlgorithms ? hasAlgs : !hasAlgs;
-      });
-    }
-
-    return results;
-  }
-
-  // ================ STATISTIQUES ET DIAGNOSTIC ================
-
-  /**
-   * Retourne des statistiques du registre
-   */
-  getStats(): {
-    total: number;
-    byDomain: Record<MetricsDomain, number>;
-    byStatus: Record<ImplementationStatus, number>;
-    byCategory: Record<string, number>;
-    totalAlgorithms: number;
-  } {
-    const indicators = Array.from(this.indicators.values());
-
-    const byDomain: Record<MetricsDomain, number> = {
-      cognitive: 0,
-      li: 0,
-      conversational_analysis: 0,
-    };
-
-    const byStatus: Record<ImplementationStatus, number> = {
-      implemented: 0,
-      partial: 0,
-      missing: 0,
-    };
-
-    const byCategory: Record<string, number> = {};
-    let totalAlgorithms = 0;
-
-    for (const indicator of indicators) {
-      byDomain[indicator.getDomain()]++;
-      byStatus[indicator.getImplementationStatus()]++;
-
-      const category = indicator.getCategory();
-      byCategory[category] = (byCategory[category] || 0) + 1;
-
-      totalAlgorithms += indicator.getAvailableAlgorithms().length;
-    }
-
-    return {
-      total: indicators.length,
-      byDomain,
-      byStatus,
-      byCategory,
-      totalAlgorithms,
-    };
-  }
-
-  /**
-   * Diagnostic de la santé du registre
-   */
-  diagnose(): {
-    health: "excellent" | "good" | "warning" | "critical";
-    issues: string[];
-    recommendations: string[];
-    coverage: Record<MetricsDomain, number>;
-  } {
-    const stats = this.getStats();
-    const issues: string[] = [];
-    const recommendations: string[] = [];
-
-    // Calcul de la couverture par domaine (% implémentés)
-    const coverage: Record<MetricsDomain, number> = {
-      cognitive: 0,
-      li: 0,
-      conversational_analysis: 0,
-    };
-
-    for (const domain of Object.keys(coverage) as MetricsDomain[]) {
-      const domainIndicators = this.getByDomain(domain);
-      const implemented = domainIndicators.filter(
-        (ind) => ind.getImplementationStatus() === "implemented"
-      ).length;
-      coverage[domain] =
-        domainIndicators.length > 0
-          ? Math.round((implemented / domainIndicators.length) * 100)
-          : 0;
-    }
-
-    // Analyse des problèmes
-    if (stats.total === 0) {
-      issues.push("Aucun indicateur enregistré");
-      recommendations.push("Commencer par enregistrer les indicateurs de base");
-    }
-
-    if (stats.byStatus.implemented < stats.total * 0.5) {
-      issues.push("Moins de 50% des indicateurs sont implémentés");
-      recommendations.push(
-        "Prioriser l'implémentation des indicateurs critiques"
-      );
-    }
-
-    if (stats.totalAlgorithms < stats.total * 2) {
-      issues.push("Moins de 2 algorithmes par indicateur en moyenne");
-      recommendations.push(
-        "Ajouter des algorithmes alternatifs pour la comparaison"
-      );
-    }
-
-    // Vérifier la couverture par domaine
-    for (const [domain, percent] of Object.entries(coverage)) {
-      if (percent < 30) {
-        issues.push(`Couverture faible du domaine ${domain}: ${percent}%`);
-        recommendations.push(
-          `Développer les indicateurs manquants pour ${domain}`
-        );
-      }
-    }
-
-    // Détermination de la santé globale
-    let health: "excellent" | "good" | "warning" | "critical";
-
-    if (
-      issues.length === 0 &&
-      stats.byStatus.implemented >= stats.total * 0.8
-    ) {
-      health = "excellent";
-    } else if (
-      issues.length <= 2 &&
-      stats.byStatus.implemented >= stats.total * 0.6
-    ) {
-      health = "good";
-    } else if (
-      issues.length <= 4 &&
-      stats.byStatus.implemented >= stats.total * 0.3
-    ) {
-      health = "warning";
-    } else {
-      health = "critical";
-    }
-
-    return {
-      health,
-      issues,
-      recommendations,
-      coverage,
-    };
-  }
-
-  // ================ GESTION ET MAINTENANCE ================
-
-  /**
-   * Supprime un indicateur du registre
-   */
-  unregister(id: string): boolean {
-    const indicator = this.indicators.get(id);
-    if (!indicator) {
-      console.warn(`Indicateur ${id} non trouvé pour suppression`);
+    if (!indicator || !algorithm) {
       return false;
     }
 
-    const domain = indicator.getDomain();
-    const category = indicator.getCategory();
-
-    // Supprimer de l'index principal
-    this.indicators.delete(id);
-
-    // Supprimer des index secondaires
-    const domainList = this.domainIndicators.get(domain);
-    if (domainList) {
-      const index = domainList.indexOf(id);
-      if (index > -1) {
-        domainList.splice(index, 1);
-      }
+    // Vérifier si l'algorithme est dans la liste des algorithmes disponibles pour cet indicateur
+    if (!indicator.availableAlgorithms.includes(algorithmId)) {
+      return false;
     }
 
-    const categoryList = this.categoryIndicators.get(category);
-    if (categoryList) {
-      const index = categoryList.indexOf(id);
-      if (index > -1) {
-        categoryList.splice(index, 1);
-      }
-    }
-
-    console.log(`🗑️ Indicateur ${id} supprimé du registre`);
-    return true;
+    // Vérifier la compatibilité de domaine
+    return algorithm.supportedDomains.includes(indicator.domain);
   }
 
   /**
-   * Efface tous les indicateurs
+   * Statistiques du registre
    */
-  clear(): void {
-    this.indicators.clear();
-    this.domainIndicators.clear();
-    this.categoryIndicators.clear();
-
-    // Réinitialiser les domaines
-    this.domainIndicators.set("cognitive", []);
-    this.domainIndicators.set("li", []);
-    this.domainIndicators.set("conversational_analysis", []);
-
-    console.log("🧹 Registre nettoyé");
-  }
-
-  /**
-   * Valide la cohérence du registre
-   */
-  validate(): { valid: boolean; errors: string[] } {
-    const errors: string[] = [];
-
-    // Vérifier que tous les indicateurs dans les index existent
-    for (const [domain, ids] of this.domainIndicators) {
-      for (const id of ids) {
-        if (!this.indicators.has(id)) {
-          errors.push(
-            `Indicateur ${id} référencé dans domaine ${domain} mais absent du registre principal`
-          );
-        }
-      }
-    }
-
-    for (const [category, ids] of this.categoryIndicators) {
-      for (const id of ids) {
-        if (!this.indicators.has(id)) {
-          errors.push(
-            `Indicateur ${id} référencé dans catégorie ${category} mais absent du registre principal`
-          );
-        }
-      }
-    }
-
-    // Vérifier la cohérence des métadonnées
-    for (const [id, indicator] of this.indicators) {
-      const domain = indicator.getDomain();
-      const category = indicator.getCategory();
-
-      const domainList = this.domainIndicators.get(domain) || [];
-      if (!domainList.includes(id)) {
-        errors.push(`Indicateur ${id} absent de l'index du domaine ${domain}`);
-      }
-
-      const categoryList = this.categoryIndicators.get(category) || [];
-      if (!categoryList.includes(id)) {
-        errors.push(
-          `Indicateur ${id} absent de l'index de la catégorie ${category}`
-        );
-      }
-    }
-
-    return {
-      valid: errors.length === 0,
-      errors,
-    };
-  }
-
-  // ================ IMPORT/EXPORT ================
-
-  /**
-   * Exporte la configuration du registre
-   */
-  export(): {
-    indicators: BaseIndicatorConfig[];
-    domains: Record<MetricsDomain, string[]>;
-    categories: Record<string, string[]>;
-    timestamp: string;
-    version: string;
+  public getRegistryStats(): {
+    totalIndicators: number;
+    totalAlgorithms: number;
+    indicatorsByDomain: Record<MetricsDomain, number>;
+    indicatorsByStatus: Record<ImplementationStatus, number>;
+    algorithmsByType: Record<string, number>;
   } {
-    const indicators = Array.from(this.indicators.values()).map((ind) => ({
-      id: ind.getId(),
-      name: ind.getName(),
-      domain: ind.getDomain(),
-      category: ind.getCategory(),
-      implementationStatus: ind.getImplementationStatus(),
-      description: ind.getDescription(),
-      theoreticalFoundation: ind.getTheoreticalFoundation(),
-      dataRequirements: [], // Serait à enrichir selon les besoins
-    }));
+    const indicatorsByDomain: Record<MetricsDomain, number> = {} as any;
+    const indicatorsByStatus: Record<ImplementationStatus, number> = {} as any;
+    const algorithmsByType: Record<string, number> = {};
 
-    const domains = Object.fromEntries(this.domainIndicators) as Record<
-      MetricsDomain,
-      string[]
-    >;
-    const categories = Object.fromEntries(this.categoryIndicators);
+    // Compter par domaine
+    for (const domain of this.getAvailableDomains()) {
+      indicatorsByDomain[domain] = this.getIndicatorsByDomain(domain).length;
+    }
+
+    // Compter par statut d'implémentation
+    for (const indicator of this.getAllIndicators()) {
+      indicatorsByStatus[indicator.implementationStatus] =
+        (indicatorsByStatus[indicator.implementationStatus] || 0) + 1;
+    }
+
+    // Compter par type d'algorithme
+    for (const algorithm of this.getAllAlgorithms()) {
+      algorithmsByType[algorithm.type] =
+        (algorithmsByType[algorithm.type] || 0) + 1;
+    }
 
     return {
-      indicators,
-      domains,
-      categories,
-      timestamp: new Date().toISOString(),
-      version: "1.0.0",
+      totalIndicators: this.indicators.size,
+      totalAlgorithms: this.algorithms.size,
+      indicatorsByDomain,
+      indicatorsByStatus,
+      algorithmsByType,
     };
   }
 
   /**
-   * Affiche un résumé du registre
+   * Initialisation des indicateurs par défaut
    */
-  summary(): string {
-    const stats = this.getStats();
-    const diagnosis = this.diagnose();
+  private initializeDefaultIndicators(): void {
+    // Indicateurs Linguistique Interactionnelle (LI)
+    this.registerIndicator({
+      id: "common_ground_status",
+      name: "Statut du Common Ground",
+      domain: "li",
+      category: "Intercompréhension",
+      implementationStatus: "implemented",
+      theoreticalFoundation: "Clark (1996) - Common Ground Theory",
+      dataRequirements: [
+        {
+          table: "turntagged",
+          columns: ["verbatim", "next_turn_verbatim", "speaker"],
+          optional: false,
+        },
+      ],
+      defaultAlgorithm: "basic_shared_refs",
+      availableAlgorithms: [
+        "basic_shared_refs",
+        "nlp_enhanced",
+        "ml_supervised",
+      ],
+      outputType: "categorical",
+    });
 
-    return `
-📊 REGISTRE DE MÉTRIQUES - RÉSUMÉ
-═══════════════════════════════════
+    this.registerIndicator({
+      id: "feedback_alignment",
+      name: "Alignement des Feedbacks",
+      domain: "li",
+      category: "Coordination",
+      implementationStatus: "implemented",
+      theoreticalFoundation:
+        "Pickering & Garrod (2004) - Interactive Alignment",
+      dataRequirements: [
+        {
+          table: "turntagged",
+          columns: ["verbatim", "next_turn_verbatim", "tag"],
+          optional: false,
+        },
+      ],
+      defaultAlgorithm: "basic_alignment",
+      availableAlgorithms: [
+        "basic_alignment",
+        "sentiment_enhanced",
+        "sequential_pattern",
+      ],
+      outputType: "categorical",
+    });
 
-🔢 Statistiques générales:
-  • Total indicateurs: ${stats.total}
-  • Total algorithmes: ${stats.totalAlgorithms}
-  • Moyenne alg/indicateur: ${
-    stats.total > 0 ? (stats.totalAlgorithms / stats.total).toFixed(1) : 0
+    this.registerIndicator({
+      id: "backchannels_frequency",
+      name: "Fréquence des Backchannels",
+      domain: "li",
+      category: "Engagement",
+      implementationStatus: "partial",
+      theoreticalFoundation: "Schegloff (1982) - Sequence Organization",
+      dataRequirements: [
+        {
+          table: "turntagged",
+          columns: ["verbatim", "speaker", "start_time", "end_time"],
+          optional: false,
+        },
+      ],
+      defaultAlgorithm: "pattern_detection",
+      availableAlgorithms: ["pattern_detection", "prosodic_enhanced"],
+      outputType: "numerical",
+    });
+
+    // Indicateurs Sciences Cognitives
+    this.registerIndicator({
+      id: "fluidite_cognitive",
+      name: "Fluidité Cognitive",
+      domain: "cognitive",
+      category: "Traitement Automatique",
+      implementationStatus: "implemented",
+      theoreticalFoundation:
+        "Gallese (2007) - Neurones Miroirs + Fluidité Temporelle",
+      dataRequirements: [
+        {
+          table: "turntagged",
+          columns: [
+            "verbatim",
+            "next_turn_verbatim",
+            "start_time",
+            "end_time",
+            "speaker",
+          ],
+          optional: false,
+        },
+      ],
+      defaultAlgorithm: "basic_fluidity",
+      availableAlgorithms: ["basic_fluidity", "neuron_mirror", "ml_enhanced"],
+      outputType: "numerical",
+    });
+
+    this.registerIndicator({
+      id: "reactions_directes",
+      name: "Réactions Directes",
+      domain: "cognitive",
+      category: "Automatisme Cognitif",
+      implementationStatus: "partial",
+      theoreticalFoundation: "Neurones Miroirs - Réactivité Spontanée",
+      dataRequirements: [
+        {
+          table: "turntagged",
+          columns: ["verbatim", "next_turn_verbatim", "start_time", "end_time"],
+          optional: false,
+        },
+      ],
+      defaultAlgorithm: "temporal_reactivity",
+      availableAlgorithms: ["temporal_reactivity", "semantic_priming"],
+      outputType: "categorical",
+    });
+
+    this.registerIndicator({
+      id: "charge_cognitive",
+      name: "Charge Cognitive",
+      domain: "cognitive",
+      category: "Effort Mental",
+      implementationStatus: "missing",
+      theoreticalFoundation: "Arnsten (2009) - Charge Cognitive PFC",
+      dataRequirements: [
+        {
+          table: "turntagged",
+          columns: ["verbatim", "tag", "start_time", "end_time"],
+          optional: false,
+        },
+      ],
+      defaultAlgorithm: "complexity_analysis",
+      availableAlgorithms: ["complexity_analysis", "ml_load_estimation"],
+      outputType: "numerical",
+    });
+
+    // Indicateurs Analyse Conversationnelle (baseline empirique)
+    this.registerIndicator({
+      id: "positive_reaction_rate",
+      name: "Taux de Réactions Positives",
+      domain: "conversational_analysis",
+      category: "Efficacité Empirique",
+      implementationStatus: "implemented",
+      theoreticalFoundation: "Analyse Conversationnelle - Adjacency Pairs",
+      dataRequirements: [
+        {
+          table: "turntagged",
+          columns: ["tag", "next_turn_verbatim", "next_turn_tag"],
+          optional: false,
+        },
+      ],
+      defaultAlgorithm: "positive_markers_detection",
+      availableAlgorithms: ["positive_markers_detection", "sentiment_analysis"],
+      outputType: "numerical",
+    });
   }
 
-📊 Par domaine:
-  • Cognitif: ${stats.byDomain.cognitive} indicateurs (${
-      diagnosis.coverage.cognitive
-    }% implémentés)
-  • LI: ${stats.byDomain.li} indicateurs (${
-      diagnosis.coverage.li
-    }% implémentés)  
-  • AC: ${stats.byDomain.conversational_analysis} indicateurs (${
-      diagnosis.coverage.conversational_analysis
-    }% implémentés)
+  /**
+   * Initialisation des algorithmes par défaut
+   */
+  private initializeDefaultAlgorithms(): void {
+    // Algorithmes LI
+    this.registerAlgorithm({
+      id: "basic_shared_refs",
+      name: "Détection Références Partagées",
+      type: "rule_based",
+      version: "1.0.0",
+      description: "Détection de références partagées par règles lexicales",
+      requiresTraining: false,
+      supportedDomains: ["li"],
+    });
 
-🚦 Statut d'implémentation:
-  • ✅ Implémentés: ${stats.byStatus.implemented}
-  • ⚠️ Partiels: ${stats.byStatus.partial}
-  • ❌ Manquants: ${stats.byStatus.missing}
+    this.registerAlgorithm({
+      id: "nlp_enhanced",
+      name: "Common Ground NLP Enhanced",
+      type: "nlp_enhanced",
+      version: "1.0.0",
+      description: "Analyse sémantique avec spaCy et similarité vectorielle",
+      requiresTraining: false,
+      supportedDomains: ["li"],
+    });
 
-🏥 Santé du registre: ${diagnosis.health.toUpperCase()}
-${
-  diagnosis.issues.length > 0
-    ? `
-⚠️ Problèmes identifiés:
-${diagnosis.issues.map((issue) => `  • ${issue}`).join("\n")}
+    this.registerAlgorithm({
+      id: "ml_supervised",
+      name: "Common Ground ML Supervisé",
+      type: "ml_supervised",
+      version: "1.0.0",
+      description: "Modèle entraîné sur annotations expertes",
+      requiresTraining: true,
+      supportedDomains: ["li"],
+    });
 
-💡 Recommandations:
-${diagnosis.recommendations.map((rec) => `  • ${rec}`).join("\n")}
-`
-    : "  • Aucun problème détecté"
-}
-═══════════════════════════════════
-    `.trim();
+    // Algorithmes Cognitifs
+    this.registerAlgorithm({
+      id: "basic_fluidity",
+      name: "Algorithme Fluidité Basique",
+      type: "rule_based",
+      version: "1.0.0",
+      description:
+        "Analyse temporelle et linguistique basée sur des règles explicites",
+      requiresTraining: false,
+      supportedDomains: ["cognitive"],
+    });
+
+    this.registerAlgorithm({
+      id: "neuron_mirror",
+      name: "Neurones Miroirs Avancé",
+      type: "nlp_enhanced",
+      version: "1.0.0",
+      description:
+        "Modèle basé sur résonance neuronale et synchronie temporelle",
+      requiresTraining: false,
+      supportedDomains: ["cognitive"],
+    });
+
+    this.registerAlgorithm({
+      id: "ml_enhanced",
+      name: "Fluidité ML Enhanced",
+      type: "ml_supervised",
+      version: "1.0.0",
+      description:
+        "Modèle supervisé avec features prosodiques et linguistiques",
+      requiresTraining: true,
+      supportedDomains: ["cognitive"],
+    });
+
+    // Algorithmes Analyse Conversationnelle
+    this.registerAlgorithm({
+      id: "positive_markers_detection",
+      name: "Détection Marqueurs Positifs",
+      type: "rule_based",
+      version: "1.0.0",
+      description: "Détection de marqueurs positifs par patterns lexicaux",
+      requiresTraining: false,
+      supportedDomains: ["conversational_analysis"],
+    });
+
+    this.registerAlgorithm({
+      id: "sentiment_analysis",
+      name: "Analyse de Sentiment",
+      type: "nlp_enhanced",
+      version: "1.0.0",
+      description: "Analyse de sentiment avec modèles pré-entraînés",
+      requiresTraining: false,
+      supportedDomains: ["conversational_analysis", "li"],
+    });
+  }
+
+  /**
+   * Méthode pour réinitialiser le registre (utile pour les tests)
+   */
+  public reset(): void {
+    this.indicators.clear();
+    this.algorithms.clear();
+    this.domainMappings.clear();
+    this.initializeDefaultIndicators();
+    this.initializeDefaultAlgorithms();
+  }
+
+  /**
+   * Export de la configuration complète (pour sauvegarde/backup)
+   */
+  public exportConfiguration(): {
+    indicators: BaseIndicatorConfig[];
+    algorithms: AlgorithmConfig[];
+    version: string;
+    timestamp: string;
+  } {
+    return {
+      indicators: this.getAllIndicators(),
+      algorithms: this.getAllAlgorithms(),
+      version: "1.0.0",
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Import d'une configuration (pour restauration)
+   */
+  public importConfiguration(config: {
+    indicators: BaseIndicatorConfig[];
+    algorithms: AlgorithmConfig[];
+  }): void {
+    this.reset();
+
+    for (const indicator of config.indicators) {
+      this.registerIndicator(indicator);
+    }
+
+    for (const algorithm of config.algorithms) {
+      this.registerAlgorithm(algorithm);
+    }
+
+    console.log(
+      `[MetricsRegistry] Configuration importée: ${config.indicators.length} indicateurs, ${config.algorithms.length} algorithmes`
+    );
   }
 }
 
-// ================ INSTANCE SINGLETON ================
-
-/**
- * Instance singleton du registre global
- */
-export const metricsRegistry = new MetricsRegistry();
-
-/**
- * Fonction helper pour récupérer les indicateurs par domaine
- */
-export function getIndicatorsByDomain(domain: MetricsDomain): BaseIndicator[] {
-  return metricsRegistry.getByDomain(domain);
-}
-
-/**
- * Fonction helper pour enregistrer un indicateur
- */
-export function registerIndicator(indicator: BaseIndicator): boolean {
-  return metricsRegistry.register(indicator);
-}
-
-/**
- * Fonction helper pour rechercher des indicateurs
- */
-export function searchIndicators(query: string): BaseIndicator[] {
-  return metricsRegistry.search(query);
-}
-
-export default metricsRegistry;
+// Export de l'instance singleton
+export const metricsRegistry = MetricsRegistry.getInstance();

@@ -524,7 +524,7 @@ const CognitiveDomainPanel: React.FC<{
       {/* Résultats par famille */}
       <Paper sx={{ p: 3, mb: 4 }}>
         <Typography variant="h5" gutterBottom>
-          📈 Résultats par Famille de Stratégies
+          📈 Résultats 3 par Famille de Stratégies
         </Typography>
 
         <TableContainer>

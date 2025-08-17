@@ -28,7 +28,7 @@ import { useMetricsEngine } from "../../metrics-framework/hooks/useMetricsEngine
 import { metricsRegistry } from "../../metrics-framework/core/MetricsRegistry";
 
 // Import de l'indicateur migré
-import { FluiditeCognitiveIndicator } from "../indicators/FluiditeCognitiveIndicator";
+import { FluiditeCognitiveIndicator } from "../indicators/FluiditeCognitiveIndicator/FluiditeCognitiveIndicator";
 
 // Import de votre code existant adapté
 import {
@@ -527,7 +527,7 @@ const UnifiedCognitiveInterface: React.FC<UnifiedCognitiveInterfaceProps> = ({
       {/* Résultats par famille */}
       <Paper sx={{ p: 3 }}>
         <Typography variant="h6" gutterBottom>
-          📈 Résultats par Famille de Stratégies
+          📈 Résultats 2 par Famille de Stratégies
         </Typography>
 
         {/* Layout en grille CSS */}
