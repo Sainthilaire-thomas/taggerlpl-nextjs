@@ -1,63 +1,30 @@
-# 🏷️ TaggerLPL - Application Next.js
+# 🏷️ TaggerLPL - Framework de Métriques Modulaires
 
-## 📋 Vue d'ensemble
+## 📋 Vue d'ensemble du Framework
 
-TaggerLPL est une application Next.js sophistiquée dédiée au **tagging conversationnel** et à l'**analyse linguistique interactionnelle** avec un **framework unifié de métriques modulaires**. L'application combine une interface moderne de tagging avec des algorithmes avancés d'analyse conversationnelle et de sciences cognitives.
+TaggerLPL implémente un **framework unifié de métriques modulaires** pour l'analyse conversationnelle et linguistique interactionnelle. L'architecture permet la comparaison scientifique d'algorithmes multiples sur les mêmes données, avec validation croisée AC-LI-Cognitif.
 
-### 🎯 Objectifs principaux
+### 🎯 Objectifs du Framework
 
-- ✅ **Tagging conversationnel** : Interface complète de tagging des tours de parole
-- ✅ **Analyse multimodale** : Métriques LI (Linguistique Interactionnelle) et Cognitives
-- ✅ **Framework unifié** : Architecture modulaire pour algorithmes comparables
-- ✅ **Machine Learning supervisé** : Algorithmes auto-améliorants avec annotation experte
-- ✅ **Validation scientifique** : Validation croisée AC-LI-Cognitif pour recherche
-- ✅ **Interface comparative** : Comparaison visuelle entre algorithmes
+- ✅ **Architecture modulaire** : Indicateurs comparables et algorithmes interchangeables
+- ✅ **Validation scientifique** : Métriques de performance, annotation experte, convergence
+- ✅ **Interface comparative** : Visualisation côte-à-côte des résultats d'algorithmes
+- 🔄 **Machine Learning supervisé** : Entraînement de modèles avec annotations expertes
+- 🔄 **Validation croisée** : Tests de convergence AC-LI-Cognitif automatisés
 
-## 🏗️ Architecture technique
+## 🏗️ Architecture du Framework
 
-### Technologies utilisées
-
-- **Framework** : Next.js 14+ (App Router)
-- **UI** : Material-UI (MUI) + Tailwind CSS
-- **Base de données** : Supabase (PostgreSQL)
-- **CRM** : Intégration Zoho
-- **État global** : React Context API
-- **ML/NLP** : Python (spaCy, Transformers, scikit-learn)
-- **Langue** : Interface en français
-
-### Hiérarchie des Providers
-
-```typescript
-SupabaseProvider (session auth)
-├── ThemeModeProvider (UI themes)
-│   ├── ZohoProvider (CRM integration)
-│   │   └── TaggingDataProvider (business logic)
-│   │       ├── GlobalNavbar (navigation)
-│   │       └── Pages
-```
-
-## 📁 Structure des fichiers
-
-### Architecture générale
+### Structure générale
 
 ```
-src/app/(protected)/
-├── analysis/                           # 📊 CENTRE D'ANALYSE
-│   ├── page.tsx                        # Page principale d'analyse
-│   └── components/
-│       ├── 📂 metrics-framework/       # 🔧 FRAMEWORK COMMUN
-│       ├── 📂 li-metrics/             # 🗣️ LINGUISTIQUE INTERACTIONNELLE
-│       ├── 📂 cognitive-metrics/      # 🧠 SCIENCES COGNITIVES
-│       └── 📂 shared/                 # 🔗 COMPOSANTS PARTAGÉS
-│
-├── tagging/                            # 🏷️ INTERFACE CLASSIQUE
-├── new-tagging/                        # 🚀 NOUVELLE INTERFACE
-├── calls/                              # 📞 GESTION DES APPELS
-├── tags/admin/                         # 🔧 ADMINISTRATION TAGS
-└── dashboard/                          # 📈 TABLEAU DE BORD
+src/app/(protected)/analysis/components/
+├── 📂 metrics-framework/       # 🔧 FRAMEWORK COMMUN (à implémenter)
+├── 📂 li-metrics/             # 🗣️ LINGUISTIQUE INTERACTIONNELLE
+├── 📂 cognitive-metrics/      # 🧠 SCIENCES COGNITIVES
+└── 📂 shared/                 # 🔗 COMPOSANTS PARTAGÉS
 ```
 
-### Framework de métriques modulaires
+### Framework de métriques modulaires (Planifié)
 
 ```
 metrics-framework/                      # 🔧 FRAMEWORK COMMUN
@@ -79,7 +46,7 @@ metrics-framework/                      # 🔧 FRAMEWORK COMMUN
 │   ├── useIndicatorRegistry.ts         # Gestion registre dynamique
 │   ├── useAlgorithmBenchmarking.ts     # Système de benchmarking
 │   ├── useAnnotationWorkflow.ts        # Workflow annotation supervisée
-│   ├── useConvergenceValidation.ts     # 🆕 Validation croisée AC-LI-Cognitif
+│   ├── useConvergenceValidation.ts     # Validation croisée AC-LI-Cognitif
 │   ├── useMetricsByFamily.ts           # Analyse par famille de stratégies
 │   ├── useMLTraining.ts                # Entraînement modèles ML
 │   └── usePerformanceMonitoring.ts     # Monitoring temps réel
@@ -87,760 +54,689 @@ metrics-framework/                      # 🔧 FRAMEWORK COMMUN
 ├── 📂 components/
 │   ├── MetricIndicatorCard.tsx         # Carte d'indicateur universelle
 │   ├── AlgorithmComparisonView.tsx     # Comparaison algorithmes ligne par ligne
-│   ├── AlgorithmLogicExplanation.tsx   # 🆕 Explication logique d'algorithme
 │   ├── AnnotationInterface.tsx         # Interface annotation experte
 │   ├── BenchmarkDashboard.tsx          # Dashboard performance comparative
-│   ├── ValidationDashboard.tsx         # 🆕 Dashboard validation convergence
-│   ├── ConvergenceVisualization.tsx    # 🆕 Graphiques convergence
-│   ├── MetricsCategoryView.tsx         # Vue par catégorie d'indicateurs
-│   ├── ABTestingInterface.tsx          # Interface A/B testing
-│   ├── MLTrainingInterface.tsx         # Interface entraînement ML
-│   └── PerformanceMonitor.tsx          # Monitoring en temps réel
-│
-├── 📂 utils/
-│   ├── dataPreprocessing.ts            # Préprocessing données Supabase
-│   ├── featureExtraction.ts            # Extraction features ML
-│   ├── algorithmValidation.ts          # Validation et métriques qualité
-│   ├── annotationHelpers.ts            # Utilitaires annotation
-│   ├── performanceOptimization.ts      # Optimisations et cache
-│   ├── mlHelpers.ts                    # Helpers ML/NLP
-│   └── supabaseAdapter.ts              # Adaptateur données Supabase
-│
-├── 📂 stats/                           # 🆕 MODULE STATISTIQUES
-│   ├── convergence_validation.py       # Calculs Kendall/Pearson
-│   ├── hypothesis_testing.py           # Tests d'hypothèses spécifiques
-│   └── ranking_consistency.py          # Algorithmes de concordance
-│
-└── 📂 database/
-    ├── migrations/                     # Scripts création tables
-    │   ├── 001_create_annotations.sql
-    │   ├── 002_create_performance.sql
-    │   ├── 003_create_ab_tests.sql
-    │   └── 004_create_convergence.sql  # 🆕 Tables validation convergence
-    └── schemas/
-        ├── annotations.ts              # Types Supabase annotations
-        ├── performance.ts              # Types Supabase performance
-        └── convergence.ts              # 🆕 Types validation convergence
+│   ├── ValidationDashboard.tsx         # Dashboard validation convergence
+│   ├── ConvergenceVisualization.tsx    # Graphiques convergence
+│   └── MLTrainingInterface.tsx         # Interface entraînement ML
+└── 📂 utils/
+    ├── dataPreprocessing.ts            # Préprocessing données Supabase
+    ├── featureExtraction.ts            # Extraction features ML
+    ├── algorithmValidation.ts          # Validation et métriques qualité
+    └── mlHelpers.ts                    # Helpers ML/NLP
 ```
 
-### Domaines spécialisés
+## 🗣️ Domaine LI (Linguistique Interactionnelle)
+
+### État d'implémentation
 
 ```
 li-metrics/                             # 🗣️ LINGUISTIQUE INTERACTIONNELLE
 ├── 📂 indicators/
 │   ├── 📂 FeedbackAlignmentIndicator/  # ✅ IMPLÉMENTÉ
 │   │   ├── algorithms/
-│   │   │   ├── BasicAlignmentAlgorithm.ts      # Détection marqueurs basique
-│   │   │   ├── SentimentEnhancedAlgorithm.ts   # Avec analyse sentiment
-│   │   │   └── SequentialPatternAlgorithm.ts   # Patterns séquentiels
+│   │   │   ├── BasicAlignmentAlgorithm.ts      # ✅ Analyse sémantique verbatims
+│   │   │   ├── SentimentEnhancedAlgorithm.ts   # 🔄 À IMPLÉMENTER
+│   │   │   └── SequentialPatternAlgorithm.ts   # 🔄 À IMPLÉMENTER
 │   │   ├── hooks/
-│   │   │   ├── useFeedbackAlignmentMetrics.ts  # Hook spécialisé
-│   │   │   └── useFeedbackAlignmentAnnotation.ts
-│   │   ├── FeedbackAlignmentInterface.tsx      # Interface utilisateur
-│   │   └── types.ts                            # Types spécifiques
+│   │   │   ├── useFeedbackAlignmentMetrics.ts  # ✅ Hook complet
+│   │   │   └── useFeedbackAlignmentAnnotation.ts # 🔄 À IMPLÉMENTER
+│   │   ├── FeedbackAlignmentInterface.tsx      # ✅ Interface complète
+│   │   └── types.ts                            # ✅ Types complets
 │   │
-│   ├── 📂 CommonGroundIndicator/
-│   │   ├── algorithms/
-│   │   │   ├── BasicSharedRefsAlgorithm.ts     # Algorithme règles (corrigé)
-│   │   │   ├── NLPEnhancedAlgorithm.ts         # Avec spaCy/Transformers
-│   │   │   └── MLSupervisedAlgorithm.ts        # Machine Learning supervisé
-│   │   └── ... (même structure)
-│   │
+│   ├── 📂 CommonGroundIndicator/       # 🔄 À IMPLÉMENTER
 │   ├── 📂 BackchannelsIndicator/       # 🔄 À IMPLÉMENTER
 │   ├── 📂 ProsodicFluencyIndicator/    # 🔄 À IMPLÉMENTER
 │   ├── 📂 SpeechRateIndicator/         # 🔄 À IMPLÉMENTER
 │   ├── 📂 SequentialPatternsIndicator/ # 🔄 À IMPLÉMENTER
-│   ├── 📂 RepairMechanismsIndicator/   # 🔄 À IMPLÉMENTER
-│   └── 📂 CompositeLIScoreIndicator/   # 🔄 À IMPLÉMENTER
+│   └── 📂 RepairMechanismsIndicator/   # 🔄 À IMPLÉMENTER
 │
-├── LIMetricsConfig.ts                  # Configuration domaine LI
-├── LIMetricsRegistry.ts                # Registre spécialisé LI
-└── LinguisticInteractionalMetrics.tsx  # Composant principal LI
+├── LIMetricsConfig.ts                  # 🔄 À IMPLÉMENTER
+├── LIMetricsRegistry.ts                # 🔄 À IMPLÉMENTER
+└── LinguisticInteractionalMetrics.tsx  # 🔄 À IMPLÉMENTER
+```
 
+## 🧠 Domaine Cognitive (Sciences Cognitives)
+
+### État d'implémentation
+
+```
 cognitive-metrics/                      # 🧠 SCIENCES COGNITIVES
 ├── 📂 indicators/
-│   ├── 📂 FluiditeCognitiveIndicator/  # 🔄 EN MIGRATION
+│   ├── 📂 FluiditeCognitiveIndicator/  # ✅ EXISTANT (à migrer vers framework)
 │   │   ├── algorithms/
-│   │   │   ├── BasicFluidityAlgorithm.ts       # Algorithme actuel migré
-│   │   │   ├── NeuronMirrorAlgorithm.ts        # Basé neurones miroirs avancé
-│   │   │   └── MLEnhancedAlgorithm.ts          # ML supervisé fluidité
+│   │   │   ├── BasicFluidityAlgorithm.ts       # 🔄 À MIGRER (existant en hook)
+│   │   │   ├── NeuronMirrorAlgorithm.ts        # 🔄 À IMPLÉMENTER
+│   │   │   └── MLEnhancedAlgorithm.ts          # 🔄 À IMPLÉMENTER
+│   │   ├── hooks/
+│   │   │   ├── useFluiditeCognitiveMetrics.ts  # 🔄 À CRÉER (migration)
+│   │   │   └── useFluidityAnnotation.ts        # 🔄 À IMPLÉMENTER
+│   │   ├── FluiditeCognitiveInterface.tsx      # 🔄 À CRÉER
+│   │   └── types.ts                            # 🔄 À CRÉER
+│   │
+│   ├── 📂 ReactionsDirectesIndicator/  # ✅ EXISTANT (à migrer)
+│   │   ├── algorithms/
+│   │   │   ├── BasicReactionsAlgorithm.ts      # 🔄 À MIGRER
+│   │   │   └── ContextualReactionsAlgorithm.ts # 🔄 À IMPLÉMENTER
 │   │   └── ... (même structure)
 │   │
-│   ├── 📂 ReactionsDirectesIndicator/  # 🔄 À MIGRER
-│   ├── 📂 ReprisesLexicalesIndicator/  # 🔄 À MIGRER
-│   ├── 📂 ChargeCognitiveIndicator/    # 🔄 À MIGRER
-│   ├── 📂 MarqueursEffortIndicator/    # 🔄 À MIGRER
-│   ├── 📂 PatternsResistanceIndicator/ # 🔄 À MIGRER
-│   ├── 📂 RobustesseStressIndicator/   # 🔄 À MIGRER
-│   ├── 📂 NiveauStressIndicator/       # 🔄 À MIGRER
-│   └── 📂 PositionConversationIndicator/ # 🔄 À MIGRER
+│   ├── 📂 ReprisesLexicalesIndicator/  # ✅ EXISTANT (à migrer)
+│   │   ├── algorithms/
+│   │   │   ├── BasicReprisesAlgorithm.ts       # 🔄 À MIGRER
+│   │   │   └── SemanticReprisesAlgorithm.ts    # 🔄 À IMPLÉMENTER
+│   │   └── ... (même structure)
+│   │
+│   ├── 📂 ChargeCognitiveIndicator/    # ✅ EXISTANT (à migrer)
+│   │   ├── algorithms/
+│   │   │   ├── BasicChargeAlgorithm.ts         # 🔄 À MIGRER
+│   │   │   └── MultiFactorChargeAlgorithm.ts   # 🔄 À IMPLÉMENTER
+│   │   └── ... (même structure)
+│   │
+│   ├── 📂 MarqueursEffortIndicator/    # ✅ EXISTANT (à migrer)
+│   ├── 📂 PatternsResistanceIndicator/ # ✅ EXISTANT (à migrer)
+│   ├── 📂 RobustesseStressIndicator/   # ✅ EXISTANT (à migrer)
+│   ├── 📂 NiveauStressIndicator/       # ✅ EXISTANT (à migrer)
+│   └── 📂 PositionConversationIndicator/ # ✅ EXISTANT (à migrer)
 │
-├── CognitiveMetricsConfig.ts           # Configuration domaine Cognitive
-├── CognitiveMetricsRegistry.ts         # Registre spécialisé Cognitive
-├── CognitiveMetrics.tsx                # Composant principal Cognitive
+├── CognitiveMetricsConfig.ts           # 🔄 À CRÉER
+├── CognitiveMetricsRegistry.ts         # 🔄 À CRÉER
+├── CognitiveMetrics.tsx                # ✅ EXISTANT (à adapter au framework)
 │
-└── 📂 migration/                       # 🔄 MIGRATION EXISTANT
+└── 📂 migration/                       # 🔄 OUTILS DE MIGRATION
     ├── adaptUseCognitiveMetrics.ts     # Adaptation hook existant
     ├── adaptIndicatorData.ts           # Migration données existantes
     ├── compatibilityLayer.ts           # Couche compatibilité
     └── migrationGuide.md               # Guide migration step-by-step
 ```
 
-### Composants partagés
+### 🔄 État actuel des métriques cognitives
+
+#### **✅ Implémentation existante (hors framework)**
+
+**Localisation actuelle** : `app/(protected)/analysis/components/CognitiveMetrics.tsx`
+
+**Hook existant** : `useCognitiveMetrics.ts`
+
+```typescript
+// Structure actuelle (à migrer)
+export const useCognitiveMetrics = (data: TaggedTurn[]) => {
+  return {
+    // Indicateurs existants
+    fluiditeCognitive: FluiditeScore,
+    reactionsDirectes: ReactionsScore,
+    reprisesLexicales: ReprisesScore,
+    chargeCognitive: ChargeScore,
+    marqueursEffort: EffortScore,
+    patternsResistance: ResistanceScore,
+    robustesseStress: StressScore,
+    niveauStress: StressLevelScore,
+    positionConversation: PositionScore,
+
+    // Métriques globales
+    scoreGlobalCognitif: number,
+    tendancesEvolution: TrendAnalysis,
+  };
+};
+```
+
+#### **📊 Indicateurs cognitifs opérationnels**
+
+1. **✅ Fluidité Cognitive** - Mesure de la spontanéité conversationnelle
+   - Détection des hésitations, pauses, reformulations
+   - Score basé sur la fluidité du discours conseiller
+2. **✅ Réactions Directes** - Vitesse de réaction aux interventions client
+   - Temps de latence entre tour client et réponse conseiller
+   - Analyse de la réactivité conversationnelle
+3. **✅ Reprises Lexicales** - Réutilisation du vocabulaire client
+   - Détection des mots/expressions repris du client
+   - Mesure de l'adaptation linguistique
+4. **✅ Charge Cognitive** - Complexité du traitement conversationnel
+   - Longueur des tours, complexité syntaxique
+   - Indicateurs de surcharge cognitive
+5. **✅ Marqueurs d'Effort** - Signes de difficulté conversationnelle
+   - Détection "euh", "ben", pauses longues
+   - Quantification de l'effort conversationnel
+6. **✅ Patterns de Résistance** - Détection des blocages conversationnels
+   - Répétitions, reformulations multiples
+   - Patterns de difficultés récurrentes
+7. **✅ Robustesse au Stress** - Maintien de la performance sous pression
+   - Stabilité des métriques dans contextes difficiles
+   - Résilience conversationnelle
+8. **✅ Niveau de Stress** - Intensité du stress conversationnel
+   - Combinaison de marqueurs physiologiques linguistiques
+   - Score global de tension
+9. **✅ Position dans la Conversation** - Évolution temporelle des métriques
+   - Tendances début/milieu/fin de conversation
+   - Patterns d'évolution cognitive
+
+### ✅ FeedbackAlignmentIndicator - Statut Complet
+
+**Localisation** : `li-metrics/indicators/FeedbackAlignmentIndicator/`
+
+#### **Fonctionnalités opérationnelles** :
+
+**✅ BasicAlignmentAlgorithm.ts** - Moteur d'analyse sémantique
+
+- Lexiques français étendus (145 patterns : POSITIF/NEGATIF/NEUTRE)
+- Analyse des verbatims client avec scoring de confidence
+- Recherche des réactions client (temporelle + next_turn)
+- Calcul par familles de stratégies (REFLET/ENGAGEMENT/EXPLICATION/OUVERTURE)
+- Validation qualité et filtrage des résultats
+
+**✅ FeedbackAlignmentInterface.tsx** - Interface utilisateur
+
+- Affichage des résultats par famille avec scores d'efficacité
+- Dialog interactif "Lexiques Complets" avec 145 patterns visibles
+- Cartes cliquables par sentiment avec animations
+- Export des résultats + lexiques
+- Interface responsive (Box/Flexbox, compatible MUI)
+
+**✅ useFeedbackAlignmentMetrics.ts** - Hook de données
+
+- Chargement de tous les turntagged (3652+ enregistrements)
+- Pagination Supabase automatique (contournement limite 1000)
+- Cache intelligent et optimisations de performance
+- Gestion d'erreurs et états de chargement
+- Filtrage par origine avec diagnostics
+
+#### **Résultats scientifiques validés** :
+
+```
+📊 Efficacité par stratégie (analyse de 1397 tours) :
+🥇 OUVERTURE:    48.3% verbatims positifs (175 occurrences)
+🥈 ENGAGEMENT:   34.5% verbatims positifs (182 occurrences)
+🥉 REFLET:       18.2% verbatims positifs (444 occurrences)
+❌ EXPLICATION:   1.0% verbatims positifs (596 occurrences)
+
+✅ Hypothèses validées : H1 (ACTION > EXPLICATION), H2 (EXPLICATION inefficace)
+📊 Couverture : 72% (1006/1397 verbatims analysés)
+🎯 Confidence moyenne : >75%
+```
+
+#### **🔄 Prochaines étapes FeedbackAlignment** :
+
+1. **SentimentEnhancedAlgorithm.ts** - Algorithme avec NLP avancé
+   - Intégration analyse de sentiment plus sophistiquée
+   - Détection émotions (joie, frustration, surprise, etc.)
+   - Analyse de l'intensité émotionnelle
+   - Comparaison avec BasicAlgorithm
+2. **SequentialPatternAlgorithm.ts** - Patterns séquentiels
+   - Détection de séquences stratégie → réaction récurrentes
+   - Analyse des enchaînements optimaux
+   - Patterns temporels et contextuels
+3. **Interface comparative** - Comparaison d'algorithmes
+   - Vue côte-à-côte des résultats Basic vs Enhanced vs Sequential
+   - Métriques de performance comparatives
+   - Tests A/B automatisés
+
+## 🔗 Composants Partagés
+
+### État d'implémentation
 
 ```
 shared/                                 # 🔗 COMPOSANTS PARTAGÉS
 ├── 📂 atoms/                          # ⚛️ COMPOSANTS ATOMIQUES
-│   ├── IndicatorHeader.tsx            # En-tête d'indicateur standardisé
-│   ├── ColorLegend.tsx                # Légende de couleurs avec seuils
-│   ├── ScoreChip.tsx                  # Puce d'affichage de score colorée
-│   ├── AlgorithmDetailDialog.tsx      # Dialog détails algorithme
-│   ├── MetricCard.tsx                 # Carte métrique simple
-│   ├── LoadingSpinner.tsx             # Spinner de chargement uniforme
-│   ├── ErrorAlert.tsx                 # Alerte d'erreur standardisée
-│   ├── StatusBadge.tsx                # Badge de statut (actif/inactif/test)
-│   ├── ThresholdIndicator.tsx         # Indicateur de seuil visuel
-│   ├── ConfidenceBar.tsx              # Barre de confiance algorithme
-│   ├── ProgressRing.tsx               # Anneau de progression circulaire
-│   ├── ActionButton.tsx               # Bouton d'action standardisé
-│   ├── InfoTooltip.tsx                # Tooltip d'information contextuelle
-│   ├── DateDisplay.tsx                # Affichage de date formatée
-│   └── index.ts                       # Export centralisé atoms
+│   ├── IndicatorHeader.tsx            # ✅ IMPLÉMENTÉ
+│   ├── ColorLegend.tsx                # ✅ IMPLÉMENTÉ
+│   ├── AlgorithmDetailDialog.tsx      # ✅ IMPLÉMENTÉ
+│   └── [autres atoms...]              # 🔄 À IMPLÉMENTER
 │
 ├── 📂 molecules/                      # 🧬 COMPOSANTS MOLÉCULAIRES
-│   ├── ResultsTable.tsx               # Tableau de résultats uniforme
-│   ├── AlgorithmLogicExplanation.tsx  # 🆕 Explication logique détaillée
-│   ├── MetricComparisonCard.tsx       # Carte de comparaison métriques
-│   ├── AnnotationInterface.tsx        # Interface annotation standardisée
-│   ├── BenchmarkResultsDisplay.tsx    # Affichage résultats benchmark
-│   ├── AlgorithmSelector.tsx          # Sélecteur d'algorithme avec preview
-│   ├── FilterPanel.tsx                # Panneau de filtres réutilisable
-│   ├── ExportControls.tsx             # Contrôles d'export standardisés
-│   ├── PerformanceMetrics.tsx         # Métriques de performance temps réel
-│   ├── ValidationStatus.tsx           # Statut de validation avec détails
-│   ├── DataQualityIndicator.tsx       # Indicateur qualité des données
-│   ├── SearchAndFilter.tsx            # Recherche et filtrage combinés
-│   ├── PaginationControls.tsx         # Contrôles de pagination uniformes
-│   ├── SortableHeader.tsx             # En-tête de colonne triable
-│   ├── MetricsChart.tsx               # Graphique de métriques générique
-│   ├── CorrelationMatrix.tsx          # Matrice de corrélation visuelle
-│   ├── TrendChart.tsx                 # Graphique de tendance temporelle
-│   ├── DistributionChart.tsx          # Graphique de distribution
-│   ├── HeatmapVisualization.tsx       # Heatmap pour patterns
-│   ├── NetworkGraph.tsx               # Graphique de réseau (relations)
-│   └── index.ts                       # Export centralisé molecules
-│
-├── 📂 organisms/                      # 🦴 COMPOSANTS ORGANISMES
-│   ├── MetricsDashboard.tsx           # Dashboard principal de métriques
-│   ├── ComparativeAnalysisView.tsx    # Vue d'analyse comparative complète
-│   ├── AnnotationWorkbench.tsx        # Workbench d'annotation experte
-│   ├── ValidationReportView.tsx       # Vue rapport de validation
-│   ├── PerformanceMonitoringPanel.tsx # Panneau monitoring performance
-│   ├── AlgorithmBenchmarkSuite.tsx    # Suite complète de benchmark
-│   ├── DataExplorationInterface.tsx   # Interface d'exploration données
-│   ├── QualityAssurancePanel.tsx      # Panneau assurance qualité
-│   ├── ConfigurationManager.tsx       # Gestionnaire de configuration
-│   ├── AuditTrailViewer.tsx          # Visualiseur piste d'audit
-│   └── index.ts                       # Export centralisé organisms
+│   ├── ResultsTable.tsx               # ✅ IMPLÉMENTÉ
+│   ├── AlgorithmLogicExplanation.tsx  # ✅ IMPLÉMENTÉ (avec lexiques)
+│   ├── types.ts                       # ✅ ExtendedAlgorithmLogicProps
+│   └── [autres molecules...]          # 🔄 À IMPLÉMENTER
 │
 ├── 📂 hooks/                          # 🪝 HOOKS PARTAGÉS
-│   ├── useAlgorithmDialog.ts          # 🔧 Gestion dialog algorithme
-│   ├── useScientificReferences.ts     # 📚 Gestion références scientifiques
-│   ├── useThemeMode.ts                # 🎨 Gestion thème dark/light
-│   ├── useLocalStorage.ts             # 💾 Persistence locale
-│   ├── useDebounce.ts                 # ⏱️ Debounce pour performance
-│   ├── usePagination.ts               # 📄 Logique de pagination
-│   ├── useSort.ts                     # 🔄 Logique de tri
-│   ├── useFilter.ts                   # 🔍 Logique de filtrage
-│   ├── useExport.ts                   # 📤 Export multi-formats
-│   ├── useNotifications.ts            # 🔔 Système de notifications
-│   ├── usePerformanceMonitoring.ts    # 📊 Monitoring performance
-│   ├── useErrorHandler.ts             # ❌ Gestion centralisée erreurs
-│   ├── useDataValidation.ts           # ✅ Validation données
-│   ├── useCache.ts                    # 🗄️ Gestion cache intelligent
-│   ├── useAsyncOperation.ts           # ⚡ Gestion opérations async
-│   ├── usePolling.ts                  # 🔄 Polling automatique
-│   ├── useWebSocket.ts                # 🔌 Connexions WebSocket
-│   ├── useKeyboardShortcuts.ts        # ⌨️ Raccourcis clavier
-│   ├── useAccessibility.ts            # ♿ Support accessibilité
-│   ├── useAnalytics.ts                # 📈 Analytics et tracking
-│   └── index.ts                       # Export centralisé hooks
+│   ├── useAlgorithmDialog.ts          # ✅ IMPLÉMENTÉ
+│   └── [autres hooks...]              # 🔄 À IMPLÉMENTER
 │
-├── 📂 utils/                          # 🛠️ UTILITAIRES PARTAGÉS
-│   ├── dataTransformers.ts            # Transformations de données
-│   ├── formatters.ts                  # Formatage (dates, nombres, etc.)
-│   ├── validators.ts                  # Fonctions de validation
-│   ├── calculators.ts                 # Calculs statistiques communs
-│   ├── exportHelpers.ts               # Helpers d'export (PDF, CSV, etc.)
-│   ├── colorUtils.ts                  # Utilitaires de couleur et thème
-│   ├── performanceUtils.ts            # Optimisations de performance
-│   ├── errorUtils.ts                  # Gestion et formatage erreurs
-│   ├── typeGuards.ts                  # Type guards TypeScript
-│   ├── arrayUtils.ts                  # Utilitaires de manipulation arrays
-│   ├── objectUtils.ts                 # Utilitaires de manipulation objets
-│   ├── stringUtils.ts                 # Utilitaires de traitement texte
-│   ├── mathUtils.ts                   # Fonctions mathématiques avancées
-│   ├── dateUtils.ts                   # Manipulation et formatage dates
-│   ├── urlUtils.ts                    # Gestion d'URLs et routes
-│   ├── localStorageUtils.ts           # Helpers localStorage/sessionStorage
-│   ├── supabaseUtils.ts               # Utilitaires Supabase spécifiques
-│   ├── chartUtils.ts                  # Configuration graphiques
-│   ├── csvUtils.ts                    # Import/export CSV
-│   ├── pdfUtils.ts                    # Génération PDF
-│   └── index.ts                       # Export centralisé utils
-│
-├── 📂 types/                          # 📝 TYPES PARTAGÉS
-│   ├── common.ts                      # Types communs application
-│   ├── api.ts                         # Types API et responses
-│   ├── ui.ts                          # Types interface utilisateur
-│   ├── charts.ts                      # Types pour graphiques
-│   ├── export.ts                      # Types pour exports
-│   ├── validation.ts                  # Types pour validation
-│   ├── performance.ts                 # Types monitoring performance
-│   ├── analytics.ts                   # Types analytics et tracking
-│   └── index.ts                       # Export centralisé types
-│
-├── 📂 constants/                      # 📊 CONSTANTES PARTAGÉES
-│   ├── colors.ts                      # Palette de couleurs uniforme
-│   ├── thresholds.ts                  # Seuils de validation/alertes
-│   ├── routes.ts                      # Routes de l'application
-│   ├── apiEndpoints.ts                # Endpoints API centralisés
-│   ├── chartConfigs.ts                # Configurations graphiques par défaut
-│   ├── exportFormats.ts               # Formats d'export supportés
-│   ├── performanceMetrics.ts          # Métriques de performance cibles
-│   ├── validationRules.ts             # Règles de validation communes
-│   ├── errorMessages.ts               # Messages d'erreur standardisés
-│   ├── notifications.ts               # Types et durées notifications
-│   └── index.ts                       # Export centralisé constants
-│
-├── 📂 styles/                         # 🎨 STYLES PARTAGÉS
-│   ├── theme.ts                       # Thème Material-UI personnalisé
-│   ├── globalStyles.ts                # Styles globaux CSS-in-JS
-│   ├── animations.ts                  # Animations réutilisables
-│   ├── breakpoints.ts                 # Points de rupture responsive
-│   ├── shadows.ts                     # Ombres et élévations
-│   ├── typography.ts                  # Configuration typographique
-│   ├── spacing.ts                     # Système d'espacement
-│   └── index.ts                       # Export centralisé styles
-│
-├── 📂 contexts/                       # 🌐 CONTEXTES PARTAGÉS
-│   ├── ThemeContext.tsx               # Contexte thème global
-│   ├── NotificationContext.tsx        # Contexte notifications
-│   ├── PerformanceContext.tsx         # Contexte monitoring performance
-│   ├── ErrorBoundaryContext.tsx       # Contexte gestion erreurs
-│   ├── AnalyticsContext.tsx           # Contexte analytics
-│   └── index.ts                       # Export centralisé contexts
-│
-├── 📂 providers/                      # 🔌 PROVIDERS PARTAGÉS
-│   ├── ThemeProvider.tsx              # Provider thème avec persistence
-│   ├── NotificationProvider.tsx       # Provider notifications toast
-│   ├── ErrorBoundaryProvider.tsx      # Provider error boundary global
-│   ├── AnalyticsProvider.tsx          # Provider analytics et tracking
-│   ├── PerformanceProvider.tsx        # Provider monitoring performance
-│   └── index.ts                       # Export centralisé providers
-│
-└── 📂 layouts/                        # 📐 LAYOUTS PARTAGÉS
-    ├── DashboardLayout.tsx            # Layout principal dashboard
-    ├── AnalysisLayout.tsx             # Layout pages d'analyse
-    ├── FullscreenLayout.tsx           # Layout plein écran
-    ├── SplitPaneLayout.tsx            # Layout à panneaux divisés
-    ├── TabLayout.tsx                  # Layout avec onglets
-    ├── WizardLayout.tsx               # Layout assistant/wizard
-    ├── ResponsiveLayout.tsx           # Layout responsive adaptatif
-    └── index.ts                       # Export centralisé layouts
+└── 📂 utils/                          # 🛠️ UTILITAIRES PARTAGÉS
+    └── [utils...]                     # 🔄 À IMPLÉMENTER
 ```
 
-## 🚀 Composants principaux
+#### **✅ AlgorithmLogicExplanation** - Composant enrichi
 
-### 1. **GlobalNavbar** - Navigation intelligente améliorée
+**Fonctionnalités opérationnelles** :
 
-**Localisation** : `@/components/layout/GlobalNavbar`
+- Interface multicouche pour affichage des lexiques
+- Dialog "Vue détaillée" avec scrolling optimisé
+- Cartes interactives par sentiment avec animations
+- Support types étendus (`ExtendedAlgorithmLogicProps`)
+- Composants factorisés (`LexiconCategory`, `DetailedLexicon`)
 
-**Fonctionnalités clés** :
+## 📊 Centre d'Analyse
 
-- **Navigation adaptative** : Comportement différent selon le type de page
-- **Auto-hide intelligent** : Se masque lors du défilement vers le bas
-- **Zone de détection** : Zone invisible de 20px en haut pour réafficher la navbar
-- **Hauteur fixe** : 48px constant pour éviter les décalages
-
-### 2. **TaggingDataProvider** - Gestion d'état globale
-
-**Localisation** : `@/context/TaggingDataContext`
-
-**Données gérées** :
-
-```typescript
-interface TaggingDataContextType {
-  // Données principales
-  taggingCalls: TaggingCall[];
-  allTurnTagged: TaggedTurn[]; // 🆕 Pour analyse globale
-  selectedTaggingCall: TaggingCall | null;
-  taggingTranscription: Word[];
-  taggedTurns: TaggedTurn[];
-  tags: Tag[];
-
-  // Actions de tagging
-  addTag: (newTag: NewTag) => Promise<TaggedTurn | null>;
-  deleteTurnTag: (id: number) => Promise<void>;
-  calculateAllNextTurnTags: (callId: string) => Promise<number>;
-
-  // Nouvelles fonctionnalités globales
-  fetchAllTurnTagged: (filters?: GlobalTurnTaggedFilters) => Promise<void>;
-  globalTurnTaggedStats: GlobalTurnTaggedStats;
-  getFilteredTurnsForAnalysis: (
-    filters?: GlobalTurnTaggedFilters
-  ) => TaggedTurn[];
-  refreshGlobalDataIfNeeded: () => Promise<void>;
-}
-```
-
-### 3. **CallTableList** - Interface optimisée de gestion des appels
-
-**Localisation** : `@/components/calls/CallTableList`
-
-**Optimisations de performance** :
-
-- **Cache intelligent** avec `useOptimizedCallData`
-- **Actions en lot** avec `useBulkActions`
-- **Interface responsive** avec cartes mobiles
-- **Pagination automatique** pour contourner limitations Supabase
-
-### 4. **🆕 FeedbackAlignmentInterface** - Analyse d'alignement conversationnel
-
-**Localisation** : `@/components/analysis/components/li-metrics/indicators/FeedbackAlignmentIndicator/`
-
-**Fonctionnalités avancées** :
-
-- **Analyse par familles de tags** : REFLET, ENGAGEMENT, EXPLICATION, OUVERTURE
-- **Classification des réactions client** : POSITIF, NEGATIF, NEUTRE
-- **Algorithmes multiples** : BasicAlignment, SentimentEnhanced, SequentialPattern
-- **Interface comparative** : Comparaison visuelle des algorithmes
-- **Explication de logique** : Composant `AlgorithmLogicExplanation` détaillé
-- **Données temps réel** : Gestion de tous les 3652+ enregistrements
-
-### 5. **TagManager** - Gestion avancée des tags avec statistiques
-
-**Localisation** : `@/components/tags/TagManager`
-
-**Nouvelles fonctionnalités** :
-
-- **Système de statistiques d'utilisation** complètes
-- **Interface moderne** avec boutons d'action (📊 Info, ✏️ Edit, 🗑️ Delete)
-- **Composant TagUsageStats** factorisé et réutilisable
-- **Fusion intelligente** et réassignation de tags
-- **Support thème adaptatif** complet
-
-### 6. **📊 Centre d'Analyse** - Hub unifié d'analyse conversationnelle
+### Page principale
 
 **Localisation** : `app/(protected)/analysis/page.tsx`
 
-**Architecture modulaire** :
-
+```typescript
+// Structure actuelle
+export default function AnalysisPage() {
+  return (
+    <AnalysisLayout>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        {/* ✅ Onglet Feedback Alignment - OPÉRATIONNEL */}
+        <FeedbackAlignmentInterface
+          selectedOrigin={selectedOrigin}
+          showDetailedResults={true}
+          showComparison={false} // 🔄 À activer avec multi-algorithmes
+        />
+        {/* 🔄 Onglets à implémenter */}
+        <CommonGroundInterface /> {/* À IMPLÉMENTER */}
+        <BackchannelsInterface /> {/* À IMPLÉMENTER */}
+        <CognitiveMetricsInterface /> {/* À MIGRER */}
+      </Box>
+    </AnalysisLayout>
+  );
+}
 ```
-📊 Feedback Alignment     # Analyse d'impact des stratégies
-🔄 Common Ground         # Établissement terrain commun (À IMPLÉMENTER)
-🧠 Fluidité Cognitive    # Analyse charge cognitive (EN MIGRATION)
-📈 Validation Croisée    # 🆕 Convergence AC-LI-Cognitif
-📋 Rapports Détaillés    # Génération de rapports PDF
-```
 
-### 7. **🆕 AlgorithmLogicExplanation** - Composant d'explication pédagogique
+## 🗄️ Base de Données
 
-**Localisation** : `@/components/shared/molecules/AlgorithmLogicExplanation`
-
-**Sections détaillées** :
-
-- **🔄 Processus d'analyse** : Étapes avec exemples concrets
-- **📊 Métriques calculées** : Formules et interprétations
-- **🔬 Base théorique** : Références scientifiques
-- **📈 Guide d'interprétation** : Échelles et conseils pratiques
-
-## 🗄️ Base de données
-
-### Tables principales (existantes)
+### Tables existantes (utilisées)
 
 ```sql
--- Conversations taggées
+-- ✅ Données conversationnelles (opérationnelles)
 turntagged (
   id INTEGER PRIMARY KEY,
   call_id INTEGER,
   start_time FLOAT,
   end_time FLOAT,
   tag TEXT,
-  verbatim TEXT,
-  next_turn_verbatim TEXT,
+  verbatim TEXT,               -- ✅ Analysé par moteur sémantique
+  next_turn_verbatim TEXT,     -- ✅ Verbatim client analysé
   next_turn_tag TEXT,
   speaker TEXT
 );
 
--- Tags et familles
+-- ✅ Tags et familles (opérationnels)
 lpltag (
   id INTEGER PRIMARY KEY,
   label TEXT,
-  family TEXT,                -- 🔑 CLÉ POUR ANALYSE
+  family TEXT,                -- ✅ CLÉ pour analyse par famille
   originespeaker TEXT,        -- conseiller/client
   color TEXT,
   description TEXT
 );
 
--- Appels
+-- ✅ Appels (opérationnels)
 call (
   callid TEXT PRIMARY KEY,
   filename TEXT,
   filepath TEXT,
-  origine TEXT,               -- 🔑 FILTRE D'ORIGINE
+  origine TEXT,               -- ✅ Filtre par origine
   duree INTEGER,
   is_tagging_call BOOLEAN,
   preparedfortranscript BOOLEAN
 );
 ```
 
-### 🆕 Nouvelles tables (Framework de métriques)
-
-#### Système d'annotation unifié
+### 🔄 Tables Framework (à implémenter)
 
 ```sql
--- Annotations expertes pour validation
+-- 🔄 Système d'annotation unifié
 CREATE TABLE metric_annotations (
   id SERIAL PRIMARY KEY,
   turn_id INTEGER REFERENCES turntagged(id),
   domain TEXT NOT NULL,              -- 'li' | 'cognitive'
-  indicator_id TEXT NOT NULL,        -- 'feedback_alignment', 'common_ground', etc.
+  indicator_id TEXT NOT NULL,        -- 'feedback_alignment', 'common_ground'
   human_label TEXT NOT NULL,         -- Annotation experte
   algorithm_prediction TEXT,         -- Prédiction algorithme
   algorithm_confidence FLOAT,        -- Confiance (0-1)
   annotator_id TEXT NOT NULL,
-
-  -- Métadonnées annotation
-  annotation_time_seconds INTEGER,
-  difficulty_rating INTEGER CHECK (difficulty_rating BETWEEN 1 AND 5),
-  notes TEXT,
-
-  -- Spécifique domaines
-  cognitive_load_rating INTEGER,     -- Pour domaine cognitif (1-10)
-  processing_type TEXT,              -- 'automatique', 'contrôlé', 'mixte'
-
-  created_at TIMESTAMP DEFAULT NOW(),
-  UNIQUE(turn_id, domain, indicator_id, annotator_id)
+  created_at TIMESTAMP DEFAULT NOW()
 );
-```
 
-#### Performance et benchmarking
-
-```sql
--- Performance algorithmes
+-- 🔄 Performance algorithmes
 CREATE TABLE algorithm_performance (
   id SERIAL PRIMARY KEY,
   domain TEXT NOT NULL,
   indicator_id TEXT NOT NULL,
   algorithm_id TEXT NOT NULL,
-
-  -- Métriques classification
   accuracy FLOAT,
   precision FLOAT,
   recall FLOAT,
   f1_score FLOAT,
-
-  -- Métriques opérationnelles
   processing_time_ms INTEGER,
-  memory_usage_mb FLOAT,
-  throughput_per_second FLOAT,
-
-  -- Contexte test
-  test_data_size INTEGER,
-  test_date TIMESTAMP DEFAULT NOW(),
-  configuration JSONB,
-
-  UNIQUE(domain, indicator_id, algorithm_id, test_date)
+  test_date TIMESTAMP DEFAULT NOW()
 );
-```
 
-#### 🆕 Validation croisée AC-LI-Cognitif
-
-```sql
--- Historique des validations de convergence
+-- 🔄 Validation croisée AC-LI-Cognitif
 CREATE TABLE convergence_validations (
   id SERIAL PRIMARY KEY,
   validation_date TIMESTAMP DEFAULT NOW(),
-  corpus_version TEXT NOT NULL,
-
-  -- Résultats de concordance (τ de Kendall)
   kendall_tau_ac_li FLOAT,
   kendall_tau_ac_cognitive FLOAT,
   kendall_tau_li_cognitive FLOAT,
   overall_consistency FLOAT,
-
-  -- Validation des hypothèses théoriques
-  h1_action_effectiveness_validated BOOLEAN,    -- ENGAGEMENT/OUVERTURE efficaces
-  h2_explanation_difficulty_validated BOOLEAN,  -- EXPLICATION inefficaces
-  h3_reflet_gradient_validated BOOLEAN,         -- Gradient REFLET VOUS>JE>ACQ
-
-  -- Métadonnées
-  total_pairs_analyzed INTEGER,
-  convergence_status TEXT CHECK (convergence_status IN ('CONVERGENT', 'DIVERGENT'))
-);
-
--- Détails par famille de stratégies
-CREATE TABLE family_effectiveness_scores (
-  id SERIAL PRIMARY KEY,
-  validation_id INTEGER REFERENCES convergence_validations(id),
-  strategy_family TEXT NOT NULL,     -- 'REFLET', 'ENGAGEMENT', 'EXPLICATION', 'OUVERTURE'
-
-  -- Scores par niveau d'analyse
-  ac_effectiveness FLOAT,            -- % réactions positives (Analyse Conversationnelle)
-  li_effectiveness FLOAT,            -- Score composite LI
-  cognitive_effectiveness FLOAT,     -- Score composite Cognitif
-
-  -- Détails statistiques
-  sample_size INTEGER,
-  confidence_interval_low FLOAT,
-  confidence_interval_high FLOAT
+  h1_action_effectiveness_validated BOOLEAN,
+  h2_explanation_difficulty_validated BOOLEAN,
+  convergence_status TEXT
 );
 ```
 
-## 🔧 APIs principales
+## 🎯 Roadmap d'Implémentation
 
-### Hook principal unifié
+### 🔄 **Phase 1 : Extension FeedbackAlignment (Priorité Immédiate)**
+
+#### **1.1 Deuxième algorithme (2-3 jours)**
 
 ```typescript
-// metrics-framework/hooks/useMetricsEngine.ts
+// À créer : SentimentEnhancedAlgorithm.ts
+class SentimentEnhancedAlgorithm extends BasicAlignmentAlgorithm {
+  // Extension avec analyse sentiment plus sophistiquée
+  // Détection émotions granulaires
+  // Comparaison directe avec BasicAlgorithm
+}
+```
+
+#### **1.2 Interface comparative (1-2 jours)**
+
+```typescript
+// À modifier : FeedbackAlignmentInterface.tsx
+<AlgorithmComparisonView
+  algorithms={["basic", "sentiment-enhanced"]}
+  results={comparisonResults}
+  showSideBySide={true}
+/>
+```
+
+#### **1.3 Documentation scientifique (1-2 jours)**
+
+- Génération automatique de tableaux pour thèse
+- Export des résultats en format académique
+- Graphiques de comparaison algorithmes
+- Métriques de validation scientifique
+
+### 🔄 **Phase 2 : Framework Core (1-2 semaines)**
+
+#### **2.1 Architecture de base**
+
+```typescript
+// À créer : metrics-framework/core/
+- BaseIndicator.ts           # Classe abstraite
+- AlgorithmStrategy.ts       # Interface algorithmes
+- MetricsEngine.ts          # Moteur unifié
+- types/ (base, indicators, algorithms, results)
+```
+
+#### **2.2 Registry pattern**
+
+```typescript
+// À créer : MetricsRegistry.ts
+class MetricsRegistry {
+  registerIndicator(indicator: BaseIndicator): void;
+  getIndicator(id: string): BaseIndicator;
+  getAlgorithms(indicatorId: string): AlgorithmStrategy[];
+  runComparison(indicatorId: string, algorithms: string[]): ComparisonResult;
+}
+```
+
+#### **2.3 Hook principal unifié**
+
+```typescript
+// À créer : useMetricsEngine.ts
 export const useMetricsEngine = (config: MetricsEngineConfig) => {
   return {
-    // État
     indicators: BaseIndicator[],
     results: Record<string, IndicatorResult>,
-    loading: boolean,
-    error: string | null,
-
-    // Actions principales
-    calculateMetrics: (data: TurnTaggedData[]) => Promise<Record<string, IndicatorResult>>,
-    switchAlgorithm: (indicatorId: string, algorithmId: string) => void,
-
-    // Analyse par famille
-    getResultsByFamily: () => FamilyResults[],
-    getGlobalMetrics: () => GlobalMetrics,
-
-    // Benchmarking et comparaison
-    runBenchmark: (testData: AnnotatedData[]) => Promise<BenchmarkResults>,
     compareAlgorithms: (algorithms: string[]) => Promise<AlgorithmComparison>,
-
-    // ML et optimisation
-    trainMLModel: (indicatorId: string, trainingData: AnnotatedData[]) => Promise<TrainingResult>,
-    deployModel: (indicatorId: string, modelVersion: string) => Promise<void>,
-
-    // 🆕 Validation croisée
-    validateConvergence: (config: ConvergenceConfig) => Promise<ConvergenceResults>,
-    getConvergenceHistory: () => ConvergenceValidation[],
+    runBenchmark: (testData: AnnotatedData[]) => Promise<BenchmarkResults>
   };
 };
 ```
 
-### 🆕 Hook de validation convergence
+### 🔄 **Phase 3 : Migration Métriques Cognitives (1-2 semaines)**
+
+#### **3.1 Migration FluiditeCognitiveIndicator**
 
 ```typescript
-// metrics-framework/hooks/useConvergenceValidation.ts
-export const useConvergenceValidation = (
-  config: ConvergenceValidationConfig
-) => {
-  return {
-    // Calculs de convergence
-    calculateRankingConsistency: () => KendallResults,
-    calculateEffectivenessCorrelations: () => PearsonResults,
-    validateDirectionalAgreement: () => DirectionalResults,
+// Étape 1 : Créer structure framework
+cognitive-metrics/indicators/FluiditeCognitiveIndicator/
+├── algorithms/BasicFluidityAlgorithm.ts     # Migration du hook existant
+├── hooks/useFluiditeCognitiveMetrics.ts     # Adaptation au framework
+├── FluiditeCognitiveInterface.tsx           # Nouvelle interface
+└── types.ts                                 # Types spécifiques
 
-    // Tests d'hypothèses spécifiques
-    testH1ActionEffectiveness: () => ValidationResult, // ENGAGEMENT/OUVERTURE
-    testH2ExplanationDifficulty: () => ValidationResult, // EXPLICATION
-    testH3RefletGradient: () => ValidationResult, // REFLET gradient
-
-    // Synthèse et recommandations
-    generateValidationReport: () => ConvergenceReport,
-    suggestModelRefinements: () => ImprovementSuggestions,
-  };
-};
+// Étape 2 : Migrer logique existante
+class BasicFluidityAlgorithm {
+  // Migration depuis useCognitiveMetrics
+  calculateFluiditeScore(turns: TaggedTurn[]): FluiditeResult {
+    // Logique existante adaptée
+  }
+}
 ```
 
-### Hook spécialisé FeedbackAlignment
+#### **3.2 Migration des 8 autres indicateurs cognitifs**
+
+- **ReactionsDirectesIndicator** : Temps de latence conversationnelle
+- **ReprisesLexicalesIndicator** : Réutilisation vocabulaire client
+- **ChargeCognitiveIndicator** : Complexité traitement conversationnel
+- **MarqueursEffortIndicator** : Détection signes de difficulté
+- **PatternsResistanceIndicator** : Blocages conversationnels
+- **RobustesseStressIndicator** : Maintien performance sous pression
+- **NiveauStressIndicator** : Intensité stress conversationnel
+- **PositionConversationIndicator** : Évolution temporelle métriques
+
+#### **3.3 Interface unifiée CognitiveMetrics**
 
 ```typescript
-// li-metrics/indicators/FeedbackAlignmentIndicator/hooks/useFeedbackAlignmentMetrics.ts
-export const useFeedbackAlignmentMetrics = (config) => {
-  return {
-    // Données analysées
-    data: TaggedTurn[],
-    tableRows: TableRow[],
-    analysisResults: AlignmentAnalysis,
-    stats: AlignmentStats,
+// Adapter CognitiveMetrics.tsx existant au framework
+<CognitiveMetricsInterface>
+  <IndicatorTabs>
+    <Tab
+      label="Fluidité Cognitive"
+      component={<FluiditeCognitiveInterface />}
+    />
+    <Tab
+      label="Réactions Directes"
+      component={<ReactionsDirectesInterface />}
+    />
+    <Tab
+      label="Reprises Lexicales"
+      component={<ReprisesLexicalesInterface />}
+    />
+    {/* ... autres indicateurs */}
+  </IndicatorTabs>
 
-    // État
-    isLoading: boolean,
-    isAnalyzing: boolean,
-    error: string | null,
-
-    // Actions
-    runAnalysis: () => Promise<void>,
-    refreshData: () => Promise<void>,
-
-    // Méta informations
-    dataCount: number,
-    hasData: boolean,
-    sourceDataCount: number,
-
-    // Diagnostics pour debug
-    debugInfo: {
-      families: string[],
-      nextTurnTags: string[],
-      origines: string[]
-    }
-  };
-};
+  <GlobalCognitiveScore
+    indicators={allCognitiveIndicators}
+    showTrends={true}
+    showComparison={true}
+  />
+</CognitiveMetricsInterface>
 ```
 
-## 🚀 Fonctionnalités récentes (2024)
+### 🔄 **Phase 4 : Nouveaux Indicateurs LI (2-3 semaines)**
 
-### ✅ **Feedback Alignment Interface** (Décembre 2024)
+#### **4.1 CommonGroundIndicator**
 
-- **Analyse complète** : Traitement de tous les 3652+ enregistrements
-- **Algorithme par familles** : Classification basée sur `lpltag.family` au lieu du speaker
-- **Pagination Supabase** : Contournement de la limite 1000 avec pagination automatique
-- **Interface pédagogique** : Explication détaillée de la logique d'algorithme
-- **Résultats temps réel** :
-  - OUVERTURE: 48.3% d'alignement positif ⭐ (meilleure stratégie)
-  - ENGAGEMENT: 34.5% d'alignement positif
-  - REFLET: 18.2% d'alignement positif
-  - EXPLICATION: 1.0% d'alignement positif ❌ (confirme l'hypothèse)
+- Algorithme de détection références partagées
+- Interface d'analyse du terrain commun
+- Métriques de cohésion conversationnelle
 
-### 🔄 **Framework de métriques modulaires** (En cours)
+#### **4.2 BackchannelsIndicator**
 
-- **Architecture unifiée** : Base commune pour LI et métriques cognitives
-- **Algorithmes comparables** : Interface standardisée de comparaison
-- **Annotation supervisée** : Workflow d'annotation experte intégré
-- **Machine Learning** : Entraînement de modèles supervisés
+- Détection des signaux d'écoute (mm-hmm, oui, etc.)
+- Analyse de la synchronisation conversationnelle
+- Patterns de feedback non-verbal
 
-### 🆕 **Validation croisée AC-LI-Cognitif** (Planifié 2025)
+#### **4.3 SequentialPatternsIndicator**
 
-- **Tests statistiques** : Coefficients de Kendall, corrélations de Pearson
-- **Validation d'hypothèses** : Tests automatisés des hypothèses théoriques
-- **Dashboard de convergence** : Interface de validation scientifique
-- **Méthodogie rigoureuse** : Validation empirique du modèle théorique intégré
+- Analyse des séquences turn-by-turn
+- Détection de patterns récurrents
+- Optimisation des enchaînements conversationnels
 
-## 📊 Métriques et résultats
+### 🔄 **Phase 5 : Validation Scientifique (3-4 semaines)**
 
-### Performances système
+#### **4.1 Système d'annotation**
 
-- **Données source** : 3652 enregistrements turntagged
-- **Temps de traitement** : <2s pour analyse complète
-- **Cache intelligent** : Invalidation automatique, stats de performance
-- **Interface responsive** : Support mobile/desktop complet
+- Interface d'annotation experte
+- Workflow de validation croisée
+- Métriques inter-annotateur
 
-### Résultats scientifiques (FeedbackAlignment)
+#### **4.2 Validation croisée AC-LI-Cognitif**
 
+- Tests de convergence automatisés
+- Dashboard de validation scientifique
+- Génération de rapports de recherche
+
+## 📋 **Prochaines Tâches Concrètes**
+
+### **Tâche 1 : Deuxième algorithme FeedbackAlignment (URGENT pour thèse)**
+
+**Objectif** : Créer `SentimentEnhancedAlgorithm.ts` pour comparaison scientifique
+
+**Livrables** :
+
+```typescript
+// 1. Fichier à créer
+li-metrics/indicators/FeedbackAlignmentIndicator/algorithms/SentimentEnhancedAlgorithm.ts
+
+// 2. Méthodes à implémenter
+- analyzeEmotionalIntensity(verbatim: string): EmotionalScore
+- detectGranularSentiments(verbatim: string): GranularSentiment[]
+- compareWithBaseline(basicResult: AlignmentResult): ComparisonMetrics
+
+// 3. Interface à modifier
+FeedbackAlignmentInterface.tsx
+- Ajouter sélecteur d'algorithme
+- Affichage comparatif des résultats
+- Métriques de performance différentielle
 ```
-📊 Résultats d'efficacité par stratégie (sur 1397 tours analysés):
 
-🥇 OUVERTURE:    48.3% d'alignement positif  (175 occurrences)
-🥈 ENGAGEMENT:   34.5% d'alignement positif  (182 occurrences)
-🥉 REFLET:       18.2% d'alignement positif  (444 occurrences)
-❌ EXPLICATION:   1.0% d'alignement positif  (596 occurrences)
+### **Tâche 2 : Export documentation thèse (URGENT)**
 
-📈 Score global: 16.3% (confirme hypothèse: stratégies ACTION > EXPLICATION)
-📊 Couverture: 72.0% (1006 réponses client analysées sur 1397 tours)
+**Objectif** : Générer tableaux et graphiques pour insertion dans thèse
+
+**Livrables** :
+
+```typescript
+// 1. Hook d'export à créer
+useThesisExport.ts
+- generateResultsTable(): AcademicTable
+- generateComparisonChart(): ChartConfig
+- generateMethodologyDescription(): LatexContent
+- exportToPDF(): Buffer
+
+// 2. Formats de sortie
+- Tableaux LaTeX formatés
+- Graphiques haute résolution (SVG/PNG)
+- Descriptions méthodologiques
+- Métriques de validation
 ```
 
-### Hypothèses validées
+### **Tâche 3 : Migration première métrique cognitive (PRIORITÉ MOYENNE)**
 
-- ✅ **H1 : Efficacité des stratégies d'action** - OUVERTURE et ENGAGEMENT génèrent plus d'alignement
-- ✅ **H2 : Inefficacité de l'EXPLICATION** - Seulement 1% d'alignement positif
-- 🔄 **H3 : Gradient REFLET** - En cours d'analyse (nécessite sous-classification)
+**Objectif** : Migrer FluiditeCognitiveIndicator vers le framework
 
-## 🎯 Roadmap 2025
+**Livrables** :
 
-### Q1 2025 : Migration complète framework
+```typescript
+// 1. Structure à créer
+cognitive-metrics/indicators/FluiditeCognitiveIndicator/
+├── algorithms/BasicFluidityAlgorithm.ts
+├── hooks/useFluiditeCognitiveMetrics.ts
+├── FluiditeCognitiveInterface.tsx
+└── types.ts
 
-- [ ] Migration complète des métriques cognitives vers architecture modulaire
-- [ ] Implémentation des indicateurs LI restants (Common Ground, Backchannels, etc.)
-- [ ] Interface d'annotation experte opérationnelle
-- [ ] Premiers modèles ML supervisés
+// 2. Migration de la logique existante
+// Depuis : useCognitiveMetrics.ts (hook actuel)
+// Vers : BasicFluidityAlgorithm.ts (algorithme framework)
 
-### Q2 2025 : Validation scientifique
+// 3. Adaptation de l'interface
+// Depuis : CognitiveMetrics.tsx (composant monolithique)
+// Vers : FluiditeCognitiveInterface.tsx (composant modulaire)
+```
 
-- [ ] Collecte 1000+ annotations expertes par indicateur
-- [ ] Validation croisée AC-LI-Cognitif avec tests statistiques
-- [ ] Dashboard de convergence et validation d'hypothèses
-- [ ] Publication des résultats de validation
+### **Tâche 4 : Tests de validation (IMPORTANT)**
 
-### Q3 2025 : Optimisation et production
+**Objectif** : Valider la robustesse des algorithmes
 
-- [ ] A/B testing automatique entre algorithmes
-- [ ] Monitoring performance temps réel
-- [ ] Optimisations avancées (cache multi-niveaux, workers)
-- [ ] API publique pour intégrations externes
+**Livrables** :
 
-### Q4 2025 : Extensions avancées
+```typescript
+// 1. Tests automatisés
+algorithms/__tests__/
+- BasicAlignmentAlgorithm.test.ts
+- SentimentEnhancedAlgorithm.test.ts
+- ComparisonValidation.test.ts
 
-- [ ] Analyse multimodale (audio + texte)
-- [ ] Intégration NLP avancée (Transformers, spaCy)
-- [ ] Système de recommandations personnalisées
-- [ ] Export vers systèmes tiers (CRM, Analytics)
+// 2. Métriques de qualité
+- Précision sur échantillon annoté
+- Temps de traitement benchmark
+- Stabilité inter-exécutions
+- Couverture d'analyse
+```
 
-## 🛠️ Installation et développement
+## 🔧 **Setup pour Nouvelle Session**
 
-### Prérequis
+### **Contexte projet**
 
-- Node.js 18+
-- npm ou yarn
-- Compte Supabase configuré
-- Accès aux données TaggerLPL
+- **Framework** : Architecture modulaire pour métriques comparables
+- **État actuel** : FeedbackAlignment opérationnel avec BasicAlgorithm
+- **Données** : 3652+ enregistrements turntagged, 145 patterns linguistiques
+- **Résultats** : Hypothèses H1 & H2 validées scientifiquement
 
-### Installation
+### **Fichiers clés à examiner**
 
 ```bash
-# 1. Cloner le repository
-git clone [repo-url]
-cd taggerlpl-nextjs
+# Structure existante
+src/app/(protected)/analysis/components/
+├── li-metrics/indicators/FeedbackAlignmentIndicator/
+│   ├── algorithms/BasicAlignmentAlgorithm.ts        # ✅ Moteur sémantique
+│   ├── FeedbackAlignmentInterface.tsx               # ✅ Interface complète
+│   ├── hooks/useFeedbackAlignmentMetrics.ts         # ✅ Hook données
+│   └── types.ts                                     # ✅ Types
+├── shared/molecules/
+│   ├── AlgorithmLogicExplanation.tsx                # ✅ Composant enrichi
+│   └── types.ts                                     # ✅ ExtendedAlgorithmLogicProps
+├── shared/atoms/                                    # ✅ Composants atomiques
+└── CognitiveMetrics.tsx                             # ✅ Métriques cognitives existantes
 
-# 2. Installer les dépendances
-npm install
-
-# 3. Configuration environnement
-cp .env.example .env.local
-# Remplir les variables Supabase
-
-# 4. Lancement développement
-npm run dev
+# Hook cognitif existant (à migrer)
+src/hooks/useCognitiveMetrics.ts                     # ✅ 9 indicateurs opérationnels
 ```
 
-### Structure de développement
+### **APIs disponibles**
 
-```bash
-# Tests
-npm test                    # Tests unitaires
-npm run test:integration    # Tests d'intégration
+```typescript
+// Hook principal FeedbackAlignment
+const {
+  tableRows, // Données formatées pour affichage
+  analysisResults, // Résultats par famille + sentiment
+  stats, // Statistiques globales
+  runAnalysis, // Lance analyse complète
+  debugInfo, // Diagnostics + métadonnées
+} = useFeedbackAlignmentMetrics({ selectedOrigin, algorithmType: "basic" });
 
-# Qualité code
-npm run lint               # ESLint
-npm run format             # Prettier
-npm run type-check         # TypeScript
+// Algorithme d'analyse
+const algorithm = new BasicAlignmentAlgorithm(turnTaggedData);
+const results = algorithm.analyzeAlignment(); // Retourne AlignmentAnalysis
+algorithm.diagnoseVerbatims(); // Diagnostics qualité données
 
-# Build production
-npm run build              # Build optimisé
-npm run start              # Serveur production
+// Hook cognitif existant (à migrer vers framework)
+const {
+  fluiditeCognitive, // Score fluidité conversationnelle
+  reactionsDirectes, // Temps de latence réactions
+  reprisesLexicales, // Réutilisation vocabulaire client
+  chargeCognitive, // Complexité traitement
+  marqueursEffort, // Signes de difficulté ("euh", pauses)
+  patternsResistance, // Blocages conversationnels
+  robustesseStress, // Maintien performance sous pression
+  niveauStress, // Intensité stress conversationnel
+  positionConversation, // Évolution temporelle
+  scoreGlobalCognitif, // Score composite
+} = useCognitiveMetrics(turnTaggedData);
 ```
 
-### 🆕 Setup Framework de métriques
+### **Données de test**
 
-```bash
-# 1. Créer structure métrics-framework
-mkdir -p src/app/\(protected\)/analysis/components/metrics-framework/{core,hooks,components,utils,database}
+- **Source** : Table `turntagged` (3652 enregistrements)
+- **Filtrage** : Par origine, famille de stratégie
+- **Couverture** : 72% des tours analysables (1006/1397)
+- **Qualité** : Confidence moyenne >75%
 
-# 2. Setup base de données
-# Exécuter scripts migration dans Supabase Dashboard
-# Tables: metric_annotations, algorithm_performance, convergence_validations
-
-# 3. Test basique framework
-import { useMetricsEngine } from "@/components/metrics-framework/hooks/useMetricsEngine";
-
-const TestComponent = () => {
-  const { indicators, loading, error } = useMetricsEngine({ domain: "li" });
-  return
-```
+Le framework est prêt pour extension avec nouveaux algorithmes et indicateurs ! 🚀
