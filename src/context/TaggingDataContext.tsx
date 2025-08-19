@@ -7,6 +7,7 @@ import {
   useEffect,
   useCallback,
   useRef,
+  useMemo,
   ReactNode,
 } from "react";
 
@@ -78,6 +79,29 @@ export interface NewTag {
   [key: string]: any;
 }
 
+// ==========================================
+// 📋 NOUVEAUX TYPES (sans conflit)
+// ==========================================
+
+interface GlobalTurnTaggedFilters {
+  strategies?: string[];
+  speakers?: string[];
+  callIds?: string[];
+  limit?: number;
+  origine?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+interface GlobalTurnTaggedStats {
+  totalTurns: number;
+  totalCalls: number;
+  strategiesCount: Record<string, number>;
+  speakersCount: Record<string, number>;
+  originesCount: Record<string, number>;
+  lastUpdated: Date;
+}
+
 export interface RelationsStatus {
   totalTags: number;
   tagsWithNextTurn: number;
@@ -116,6 +140,20 @@ interface TaggingDataContextType {
     callId: string
   ) => Promise<RelationsStatus | null>;
   getRelationsStatus: (callId: string) => Promise<RelationsStatus | null>;
+
+  // 🆕 NOUVELLES PROPRIÉTÉS (ajoutées sans conflit)
+  allTurnTagged: TaggedTurn[]; // ← Pour analyse globale
+  setAllTurnTagged: React.Dispatch<React.SetStateAction<TaggedTurn[]>>;
+  fetchAllTurnTagged: (filters?: GlobalTurnTaggedFilters) => Promise<void>;
+  globalTurnTaggedStats: GlobalTurnTaggedStats;
+  loadingGlobalData: boolean;
+  errorGlobalData: string | null;
+
+  // 🆕 Fonctions utilitaires pour compatibilité
+  getFilteredTurnsForAnalysis: (
+    filters?: GlobalTurnTaggedFilters
+  ) => TaggedTurn[];
+  refreshGlobalDataIfNeeded: () => Promise<void>;
 }
 
 // Create the context with a default undefined value
@@ -142,6 +180,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
   // Destructurer directement le hook useSupabase
   const { supabase } = useSupabase();
 
+  // ✅ ÉTATS EXISTANTS (inchangés)
   const [taggingCalls, setTaggingCalls] = useState<TaggingCall[]>([]);
   const [selectedTaggingCall, setSelectedTaggingCall] =
     useState<TaggingCall | null>(null);
@@ -152,6 +191,21 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
   const [currentWord, setCurrentWord] = useState<Word | null>(null);
   const [taggedTurns, setTaggedTurns] = useState<TaggedTurn[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
+
+  // 🆕 NOUVEAUX ÉTATS (corrigés - au bon endroit)
+  const [allTurnTagged, setAllTurnTagged] = useState<TaggedTurn[]>([]);
+  const [loadingGlobalData, setLoadingGlobalData] = useState(false);
+  const [errorGlobalData, setErrorGlobalData] = useState<string | null>(null);
+  const [lastGlobalFetch, setLastGlobalFetch] = useState<Date | null>(null);
+
+  // Dans votre contexte, ajoutez cette fonction utilitaire
+  const checkTotalTurnTagged = async () => {
+    const { count } = await supabase
+      .from("turntagged")
+      .select("*", { count: "exact", head: true });
+    console.log(`📊 Total réel en DB: ${count} turns`);
+    return count;
+  };
 
   const updateCurrentWord = (word: Word | null): void => {
     setCurrentWord(word);
@@ -227,6 +281,197 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
         err instanceof Error ? err.message : String(err)
       );
     }
+  }, [supabase]);
+
+  // 🆕 NOUVELLE FONCTION pour fetch global (sans conflit)
+  // 1. ✅ Correction dans fetchAllTurnTagged
+  const fetchAllTurnTagged = useCallback(
+    async (filters?: GlobalTurnTaggedFilters) => {
+      if (!supabase) {
+        console.warn("Supabase not available");
+        return;
+      }
+
+      try {
+        setLoadingGlobalData(true);
+        setErrorGlobalData(null);
+
+        console.log("=== FETCH ALL TURNTAGGED COMPLET (SANS LIMITE) ===");
+        console.log("Filtres:", filters);
+
+        // 🚀 PREMIÈRE ÉTAPE: Compter le total exact
+        const { count: totalCount, error: countError } = await supabase
+          .from("turntagged")
+          .select("*", { count: "exact", head: true });
+
+        if (countError) {
+          console.error("Erreur lors du count:", countError);
+          throw countError;
+        }
+
+        console.log(`📊 Total réel en base: ${totalCount} turntagged`);
+
+        // 🚀 DEUXIÈME ÉTAPE: Récupération par pages
+        const pageSize = 1000; // Taille de page Supabase
+        let allData: any[] = [];
+        let page = 0;
+        let hasMore = true;
+
+        console.log(`🔄 Récupération par pages (${pageSize} par page)...`);
+
+        while (hasMore && allData.length < (totalCount || 10000)) {
+          const from = page * pageSize;
+          const to = from + pageSize - 1;
+
+          console.log(`📥 Page ${page + 1}: récupération ${from}-${to}`);
+
+          // Construction de la requête avec jointures
+          let query = supabase
+            .from("turntagged")
+            .select(
+              `
+            *,
+            lpltag:tag (color, family, originespeaker),
+            call:call_id (origine, duree)
+          `
+            )
+            .range(from, to)
+            .order("call_id", { ascending: true })
+            .order("start_time", { ascending: true });
+
+          // Application des filtres si spécifiés
+          if (filters?.strategies?.length) {
+            query = query.in("tag", filters.strategies);
+          }
+
+          if (filters?.speakers?.length) {
+            query = query.in("speaker", filters.speakers);
+          }
+
+          if (filters?.callIds?.length) {
+            query = query.in("call_id", filters.callIds);
+          }
+
+          if (filters?.origine) {
+            query = query.eq("call.origine", filters.origine);
+          }
+
+          const { data: pageData, error: pageError } = await query;
+
+          if (pageError) {
+            console.error(`Erreur page ${page}:`, pageError);
+            throw pageError;
+          }
+
+          if (!pageData || pageData.length === 0) {
+            console.log(
+              `📄 Page ${page + 1}: aucune donnée, fin de pagination`
+            );
+            hasMore = false;
+            break;
+          }
+
+          allData = [...allData, ...pageData];
+          console.log(
+            `✅ Page ${page + 1}: +${pageData.length} turns (total: ${
+              allData.length
+            })`
+          );
+
+          // Si moins que pageSize, on a atteint la fin
+          if (pageData.length < pageSize) {
+            hasMore = false;
+            console.log(`🏁 Fin naturelle de pagination (page incomplète)`);
+          }
+
+          page++;
+
+          // Sécurité: éviter les boucles infinies
+          if (page > 10) {
+            console.warn("⚠️ Arrêt sécurité: plus de 10 pages récupérées");
+            break;
+          }
+        }
+
+        console.log(
+          `🎉 Récupération terminée: ${allData.length}/${totalCount} turns`
+        );
+
+        // 🚀 TROISIÈME ÉTAPE: Traitement des données
+        const processedData: TaggedTurn[] = allData.map((turn: any) => ({
+          id: turn.id,
+          call_id: turn.call_id,
+          start_time: turn.start_time,
+          end_time: turn.end_time,
+          tag: turn.tag,
+          verbatim: turn.verbatim || "",
+          next_turn_verbatim: turn.next_turn_verbatim || "",
+          next_turn_tag: turn.next_turn_tag,
+          speaker: turn.speaker,
+          color: turn.lpltag?.color || "#gray",
+
+          // Données enrichies
+          family: turn.lpltag?.family || "UNKNOWN",
+          originespeaker: turn.lpltag?.originespeaker || "unknown",
+          call_origine: turn.call?.origine || "unknown",
+          call_duree: turn.call?.duree || 0,
+        }));
+
+        setAllTurnTagged(processedData);
+        setLastGlobalFetch(new Date());
+
+        console.log(`📈 État mis à jour avec ${processedData.length} turns`);
+
+        // Vérification finale
+        if (processedData.length < (totalCount || 0) * 0.9) {
+          console.warn(
+            `⚠️ Attention: seulement ${processedData.length}/${totalCount} récupérés`
+          );
+        }
+      } catch (err) {
+        console.error("❌ Erreur lors du fetch global:", err);
+        setErrorGlobalData(
+          err instanceof Error ? err.message : "Erreur inconnue"
+        );
+      } finally {
+        setLoadingGlobalData(false);
+      }
+    },
+    [supabase]
+  );
+
+  // 3. ✅ Fonction utilitaire pour diagnostiquer
+  const diagnosticSupabaseLimit = useCallback(async () => {
+    if (!supabase) return;
+
+    console.log("🔍 DIAGNOSTIC LIMITATION SUPABASE");
+    console.log("================================");
+
+    // Test 1: Count exact
+    const { count } = await supabase
+      .from("turntagged")
+      .select("*", { count: "exact", head: true });
+    console.log("Total en base:", count);
+
+    // Test 2: Fetch avec limite par défaut
+    const { data: defaultData } = await supabase
+      .from("turntagged")
+      .select("id");
+    console.log("Fetch par défaut:", defaultData?.length);
+
+    // Test 3: Fetch avec limite explicite
+    const { data: limitedData } = await supabase
+      .from("turntagged")
+      .select("id")
+      .limit(5000);
+    console.log("Fetch avec limite 5000:", limitedData?.length);
+
+    // Test 4: Fetch avec range
+    const { data: rangeData } = await supabase
+      .from("turntagged")
+      .select("id")
+      .range(0, 2999);
+    console.log("Fetch avec range 0-2999:", rangeData?.length);
   }, [supabase]);
 
   // Dans TaggingDataContext.tsx, ajoutez cette fonction
@@ -328,6 +573,82 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     },
     [supabase]
   );
+
+  // 🆕 FONCTION pour données filtrées (utilitaire)
+  const getFilteredTurnsForAnalysis = useCallback(
+    (filters?: GlobalTurnTaggedFilters): TaggedTurn[] => {
+      let filtered = allTurnTagged;
+
+      if (filters?.strategies?.length) {
+        filtered = filtered.filter((turn: TaggedTurn) =>
+          filters.strategies!.includes(turn.tag)
+        );
+      }
+
+      if (filters?.speakers?.length) {
+        filtered = filtered.filter((turn: TaggedTurn) =>
+          filters.speakers!.includes(turn.speaker)
+        );
+      }
+
+      if (filters?.callIds?.length) {
+        filtered = filtered.filter((turn: TaggedTurn) =>
+          filters.callIds!.includes(turn.call_id)
+        );
+      }
+
+      return filtered;
+    },
+    [allTurnTagged]
+  );
+
+  // 🆕 FONCTION pour refresh intelligent
+  const refreshGlobalDataIfNeeded = useCallback(async () => {
+    const now = new Date();
+    const shouldRefresh =
+      !lastGlobalFetch ||
+      now.getTime() - lastGlobalFetch.getTime() > 5 * 60 * 1000; // 5 minutes
+
+    if (shouldRefresh) {
+      console.log("🔄 Refresh automatique des données globales");
+      await fetchAllTurnTagged({ limit: 5000 });
+    }
+  }, [lastGlobalFetch, fetchAllTurnTagged]);
+
+  // 🆕 CALCUL des statistiques globales
+  const globalTurnTaggedStats = useMemo((): GlobalTurnTaggedStats => {
+    const uniqueCallIds = new Set(
+      allTurnTagged.map((turn: TaggedTurn) => turn.call_id)
+    );
+
+    return {
+      totalTurns: allTurnTagged.length,
+      totalCalls: uniqueCallIds.size,
+      strategiesCount: allTurnTagged.reduce(
+        (acc: Record<string, number>, turn: TaggedTurn) => {
+          acc[turn.tag] = (acc[turn.tag] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+      speakersCount: allTurnTagged.reduce(
+        (acc: Record<string, number>, turn: TaggedTurn) => {
+          acc[turn.speaker] = (acc[turn.speaker] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+      originesCount: allTurnTagged.reduce(
+        (acc: Record<string, number>, turn: TaggedTurn) => {
+          const origine = (turn as any).call_origine || "unknown";
+          acc[origine] = (acc[origine] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+      lastUpdated: lastGlobalFetch || new Date(),
+    };
+  }, [allTurnTagged, lastGlobalFetch]);
 
   // Fetch des post-its liés à un appel
   const fetchTaggingPostits = useCallback(
@@ -442,6 +763,12 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
   useEffect(() => {
     fetchTaggingCalls();
   }, [fetchTaggingCalls]);
+
+  // 2. ✅ Correction dans l'initialisation
+  useEffect(() => {
+    console.log("🚀 Initialisation avec fetch complet des données");
+    fetchAllTurnTagged({ limit: undefined }); // Pas de limite pour l'initial
+  }, [fetchAllTurnTagged]);
 
   // Fonction pour récupérer les tags
   // Fonction fetchTaggedTurns simplifiée dans TaggingDataContext.tsx
@@ -646,6 +973,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
 
     return false;
   }
+
   // Fonction calculateAllNextTurnTags corrigée (lignes ~520)
   // ✅ VERSION SIMPLIFIÉE ET CORRECTE du calcul next_turn_tag
   const calculateAllNextTurnTags = useCallback(
@@ -787,118 +1115,6 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     [supabase, fetchTaggedTurns]
   );
 
-  // ✅ FONCTION HELPER pour trouver le next_turn_tag
-  function findNextTurnTag(
-    currentTag: any,
-    allTags: any[],
-    currentIndex: number
-  ) {
-    console.log(
-      `🔍 Recherche next_turn pour tag ${currentTag.id} (${currentTag.speaker}, ${currentTag.start_time}-${currentTag.end_time})`
-    );
-
-    const OVERLAP_TOLERANCE = 0.1; // Tolérance de 100ms pour les chevauchements
-
-    // ✅ STRATÉGIE 1: Chercher le tag le plus proche chronologiquement d'un autre speaker
-    let bestCandidate = null;
-    let minTimeGap = Infinity;
-
-    for (let j = currentIndex + 1; j < allTags.length; j++) {
-      const candidateTag = allTags[j];
-
-      // Ignorer les tags du même speaker
-      if (candidateTag.speaker === currentTag.speaker) {
-        continue;
-      }
-
-      // ✅ LOGIQUE AMÉLIORÉE pour déterminer si c'est un "tour suivant"
-      const isValidNextTurn = isValidNextTurnCandidate(
-        currentTag,
-        candidateTag,
-        OVERLAP_TOLERANCE
-      );
-
-      if (isValidNextTurn) {
-        // Calculer la proximité temporelle
-        const timeGap = candidateTag.start_time - currentTag.end_time;
-
-        if (timeGap < minTimeGap) {
-          minTimeGap = timeGap;
-          bestCandidate = candidateTag;
-        }
-
-        // ✅ Si on trouve un tag très proche (< 2 secondes), on l'utilise
-        if (timeGap >= -OVERLAP_TOLERANCE && timeGap <= 2.0) {
-          console.log(
-            `✅ Next turn trouvé: ${candidateTag.id} (gap: ${timeGap.toFixed(
-              2
-            )}s)`
-          );
-          return candidateTag;
-        }
-      }
-    }
-
-    if (bestCandidate) {
-      console.log(
-        `✅ Meilleur candidat: ${bestCandidate.id} (gap: ${minTimeGap.toFixed(
-          2
-        )}s)`
-      );
-      return bestCandidate;
-    }
-
-    console.log(`❌ Aucun next turn trouvé pour tag ${currentTag.id}`);
-    return null;
-  }
-
-  // ✅ FONCTION DE DIAGNOSTIC (optionnelle)
-  async function diagnoseNextTurnCalculation(callId: string) {
-    console.log("=== DIAGNOSTIC NEXT_TURN_TAG ===");
-
-    const { data: tags } = await supabase
-      .from("turntagged")
-      .select("*")
-      .eq("call_id", callId)
-      .order("start_time", { ascending: true });
-
-    if (!tags) return;
-
-    console.log("📊 Analyse des patterns:");
-
-    // Analyser les gaps temporels
-    const gaps = [];
-    for (let i = 0; i < tags.length - 1; i++) {
-      const gap = tags[i + 1].start_time - tags[i].end_time;
-      gaps.push(gap);
-    }
-
-    console.log(
-      `⏱️ Gaps temporels: min=${Math.min(...gaps).toFixed(2)}s, max=${Math.max(
-        ...gaps
-      ).toFixed(2)}s, moyenne=${(
-        gaps.reduce((a, b) => a + b, 0) / gaps.length
-      ).toFixed(2)}s`
-    );
-
-    // Analyser les speakers
-    const speakers = [...new Set(tags.map((t) => t.speaker))];
-    console.log(`👥 Speakers détectés: ${speakers.join(", ")}`);
-
-    // Analyser les chevauchements
-    let overlaps = 0;
-    for (let i = 0; i < tags.length - 1; i++) {
-      for (let j = i + 1; j < tags.length; j++) {
-        if (
-          tags[i].end_time > tags[j].start_time &&
-          tags[i].start_time < tags[j].end_time
-        ) {
-          overlaps++;
-        }
-      }
-    }
-    console.log(`🔄 Chevauchements détectés: ${overlaps}`);
-  }
   const deleteTurnTag = useCallback(
     async (id: number): Promise<void> => {
       if (!supabase) {
@@ -933,6 +1149,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
   return (
     <TaggingDataContext.Provider
       value={{
+        // ✅ PROPRIÉTÉS EXISTANTES (inchangées)
         taggingCalls,
         setTaggingCalls,
         selectedTaggingCall,
@@ -958,6 +1175,16 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
         fetchTaggingCalls,
         checkRelationsCompleteness,
         getRelationsStatus,
+
+        // 🆕 NOUVELLES PROPRIÉTÉS (ajoutées)
+        allTurnTagged,
+        setAllTurnTagged,
+        fetchAllTurnTagged,
+        globalTurnTaggedStats,
+        loadingGlobalData,
+        errorGlobalData,
+        getFilteredTurnsForAnalysis,
+        refreshGlobalDataIfNeeded,
       }}
     >
       {children}

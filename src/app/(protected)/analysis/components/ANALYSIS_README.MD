@@ -1,151 +1,466 @@
-# 🏗️ Architecture Unifiée - Framework de Métriques Modulaires
+# 🏷️ TaggerLPL - Application Next.js
 
-## 📋 Vue d'ensemble du projet
+## 📋 Vue d'ensemble
 
-Ce document spécifie l'architecture complète pour un framework unifié permettant de développer, tester et optimiser des métriques de **Linguistique Interactionnelle (LI)** et de **Sciences Cognitives** avec une approche modulaire et scientifiquement rigoureuse.
+TaggerLPL est une application Next.js sophistiquée dédiée au **tagging conversationnel** et à l'**analyse linguistique interactionnelle** avec un **framework unifié de métriques modulaires**. L'application combine une interface moderne de tagging avec des algorithmes avancés d'analyse conversationnelle et de sciences cognitives.
 
 ### 🎯 Objectifs principaux
 
-- ✅ **Architecture unifiée** : Framework commun pour LI et métriques cognitives
-- ✅ **Zéro duplication** : Code partagé entre tous les domaines
-- ✅ **Modularité** : Chaque indicateur développable indépendamment
-- ✅ **Machine Learning supervisé** : Algorithmes auto-améliorants
-- ✅ **Validation scientifique** : Benchmarking rigoureux et annotation experte
+- ✅ **Tagging conversationnel** : Interface complète de tagging des tours de parole
+- ✅ **Analyse multimodale** : Métriques LI (Linguistique Interactionnelle) et Cognitives
+- ✅ **Framework unifié** : Architecture modulaire pour algorithmes comparables
+- ✅ **Machine Learning supervisé** : Algorithmes auto-améliorants avec annotation experte
+- ✅ **Validation scientifique** : Validation croisée AC-LI-Cognitif pour recherche
 - ✅ **Interface comparative** : Comparaison visuelle entre algorithmes
-- ✅ **A/B Testing** : Optimisation continue en production
 
-## 📁 Architecture des fichiers
+## 🏗️ Architecture technique
 
-```
-src/app/(protected)/analysis/components/
-├── 📂 metrics-framework/                    # 🔧 FRAMEWORK COMMUN
-│   ├── 📂 core/
-│   │   ├── MetricsRegistry.ts               # Registre universel d'indicateurs
-│   │   ├── BaseIndicator.ts                 # Classe de base pour tous indicateurs
-│   │   ├── AlgorithmStrategy.ts             # Interface stratégies d'algorithmes
-│   │   ├── MetricsEngine.ts                 # Moteur de calcul unifié
-│   │   └── types/
-│   │       ├── base.ts                      # Types fondamentaux
-│   │       ├── indicators.ts                # Types pour indicateurs
-│   │       ├── algorithms.ts                # Types pour algorithmes
-│   │       ├── results.ts                   # Types pour résultats
-│   │       └── annotations.ts               # Types pour système d'annotation
-│   │
-│   ├── 📂 hooks/
-│   │   ├── useMetricsEngine.ts              # Hook principal unifié
-│   │   ├── useIndicatorRegistry.ts          # Gestion registre dynamique
-│   │   ├── useAlgorithmBenchmarking.ts      # Système de benchmarking
-│   │   ├── useAnnotationWorkflow.ts         # Workflow annotation supervisée
-│   │   ├── useMetricsByFamily.ts            # Analyse par famille de stratégies
-│   │   ├── useMLTraining.ts                 # Entraînement modèles ML
-│   │   └── usePerformanceMonitoring.ts      # Monitoring temps réel
-│   │
-│   ├── 📂 components/
-│   │   ├── MetricIndicatorCard.tsx          # Carte d'indicateur universelle
-│   │   ├── AlgorithmComparisonView.tsx      # Comparaison algorithmes ligne par ligne
-│   │   ├── AnnotationInterface.tsx          # Interface annotation experte
-│   │   ├── BenchmarkDashboard.tsx           # Dashboard performance comparative
-│   │   ├── MetricsCategoryView.tsx          # Vue par catégorie d'indicateurs
-│   │   ├── ABTestingInterface.tsx           # Interface A/B testing
-│   │   ├── MLTrainingInterface.tsx          # Interface entraînement ML
-│   │   └── PerformanceMonitor.tsx           # Monitoring en temps réel
-│   │
-│   ├── 📂 utils/
-│   │   ├── dataPreprocessing.ts             # Préprocessing données Supabase
-│   │   ├── featureExtraction.ts             # Extraction features ML
-│   │   ├── algorithmValidation.ts           # Validation et métriques qualité
-│   │   ├── annotationHelpers.ts             # Utilitaires annotation
-│   │   ├── performanceOptimization.ts       # Optimisations et cache
-│   │   ├── mlHelpers.ts                     # Helpers ML/NLP
-│   │   └── supabaseAdapter.ts               # Adaptateur données Supabase
-│   │
-│   └── 📂 database/
-│       ├── migrations/                      # Scripts création tables
-│       │   ├── 001_create_annotations.sql
-│       │   ├── 002_create_performance.sql
-│       │   └── 003_create_ab_tests.sql
-│       └── schemas/
-│           ├── annotations.ts               # Types Supabase annotations
-│           └── performance.ts               # Types Supabase performance
-│
-├── 📂 li-metrics/                           # 🗣️ DOMAINE LINGUISTIQUE INTERACTIONNELLE
-│   ├── 📂 indicators/
-│   │   ├── 📂 CommonGroundIndicator/
-│   │   │   ├── index.ts                     # Export principal
-│   │   │   ├── CommonGroundIndicator.tsx    # Interface utilisateur
-│   │   │   ├── algorithms/
-│   │   │   │   ├── BasicSharedRefsAlgorithm.ts      # Algorithme règles (actuel corrigé)
-│   │   │   │   ├── NLPEnhancedAlgorithm.ts          # Avec spaCy/Transformers
-│   │   │   │   ├── MLSupervisedAlgorithm.ts         # Machine Learning supervisé
-│   │   │   │   └── index.ts                         # Export algorithmes
-│   │   │   ├── components/
-│   │   │   │   ├── CGResultsDisplay.tsx             # Affichage résultats
-│   │   │   │   ├── CGAnnotationInterface.tsx        # Interface annotation spécialisée
-│   │   │   │   └── CGAlgorithmComparison.tsx        # Comparaison algorithmes CG
-│   │   │   ├── hooks/
-│   │   │   │   ├── useCommonGroundMetrics.ts        # Hook spécialisé CG
-│   │   │   │   └── useCommonGroundAnnotation.ts     # Workflow annotation CG
-│   │   │   └── types.ts                             # Types spécifiques Common Ground
-│   │   │
-│   │   ├── 📂 FeedbackAlignmentIndicator/
-│   │   │   ├── algorithms/
-│   │   │   │   ├── BasicAlignmentAlgorithm.ts       # Détection marqueurs basique
-│   │   │   │   ├── SentimentEnhancedAlgorithm.ts    # Avec analyse sentiment
-│   │   │   │   └── SequentialPatternAlgorithm.ts    # Patterns séquentiels
-│   │   │   └── ... (même structure que CommonGround)
-│   │   │
-│   │   ├── 📂 BackchannelsIndicator/
-│   │   ├── 📂 ProsodicFluencyIndicator/
-│   │   ├── 📂 SpeechRateIndicator/
-│   │   ├── 📂 SequentialPatternsIndicator/
-│   │   ├── 📂 RepairMechanismsIndicator/
-│   │   └── 📂 CompositeLIScoreIndicator/
-│   │
-│   ├── LIMetricsConfig.ts                   # Configuration domaine LI
-│   ├── LIMetricsRegistry.ts                 # Registre spécialisé LI
-│   └── LinguisticInteractionalMetrics.tsx   # Composant principal LI (existant à adapter)
-│
-├── 📂 cognitive-metrics/                    # 🧠 DOMAINE SCIENCES COGNITIVES
-│   ├── 📂 indicators/
-│   │   ├── 📂 FluiditeCognitiveIndicator/
-│   │   │   ├── algorithms/
-│   │   │   │   ├── BasicFluidityAlgorithm.ts        # Algorithme actuel migré
-│   │   │   │   ├── NeuronMirrorAlgorithm.ts         # Basé neurones miroirs avancé
-│   │   │   │   └── MLEnhancedAlgorithm.ts           # ML supervisé fluidité
-│   │   │   └── ... (même structure)
-│   │   │
-│   │   ├── 📂 ReactionsDirectesIndicator/
-│   │   ├── 📂 ReprisesLexicalesIndicator/
-│   │   ├── 📂 ChargeCognitiveIndicator/
-│   │   ├── 📂 MarqueursEffortIndicator/
-│   │   ├── 📂 PatternsResistanceIndicator/
-│   │   ├── 📂 RobustesseStressIndicator/
-│   │   ├── 📂 NiveauStressIndicator/
-│   │   └── 📂 PositionConversationIndicator/
-│   │
-│   ├── CognitiveMetricsConfig.ts            # Configuration domaine Cognitive
-│   ├── CognitiveMetricsRegistry.ts          # Registre spécialisé Cognitive
-│   ├── CognitiveMetrics.tsx                 # Composant principal Cognitive
-│   │
-│   └── 📂 migration/                        # 🔄 MIGRATION EXISTANT
-│       ├── adaptUseCognitiveMetrics.ts      # Adaptation hook existant
-│       ├── adaptIndicatorData.ts            # Migration données existantes
-│       ├── compatibilityLayer.ts            # Couche compatibilité
-│       └── migrationGuide.md                # Guide migration step-by-step
-│
-└── 📂 shared/                               # 🔗 COMPOSANTS PARTAGÉS
-    ├── FamilyAnalysisView.tsx               # Vue analyse par famille stratégies
-    ├── SupabaseDataAdapter.tsx              # Adaptateur données Supabase
-    ├── PerformanceMonitor.tsx               # Monitoring performance global
-    └── ExpertAnnotationGuide.tsx            # Guide annotation pour experts
+### Technologies utilisées
+
+- **Framework** : Next.js 14+ (App Router)
+- **UI** : Material-UI (MUI) + Tailwind CSS
+- **Base de données** : Supabase (PostgreSQL)
+- **CRM** : Intégration Zoho
+- **État global** : React Context API
+- **ML/NLP** : Python (spaCy, Transformers, scikit-learn)
+- **Langue** : Interface en français
+
+### Hiérarchie des Providers
+
+```typescript
+SupabaseProvider (session auth)
+├── ThemeModeProvider (UI themes)
+│   ├── ZohoProvider (CRM integration)
+│   │   └── TaggingDataProvider (business logic)
+│   │       ├── GlobalNavbar (navigation)
+│   │       └── Pages
 ```
 
-## 🗄️ Structure base de données
+## 📁 Structure des fichiers
 
-### **Tables principales (existantes)**
+### Architecture générale
+
+```
+src/app/(protected)/
+├── analysis/                           # 📊 CENTRE D'ANALYSE
+│   ├── page.tsx                        # Page principale d'analyse
+│   └── components/
+│       ├── 📂 metrics-framework/       # 🔧 FRAMEWORK COMMUN
+│       ├── 📂 li-metrics/             # 🗣️ LINGUISTIQUE INTERACTIONNELLE
+│       ├── 📂 cognitive-metrics/      # 🧠 SCIENCES COGNITIVES
+│       └── 📂 shared/                 # 🔗 COMPOSANTS PARTAGÉS
+│
+├── tagging/                            # 🏷️ INTERFACE CLASSIQUE
+├── new-tagging/                        # 🚀 NOUVELLE INTERFACE
+├── calls/                              # 📞 GESTION DES APPELS
+├── tags/admin/                         # 🔧 ADMINISTRATION TAGS
+└── dashboard/                          # 📈 TABLEAU DE BORD
+```
+
+### Framework de métriques modulaires
+
+```
+metrics-framework/                      # 🔧 FRAMEWORK COMMUN
+├── 📂 core/
+│   ├── MetricsRegistry.ts              # Registre universel d'indicateurs
+│   ├── BaseIndicator.ts                # Classe de base pour tous indicateurs
+│   ├── AlgorithmStrategy.ts            # Interface stratégies d'algorithmes
+│   ├── MetricsEngine.ts                # Moteur de calcul unifié
+│   ├── ValidationEngine.ts             # Moteur de validation convergence
+│   └── types/
+│       ├── base.ts                     # Types fondamentaux
+│       ├── indicators.ts               # Types pour indicateurs
+│       ├── algorithms.ts               # Types pour algorithmes
+│       ├── results.ts                  # Types pour résultats
+│       └── annotations.ts              # Types pour système d'annotation
+│
+├── 📂 hooks/
+│   ├── useMetricsEngine.ts             # Hook principal unifié
+│   ├── useIndicatorRegistry.ts         # Gestion registre dynamique
+│   ├── useAlgorithmBenchmarking.ts     # Système de benchmarking
+│   ├── useAnnotationWorkflow.ts        # Workflow annotation supervisée
+│   ├── useConvergenceValidation.ts     # 🆕 Validation croisée AC-LI-Cognitif
+│   ├── useMetricsByFamily.ts           # Analyse par famille de stratégies
+│   ├── useMLTraining.ts                # Entraînement modèles ML
+│   └── usePerformanceMonitoring.ts     # Monitoring temps réel
+│
+├── 📂 components/
+│   ├── MetricIndicatorCard.tsx         # Carte d'indicateur universelle
+│   ├── AlgorithmComparisonView.tsx     # Comparaison algorithmes ligne par ligne
+│   ├── AlgorithmLogicExplanation.tsx   # 🆕 Explication logique d'algorithme
+│   ├── AnnotationInterface.tsx         # Interface annotation experte
+│   ├── BenchmarkDashboard.tsx          # Dashboard performance comparative
+│   ├── ValidationDashboard.tsx         # 🆕 Dashboard validation convergence
+│   ├── ConvergenceVisualization.tsx    # 🆕 Graphiques convergence
+│   ├── MetricsCategoryView.tsx         # Vue par catégorie d'indicateurs
+│   ├── ABTestingInterface.tsx          # Interface A/B testing
+│   ├── MLTrainingInterface.tsx         # Interface entraînement ML
+│   └── PerformanceMonitor.tsx          # Monitoring en temps réel
+│
+├── 📂 utils/
+│   ├── dataPreprocessing.ts            # Préprocessing données Supabase
+│   ├── featureExtraction.ts            # Extraction features ML
+│   ├── algorithmValidation.ts          # Validation et métriques qualité
+│   ├── annotationHelpers.ts            # Utilitaires annotation
+│   ├── performanceOptimization.ts      # Optimisations et cache
+│   ├── mlHelpers.ts                    # Helpers ML/NLP
+│   └── supabaseAdapter.ts              # Adaptateur données Supabase
+│
+├── 📂 stats/                           # 🆕 MODULE STATISTIQUES
+│   ├── convergence_validation.py       # Calculs Kendall/Pearson
+│   ├── hypothesis_testing.py           # Tests d'hypothèses spécifiques
+│   └── ranking_consistency.py          # Algorithmes de concordance
+│
+└── 📂 database/
+    ├── migrations/                     # Scripts création tables
+    │   ├── 001_create_annotations.sql
+    │   ├── 002_create_performance.sql
+    │   ├── 003_create_ab_tests.sql
+    │   └── 004_create_convergence.sql  # 🆕 Tables validation convergence
+    └── schemas/
+        ├── annotations.ts              # Types Supabase annotations
+        ├── performance.ts              # Types Supabase performance
+        └── convergence.ts              # 🆕 Types validation convergence
+```
+
+### Domaines spécialisés
+
+```
+li-metrics/                             # 🗣️ LINGUISTIQUE INTERACTIONNELLE
+├── 📂 indicators/
+│   ├── 📂 FeedbackAlignmentIndicator/  # ✅ IMPLÉMENTÉ
+│   │   ├── algorithms/
+│   │   │   ├── BasicAlignmentAlgorithm.ts      # Détection marqueurs basique
+│   │   │   ├── SentimentEnhancedAlgorithm.ts   # Avec analyse sentiment
+│   │   │   └── SequentialPatternAlgorithm.ts   # Patterns séquentiels
+│   │   ├── hooks/
+│   │   │   ├── useFeedbackAlignmentMetrics.ts  # Hook spécialisé
+│   │   │   └── useFeedbackAlignmentAnnotation.ts
+│   │   ├── FeedbackAlignmentInterface.tsx      # Interface utilisateur
+│   │   └── types.ts                            # Types spécifiques
+│   │
+│   ├── 📂 CommonGroundIndicator/
+│   │   ├── algorithms/
+│   │   │   ├── BasicSharedRefsAlgorithm.ts     # Algorithme règles (corrigé)
+│   │   │   ├── NLPEnhancedAlgorithm.ts         # Avec spaCy/Transformers
+│   │   │   └── MLSupervisedAlgorithm.ts        # Machine Learning supervisé
+│   │   └── ... (même structure)
+│   │
+│   ├── 📂 BackchannelsIndicator/       # 🔄 À IMPLÉMENTER
+│   ├── 📂 ProsodicFluencyIndicator/    # 🔄 À IMPLÉMENTER
+│   ├── 📂 SpeechRateIndicator/         # 🔄 À IMPLÉMENTER
+│   ├── 📂 SequentialPatternsIndicator/ # 🔄 À IMPLÉMENTER
+│   ├── 📂 RepairMechanismsIndicator/   # 🔄 À IMPLÉMENTER
+│   └── 📂 CompositeLIScoreIndicator/   # 🔄 À IMPLÉMENTER
+│
+├── LIMetricsConfig.ts                  # Configuration domaine LI
+├── LIMetricsRegistry.ts                # Registre spécialisé LI
+└── LinguisticInteractionalMetrics.tsx  # Composant principal LI
+
+cognitive-metrics/                      # 🧠 SCIENCES COGNITIVES
+├── 📂 indicators/
+│   ├── 📂 FluiditeCognitiveIndicator/  # 🔄 EN MIGRATION
+│   │   ├── algorithms/
+│   │   │   ├── BasicFluidityAlgorithm.ts       # Algorithme actuel migré
+│   │   │   ├── NeuronMirrorAlgorithm.ts        # Basé neurones miroirs avancé
+│   │   │   └── MLEnhancedAlgorithm.ts          # ML supervisé fluidité
+│   │   └── ... (même structure)
+│   │
+│   ├── 📂 ReactionsDirectesIndicator/  # 🔄 À MIGRER
+│   ├── 📂 ReprisesLexicalesIndicator/  # 🔄 À MIGRER
+│   ├── 📂 ChargeCognitiveIndicator/    # 🔄 À MIGRER
+│   ├── 📂 MarqueursEffortIndicator/    # 🔄 À MIGRER
+│   ├── 📂 PatternsResistanceIndicator/ # 🔄 À MIGRER
+│   ├── 📂 RobustesseStressIndicator/   # 🔄 À MIGRER
+│   ├── 📂 NiveauStressIndicator/       # 🔄 À MIGRER
+│   └── 📂 PositionConversationIndicator/ # 🔄 À MIGRER
+│
+├── CognitiveMetricsConfig.ts           # Configuration domaine Cognitive
+├── CognitiveMetricsRegistry.ts         # Registre spécialisé Cognitive
+├── CognitiveMetrics.tsx                # Composant principal Cognitive
+│
+└── 📂 migration/                       # 🔄 MIGRATION EXISTANT
+    ├── adaptUseCognitiveMetrics.ts     # Adaptation hook existant
+    ├── adaptIndicatorData.ts           # Migration données existantes
+    ├── compatibilityLayer.ts           # Couche compatibilité
+    └── migrationGuide.md               # Guide migration step-by-step
+```
+
+### Composants partagés
+
+```
+shared/                                 # 🔗 COMPOSANTS PARTAGÉS
+├── 📂 atoms/                          # ⚛️ COMPOSANTS ATOMIQUES
+│   ├── IndicatorHeader.tsx            # En-tête d'indicateur standardisé
+│   ├── ColorLegend.tsx                # Légende de couleurs avec seuils
+│   ├── ScoreChip.tsx                  # Puce d'affichage de score colorée
+│   ├── AlgorithmDetailDialog.tsx      # Dialog détails algorithme
+│   ├── MetricCard.tsx                 # Carte métrique simple
+│   ├── LoadingSpinner.tsx             # Spinner de chargement uniforme
+│   ├── ErrorAlert.tsx                 # Alerte d'erreur standardisée
+│   ├── StatusBadge.tsx                # Badge de statut (actif/inactif/test)
+│   ├── ThresholdIndicator.tsx         # Indicateur de seuil visuel
+│   ├── ConfidenceBar.tsx              # Barre de confiance algorithme
+│   ├── ProgressRing.tsx               # Anneau de progression circulaire
+│   ├── ActionButton.tsx               # Bouton d'action standardisé
+│   ├── InfoTooltip.tsx                # Tooltip d'information contextuelle
+│   ├── DateDisplay.tsx                # Affichage de date formatée
+│   └── index.ts                       # Export centralisé atoms
+│
+├── 📂 molecules/                      # 🧬 COMPOSANTS MOLÉCULAIRES
+│   ├── ResultsTable.tsx               # Tableau de résultats uniforme
+│   ├── AlgorithmLogicExplanation.tsx  # 🆕 Explication logique détaillée
+│   ├── MetricComparisonCard.tsx       # Carte de comparaison métriques
+│   ├── AnnotationInterface.tsx        # Interface annotation standardisée
+│   ├── BenchmarkResultsDisplay.tsx    # Affichage résultats benchmark
+│   ├── AlgorithmSelector.tsx          # Sélecteur d'algorithme avec preview
+│   ├── FilterPanel.tsx                # Panneau de filtres réutilisable
+│   ├── ExportControls.tsx             # Contrôles d'export standardisés
+│   ├── PerformanceMetrics.tsx         # Métriques de performance temps réel
+│   ├── ValidationStatus.tsx           # Statut de validation avec détails
+│   ├── DataQualityIndicator.tsx       # Indicateur qualité des données
+│   ├── SearchAndFilter.tsx            # Recherche et filtrage combinés
+│   ├── PaginationControls.tsx         # Contrôles de pagination uniformes
+│   ├── SortableHeader.tsx             # En-tête de colonne triable
+│   ├── MetricsChart.tsx               # Graphique de métriques générique
+│   ├── CorrelationMatrix.tsx          # Matrice de corrélation visuelle
+│   ├── TrendChart.tsx                 # Graphique de tendance temporelle
+│   ├── DistributionChart.tsx          # Graphique de distribution
+│   ├── HeatmapVisualization.tsx       # Heatmap pour patterns
+│   ├── NetworkGraph.tsx               # Graphique de réseau (relations)
+│   └── index.ts                       # Export centralisé molecules
+│
+├── 📂 organisms/                      # 🦴 COMPOSANTS ORGANISMES
+│   ├── MetricsDashboard.tsx           # Dashboard principal de métriques
+│   ├── ComparativeAnalysisView.tsx    # Vue d'analyse comparative complète
+│   ├── AnnotationWorkbench.tsx        # Workbench d'annotation experte
+│   ├── ValidationReportView.tsx       # Vue rapport de validation
+│   ├── PerformanceMonitoringPanel.tsx # Panneau monitoring performance
+│   ├── AlgorithmBenchmarkSuite.tsx    # Suite complète de benchmark
+│   ├── DataExplorationInterface.tsx   # Interface d'exploration données
+│   ├── QualityAssurancePanel.tsx      # Panneau assurance qualité
+│   ├── ConfigurationManager.tsx       # Gestionnaire de configuration
+│   ├── AuditTrailViewer.tsx          # Visualiseur piste d'audit
+│   └── index.ts                       # Export centralisé organisms
+│
+├── 📂 hooks/                          # 🪝 HOOKS PARTAGÉS
+│   ├── useAlgorithmDialog.ts          # 🔧 Gestion dialog algorithme
+│   ├── useScientificReferences.ts     # 📚 Gestion références scientifiques
+│   ├── useThemeMode.ts                # 🎨 Gestion thème dark/light
+│   ├── useLocalStorage.ts             # 💾 Persistence locale
+│   ├── useDebounce.ts                 # ⏱️ Debounce pour performance
+│   ├── usePagination.ts               # 📄 Logique de pagination
+│   ├── useSort.ts                     # 🔄 Logique de tri
+│   ├── useFilter.ts                   # 🔍 Logique de filtrage
+│   ├── useExport.ts                   # 📤 Export multi-formats
+│   ├── useNotifications.ts            # 🔔 Système de notifications
+│   ├── usePerformanceMonitoring.ts    # 📊 Monitoring performance
+│   ├── useErrorHandler.ts             # ❌ Gestion centralisée erreurs
+│   ├── useDataValidation.ts           # ✅ Validation données
+│   ├── useCache.ts                    # 🗄️ Gestion cache intelligent
+│   ├── useAsyncOperation.ts           # ⚡ Gestion opérations async
+│   ├── usePolling.ts                  # 🔄 Polling automatique
+│   ├── useWebSocket.ts                # 🔌 Connexions WebSocket
+│   ├── useKeyboardShortcuts.ts        # ⌨️ Raccourcis clavier
+│   ├── useAccessibility.ts            # ♿ Support accessibilité
+│   ├── useAnalytics.ts                # 📈 Analytics et tracking
+│   └── index.ts                       # Export centralisé hooks
+│
+├── 📂 utils/                          # 🛠️ UTILITAIRES PARTAGÉS
+│   ├── dataTransformers.ts            # Transformations de données
+│   ├── formatters.ts                  # Formatage (dates, nombres, etc.)
+│   ├── validators.ts                  # Fonctions de validation
+│   ├── calculators.ts                 # Calculs statistiques communs
+│   ├── exportHelpers.ts               # Helpers d'export (PDF, CSV, etc.)
+│   ├── colorUtils.ts                  # Utilitaires de couleur et thème
+│   ├── performanceUtils.ts            # Optimisations de performance
+│   ├── errorUtils.ts                  # Gestion et formatage erreurs
+│   ├── typeGuards.ts                  # Type guards TypeScript
+│   ├── arrayUtils.ts                  # Utilitaires de manipulation arrays
+│   ├── objectUtils.ts                 # Utilitaires de manipulation objets
+│   ├── stringUtils.ts                 # Utilitaires de traitement texte
+│   ├── mathUtils.ts                   # Fonctions mathématiques avancées
+│   ├── dateUtils.ts                   # Manipulation et formatage dates
+│   ├── urlUtils.ts                    # Gestion d'URLs et routes
+│   ├── localStorageUtils.ts           # Helpers localStorage/sessionStorage
+│   ├── supabaseUtils.ts               # Utilitaires Supabase spécifiques
+│   ├── chartUtils.ts                  # Configuration graphiques
+│   ├── csvUtils.ts                    # Import/export CSV
+│   ├── pdfUtils.ts                    # Génération PDF
+│   └── index.ts                       # Export centralisé utils
+│
+├── 📂 types/                          # 📝 TYPES PARTAGÉS
+│   ├── common.ts                      # Types communs application
+│   ├── api.ts                         # Types API et responses
+│   ├── ui.ts                          # Types interface utilisateur
+│   ├── charts.ts                      # Types pour graphiques
+│   ├── export.ts                      # Types pour exports
+│   ├── validation.ts                  # Types pour validation
+│   ├── performance.ts                 # Types monitoring performance
+│   ├── analytics.ts                   # Types analytics et tracking
+│   └── index.ts                       # Export centralisé types
+│
+├── 📂 constants/                      # 📊 CONSTANTES PARTAGÉES
+│   ├── colors.ts                      # Palette de couleurs uniforme
+│   ├── thresholds.ts                  # Seuils de validation/alertes
+│   ├── routes.ts                      # Routes de l'application
+│   ├── apiEndpoints.ts                # Endpoints API centralisés
+│   ├── chartConfigs.ts                # Configurations graphiques par défaut
+│   ├── exportFormats.ts               # Formats d'export supportés
+│   ├── performanceMetrics.ts          # Métriques de performance cibles
+│   ├── validationRules.ts             # Règles de validation communes
+│   ├── errorMessages.ts               # Messages d'erreur standardisés
+│   ├── notifications.ts               # Types et durées notifications
+│   └── index.ts                       # Export centralisé constants
+│
+├── 📂 styles/                         # 🎨 STYLES PARTAGÉS
+│   ├── theme.ts                       # Thème Material-UI personnalisé
+│   ├── globalStyles.ts                # Styles globaux CSS-in-JS
+│   ├── animations.ts                  # Animations réutilisables
+│   ├── breakpoints.ts                 # Points de rupture responsive
+│   ├── shadows.ts                     # Ombres et élévations
+│   ├── typography.ts                  # Configuration typographique
+│   ├── spacing.ts                     # Système d'espacement
+│   └── index.ts                       # Export centralisé styles
+│
+├── 📂 contexts/                       # 🌐 CONTEXTES PARTAGÉS
+│   ├── ThemeContext.tsx               # Contexte thème global
+│   ├── NotificationContext.tsx        # Contexte notifications
+│   ├── PerformanceContext.tsx         # Contexte monitoring performance
+│   ├── ErrorBoundaryContext.tsx       # Contexte gestion erreurs
+│   ├── AnalyticsContext.tsx           # Contexte analytics
+│   └── index.ts                       # Export centralisé contexts
+│
+├── 📂 providers/                      # 🔌 PROVIDERS PARTAGÉS
+│   ├── ThemeProvider.tsx              # Provider thème avec persistence
+│   ├── NotificationProvider.tsx       # Provider notifications toast
+│   ├── ErrorBoundaryProvider.tsx      # Provider error boundary global
+│   ├── AnalyticsProvider.tsx          # Provider analytics et tracking
+│   ├── PerformanceProvider.tsx        # Provider monitoring performance
+│   └── index.ts                       # Export centralisé providers
+│
+└── 📂 layouts/                        # 📐 LAYOUTS PARTAGÉS
+    ├── DashboardLayout.tsx            # Layout principal dashboard
+    ├── AnalysisLayout.tsx             # Layout pages d'analyse
+    ├── FullscreenLayout.tsx           # Layout plein écran
+    ├── SplitPaneLayout.tsx            # Layout à panneaux divisés
+    ├── TabLayout.tsx                  # Layout avec onglets
+    ├── WizardLayout.tsx               # Layout assistant/wizard
+    ├── ResponsiveLayout.tsx           # Layout responsive adaptatif
+    └── index.ts                       # Export centralisé layouts
+```
+
+## 🚀 Composants principaux
+
+### 1. **GlobalNavbar** - Navigation intelligente améliorée
+
+**Localisation** : `@/components/layout/GlobalNavbar`
+
+**Fonctionnalités clés** :
+
+- **Navigation adaptative** : Comportement différent selon le type de page
+- **Auto-hide intelligent** : Se masque lors du défilement vers le bas
+- **Zone de détection** : Zone invisible de 20px en haut pour réafficher la navbar
+- **Hauteur fixe** : 48px constant pour éviter les décalages
+
+### 2. **TaggingDataProvider** - Gestion d'état globale
+
+**Localisation** : `@/context/TaggingDataContext`
+
+**Données gérées** :
+
+```typescript
+interface TaggingDataContextType {
+  // Données principales
+  taggingCalls: TaggingCall[];
+  allTurnTagged: TaggedTurn[]; // 🆕 Pour analyse globale
+  selectedTaggingCall: TaggingCall | null;
+  taggingTranscription: Word[];
+  taggedTurns: TaggedTurn[];
+  tags: Tag[];
+
+  // Actions de tagging
+  addTag: (newTag: NewTag) => Promise<TaggedTurn | null>;
+  deleteTurnTag: (id: number) => Promise<void>;
+  calculateAllNextTurnTags: (callId: string) => Promise<number>;
+
+  // Nouvelles fonctionnalités globales
+  fetchAllTurnTagged: (filters?: GlobalTurnTaggedFilters) => Promise<void>;
+  globalTurnTaggedStats: GlobalTurnTaggedStats;
+  getFilteredTurnsForAnalysis: (
+    filters?: GlobalTurnTaggedFilters
+  ) => TaggedTurn[];
+  refreshGlobalDataIfNeeded: () => Promise<void>;
+}
+```
+
+### 3. **CallTableList** - Interface optimisée de gestion des appels
+
+**Localisation** : `@/components/calls/CallTableList`
+
+**Optimisations de performance** :
+
+- **Cache intelligent** avec `useOptimizedCallData`
+- **Actions en lot** avec `useBulkActions`
+- **Interface responsive** avec cartes mobiles
+- **Pagination automatique** pour contourner limitations Supabase
+
+### 4. **🆕 FeedbackAlignmentInterface** - Analyse d'alignement conversationnel
+
+**Localisation** : `@/components/analysis/components/li-metrics/indicators/FeedbackAlignmentIndicator/`
+
+**Fonctionnalités avancées** :
+
+- **Analyse par familles de tags** : REFLET, ENGAGEMENT, EXPLICATION, OUVERTURE
+- **Classification des réactions client** : POSITIF, NEGATIF, NEUTRE
+- **Algorithmes multiples** : BasicAlignment, SentimentEnhanced, SequentialPattern
+- **Interface comparative** : Comparaison visuelle des algorithmes
+- **Explication de logique** : Composant `AlgorithmLogicExplanation` détaillé
+- **Données temps réel** : Gestion de tous les 3652+ enregistrements
+
+### 5. **TagManager** - Gestion avancée des tags avec statistiques
+
+**Localisation** : `@/components/tags/TagManager`
+
+**Nouvelles fonctionnalités** :
+
+- **Système de statistiques d'utilisation** complètes
+- **Interface moderne** avec boutons d'action (📊 Info, ✏️ Edit, 🗑️ Delete)
+- **Composant TagUsageStats** factorisé et réutilisable
+- **Fusion intelligente** et réassignation de tags
+- **Support thème adaptatif** complet
+
+### 6. **📊 Centre d'Analyse** - Hub unifié d'analyse conversationnelle
+
+**Localisation** : `app/(protected)/analysis/page.tsx`
+
+**Architecture modulaire** :
+
+```
+📊 Feedback Alignment     # Analyse d'impact des stratégies
+🔄 Common Ground         # Établissement terrain commun (À IMPLÉMENTER)
+🧠 Fluidité Cognitive    # Analyse charge cognitive (EN MIGRATION)
+📈 Validation Croisée    # 🆕 Convergence AC-LI-Cognitif
+📋 Rapports Détaillés    # Génération de rapports PDF
+```
+
+### 7. **🆕 AlgorithmLogicExplanation** - Composant d'explication pédagogique
+
+**Localisation** : `@/components/shared/molecules/AlgorithmLogicExplanation`
+
+**Sections détaillées** :
+
+- **🔄 Processus d'analyse** : Étapes avec exemples concrets
+- **📊 Métriques calculées** : Formules et interprétations
+- **🔬 Base théorique** : Références scientifiques
+- **📈 Guide d'interprétation** : Échelles et conseils pratiques
+
+## 🗄️ Base de données
+
+### Tables principales (existantes)
 
 ```sql
--- Conversations taggées (existant)
+-- Conversations taggées
 turntagged (
   id INTEGER PRIMARY KEY,
   call_id INTEGER,
@@ -158,55 +473,59 @@ turntagged (
   speaker TEXT
 );
 
--- Tags et familles (existant)
+-- Tags et familles
 lpltag (
   id INTEGER PRIMARY KEY,
   label TEXT,
-  family TEXT,
-  originespeaker TEXT,
+  family TEXT,                -- 🔑 CLÉ POUR ANALYSE
+  originespeaker TEXT,        -- conseiller/client
   color TEXT,
   description TEXT
 );
+
+-- Appels
+call (
+  callid TEXT PRIMARY KEY,
+  filename TEXT,
+  filepath TEXT,
+  origine TEXT,               -- 🔑 FILTRE D'ORIGINE
+  duree INTEGER,
+  is_tagging_call BOOLEAN,
+  preparedfortranscript BOOLEAN
+);
 ```
 
-### **Nouvelles tables à créer**
+### 🆕 Nouvelles tables (Framework de métriques)
 
-#### **Système d'annotation unifié**
+#### Système d'annotation unifié
 
 ```sql
 -- Annotations expertes pour validation
 CREATE TABLE metric_annotations (
   id SERIAL PRIMARY KEY,
   turn_id INTEGER REFERENCES turntagged(id),
-  domain TEXT NOT NULL, -- 'li' | 'cognitive'
-  indicator_id TEXT NOT NULL, -- 'common_ground_status', 'fluiditeCognitive', etc.
-  human_label TEXT NOT NULL, -- Annotation experte
-  algorithm_prediction TEXT, -- Prédiction algorithme
-  algorithm_confidence FLOAT, -- Confiance (0-1)
-  annotator_id TEXT NOT NULL, -- ID annotateur
-  created_at TIMESTAMP DEFAULT NOW(),
+  domain TEXT NOT NULL,              -- 'li' | 'cognitive'
+  indicator_id TEXT NOT NULL,        -- 'feedback_alignment', 'common_ground', etc.
+  human_label TEXT NOT NULL,         -- Annotation experte
+  algorithm_prediction TEXT,         -- Prédiction algorithme
+  algorithm_confidence FLOAT,        -- Confiance (0-1)
+  annotator_id TEXT NOT NULL,
 
   -- Métadonnées annotation
-  annotation_time_seconds INTEGER, -- Temps pris pour annoter
+  annotation_time_seconds INTEGER,
   difficulty_rating INTEGER CHECK (difficulty_rating BETWEEN 1 AND 5),
-  notes TEXT, -- Commentaires annotateur
-  context_needed BOOLEAN DEFAULT FALSE, -- Contexte nécessaire pour décision
+  notes TEXT,
 
   -- Spécifique domaines
-  cognitive_load_rating INTEGER, -- Pour domaine cognitif (1-10)
-  effort_markers_count INTEGER, -- Comptage manuel marqueurs
-  processing_type TEXT, -- 'automatique', 'contrôlé', 'mixte'
+  cognitive_load_rating INTEGER,     -- Pour domaine cognitif (1-10)
+  processing_type TEXT,              -- 'automatique', 'contrôlé', 'mixte'
 
+  created_at TIMESTAMP DEFAULT NOW(),
   UNIQUE(turn_id, domain, indicator_id, annotator_id)
 );
-
--- Index pour performances
-CREATE INDEX idx_annotations_domain_indicator ON metric_annotations(domain, indicator_id);
-CREATE INDEX idx_annotations_turn ON metric_annotations(turn_id);
-CREATE INDEX idx_annotations_annotator ON metric_annotations(annotator_id);
 ```
 
-#### **Performance et benchmarking**
+#### Performance et benchmarking
 
 ```sql
 -- Performance algorithmes
@@ -222,11 +541,6 @@ CREATE TABLE algorithm_performance (
   recall FLOAT,
   f1_score FLOAT,
 
-  -- Métriques régression (pour scores numériques)
-  mean_absolute_error FLOAT,
-  root_mean_square_error FLOAT,
-  correlation_coefficient FLOAT,
-
   -- Métriques opérationnelles
   processing_time_ms INTEGER,
   memory_usage_mb FLOAT,
@@ -234,223 +548,62 @@ CREATE TABLE algorithm_performance (
 
   -- Contexte test
   test_data_size INTEGER,
-  annotation_coverage_percent FLOAT,
   test_date TIMESTAMP DEFAULT NOW(),
-  configuration JSONB, -- Paramètres algorithme
+  configuration JSONB,
 
   UNIQUE(domain, indicator_id, algorithm_id, test_date)
 );
-
-CREATE INDEX idx_performance_domain_indicator ON algorithm_performance(domain, indicator_id);
-CREATE INDEX idx_performance_test_date ON algorithm_performance(test_date);
 ```
 
-#### **A/B Testing**
+#### 🆕 Validation croisée AC-LI-Cognitif
 
 ```sql
--- Tests A/B en production
-CREATE TABLE ab_tests (
+-- Historique des validations de convergence
+CREATE TABLE convergence_validations (
   id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  domain TEXT NOT NULL,
-  indicator_id TEXT NOT NULL,
-  algorithm_a TEXT NOT NULL,
-  algorithm_b TEXT NOT NULL,
+  validation_date TIMESTAMP DEFAULT NOW(),
+  corpus_version TEXT NOT NULL,
 
-  -- Configuration test
-  traffic_split_percent INTEGER DEFAULT 50, -- % trafic algorithme A
-  start_date TIMESTAMP DEFAULT NOW(),
-  end_date TIMESTAMP,
-  target_sample_size INTEGER DEFAULT 1000,
+  -- Résultats de concordance (τ de Kendall)
+  kendall_tau_ac_li FLOAT,
+  kendall_tau_ac_cognitive FLOAT,
+  kendall_tau_li_cognitive FLOAT,
+  overall_consistency FLOAT,
 
-  -- Résultats
-  current_sample_size INTEGER DEFAULT 0,
-  statistical_significance FLOAT,
-  winner TEXT, -- 'algorithm_a', 'algorithm_b', 'inconclusive'
-  improvement_percent FLOAT,
+  -- Validation des hypothèses théoriques
+  h1_action_effectiveness_validated BOOLEAN,    -- ENGAGEMENT/OUVERTURE efficaces
+  h2_explanation_difficulty_validated BOOLEAN,  -- EXPLICATION inefficaces
+  h3_reflet_gradient_validated BOOLEAN,         -- Gradient REFLET VOUS>JE>ACQ
 
-  status TEXT DEFAULT 'running' CHECK (status IN ('running', 'completed', 'stopped')),
+  -- Métadonnées
+  total_pairs_analyzed INTEGER,
+  convergence_status TEXT CHECK (convergence_status IN ('CONVERGENT', 'DIVERGENT'))
+);
 
-  UNIQUE(domain, indicator_id, name)
+-- Détails par famille de stratégies
+CREATE TABLE family_effectiveness_scores (
+  id SERIAL PRIMARY KEY,
+  validation_id INTEGER REFERENCES convergence_validations(id),
+  strategy_family TEXT NOT NULL,     -- 'REFLET', 'ENGAGEMENT', 'EXPLICATION', 'OUVERTURE'
+
+  -- Scores par niveau d'analyse
+  ac_effectiveness FLOAT,            -- % réactions positives (Analyse Conversationnelle)
+  li_effectiveness FLOAT,            -- Score composite LI
+  cognitive_effectiveness FLOAT,     -- Score composite Cognitif
+
+  -- Détails statistiques
+  sample_size INTEGER,
+  confidence_interval_low FLOAT,
+  confidence_interval_high FLOAT
 );
 ```
 
-#### **Historique modèles ML**
+## 🔧 APIs principales
 
-```sql
--- Versions modèles ML
-CREATE TABLE ml_models (
-  id SERIAL PRIMARY KEY,
-  domain TEXT NOT NULL,
-  indicator_id TEXT NOT NULL,
-  version TEXT NOT NULL,
-
-  -- Métadonnées modèle
-  algorithm_type TEXT, -- 'random_forest', 'neural_network', 'transformer'
-  training_data_size INTEGER,
-  features_used JSONB,
-  hyperparameters JSONB,
-
-  -- Performance
-  validation_accuracy FLOAT,
-  training_time_minutes INTEGER,
-  model_size_mb FLOAT,
-
-  -- Déploiement
-  created_at TIMESTAMP DEFAULT NOW(),
-  deployed_at TIMESTAMP,
-  deprecated_at TIMESTAMP,
-  is_active BOOLEAN DEFAULT FALSE,
-
-  -- Storage
-  model_path TEXT, -- Chemin fichier modèle
-
-  UNIQUE(domain, indicator_id, version)
-);
-```
-
-## 🔧 Types TypeScript principaux
-
-### **Types de base framework**
-
-```typescript
-// metrics-framework/core/types/base.ts
-
-type MetricsDomain = "li" | "cognitive" | "conversational_analysis";
-
-type ImplementationStatus = "implemented" | "partial" | "missing";
-
-type AlgorithmType = "rule_based" | "nlp_enhanced" | "ml_supervised" | "hybrid";
-
-interface BaseIndicatorConfig {
-  id: string;
-  name: string;
-  domain: MetricsDomain;
-  category: string;
-  implementationStatus: ImplementationStatus;
-  theoreticalFoundation: string;
-  dataRequirements: DataRequirement[];
-}
-
-interface DataRequirement {
-  table: string;
-  columns: string[];
-  optional?: boolean;
-}
-
-interface AlgorithmConfig {
-  id: string;
-  name: string;
-  type: AlgorithmType;
-  version: string;
-  description: string;
-  requiresTraining: boolean;
-  supportedDomains: MetricsDomain[];
-}
-```
-
-### **Types résultats et annotations**
-
-```typescript
-// metrics-framework/core/types/results.ts
-
-interface IndicatorResult {
-  value: string | number;
-  confidence: number; // 0-1
-  explanation?: string;
-  features_used?: Record<string, any>;
-  processing_time_ms?: number;
-}
-
-interface AnnotationData {
-  turn_id: number;
-  domain: MetricsDomain;
-  indicator_id: string;
-  human_label: string;
-  algorithm_prediction?: string;
-  algorithm_confidence?: number;
-  annotator_id: string;
-  difficulty_rating?: number;
-  notes?: string;
-}
-
-interface BenchmarkResult {
-  algorithm_id: string;
-  accuracy: number;
-  precision: number;
-  recall: number;
-  f1_score: number;
-  processing_time_ms: number;
-  test_data_size: number;
-}
-
-interface AlgorithmComparison {
-  indicator_id: string;
-  algorithms: string[];
-  results: Record<string, IndicatorResult[]>;
-  benchmark: Record<string, BenchmarkResult>;
-  recommendation: {
-    best_accuracy: string;
-    best_speed: string;
-    best_overall: string;
-    reasoning: string;
-  };
-}
-```
-
-### **Types spécifiques domaines**
-
-```typescript
-// li-metrics/types.ts
-
-interface CommonGroundResult extends IndicatorResult {
-  value: "CG_ETABLI" | "CG_NEGOCIE" | "CG_ROMPU";
-  details: {
-    shared_references: number;
-    breakdown_detected: boolean;
-    semantic_similarity?: number;
-    detected_markers: string[];
-  };
-}
-
-interface FeedbackAlignmentResult extends IndicatorResult {
-  value: "ALIGNEMENT_FORT" | "ALIGNEMENT_FAIBLE" | "DESALIGNEMENT";
-  details: {
-    positive_markers: string[];
-    negative_markers: string[];
-    sentiment_score?: number;
-  };
-}
-
-// cognitive-metrics/types.ts
-
-interface FluiditeCognitiveResult extends IndicatorResult {
-  value: number; // Score 0-1
-  details: {
-    temporal_score: number;
-    linguistic_score: number;
-    prosodic_score: number;
-    effort_markers_detected: string[];
-  };
-}
-```
-
-## 🚀 API des hooks principaux
-
-### **Hook principal unifié**
+### Hook principal unifié
 
 ```typescript
 // metrics-framework/hooks/useMetricsEngine.ts
-
-interface MetricsEngineConfig {
-  domain: MetricsDomain;
-  indicatorIds?: string[];
-  algorithmOverrides?: Record<string, string>;
-  enableCaching?: boolean;
-  enableBenchmarking?: boolean;
-  enableRealTimeComparison?: boolean;
-}
-
 export const useMetricsEngine = (config: MetricsEngineConfig) => {
   return {
     // État
@@ -467,7 +620,7 @@ export const useMetricsEngine = (config: MetricsEngineConfig) => {
     getResultsByFamily: () => FamilyResults[],
     getGlobalMetrics: () => GlobalMetrics,
 
-    // Benchmarking
+    // Benchmarking et comparaison
     runBenchmark: (testData: AnnotatedData[]) => Promise<BenchmarkResults>,
     compareAlgorithms: (algorithms: string[]) => Promise<AlgorithmComparison>,
 
@@ -475,605 +628,17 @@ export const useMetricsEngine = (config: MetricsEngineConfig) => {
     trainMLModel: (indicatorId: string, trainingData: AnnotatedData[]) => Promise<TrainingResult>,
     deployModel: (indicatorId: string, modelVersion: string) => Promise<void>,
 
-    // A/B Testing
-    startABTest: (config: ABTestConfig) => Promise<ABTest>,
-    getABTestResults: (testId: string) => ABTestResults,
-
-    // Performance monitoring
-    getPerformanceMetrics: () => PerformanceMetrics,
-    clearCache: () => void
+    // 🆕 Validation croisée
+    validateConvergence: (config: ConvergenceConfig) => Promise<ConvergenceResults>,
+    getConvergenceHistory: () => ConvergenceValidation[],
   };
 };
 ```
 
-### **Hook annotation supervisée**
+### 🆕 Hook de validation convergence
 
 ```typescript
-// metrics-framework/hooks/useAnnotationWorkflow.ts
-
-export const useAnnotationWorkflow = (domain: MetricsDomain, indicatorId: string) => {
-  return {
-    // Sélection intelligente cas à annoter
-    selectCasesForAnnotation: (strategy: 'random' | 'active_learning' | 'disagreement') => TurnTaggedData[],
-
-    // Workflow annotation
-    currentCase: TurnTaggedData | null,
-    annotationProgress: { completed: number, total: number },
-
-    // Actions annotation
-    annotateCase: (label: string, difficulty?: number, notes?: string) => Promise<void>,
-    skipCase: (reason: string) => void,
-    goToNext: () => void,
-    goToPrevious: () => void,
-
-    // Qualité annotation
-    interAnnotatorAgreement: number,
-    annotationStats: AnnotationStats,
-
-    // Export/Import
-    exportAnnotations: () => AnnotatedData[],
-    importAnnotations: (data: AnnotatedData[]) => Promise<void>
-  };
-};
-```
-
-### **Hook spécialisé Common Ground**
-
-```typescript
-// li-metrics/indicators/CommonGroundIndicator/hooks/useCommonGroundMetrics.ts
-
-export const useCommonGroundMetrics = (
-  data: TurnTaggedData[],
-  algorithmId: string = 'basic_shared_refs'
-) => {
-  return {
-    // Résultats Common Ground
-    results: CommonGroundResult[],
-    familyResults: FamilyResults[],
-    globalStats: {
-      cg_etabli_rate: number,
-      cg_negocie_rate: number,
-      cg_rompu_rate: number
-    },
-
-    // Comparaison algorithmes
-    algorithmComparison: AlgorithmComparison,
-    availableAlgorithms: AlgorithmConfig[],
-
-    // Actions
-    calculateMetrics: () => Promise<void>,
-    compareAlgorithms: (algorithms: string[]) => Promise<void>,
-    switchAlgorithm: (algorithmId: string) => void,
-
-    // Annotation spécialisée
-    startAnnotation: () => void,
-    getAnnotationInterface: () => React.ComponentType
-  };
-};
-```
-
-## 📊 Interface utilisateur principale
-
-### **Comparaison algorithmes ligne par ligne**
-
-```typescript
-// metrics-framework/components/AlgorithmComparisonView.tsx
-
-interface AlgorithmComparisonViewProps {
-  domain: MetricsDomain;
-  indicatorId: string;
-  data: TurnTaggedData[];
-  selectedAlgorithms: string[];
-}
-
-// Rendu : Table avec colonnes par algorithme + annotation humaine + consensus
-```
-
-### **Dashboard performance**
-
-```typescript
-// metrics-framework/components/BenchmarkDashboard.tsx
-
-// Graphiques :
-// - Accuracy par algorithme (bar chart)
-// - Évolution performance dans le temps (line chart)
-// - Temps de traitement vs précision (scatter plot)
-// - Matrice confusion pour classification
-// - Distribution des scores pour régression
-```
-
-### **Interface annotation experte**
-
-```typescript
-// metrics-framework/components/AnnotationInterface.tsx
-
-// Fonctionnalités :
-// - Contexte conversationnel (tours précédents/suivants)
-// - Prédictions algorithmes avec confiance
-// - Interface annotation rapide (boutons/sliders)
-// - Justification optionnelle
-// - Statistiques temps réel
-// - Navigation intelligente (cases difficiles en priorité)
-```
-
-## 🔄 Plan de migration et implémentation
-
-### **Phase 1 : Infrastructure commune (Semaines 1-2)**
-
-#### **Objectifs :**
-
-- ✅ Créer framework `metrics-framework/`
-- ✅ Tables base de données annotations/performance
-- ✅ Hook principal `useMetricsEngine`
-- ✅ Composants de base réutilisables
-
-#### **Livrables :**
-
-```typescript
-// 1. Core framework
-metrics-framework/core/MetricsRegistry.ts
-metrics-framework/core/BaseIndicator.ts
-metrics-framework/core/types/
-
-// 2. Hooks de base
-metrics-framework/hooks/useMetricsEngine.ts
-metrics-framework/hooks/useAnnotationWorkflow.ts
-
-// 3. Composants réutilisables
-metrics-framework/components/MetricIndicatorCard.tsx
-metrics-framework/components/AlgorithmComparisonView.tsx
-
-// 4. Base de données
-database/migrations/001_create_annotations.sql
-database/migrations/002_create_performance.sql
-```
-
-#### **Tests d'acceptance :**
-
-- Framework chargeable sans erreur
-- Hook `useMetricsEngine` retourne structure attendue
-- Tables créées correctement dans Supabase
-- Interface basique fonctionnelle
-
-### **Phase 2 : Migration métriques cognitives (Semaines 3-4)**
-
-#### **Objectifs :**
-
-- ✅ Migrer hook `useCognitiveMetrics` existant vers nouvelle architecture
-- ✅ Conserver interface actuelle avec couche compatibilité
-- ✅ Implémenter premier indicateur modulaire (`FluiditeCognitive`)
-- ✅ Tests non-régression
-
-#### **Livrables :**
-
-```typescript
-// 1. Migration avec compatibilité
-cognitive-metrics/migration/adaptUseCognitiveMetrics.ts
-cognitive-metrics/migration/compatibilityLayer.ts
-
-// 2. Premier indicateur modulaire
-cognitive-metrics/indicators/FluiditeCognitiveIndicator/
-├── algorithms/BasicFluidityAlgorithm.ts
-├── FluiditeCognitiveIndicator.tsx
-└── hooks/useFluiditeCognitiveMetrics.ts
-
-// 3. Configuration domaine
-cognitive-metrics/CognitiveMetricsConfig.ts
-cognitive-metrics/CognitiveMetricsRegistry.ts
-```
-
-#### **Tests d'acceptance :**
-
-- Interface existante fonctionne sans changement visible
-- Nouvelles fonctionnalités accessibles (comparaison algorithmes)
-- Performance identique ou améliorée
-- Premier algorithme ML entraînable
-
-### **Phase 3 : Implémentation LI complète (Semaines 5-6)**
-
-#### **Objectifs :**
-
-- ✅ Implémenter tous indicateurs LI avec architecture modulaire
-- ✅ Correction algorithme Common Ground (variable `shared_score`)
-- ✅ Algorithmes NLP enhanced pour 2-3 indicateurs prioritaires
-- ✅ Interface annotation experte opérationnelle
-
-#### **Livrables :**
-
-```typescript
-// 1. Indicateurs LI complets
-li-metrics/indicators/CommonGroundIndicator/
-├── algorithms/
-│   ├── BasicSharedRefsAlgorithm.ts    # Corrigé
-│   ├── NLPEnhancedAlgorithm.ts        # spaCy + Transformers
-│   └── MLSupervisedAlgorithm.ts       # Prêt pour training
-├── CommonGroundIndicator.tsx
-└── hooks/useCommonGroundMetrics.ts
-
-li-metrics/indicators/FeedbackAlignmentIndicator/
-li-metrics/indicators/BackchannelsIndicator/
-// ... autres indicateurs
-
-// 2. Interface annotation
-metrics-framework/components/AnnotationInterface.tsx
-li-metrics/components/LIAnnotationInterface.tsx
-
-// 3. Système comparaison
-metrics-framework/components/AlgorithmComparisonView.tsx
-```
-
-#### **Tests d'acceptance :**
-
-- Tous indicateurs LI calculables avec 3 algorithmes minimum
-- Interface annotation permettant 10 annotations/minute
-- Comparaison visuelle algorithmes fonctionnelle
-- Premiers modèles ML entraînables avec 100+ annotations
-
-### **Phase 4 : ML supervisé et optimisation (Semaines 7-8)**
-
-#### **Objectifs :**
-
-- ✅ Collecte 500-1000 annotations expertes par indicateur prioritaire
-- ✅ Entraînement modèles ML supervisés performants
-- ✅ A/B testing en production
-- ✅ Monitoring performance temps réel
-
-#### **Livrables :**
-
-```typescript
-// 1. Modèles ML opérationnels
-li -
-  metrics /
-    indicators /
-    CommonGroundIndicator /
-    algorithms /
-    MLSupervisedAlgorithm.ts;
-cognitive -
-  metrics /
-    indicators /
-    FluiditeCognitiveIndicator /
-    algorithms /
-    MLEnhancedAlgorithm.ts;
-
-// 2. Interface A/B testing
-metrics - framework / components / ABTestingInterface.tsx;
-metrics - framework / hooks / useABTesting.ts;
-
-// 3. Monitoring
-metrics - framework / components / PerformanceMonitor.tsx;
-metrics - framework / hooks / usePerformanceMonitoring.ts;
-
-// 4. Optimisations
-metrics - framework / utils / performanceOptimization.ts;
-```
-
-#### **Tests d'acceptance :**
-
-- Modèles ML avec >85% accuracy sur données test
-- A/B tests automatiques entre algorithmes
-- Dashboard monitoring temps réel fonctionnel
-- Performance <100ms par calcul d'indicateur
-
-## 🎯 Résultats attendus
-
-### **Métriques de succès techniques :**
-
-- **Précision** : +20-30% vs algorithmes actuels
-- **Performance** : <100ms temps de réponse
-- **Couverture** : 8+ indicateurs LI, 9+ indicateurs cognitifs
-- **Annotation** : 1000+ exemples annotés par indicateur critique
-- **Algorithmes** : 3+ stratégies par indicateur (règles, NLP, ML)
-
-### **Métriques de succès utilisateur :**
-
-- **Interface** : Comparaison visuelle algorithmes
-- **Transparence** : Explication prédictions algorithmiques
-- **Contrôle** : Sélection algorithme selon contexte
-- **Évolution** : Amélioration continue via annotations
-
-### **Métriques de succès scientifique :**
-
-- **Validation** : Corrélation >0.8 avec expertise humaine
-- **Reproductibilité** : Benchmarks standardisés
-- **Extensibilité** : Framework réutilisable autres domaines
-- **Publication** : Résultats comparatifs publiables
-
-## 🔗 Ressources et références
-
-### **Technologies utilisées :**
-
-- **Frontend** : React + TypeScript + Material-UI
-- **Backend** : Supabase (PostgreSQL)
-- **ML/NLP** : Python (spaCy, Transformers, scikit-learn)
-- **Déploiement** : Next.js + API routes
-
-### **Références théoriques :**
-
-- **LI** : Clark (1996), Pickering & Garrod (2004), Schegloff (1982)
-- **Sciences Cognitives** : Gallese (2007), Arnsten (2009), Lupien et al. (2007)
-- **ML Supervisé** : Breiman (2001) Random Forests, Devlin et al. (2018) BERT
-
-### **Documentation complémentaire :**
-
-- [Guide annotation experte](https://claude.ai/chat/docs/annotation-guide.md)
-- [API Reference algorithmes](https://claude.ai/chat/docs/algorithm-api.md)
-- [Benchmarking méthodologie](https://claude.ai/chat/docs/benchmarking-methodology.md)
-- [Déploiement production](https://claude.ai/chat/docs/deployment-guide.md)
-
-## 🚨 Points d'attention critiques
-
-### **Sécurité et performance :**
-
-- ✅ **RLS Supabase** : Row Level Security sur toutes nouvelles tables
-- ✅ **Validation données** : Sanitisation input utilisateur
-- ✅ **Cache intelligent** : Invalidation automatique cache résultats
-- ✅ **Rate limiting** : Protection API ML training/annotation
-- ✅ **Monitoring** : Alertes dégradation performance
-
-### **Qualité scientifique :**
-
-- ✅ **Inter-annotator agreement** : >0.8 pour validation
-- ✅ **Test/validation split** : 80/20 données annotations
-- ✅ **Cross-validation** : 5-fold minimum pour ML
-- ✅ **Baseline comparison** : Toujours comparer vs algorithmes existants
-- ✅ **Statistical significance** : Tests statistiques pour A/B tests
-
-### **Maintenance et évolution :**
-
-- ✅ **Versioning modèles** : Traçabilité versions ML
-- ✅ **Backward compatibility** : Migration douce sans casser existant
-- ✅ **Documentation** : Code auto-documenté + guides utilisateur
-- ✅ **Tests automatisés** : Unit tests + integration tests
-- ✅ **Monitoring production** : Alertes performance temps réel
-
-## 📋 Checklist démarrage projet
-
-### **Prérequis techniques :**
-
-- [ ] Accès Supabase avec droits création tables
-- [ ] Node.js 18+ et npm/yarn configurés
-- [ ] VS Code avec extensions TypeScript/React
-- [ ] Git repository configuré avec branches develop/main
-- [ ] Accès environnements dev/staging/production
-
-### **Prérequis métier :**
-
-- [ ] Experts domaine disponibles pour annotation (2-3 personnes)
-- [ ] Échantillon données test représentatives (100+ conversations)
-- [ ] Critères qualité définis par domaine métier
-- [ ] Validation cadre théorique section 3.2 (LI) et neurones miroirs (Cognitif)
-
-### **Setup initial (Week 1 Day 1) :**
-
-```bash
-# 1. Créer structure dossiers
-mkdir -p src/app/\(protected\)/analysis/components/metrics-framework/{core,hooks,components,utils,database}
-mkdir -p src/app/\(protected\)/analysis/components/li-metrics/indicators
-mkdir -p src/app/\(protected\)/analysis/components/cognitive-metrics/{indicators,migration}
-
-# 2. Setup base de données
-# Exécuter scripts migration dans Supabase Dashboard
-# Ou via CLI : supabase db push
-
-# 3. Installer dépendances supplémentaires
-npm install @supabase/supabase-js date-fns uuid
-npm install -D @types/uuid
-
-# 4. Configuration environnement
-# Vérifier variables NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY
-```
-
-### **Validation setup (Week 1 Day 2) :**
-
-```typescript
-// Test basique framework
-import { useMetricsEngine } from "@/components/metrics-framework/hooks/useMetricsEngine";
-
-const TestComponent = () => {
-  const { indicators, loading, error } = useMetricsEngine({
-    domain: "cognitive",
-  });
-
-  return (
-    <div>
-      <h2>Test Framework</h2>
-      <p>Loading: {loading ? "Yes" : "No"}</p>
-      <p>Error: {error || "None"}</p>
-      <p>Indicators loaded: {indicators.length}</p>
-    </div>
-  );
-};
-```
-
-## 🔧 Commandes utiles développement
-
-### **Génération types Supabase :**
-
-```bash
-# Générer types TypeScript depuis schéma Supabase
-npx supabase gen types typescript --project-id YOUR_PROJECT_ID > types/supabase.ts
-```
-
-### **Tests et validation :**
-
-```bash
-# Tests unitaires
-npm test -- metrics-framework
-
-# Tests d'intégration
-npm run test:integration
-
-# Lint et format
-npm run lint
-npm run format
-
-# Build production
-npm run build
-```
-
-### **Monitoring base de données :**
-
-```sql
--- Vérifier performance annotations
-SELECT
-  domain,
-  indicator_id,
-  COUNT(*) as annotation_count,
-  AVG(annotation_time_seconds) as avg_time,
-  COUNT(DISTINCT annotator_id) as annotator_count
-FROM metric_annotations
-GROUP BY domain, indicator_id
-ORDER BY annotation_count DESC;
-
--- Performance algorithmes
-SELECT
-  domain,
-  indicator_id,
-  algorithm_id,
-  accuracy,
-  processing_time_ms,
-  test_date
-FROM algorithm_performance
-ORDER BY test_date DESC
-LIMIT 20;
-```
-
-## 🎓 Guide formation équipe
-
-### **Pour développeurs :**
-
-1. **Architecture modulaire** : Comprendre pattern BaseIndicator + AlgorithmStrategy
-2. **Types TypeScript** : Maîtriser types génériques framework
-3. **Hooks React** : Pattern hooks spécialisés vs hooks communs
-4. **Supabase** : RLS, migrations, types auto-générés
-5. **ML basics** : Feature extraction, training/validation split, métriques
-
-### **Pour experts métier :**
-
-1. **Interface annotation** : Workflow efficace annotation
-2. **Critères qualité** : Définir standards annotation par domaine
-3. **Validation théorique** : Alignement algorithmes avec théories
-4. **Interprétation résultats** : Lecture benchmarks et comparaisons
-5. **Feedback continue** : Process amélioration algorithmes
-
-### **Pour product owners :**
-
-1. **ROI mesurable** : Métriques précision vs effort développement
-2. **Priorisation** : Indicateurs critiques vs nice-to-have
-3. **Timeline réaliste** : Complexité ML vs besoins business
-4. **Adoption utilisateurs** : Formation équipes à nouvelles interfaces
-5. **Maintenance long terme** : Coût annotation continue vs bénéfices
-
-## 📞 Support et contacts
-
-### **Architecture technique :**
-
-- **Responsable framework** : [Nom] - questions architecture générale
-- **Expert ML/NLP** : [Nom] - algorithmes avancés et training
-- **Expert Supabase** : [Nom] - base de données et performance
-
-### **Domaines métier :**
-
-- **Expert Linguistique Interactionnelle** : [Nom] - validation théorique LI
-- **Expert Sciences Cognitives** : [Nom] - validation théorique neurones miroirs
-- **Expert Analyse Conversationnelle** : [Nom] - patterns conversationnels
-
-### **Ressources externes :**
-
-- **Documentation Supabase** : https://supabase.com/docs
-- **Material-UI Components** : https://mui.com/components/
-- **spaCy NLP** : https://spacy.io/usage/linguistic-features
-- **Transformers HuggingFace** : https://huggingface.co/docs/transformers
-
----
-
-## 🎯 En résumé : Prochaines actions
-
-### **Action immédiate (Cette session) :**
-
-1. **Valider architecture** avec équipe technique
-2. **Créer repository** et structure dossiers
-3. **Setup base de données** avec premières tables
-4. **Identifier experts** pour annotation
-
-### **Semaine 1 :**
-
-1. **Implémenter core framework** (`MetricsRegistry`, `BaseIndicator`)
-2. **Hook principal** `useMetricsEngine` fonctionnel
-3. **Premier composant** `MetricIndicatorCard`
-4. **Tests basiques** infrastructure
-
-### **Semaine 2 :**
-
-1. **Migration premier indicateur cognitif** (`FluiditeCognitive`)
-2. **Interface comparaison** algorithmes basique
-3. **Système annotation** minimal
-4. **Validation non-régression** existant
-
-### **Quick Start commande :**
-
-```bash
-# Cloner architecture de base
-git clone [repo-url]
-cd taggerlpl-nextjs
-
-# Créer structure
-mkdir -p src/app/\(protected\)/analysis/components/{metrics-framework,li-metrics,cognitive-metrics}
-
-# Premier commit
-git add .
-git commit -m "🏗️ Initialize unified metrics framework architecture"
-
-# Prêt pour développement !
-```
-
-Cette architecture vous permettra de développer des métriques **scientifiquement validées** , **modulaires** et **évolutives** tout en conservant la compatibilité avec l'existant ! 🚀
-
-**La clé du succès** : Commencer petit (1 indicateur), valider l'approche, puis étendre progressivement à tous les domaines.
-
-# 📊 Extensions Statistiques TaggerLPL
-
-## Validation Convergence Multi-Niveaux AC-LI-Cognitif
-
-### 🎯 Nouveaux besoins identifiés dans le plan de thèse
-
-Le **chapitre 3.3** du plan de thèse introduit une méthodologie de **validation croisée** entre trois niveaux d'analyse qui nécessite des fonctionnalités statistiques avancées non prévues dans l'architecture actuelle de TaggerLPL.
-
----
-
-## 📋 Fonctionnalités statistiques à développer
-
-### 1. **Validation de convergence inter-niveaux**
-
-#### **Coefficients de concordance**
-
-```python
-# Nouveau module: src/app/(protected)/analysis/components/metrics-framework/stats/
-├── convergence_validation.py
-├── ranking_consistency.py
-└── correlation_analysis.py
-```
-
-**Métriques requises :**
-
-- **Coefficient de Kendall (τ)** : concordance des classements d'efficacité entre AC/LI/Cognitif
-- **Corrélations de Pearson (r)** : accord sur l'efficacité relative des stratégies
-- **Tests de concordance directionnelle** : validation des tendances (haut/bas)
-
-#### **Architecture proposée**
-
-```typescript
-// Extension du framework existant
-interface ConvergenceValidationConfig {
-  levels: ("AC" | "LI" | "Cognitive")[];
-  strategies: string[];
-  thresholds: {
-    kendall_tau: number; // > 0.7 pour accord substantiel
-    pearson_r: number; // > 0.6 pour corrélation acceptable
-    directional: number; // > 80% pour concordance directionnelle
-  };
-}
-
+// metrics-framework/hooks/useConvergenceValidation.ts
 export const useConvergenceValidation = (
   config: ConvergenceValidationConfig
 ) => {
@@ -1084,451 +649,198 @@ export const useConvergenceValidation = (
     validateDirectionalAgreement: () => DirectionalResults,
 
     // Tests d'hypothèses spécifiques
-    testH1ActionEffectiveness: () => ValidationResult,
-    testH2ExplanationDifficulty: () => ValidationResult,
-    testH3RefletGradient: () => ValidationResult,
+    testH1ActionEffectiveness: () => ValidationResult, // ENGAGEMENT/OUVERTURE
+    testH2ExplanationDifficulty: () => ValidationResult, // EXPLICATION
+    testH3RefletGradient: () => ValidationResult, // REFLET gradient
 
-    // Synthèse validation
+    // Synthèse et recommandations
     generateValidationReport: () => ConvergenceReport,
     suggestModelRefinements: () => ImprovementSuggestions,
   };
 };
 ```
 
----
-
-### 2. **Module d'analyse comparative automatisée**
-
-#### **Comparaison efficacité par famille de stratégies**
-
-```python
-def validate_cross_level_convergence(corpus_pairs):
-    """
-    Teste si AC, LI et Cognitif convergent sur le classement d'efficacité
-    """
-    strategy_families = {
-        'REFLET': ['REFLET_ACQ', 'REFLET_JE', 'REFLET_VOUS'],
-        'ENGAGEMENT': ['ENGAGEMENT'],
-        'EXPLICATION': ['EXPLICATION'],
-        'OUVERTURE': ['OUVERTURE']
-    }
-
-    convergence_results = {}
-
-    for family_name, strategy_tags in strategy_families.items():
-        family_pairs = [pair for pair in corpus_pairs if pair.conseiller.tag in strategy_tags]
-
-        # NIVEAU AC : Distribution des réactions client (baseline empirique)
-        ac_effectiveness = calculate_positive_rate(family_pairs)
-
-        # NIVEAU LI : Score composite (Common Ground + Feedback + Fluidité)
-        li_effectiveness = calculate_composite_li_score(family_pairs)
-
-        # NIVEAU COGNITIF : Score composite (Fluidité + Automatisme - Charge)
-        cognitive_effectiveness = calculate_composite_cognitive_score(family_pairs)
-
-        convergence_results[family_name] = {
-            'ac_effectiveness': ac_effectiveness,
-            'li_effectiveness': li_effectiveness,
-            'cognitive_effectiveness': cognitive_effectiveness
-        }
-
-    # Tests de convergence
-    ranking_consistency = test_ranking_consistency(convergence_results)
-
-    return {
-        'family_results': convergence_results,
-        'consistency_tests': ranking_consistency,
-        'validation_status': 'CONVERGENT' if ranking_consistency['overall'] > 0.7 else 'DIVERGENT'
-    }
-```
-
-#### **Tests statistiques spécialisés**
-
-```python
-def test_ranking_consistency(convergence_results):
-    """
-    Calcule les coefficients de Kendall entre les trois classements
-    """
-    from scipy.stats import kendalltau
-
-    # Extraction des classements par niveau
-    strategies = list(convergence_results.keys())
-
-    ac_ranking = sorted(strategies,
-                       key=lambda x: convergence_results[x]['ac_effectiveness'],
-                       reverse=True)
-
-    li_ranking = sorted(strategies,
-                       key=lambda x: convergence_results[x]['li_effectiveness'],
-                       reverse=True)
-
-    cognitive_ranking = sorted(strategies,
-                              key=lambda x: convergence_results[x]['cognitive_effectiveness'],
-                              reverse=True)
-
-    # Calculs des concordances (τ de Kendall)
-    tau_ac_li, p_ac_li = kendalltau(ac_ranking, li_ranking)
-    tau_ac_cognitive, p_ac_cognitive = kendalltau(ac_ranking, cognitive_ranking)
-    tau_li_cognitive, p_li_cognitive = kendalltau(li_ranking, cognitive_ranking)
-
-    return {
-        'rankings': {
-            'AC': ac_ranking,
-            'LI': li_ranking,
-            'Cognitive': cognitive_ranking
-        },
-        'concordance': {
-            'AC_LI': {'tau': tau_ac_li, 'p_value': p_ac_li},
-            'AC_Cognitive': {'tau': tau_ac_cognitive, 'p_value': p_ac_cognitive},
-            'LI_Cognitive': {'tau': tau_li_cognitive, 'p_value': p_li_cognitive}
-        },
-        'overall_consistency': (tau_ac_li + tau_ac_cognitive + tau_li_cognitive) / 3
-    }
-```
-
----
-
-### 3. **Interface de validation visuelle**
-
-#### **Dashboard de convergence**
-
-```tsx
-// Nouveau composant: ValidationDashboard.tsx
-
-interface ValidationDashboardProps {
-  convergenceResults: ConvergenceResults;
-  validationConfig: ConvergenceValidationConfig;
-}
-
-export const ValidationDashboard: React.FC<ValidationDashboardProps> = ({
-  convergenceResults,
-  validationConfig,
-}) => {
-  return (
-    <Box sx={{ p: 3 }}>
-      {/* 1. Statut global de convergence */}
-      <Alert
-        severity={
-          convergenceResults.validation_status === "CONVERGENT"
-            ? "success"
-            : "warning"
-        }
-        sx={{ mb: 3 }}
-      >
-        <AlertTitle>
-          Statut de convergence: {convergenceResults.validation_status}
-        </AlertTitle>
-        {convergenceResults.validation_status === "CONVERGENT"
-          ? "Les trois niveaux d'analyse convergent vers les mêmes conclusions"
-          : "Divergences détectées entre les niveaux d'analyse - révision du modèle nécessaire"}
-      </Alert>
-
-      {/* 2. Matrice de corrélations */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Concordance des classements (τ de Kendall)
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={4}>
-            <MetricCard
-              title="AC ↔ LI"
-              value={convergenceResults.consistency_tests.concordance.AC_LI.tau}
-              threshold={validationConfig.thresholds.kendall_tau}
-              format="kendall"
-            />
-          </Grid>
-          <Grid item xs={4}>
-            <MetricCard
-              title="AC ↔ Cognitif"
-              value={
-                convergenceResults.consistency_tests.concordance.AC_Cognitive
-                  .tau
-              }
-              threshold={validationConfig.thresholds.kendall_tau}
-              format="kendall"
-            />
-          </Grid>
-          <Grid item xs={4}>
-            <MetricCard
-              title="LI ↔ Cognitif"
-              value={
-                convergenceResults.consistency_tests.concordance.LI_Cognitive
-                  .tau
-              }
-              threshold={validationConfig.thresholds.kendall_tau}
-              format="kendall"
-            />
-          </Grid>
-        </Grid>
-      </Paper>
-
-      {/* 3. Classements comparatifs */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Classements d'efficacité par niveau
-        </Typography>
-        <RankingComparisonTable
-          rankings={convergenceResults.consistency_tests.rankings}
-          familyResults={convergenceResults.family_results}
-        />
-      </Paper>
-
-      {/* 4. Tests d'hypothèses spécifiques */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Validation des hypothèses théoriques
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={4}>
-            <HypothesisTestCard
-              hypothesis="H1: ENGAGEMENT/OUVERTURE efficaces"
-              result={convergenceResults.hypothesis_tests?.H1_validation}
-              details="Traitement automatique → réactions positives"
-            />
-          </Grid>
-          <Grid item xs={4}>
-            <HypothesisTestCard
-              hypothesis="H2: EXPLICATION inefficaces"
-              result={convergenceResults.hypothesis_tests?.H2_validation}
-              details="Surcharge cognitive → réactions négatives"
-            />
-          </Grid>
-          <Grid item xs={4}>
-            <HypothesisTestCard
-              hypothesis="H3: Gradient REFLET"
-              result={convergenceResults.hypothesis_tests?.H3_validation}
-              details="VOUS > JE > ACQ selon forme linguistique"
-            />
-          </Grid>
-        </Grid>
-      </Paper>
-
-      {/* 5. Recommandations d'amélioration */}
-      {convergenceResults.validation_status === "DIVERGENT" && (
-        <Paper sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            Recommandations d'amélioration du modèle
-          </Typography>
-          <ImprovementSuggestions
-            suggestions={convergenceResults.improvement_suggestions}
-          />
-        </Paper>
-      )}
-    </Box>
-  );
-};
-```
-
-#### **Graphiques de convergence**
-
-```tsx
-// Composant spécialisé: ConvergenceVisualization.tsx
-
-export const ConvergenceVisualization: React.FC<{
-  convergenceData: ConvergenceResults;
-}> = ({ convergenceData }) => {
-  return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-      {/* Graphique radar de convergence */}
-      <Paper sx={{ p: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Convergence multi-niveaux par stratégie
-        </Typography>
-        <ResponsiveContainer width="100%" height={400}>
-          <RadarChart data={formatRadarData(convergenceData.family_results)}>
-            <PolarGrid />
-            <PolarAngleAxis dataKey="strategy" />
-            <PolarRadiusAxis angle={90} domain={[0, 1]} />
-            <Radar
-              name="AC (Empirique)"
-              dataKey="ac_effectiveness"
-              stroke="#8884d8"
-              fill="#8884d8"
-              fillOpacity={0.3}
-            />
-            <Radar
-              name="LI (Interactionnel)"
-              dataKey="li_effectiveness"
-              stroke="#82ca9d"
-              fill="#82ca9d"
-              fillOpacity={0.3}
-            />
-            <Radar
-              name="Cognitif (Explicatif)"
-              dataKey="cognitive_effectiveness"
-              stroke="#ffc658"
-              fill="#ffc658"
-              fillOpacity={0.3}
-            />
-            <Legend />
-          </RadarChart>
-        </ResponsiveContainer>
-      </Paper>
-
-      {/* Graphique de concordance temporelle */}
-      <Paper sx={{ p: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Évolution de la concordance (diagnostics)
-        </Typography>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={generateConcordanceTimeSeries(convergenceData)}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="sample_size" />
-            <YAxis domain={[0, 1]} />
-            <Line
-              type="monotone"
-              dataKey="kendall_tau"
-              stroke="#8884d8"
-              name="τ de Kendall"
-            />
-            <Line
-              type="monotone"
-              dataKey="pearson_r"
-              stroke="#82ca9d"
-              name="r de Pearson"
-            />
-            <ReferenceLine y={0.7} stroke="red" strokeDasharray="5 5" />
-            <Tooltip />
-            <Legend />
-          </LineChart>
-        </ResponsiveContainer>
-      </Paper>
-    </Box>
-  );
-};
-```
-
----
-
-### 4. **Intégration dans l'architecture existante**
-
-#### **Extensions du metrics-framework**
+### Hook spécialisé FeedbackAlignment
 
 ```typescript
-// Extension de l'architecture existante
-src/app/(protected)/analysis/components/metrics-framework/
-├── core/
-│   ├── MetricsRegistry.ts              # ✅ Existant
-│   ├── BaseIndicator.ts                # ✅ Existant
-│   └── ValidationEngine.ts             # 🆕 NOUVEAU - Moteur de validation
-├── hooks/
-│   ├── useMetricsEngine.ts             # ✅ Existant
-│   └── useConvergenceValidation.ts     # 🆕 NOUVEAU - Hook validation
-├── components/
-│   ├── MetricIndicatorCard.tsx         # ✅ Existant
-│   ├── AlgorithmComparisonView.tsx     # ✅ Existant
-│   ├── ValidationDashboard.tsx         # 🆕 NOUVEAU - Dashboard validation
-│   └── ConvergenceVisualization.tsx    # 🆕 NOUVEAU - Graphiques convergence
-└── stats/                              # 🆕 NOUVEAU - Module statistiques
-    ├── convergence_validation.py       # Calculs Kendall/Pearson
-    ├── hypothesis_testing.py           # Tests d'hypothèses spécifiques
-    └── ranking_consistency.py          # Algorithmes de concordance
+// li-metrics/indicators/FeedbackAlignmentIndicator/hooks/useFeedbackAlignmentMetrics.ts
+export const useFeedbackAlignmentMetrics = (config) => {
+  return {
+    // Données analysées
+    data: TaggedTurn[],
+    tableRows: TableRow[],
+    analysisResults: AlignmentAnalysis,
+    stats: AlignmentStats,
+
+    // État
+    isLoading: boolean,
+    isAnalyzing: boolean,
+    error: string | null,
+
+    // Actions
+    runAnalysis: () => Promise<void>,
+    refreshData: () => Promise<void>,
+
+    // Méta informations
+    dataCount: number,
+    hasData: boolean,
+    sourceDataCount: number,
+
+    // Diagnostics pour debug
+    debugInfo: {
+      families: string[],
+      nextTurnTags: string[],
+      origines: string[]
+    }
+  };
+};
 ```
 
-#### **Base de données étendue**
+## 🚀 Fonctionnalités récentes (2024)
 
-```sql
--- Nouvelles tables pour validation convergence
+### ✅ **Feedback Alignment Interface** (Décembre 2024)
 
--- Historique des validations de convergence
-CREATE TABLE convergence_validations (
-  id SERIAL PRIMARY KEY,
-  validation_date TIMESTAMP DEFAULT NOW(),
-  corpus_version TEXT NOT NULL,
+- **Analyse complète** : Traitement de tous les 3652+ enregistrements
+- **Algorithme par familles** : Classification basée sur `lpltag.family` au lieu du speaker
+- **Pagination Supabase** : Contournement de la limite 1000 avec pagination automatique
+- **Interface pédagogique** : Explication détaillée de la logique d'algorithme
+- **Résultats temps réel** :
+  - OUVERTURE: 48.3% d'alignement positif ⭐ (meilleure stratégie)
+  - ENGAGEMENT: 34.5% d'alignement positif
+  - REFLET: 18.2% d'alignement positif
+  - EXPLICATION: 1.0% d'alignement positif ❌ (confirme l'hypothèse)
 
-  -- Résultats de concordance
-  kendall_tau_ac_li FLOAT,
-  kendall_tau_ac_cognitive FLOAT,
-  kendall_tau_li_cognitive FLOAT,
-  overall_consistency FLOAT,
+### 🔄 **Framework de métriques modulaires** (En cours)
 
-  -- Validation des hypothèses
-  h1_action_effectiveness_validated BOOLEAN,
-  h2_explanation_difficulty_validated BOOLEAN,
-  h3_reflet_gradient_validated BOOLEAN,
+- **Architecture unifiée** : Base commune pour LI et métriques cognitives
+- **Algorithmes comparables** : Interface standardisée de comparaison
+- **Annotation supervisée** : Workflow d'annotation experte intégré
+- **Machine Learning** : Entraînement de modèles supervisés
 
-  -- Métadonnées
-  total_pairs_analyzed INTEGER,
-  validation_config JSONB,
-  convergence_status TEXT CHECK (convergence_status IN ('CONVERGENT', 'DIVERGENT'))
-);
+### 🆕 **Validation croisée AC-LI-Cognitif** (Planifié 2025)
 
--- Détails par famille de stratégies
-CREATE TABLE family_effectiveness_scores (
-  id SERIAL PRIMARY KEY,
-  validation_id INTEGER REFERENCES convergence_validations(id),
-  strategy_family TEXT NOT NULL, -- 'REFLET', 'ENGAGEMENT', etc.
+- **Tests statistiques** : Coefficients de Kendall, corrélations de Pearson
+- **Validation d'hypothèses** : Tests automatisés des hypothèses théoriques
+- **Dashboard de convergence** : Interface de validation scientifique
+- **Méthodogie rigoureuse** : Validation empirique du modèle théorique intégré
 
-  -- Scores par niveau
-  ac_effectiveness FLOAT,      -- % réactions positives (AC)
-  li_effectiveness FLOAT,      -- Score composite LI
-  cognitive_effectiveness FLOAT, -- Score composite Cognitif
+## 📊 Métriques et résultats
 
-  -- Détails supportant l'analyse
-  sample_size INTEGER,
-  confidence_interval_low FLOAT,
-  confidence_interval_high FLOAT
-);
+### Performances système
 
--- Index pour performance
-CREATE INDEX idx_convergence_date ON convergence_validations(validation_date);
-CREATE INDEX idx_family_effectiveness ON family_effectiveness_scores(strategy_family, validation_id);
+- **Données source** : 3652 enregistrements turntagged
+- **Temps de traitement** : <2s pour analyse complète
+- **Cache intelligent** : Invalidation automatique, stats de performance
+- **Interface responsive** : Support mobile/desktop complet
+
+### Résultats scientifiques (FeedbackAlignment)
+
+```
+📊 Résultats d'efficacité par stratégie (sur 1397 tours analysés):
+
+🥇 OUVERTURE:    48.3% d'alignement positif  (175 occurrences)
+🥈 ENGAGEMENT:   34.5% d'alignement positif  (182 occurrences)
+🥉 REFLET:       18.2% d'alignement positif  (444 occurrences)
+❌ EXPLICATION:   1.0% d'alignement positif  (596 occurrences)
+
+📈 Score global: 16.3% (confirme hypothèse: stratégies ACTION > EXPLICATION)
+📊 Couverture: 72.0% (1006 réponses client analysées sur 1397 tours)
 ```
 
----
+### Hypothèses validées
 
-### 5. **Plan d'implémentation prioritaire**
+- ✅ **H1 : Efficacité des stratégies d'action** - OUVERTURE et ENGAGEMENT génèrent plus d'alignement
+- ✅ **H2 : Inefficacité de l'EXPLICATION** - Seulement 1% d'alignement positif
+- 🔄 **H3 : Gradient REFLET** - En cours d'analyse (nécessite sous-classification)
 
-#### **Phase 1 (Critique pour thèse) - 2 semaines**
+## 🎯 Roadmap 2025
 
-1. **Module de calculs statistiques** (`stats/convergence_validation.py`)
-   - Coefficient de Kendall τ
-   - Corrélations de Pearson
-   - Tests de significativité
-2. **Hook de validation principale** (`useConvergenceValidation.ts`)
-   - Interface TypeScript avec module Python
-   - Gestion des seuils de validation
-   - Export des résultats
-3. **Dashboard minimal** (`ValidationDashboard.tsx`)
-   - Statut convergence global
-   - Matrice de concordance
-   - Classements comparatifs
+### Q1 2025 : Migration complète framework
 
-#### **Phase 2 (Enrichissement) - 1 semaine**
+- [ ] Migration complète des métriques cognitives vers architecture modulaire
+- [ ] Implémentation des indicateurs LI restants (Common Ground, Backchannels, etc.)
+- [ ] Interface d'annotation experte opérationnelle
+- [ ] Premiers modèles ML supervisés
 
-4. **Visualisations avancées** (`ConvergenceVisualization.tsx`)
-   - Graphiques radar multi-niveaux
-   - Courbes de concordance
-   - Diagnostic de robustesse
-5. **Tests d'hypothèses automatisés**
-   - Validation H1, H2, H3 avec seuils
-   - Rapport automatique de validation
-   - Suggestions d'amélioration
+### Q2 2025 : Validation scientifique
 
-#### **Phase 3 (Perfectionnement) - 1 semaine**
+- [ ] Collecte 1000+ annotations expertes par indicateur
+- [ ] Validation croisée AC-LI-Cognitif avec tests statistiques
+- [ ] Dashboard de convergence et validation d'hypothèses
+- [ ] Publication des résultats de validation
 
-6. **Persistence et historique**
-   - Tables validation en base
-   - Versioning des corpus
-   - Comparaisons diachroniques
+### Q3 2025 : Optimisation et production
 
----
+- [ ] A/B testing automatique entre algorithmes
+- [ ] Monitoring performance temps réel
+- [ ] Optimisations avancées (cache multi-niveaux, workers)
+- [ ] API publique pour intégrations externes
 
-### 🎯 Validation du modèle théorique
+### Q4 2025 : Extensions avancées
 
-Cette extension statistique permettra de **valider empiriquement** les prédictions du modèle théorique intégré AC-LI-Cognitif :
+- [ ] Analyse multimodale (audio + texte)
+- [ ] Intégration NLP avancée (Transformers, spaCy)
+- [ ] Système de recommandations personnalisées
+- [ ] Export vers systèmes tiers (CRM, Analytics)
 
-**Critères de validation :**
+## 🛠️ Installation et développement
 
-- **τ de Kendall > 0.7** : Accord substantiel sur le classement d'efficacité
-- **r de Pearson > 0.6** : Corrélation acceptable entre les niveaux
-- **Convergence directionnelle > 80%** : Accord sur les tendances
+### Prérequis
 
-**Hypothèses testées :**
+- Node.js 18+
+- npm ou yarn
+- Compte Supabase configuré
+- Accès aux données TaggerLPL
 
-- **H1** : ENGAGEMENT/OUVERTURE → efficacité par traitement automatique
-- **H2** : EXPLICATION → inefficacité par surcharge cognitive
-- **H3** : REFLET → gradient selon forme linguistique (VOUS > JE > ACQ)
+### Installation
 
-Cette méthodologie statistique robuste transformera la recherche d'une simple observation de patterns vers une **validation scientifique rigoureuse** d'un modèle explicatif intégré. 🚀
+```bash
+# 1. Cloner le repository
+git clone [repo-url]
+cd taggerlpl-nextjs
+
+# 2. Installer les dépendances
+npm install
+
+# 3. Configuration environnement
+cp .env.example .env.local
+# Remplir les variables Supabase
+
+# 4. Lancement développement
+npm run dev
+```
+
+### Structure de développement
+
+```bash
+# Tests
+npm test                    # Tests unitaires
+npm run test:integration    # Tests d'intégration
+
+# Qualité code
+npm run lint               # ESLint
+npm run format             # Prettier
+npm run type-check         # TypeScript
+
+# Build production
+npm run build              # Build optimisé
+npm run start              # Serveur production
+```
+
+### 🆕 Setup Framework de métriques
+
+```bash
+# 1. Créer structure métrics-framework
+mkdir -p src/app/\(protected\)/analysis/components/metrics-framework/{core,hooks,components,utils,database}
+
+# 2. Setup base de données
+# Exécuter scripts migration dans Supabase Dashboard
+# Tables: metric_annotations, algorithm_performance, convergence_validations
+
+# 3. Test basique framework
+import { useMetricsEngine } from "@/components/metrics-framework/hooks/useMetricsEngine";
+
+const TestComponent = () => {
+  const { indicators, loading, error } = useMetricsEngine({ domain: "li" });
+  return
+```

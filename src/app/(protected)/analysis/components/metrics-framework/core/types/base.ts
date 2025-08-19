@@ -75,6 +75,22 @@ export interface IndicatorResult {
 /**
  * Configuration d'un indicateur
  */
+export interface BaseIndicatorResult {
+  // Valeur principale (peut être string ou number selon l'indicateur)
+  value: string | number;
+
+  // Confiance dans le résultat (0-1)
+  confidence: number;
+
+  // Explication textuelle du résultat
+  explanation?: string;
+
+  // Features utilisées pour le calcul (pour debugging/amélioration)
+  features_used?: Record<string, any>;
+
+  // Temps de traitement en millisecondes
+  processing_time_ms?: number;
+}
 export interface BaseIndicatorConfig {
   id: string;
   name: string;
