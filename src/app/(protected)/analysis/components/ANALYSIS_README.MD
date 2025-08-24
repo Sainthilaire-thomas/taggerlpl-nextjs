@@ -75,14 +75,14 @@ li-metrics/                             # 🗣️ LINGUISTIQUE INTERACTIONNELLE
 ├── 📂 indicators/
 │   ├── 📂 FeedbackAlignmentIndicator/  # ✅ IMPLÉMENTÉ
 │   │   ├── algorithms/
-│   │   │   ├── BasicAlignmentAlgorithm.ts      # ✅ Analyse sémantique verbatims
-│   │   │   ├── SentimentEnhancedAlgorithm.ts   # 🔄 À IMPLÉMENTER
-│   │   │   └── SequentialPatternAlgorithm.ts   # 🔄 À IMPLÉMENTER
+│   │   │   ├── BasicAlignmentAlgorithm.ts          # ✅ Analyse sémantique lexicale
+│   │   │   ├── ConversationalPatternAlgorithm.ts   # 🚀 NOUVEAU (analyse structurelle)
+│   │   │   └── SequentialPatternAlgorithm.ts       # 🔄 À IMPLÉMENTER (multi-paires)
 │   │   ├── hooks/
-│   │   │   ├── useFeedbackAlignmentMetrics.ts  # ✅ Hook complet
-│   │   │   └── useFeedbackAlignmentAnnotation.ts # 🔄 À IMPLÉMENTER
-│   │   ├── FeedbackAlignmentInterface.tsx      # ✅ Interface complète
-│   │   └── types.ts                            # ✅ Types complets
+│   │   │   ├── useFeedbackAlignmentMetrics.ts      # ✅ Hook complet multi-algorithmes
+│   │   │   └── useFeedbackAlignmentAnnotation.ts   # 🔄 À IMPLÉMENTER
+│   │   ├── FeedbackAlignmentInterface.tsx          # ✅ Interface complète comparative
+│   │   └── types.ts                                # ✅ Types complets + extensions CA
 │   │
 │   ├── 📂 CommonGroundIndicator/       # 🔄 À IMPLÉMENTER
 │   ├── 📂 BackchannelsIndicator/       # 🔄 À IMPLÉMENTER
@@ -209,37 +209,79 @@ export const useCognitiveMetrics = (data: TaggedTurn[]) => {
    - Tendances début/milieu/fin de conversation
    - Patterns d'évolution cognitive
 
-### ✅ FeedbackAlignmentIndicator - Statut Complet
+### ✅ FeedbackAlignmentIndicator - Statut Complet avec Nouvelle Stratégie
 
 **Localisation** : `li-metrics/indicators/FeedbackAlignmentIndicator/`
 
+#### **🚀 Innovation Algorithmique : Approche Scientifique Bi-Dimensionnelle**
+
+**Révision stratégique** : Abandon de l'approche `SentimentEnhancedAlgorithm` (redondante lexicalement) au profit du `ConversationalPatternAlgorithm` (innovation structurelle).
+
 #### **Fonctionnalités opérationnelles** :
 
-**✅ BasicAlignmentAlgorithm.ts** - Moteur d'analyse sémantique
+**✅ BasicAlignmentAlgorithm.ts** - Moteur d'analyse sémantique lexicale
 
-- Lexiques français étendus (145 patterns : POSITIF/NEGATIF/NEUTRE)
-- Analyse des verbatims client avec scoring de confidence
-- Recherche des réactions client (temporelle + next_turn)
-- Calcul par familles de stratégies (REFLET/ENGAGEMENT/EXPLICATION/OUVERTURE)
-- Validation qualité et filtrage des résultats
+- **Paradigme** : Analyse de sentiment par correspondance lexicale
+- **Méthode** : 145 patterns français (POSITIF/NEGATIF/NEUTRE)
+- **Unité d'analyse** : Mots et expressions isolés
+- **Output** : Score de sentiment (-1 à +1) avec confidence
+- **Couverture** : 72% des verbatims (1006/1397 analysables)
 
-**✅ FeedbackAlignmentInterface.tsx** - Interface utilisateur
+**🚀 ConversationalPatternAlgorithm.ts** - NOUVEAU : Moteur d'analyse structurelle
 
-- Affichage des résultats par famille avec scores d'efficacité
-- Dialog interactif "Lexiques Complets" avec 145 patterns visibles
-- Cartes cliquables par sentiment avec animations
-- Export des résultats + lexiques
-- Interface responsive (Box/Flexbox, compatible MUI)
+- **Paradigme** : Conversation Analysis et paires adjacentes
+- **Méthode** : Analyse structurelle des patterns conseiller→client
+- **Unité d'analyse** : Paires adjacentes et cohérence pragmatique
+- **Output** : Types d'alignment (STRONG_AGREEMENT, QUALIFIED_AGREEMENT, etc.)
+- **Innovation** : Première implémentation computationnelle de la CA
 
-**✅ useFeedbackAlignmentMetrics.ts** - Hook de données
+**📊 Justification Scientifique** :
 
-- Chargement de tous les turntagged (3652+ enregistrements)
-- Pagination Supabase automatique (contournement limite 1000)
-- Cache intelligent et optimisations de performance
-- Gestion d'erreurs et états de chargement
-- Filtrage par origine avec diagnostics
+- **Fondement théorique** : Schegloff & Sacks (1973) - Adjacency Pairs
+- **Application** : Drew & Heritage (1992) - Professional Interaction
+- **Différenciation** : Lexical (sentiment) vs Structurel (alignment)
+- **Complémentarité** : Deux dimensions d'analyse indépendantes
 
-#### **Résultats scientifiques validés** :
+#### **🧠 Types d'Analyses Structurelles Détectées** :
+
+```typescript
+enum AlignmentType {
+  STRONG_AGREEMENT = "strong_agreement", // "Exactement !", "C'est ça !"
+  QUALIFIED_AGREEMENT = "qualified_agreement", // "Oui mais...", "En partie"
+  COOPERATIVE_RESISTANCE = "cooperative_resistance", // "Je ne sais pas si..."
+  DISALIGNMENT = "disalignment", // "Non", "Pas du tout"
+}
+
+enum PragmaticFunction {
+  VALIDATE = "validate", // REFLET → Attente de confirmation
+  EXPLORE = "explore", // ENGAGEMENT → Attente d'élaboration
+  INFORM = "inform", // EXPLICATION → Attente de compréhension
+  REDIRECT = "redirect", // OUVERTURE → Attente de suivi
+}
+```
+
+#### **🔍 Interface Multi-Algorithmes Enrichie**
+
+**✅ FeedbackAlignmentInterface.tsx** - Interface comparative complète
+
+- **Mode Simple** : Analyse avec un seul algorithme (Basic OU ConversationalPattern)
+- **Mode Comparaison** : Analyse côte-à-côte avec métriques différentielles
+- **Sélecteurs** : Algorithme + Mode d'analyse + Origine
+- **Visualisations** : Tableaux comparatifs, métriques de convergence, recommendations
+- **Export** : Résultats + méthodologie pour insertion thèse
+
+#### **🎯 Hook Multi-Algorithmes**
+
+**✅ useFeedbackAlignmentMetrics.ts** - Hook enrichi
+
+- **Configuration** : Support multi-algorithmes avec comparaison
+- **APIs** : `runSingleAlgorithm()`, `runAlgorithmComparison()`, `generateRecommendations()`
+- **Caching** : Optimisations de performance avec invalidation intelligente
+- **Compatibilité** : Interface existante préservée + extensions
+
+#### **📊 Résultats Scientifiques Validés** :
+
+**BasicAlgorithm (Sentiment Lexical)** :
 
 ```
 📊 Efficacité par stratégie (analyse de 1397 tours) :
@@ -249,25 +291,48 @@ export const useCognitiveMetrics = (data: TaggedTurn[]) => {
 ❌ EXPLICATION:   1.0% verbatims positifs (596 occurrences)
 
 ✅ Hypothèses validées : H1 (ACTION > EXPLICATION), H2 (EXPLICATION inefficace)
-📊 Couverture : 72% (1006/1397 verbatims analysés)
-🎯 Confidence moyenne : >75%
 ```
 
-#### **🔄 Prochaines étapes FeedbackAlignment** :
+**ConversationalPattern (Alignment Structurel)** :
 
-1. **SentimentEnhancedAlgorithm.ts** - Algorithme avec NLP avancé
-   - Intégration analyse de sentiment plus sophistiquée
-   - Détection émotions (joie, frustration, surprise, etc.)
-   - Analyse de l'intensité émotionnelle
-   - Comparaison avec BasicAlgorithm
-2. **SequentialPatternAlgorithm.ts** - Patterns séquentiels
-   - Détection de séquences stratégie → réaction récurrentes
-   - Analyse des enchaînements optimaux
-   - Patterns temporels et contextuels
-3. **Interface comparative** - Comparaison d'algorithmes
-   - Vue côte-à-côte des résultats Basic vs Enhanced vs Sequential
-   - Métriques de performance comparatives
-   - Tests A/B automatisés
+```
+🧠 Patterns d'alignment détectés :
+- STRONG_AGREEMENT: Corrélation avec satisfaction client élevée
+- QUALIFIED_AGREEMENT: Pattern dominant pour stratégies REFLET
+- COOPERATIVE_RESISTANCE: Signal d'optimisation nécessaire
+- DISALIGNMENT: Prédicateur d'échec conversationnel
+
+🎯 Cohérence Pragmatique :
+- VALIDATE (REFLET) → Confirmation attendue vs reçue
+- EXPLORE (ENGAGEMENT) → Élaboration attendue vs reçue
+- INFORM (EXPLICATION) → Compréhension attendue vs reçue
+```
+
+#### **🔄 Comparaison Algorithmique** :
+
+| Dimension        | BasicAlgorithm          | ConversationalPattern      |
+| ---------------- | ----------------------- | -------------------------- |
+| **Paradigme**    | Sentiment Analysis      | Conversation Analysis      |
+| **Méthode**      | Correspondance lexicale | Analyse structurelle       |
+| **Mesure**       | Polarité émotionnelle   | Cohérence pragmatique      |
+| **Prédictif**    | Sentiment futur         | Efficacité stratégique     |
+| **Optimisation** | Lexique positif         | Patterns conversationnels  |
+| **Innovation**   | Établi                  | Première implémentation CA |
+
+#### **🚀 Prochaines Étapes (Priorité Immédiate)** :
+
+1. **ConversationalPatternAlgorithm.ts** - Implémentation complète
+   - Types d'alignment et marqueurs structurels
+   - Cohérence pragmatique par famille de stratégies
+   - Métriques de validation avec BasicAlgorithm
+2. **Interface Comparative** - Mode comparaison opérationnel
+   - Vue côte-à-côte Sentiment vs Alignment
+   - Métriques de convergence et divergence
+   - Recommandations d'optimisation conversationnelle
+3. **Export Thèse** - Documentation scientifique
+   - Tableaux LaTeX de comparaison algorithmique
+   - Graphiques de performance différentielle
+   - Justification méthodologique (CA vs Sentiment Analysis)
 
 ## 🔗 Composants Partagés
 
@@ -284,14 +349,17 @@ shared/                                 # 🔗 COMPOSANTS PARTAGÉS
 ├── 📂 molecules/                      # 🧬 COMPOSANTS MOLÉCULAIRES
 │   ├── ResultsTable.tsx               # ✅ IMPLÉMENTÉ
 │   ├── AlgorithmLogicExplanation.tsx  # ✅ IMPLÉMENTÉ (avec lexiques)
+│   ├── AlgorithmComparisonView.tsx    # 🚀 NOUVEAU (comparaison algorithmes)
 │   ├── types.ts                       # ✅ ExtendedAlgorithmLogicProps
 │   └── [autres molecules...]          # 🔄 À IMPLÉMENTER
 │
 ├── 📂 hooks/                          # 🪝 HOOKS PARTAGÉS
 │   ├── useAlgorithmDialog.ts          # ✅ IMPLÉMENTÉ
+│   ├── useAlgorithmComparison.ts      # 🚀 NOUVEAU (comparaison multi-algo)
 │   └── [autres hooks...]              # 🔄 À IMPLÉMENTER
 │
 └── 📂 utils/                          # 🛠️ UTILITAIRES PARTAGÉS
+    ├── conversationAnalysisHelpers.ts # 🚀 NOUVEAU (utilitaires CA)
     └── [utils...]                     # 🔄 À IMPLÉMENTER
 ```
 
@@ -305,6 +373,15 @@ shared/                                 # 🔗 COMPOSANTS PARTAGÉS
 - Support types étendus (`ExtendedAlgorithmLogicProps`)
 - Composants factorisés (`LexiconCategory`, `DetailedLexicon`)
 
+#### **🚀 AlgorithmComparisonView** - Nouveau composant
+
+**Fonctionnalités planifiées** :
+
+- Comparaison côte-à-côte des résultats algorithmiques
+- Métriques de convergence et divergence
+- Visualisations des différences structurelles
+- Recommandations d'optimisation
+
 ## 📊 Centre d'Analyse
 
 ### Page principale
@@ -312,16 +389,17 @@ shared/                                 # 🔗 COMPOSANTS PARTAGÉS
 **Localisation** : `app/(protected)/analysis/page.tsx`
 
 ```typescript
-// Structure actuelle
+// Structure actuelle enrichie
 export default function AnalysisPage() {
   return (
     <AnalysisLayout>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-        {/* ✅ Onglet Feedback Alignment - OPÉRATIONNEL */}
+        {/* ✅ Onglet Feedback Alignment - OPÉRATIONNEL MULTI-ALGORITHMES */}
         <FeedbackAlignmentInterface
           selectedOrigin={selectedOrigin}
           showDetailedResults={true}
-          showComparison={false} // 🔄 À activer avec multi-algorithmes
+          showComparison={true} // 🚀 NOUVEAU : Mode comparaison activé
+          initialAlgorithm="basic" // ou "conversational-pattern"
         />
         {/* 🔄 Onglets à implémenter */}
         <CommonGroundInterface /> {/* À IMPLÉMENTER */}
@@ -344,18 +422,18 @@ turntagged (
   call_id INTEGER,
   start_time FLOAT,
   end_time FLOAT,
-  tag TEXT,
+  tag TEXT,                    -- ✅ Stratégie conseiller (analysée par CA)
   verbatim TEXT,               -- ✅ Analysé par moteur sémantique
-  next_turn_verbatim TEXT,     -- ✅ Verbatim client analysé
+  next_turn_verbatim TEXT,     -- ✅ Verbatim client (analysé par CA + sentiment)
   next_turn_tag TEXT,
-  speaker TEXT
+  speaker TEXT                 -- ✅ Distinction conseiller/client pour CA
 );
 
 -- ✅ Tags et familles (opérationnels)
 lpltag (
   id INTEGER PRIMARY KEY,
   label TEXT,
-  family TEXT,                -- ✅ CLÉ pour analyse par famille
+  family TEXT,                -- ✅ CLÉ pour analyse par famille + fonctions pragmatiques
   originespeaker TEXT,        -- conseiller/client
   color TEXT,
   description TEXT
@@ -382,6 +460,7 @@ CREATE TABLE metric_annotations (
   turn_id INTEGER REFERENCES turntagged(id),
   domain TEXT NOT NULL,              -- 'li' | 'cognitive'
   indicator_id TEXT NOT NULL,        -- 'feedback_alignment', 'common_ground'
+  algorithm_id TEXT NOT NULL,        -- 'basic', 'conversational-pattern'
   human_label TEXT NOT NULL,         -- Annotation experte
   algorithm_prediction TEXT,         -- Prédiction algorithme
   algorithm_confidence FLOAT,        -- Confiance (0-1)
@@ -394,13 +473,25 @@ CREATE TABLE algorithm_performance (
   id SERIAL PRIMARY KEY,
   domain TEXT NOT NULL,
   indicator_id TEXT NOT NULL,
-  algorithm_id TEXT NOT NULL,
+  algorithm_id TEXT NOT NULL,        -- 'basic' | 'conversational-pattern'
   accuracy FLOAT,
   precision FLOAT,
   recall FLOAT,
   f1_score FLOAT,
   processing_time_ms INTEGER,
+  convergence_rate FLOAT,            -- Taux de convergence avec autres algorithmes
   test_date TIMESTAMP DEFAULT NOW()
+);
+
+-- 🔄 Validation croisée Sentiment-Alignment
+CREATE TABLE sentiment_alignment_correlations (
+  id SERIAL PRIMARY KEY,
+  validation_date TIMESTAMP DEFAULT NOW(),
+  pearson_correlation FLOAT,        -- Corrélation sentiment/alignment
+  spearman_correlation FLOAT,       -- Corrélation rang sentiment/alignment
+  agreement_rate FLOAT,             -- Taux d'accord classification
+  divergence_patterns TEXT,         -- Patterns de divergence détectés
+  recommendations TEXT              -- Recommandations d'usage
 );
 
 -- 🔄 Validation croisée AC-LI-Cognitif
@@ -417,37 +508,46 @@ CREATE TABLE convergence_validations (
 );
 ```
 
-## 🎯 Roadmap d'Implémentation
+## 🎯 Roadmap d'Implémentation - RÉVISÉ
 
-### 🔄 **Phase 1 : Extension FeedbackAlignment (Priorité Immédiate)**
+### 🚀 **Phase 1 : Implémentation ConversationalPatternAlgorithm (Priorité IMMÉDIATE)**
 
-#### **1.1 Deuxième algorithme (2-3 jours)**
+#### **1.1 Algorithme d'Analyse Structurelle (2-3 jours)**
 
 ```typescript
-// À créer : SentimentEnhancedAlgorithm.ts
-class SentimentEnhancedAlgorithm extends BasicAlignmentAlgorithm {
-  // Extension avec analyse sentiment plus sophistiquée
-  // Détection émotions granulaires
-  // Comparaison directe avec BasicAlgorithm
+// À créer : ConversationalPatternAlgorithm.ts
+class ConversationalPatternAlgorithm extends BasicAlignmentAlgorithm {
+  // Analyse des paires adjacentes conseiller→client
+  // Détection des types d'alignment structurel
+  // Calcul de cohérence pragmatique par famille
+  // Comparaison avec BasicAlgorithm (sentiment)
 }
 ```
 
-#### **1.2 Interface comparative (1-2 jours)**
+**Références Scientifiques** :
+
+- Schegloff & Sacks (1973) : Adjacency Pairs Theory
+- Pomerantz (1984) : Preference Organization
+- Drew & Heritage (1992) : Professional Interaction
+- Heritage & Sefi (1992) : Advice Reception
+
+#### **1.2 Interface Comparative Multi-Algorithmes (1-2 jours)**
 
 ```typescript
 // À modifier : FeedbackAlignmentInterface.tsx
 <AlgorithmComparisonView
-  algorithms={["basic", "sentiment-enhanced"]}
+  algorithms={["basic", "conversational-pattern"]}
   results={comparisonResults}
   showSideBySide={true}
+  showConvergenceMetrics={true}
 />
 ```
 
-#### **1.3 Documentation scientifique (1-2 jours)**
+#### **1.3 Documentation Scientifique & Export Thèse (1-2 jours)**
 
-- Génération automatique de tableaux pour thèse
-- Export des résultats en format académique
-- Graphiques de comparaison algorithmes
+- Génération automatique de tableaux comparatifs (LaTeX)
+- Graphiques de corrélation Sentiment/Alignment
+- Justification méthodologique CA vs Sentiment Analysis
 - Métriques de validation scientifique
 
 ### 🔄 **Phase 2 : Framework Core (1-2 semaines)**
@@ -495,248 +595,5 @@ export const useMetricsEngine = (config: MetricsEngineConfig) => {
 ```typescript
 // Étape 1 : Créer structure framework
 cognitive-metrics/indicators/FluiditeCognitiveIndicator/
-├── algorithms/BasicFluidityAlgorithm.ts     # Migration du hook existant
-├── hooks/useFluiditeCognitiveMetrics.ts     # Adaptation au framework
-├── FluiditeCognitiveInterface.tsx           # Nouvelle interface
-└── types.ts                                 # Types spécifiques
-
-// Étape 2 : Migrer logique existante
-class BasicFluidityAlgorithm {
-  // Migration depuis useCognitiveMetrics
-  calculateFluiditeScore(turns: TaggedTurn[]): FluiditeResult {
-    // Logique existante adaptée
-  }
-}
+├── algorithms/BasicFluidityAlgorithm.
 ```
-
-#### **3.2 Migration des 8 autres indicateurs cognitifs**
-
-- **ReactionsDirectesIndicator** : Temps de latence conversationnelle
-- **ReprisesLexicalesIndicator** : Réutilisation vocabulaire client
-- **ChargeCognitiveIndicator** : Complexité traitement conversationnel
-- **MarqueursEffortIndicator** : Détection signes de difficulté
-- **PatternsResistanceIndicator** : Blocages conversationnels
-- **RobustesseStressIndicator** : Maintien performance sous pression
-- **NiveauStressIndicator** : Intensité stress conversationnel
-- **PositionConversationIndicator** : Évolution temporelle métriques
-
-#### **3.3 Interface unifiée CognitiveMetrics**
-
-```typescript
-// Adapter CognitiveMetrics.tsx existant au framework
-<CognitiveMetricsInterface>
-  <IndicatorTabs>
-    <Tab
-      label="Fluidité Cognitive"
-      component={<FluiditeCognitiveInterface />}
-    />
-    <Tab
-      label="Réactions Directes"
-      component={<ReactionsDirectesInterface />}
-    />
-    <Tab
-      label="Reprises Lexicales"
-      component={<ReprisesLexicalesInterface />}
-    />
-    {/* ... autres indicateurs */}
-  </IndicatorTabs>
-
-  <GlobalCognitiveScore
-    indicators={allCognitiveIndicators}
-    showTrends={true}
-    showComparison={true}
-  />
-</CognitiveMetricsInterface>
-```
-
-### 🔄 **Phase 4 : Nouveaux Indicateurs LI (2-3 semaines)**
-
-#### **4.1 CommonGroundIndicator**
-
-- Algorithme de détection références partagées
-- Interface d'analyse du terrain commun
-- Métriques de cohésion conversationnelle
-
-#### **4.2 BackchannelsIndicator**
-
-- Détection des signaux d'écoute (mm-hmm, oui, etc.)
-- Analyse de la synchronisation conversationnelle
-- Patterns de feedback non-verbal
-
-#### **4.3 SequentialPatternsIndicator**
-
-- Analyse des séquences turn-by-turn
-- Détection de patterns récurrents
-- Optimisation des enchaînements conversationnels
-
-### 🔄 **Phase 5 : Validation Scientifique (3-4 semaines)**
-
-#### **4.1 Système d'annotation**
-
-- Interface d'annotation experte
-- Workflow de validation croisée
-- Métriques inter-annotateur
-
-#### **4.2 Validation croisée AC-LI-Cognitif**
-
-- Tests de convergence automatisés
-- Dashboard de validation scientifique
-- Génération de rapports de recherche
-
-## 📋 **Prochaines Tâches Concrètes**
-
-### **Tâche 1 : Deuxième algorithme FeedbackAlignment (URGENT pour thèse)**
-
-**Objectif** : Créer `SentimentEnhancedAlgorithm.ts` pour comparaison scientifique
-
-**Livrables** :
-
-```typescript
-// 1. Fichier à créer
-li-metrics/indicators/FeedbackAlignmentIndicator/algorithms/SentimentEnhancedAlgorithm.ts
-
-// 2. Méthodes à implémenter
-- analyzeEmotionalIntensity(verbatim: string): EmotionalScore
-- detectGranularSentiments(verbatim: string): GranularSentiment[]
-- compareWithBaseline(basicResult: AlignmentResult): ComparisonMetrics
-
-// 3. Interface à modifier
-FeedbackAlignmentInterface.tsx
-- Ajouter sélecteur d'algorithme
-- Affichage comparatif des résultats
-- Métriques de performance différentielle
-```
-
-### **Tâche 2 : Export documentation thèse (URGENT)**
-
-**Objectif** : Générer tableaux et graphiques pour insertion dans thèse
-
-**Livrables** :
-
-```typescript
-// 1. Hook d'export à créer
-useThesisExport.ts
-- generateResultsTable(): AcademicTable
-- generateComparisonChart(): ChartConfig
-- generateMethodologyDescription(): LatexContent
-- exportToPDF(): Buffer
-
-// 2. Formats de sortie
-- Tableaux LaTeX formatés
-- Graphiques haute résolution (SVG/PNG)
-- Descriptions méthodologiques
-- Métriques de validation
-```
-
-### **Tâche 3 : Migration première métrique cognitive (PRIORITÉ MOYENNE)**
-
-**Objectif** : Migrer FluiditeCognitiveIndicator vers le framework
-
-**Livrables** :
-
-```typescript
-// 1. Structure à créer
-cognitive-metrics/indicators/FluiditeCognitiveIndicator/
-├── algorithms/BasicFluidityAlgorithm.ts
-├── hooks/useFluiditeCognitiveMetrics.ts
-├── FluiditeCognitiveInterface.tsx
-└── types.ts
-
-// 2. Migration de la logique existante
-// Depuis : useCognitiveMetrics.ts (hook actuel)
-// Vers : BasicFluidityAlgorithm.ts (algorithme framework)
-
-// 3. Adaptation de l'interface
-// Depuis : CognitiveMetrics.tsx (composant monolithique)
-// Vers : FluiditeCognitiveInterface.tsx (composant modulaire)
-```
-
-### **Tâche 4 : Tests de validation (IMPORTANT)**
-
-**Objectif** : Valider la robustesse des algorithmes
-
-**Livrables** :
-
-```typescript
-// 1. Tests automatisés
-algorithms/__tests__/
-- BasicAlignmentAlgorithm.test.ts
-- SentimentEnhancedAlgorithm.test.ts
-- ComparisonValidation.test.ts
-
-// 2. Métriques de qualité
-- Précision sur échantillon annoté
-- Temps de traitement benchmark
-- Stabilité inter-exécutions
-- Couverture d'analyse
-```
-
-## 🔧 **Setup pour Nouvelle Session**
-
-### **Contexte projet**
-
-- **Framework** : Architecture modulaire pour métriques comparables
-- **État actuel** : FeedbackAlignment opérationnel avec BasicAlgorithm
-- **Données** : 3652+ enregistrements turntagged, 145 patterns linguistiques
-- **Résultats** : Hypothèses H1 & H2 validées scientifiquement
-
-### **Fichiers clés à examiner**
-
-```bash
-# Structure existante
-src/app/(protected)/analysis/components/
-├── li-metrics/indicators/FeedbackAlignmentIndicator/
-│   ├── algorithms/BasicAlignmentAlgorithm.ts        # ✅ Moteur sémantique
-│   ├── FeedbackAlignmentInterface.tsx               # ✅ Interface complète
-│   ├── hooks/useFeedbackAlignmentMetrics.ts         # ✅ Hook données
-│   └── types.ts                                     # ✅ Types
-├── shared/molecules/
-│   ├── AlgorithmLogicExplanation.tsx                # ✅ Composant enrichi
-│   └── types.ts                                     # ✅ ExtendedAlgorithmLogicProps
-├── shared/atoms/                                    # ✅ Composants atomiques
-└── CognitiveMetrics.tsx                             # ✅ Métriques cognitives existantes
-
-# Hook cognitif existant (à migrer)
-src/hooks/useCognitiveMetrics.ts                     # ✅ 9 indicateurs opérationnels
-```
-
-### **APIs disponibles**
-
-```typescript
-// Hook principal FeedbackAlignment
-const {
-  tableRows, // Données formatées pour affichage
-  analysisResults, // Résultats par famille + sentiment
-  stats, // Statistiques globales
-  runAnalysis, // Lance analyse complète
-  debugInfo, // Diagnostics + métadonnées
-} = useFeedbackAlignmentMetrics({ selectedOrigin, algorithmType: "basic" });
-
-// Algorithme d'analyse
-const algorithm = new BasicAlignmentAlgorithm(turnTaggedData);
-const results = algorithm.analyzeAlignment(); // Retourne AlignmentAnalysis
-algorithm.diagnoseVerbatims(); // Diagnostics qualité données
-
-// Hook cognitif existant (à migrer vers framework)
-const {
-  fluiditeCognitive, // Score fluidité conversationnelle
-  reactionsDirectes, // Temps de latence réactions
-  reprisesLexicales, // Réutilisation vocabulaire client
-  chargeCognitive, // Complexité traitement
-  marqueursEffort, // Signes de difficulté ("euh", pauses)
-  patternsResistance, // Blocages conversationnels
-  robustesseStress, // Maintien performance sous pression
-  niveauStress, // Intensité stress conversationnel
-  positionConversation, // Évolution temporelle
-  scoreGlobalCognitif, // Score composite
-} = useCognitiveMetrics(turnTaggedData);
-```
-
-### **Données de test**
-
-- **Source** : Table `turntagged` (3652 enregistrements)
-- **Filtrage** : Par origine, famille de stratégie
-- **Couverture** : 72% des tours analysables (1006/1397)
-- **Qualité** : Confidence moyenne >75%
-
-Le framework est prêt pour extension avec nouveaux algorithmes et indicateurs ! 🚀

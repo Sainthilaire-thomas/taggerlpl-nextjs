@@ -1,4 +1,4 @@
-// app/(protected)/analysis/page.tsx - Intégration directe framework unifié
+// app/(protected)/analysis/page.tsx - Intégration Algorithm Lab comme onglet principal
 "use client";
 
 import { useEffect, useState } from "react";
@@ -16,12 +16,8 @@ import TagTemporalAnalysis from "./components/TagTemporalAnalysis";
 // 🧠 NOUVEAU FRAMEWORK - Domaine Cognitif
 import FluiditeCognitiveInterface from "./components/cognitive-metrics/indicators/FluiditeCognitiveIndicator/FluiditeCognitiveInterface";
 import FeedbackAlignmentInterface from "./components/li-metrics/indicators/FeedbackAlignementIndicator/FeedbackAlignmentInterface";
-// 🗣️ NOUVEAU FRAMEWORK - Domaine LI (à créer)
-// import LIMetricsInterface from "./components/li-metrics/LIMetricsInterface";
 
-// 🔬 NOUVEAU FRAMEWORK - Validation Convergence (futur)
-// import ConvergenceValidationInterface from "./components/convergence-validation/ConvergenceValidationInterface";
-
+import AlgorithmLabInterface from "./components/AlgorithmLab/components/shared/AlgorithmLabInterface";
 interface TabPanelProps {
   children?: React.ReactNode;
   value: number;
@@ -86,17 +82,18 @@ export default function AnalysisPage() {
           px: { xs: 2, sm: 3 },
         }}
       >
-        {/* En-tête principal simplifié */}
+        {/* En-tête principal avec mention Algorithm Lab */}
         <Box sx={{ mb: 4 }}>
           <Typography variant="h3" gutterBottom sx={{ fontWeight: "bold" }}>
             Centre d'Analyse Conversationnelle
           </Typography>
           <Typography variant="h6" color="text.secondary">
             Framework unifié pour l'analyse multi-domaines (AC • LI • Cognitif)
+            + Algorithm Lab
           </Typography>
         </Box>
 
-        {/* Onglets avec nouveau framework intégré */}
+        {/* Onglets avec Algorithm Lab intégré */}
         <Paper elevation={2} sx={{ mb: 3 }}>
           <Tabs
             value={tabValue}
@@ -119,7 +116,8 @@ export default function AnalysisPage() {
             <Tab label="🗣️ Linguistique Interactionnelle" {...a11yProps(3)} />
             <Tab label="🧠 Sciences Cognitives" {...a11yProps(4)} />
             <Tab label="🔬 Validation Convergence" {...a11yProps(5)} />
-            <Tab label="📍 Analyse Temporelle" {...a11yProps(6)} />
+            <Tab label="🧪 Algorithm Lab" {...a11yProps(6)} />
+            <Tab label="📍 Analyse Temporelle" {...a11yProps(7)} />
           </Tabs>
         </Paper>
 
@@ -184,7 +182,6 @@ export default function AnalysisPage() {
         </TabPanel>
 
         {/* 🗣️ LI - NOUVEAU FRAMEWORK */}
-
         <TabPanel value={tabValue} index={3}>
           <FeedbackAlignmentInterface showComparison={true} />
         </TabPanel>
@@ -259,8 +256,22 @@ export default function AnalysisPage() {
           </Box>
         </TabPanel>
 
-        {/* 📍 TEMPOREL - Existant conservé */}
+        {/* 🧪 ALGORITHM LAB - NOUVEAU ONGLET PRINCIPAL */}
         <TabPanel value={tabValue} index={6}>
+          <AlgorithmLabInterface
+            selectedOrigin={selectedOrigin}
+            availableDomains={["li", "cognitive", "ac"]}
+            availableIndicators={[
+              "feedback_alignment",
+              "fluidite_cognitive",
+              "common_ground",
+              "backchannels",
+            ]}
+          />
+        </TabPanel>
+
+        {/* 📍 TEMPOREL - Existant conservé */}
+        <TabPanel value={tabValue} index={7}>
           <TagTemporalAnalysis />
         </TabPanel>
 
