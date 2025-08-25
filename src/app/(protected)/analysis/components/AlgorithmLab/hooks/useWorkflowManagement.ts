@@ -38,6 +38,13 @@ export const useWorkflowManagement = () => {
 
   const canAccessLevel = useCallback(
     (levelId: number) => {
+      // Flag de développement - mettre à false en production
+      const DEV_BYPASS_PREREQUISITES = true;
+
+      if (DEV_BYPASS_PREREQUISITES) {
+        return true;
+      }
+
       const level = validationLevels.find((l) => l.id === levelId);
       if (!level) return false;
 

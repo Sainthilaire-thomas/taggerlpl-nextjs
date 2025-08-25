@@ -20,7 +20,7 @@ import {
 import { useWorkflowManagement } from "../../hooks/useWorkflowManagement";
 import { NavigationTabs } from "./NavigationTabs";
 import { InterAnnotatorAgreement } from "../Level0/InterAnnotatorAgreement";
-
+import { Level1Interface } from "../Level1/Level1Interface";
 // Props pour l'intégration dans la page analysis
 interface AlgorithmLabInterfaceProps {
   selectedOrigin?: string | null;
@@ -101,39 +101,7 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
       case 0:
         return <InterAnnotatorAgreement />;
       case 1:
-        return (
-          <Box sx={styles.levelContentBox}>
-            <Typography
-              variant="h4"
-              gutterBottom
-              sx={{ fontWeight: "bold", color: theme.palette.text.primary }}
-            >
-              Validation Technique
-            </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-              Performance des algorithmes vs experts
-            </Typography>
-            <Paper sx={styles.prerequisitePaper}>
-              <Typography
-                variant="body2"
-                sx={{ mb: 2, color: theme.palette.text.primary }}
-              >
-                <strong>Prérequis :</strong> Kappa &gt; 0.70 du Niveau 0 validé
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{
-                  color:
-                    theme.palette.mode === "dark"
-                      ? theme.palette.text.secondary
-                      : theme.palette.primary.dark,
-                }}
-              >
-                Domaines disponibles: {availableDomains.join(", ") || "Aucun"}
-              </Typography>
-            </Paper>
-          </Box>
-        );
+        return <Level1Interface />;
       case 2:
         return (
           <Box sx={styles.levelContentBox}>
