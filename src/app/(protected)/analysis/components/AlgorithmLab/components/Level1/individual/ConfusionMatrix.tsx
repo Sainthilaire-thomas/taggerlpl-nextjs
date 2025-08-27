@@ -14,7 +14,7 @@ import {
   useTheme,
   alpha,
 } from "@mui/material";
-import { ValidationMetrics } from "../../types/Level1Types";
+import { ValidationMetrics } from "../../../types/Level1Types";
 
 interface ConfusionMatrixProps {
   metrics: ValidationMetrics | null;

@@ -1,25 +1,23 @@
-// Composant principal d'intégration - components/Level1/Level1Interface.tsx
-import React, { useState } from "react";
-import {
-  Box,
-  Paper,
-  Tabs,
-  Tab,
-  Alert,
-  Typography,
-  useTheme,
-} from "@mui/material";
-import {
-  Assessment,
-  ViewModule as GridView,
-  Tune,
-  CompareArrows,
-} from "@mui/icons-material";
-import { TechnicalValidation } from "./TechnicalValidation";
-import { ConfusionMatrix } from "./ConfusionMatrix";
-import { ParameterOptimization } from "./ParameterOptimization";
+// components/AlgorithmLab/Level1Interface.tsx
+// Interface principale Level1 avec distinction individual/comparison
+
+import React, { useState, useEffect } from "react";
+import { Box, Tabs, Tab, Typography, Divider } from "@mui/material";
+
+// Individual analysis components
+import { TechnicalValidation } from "./individual/TechnicalValidation";
+import { ConfusionMatrix } from "./individual/ConfusionMatrix";
+import { EnhancedErrorAnalysis } from "./individual/EnhancedErrorAnalysis";
+import { ParameterOptimization } from "./individual/ParameterOptimization";
+
+// Comparison analysis components
+import { AlgorithmComparison } from "./comparison/AlgorithmComparison";
+import { ClassifierConfiguration } from "./comparison/ClassifierConfiguration";
+import { CrossValidation } from "./comparison/CrossValidation";
+import { initializeClassifiers } from "../../algorithms/level1/shared/initializeClassifiers";
+
+// Shared components
 import { TechnicalBenchmark } from "./TechnicalBenchmark";
-import { useLevel1Testing } from "../../hooks/useLevel1Testing";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -28,138 +26,103 @@ interface TabPanelProps {
 }
 
 const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
-  <div hidden={value !== index} style={{ paddingTop: "24px" }}>
-    {value === index && children}
+  <div
+    role="tabpanel"
+    hidden={value !== index}
+    id={`level1-tabpanel-${index}`}
+    aria-labelledby={`level1-tab-${index}`}
+  >
+    {value === index && <Box>{children}</Box>}
   </div>
 );
 
 export const Level1Interface: React.FC = () => {
-  const theme = useTheme();
-  const [currentTab, setCurrentTab] = useState(0);
-  const {
-    state,
-    availableAlgorithms,
-    updateAlgorithmParameters,
-    runValidation,
-  } = useLevel1Testing();
-  const [benchmarkHistory, setBenchmarkHistory] = useState<any[]>([]);
+  const [tabValue, setTabValue] = useState(0);
 
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
-    setCurrentTab(newValue);
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
   };
 
-  const handleParametersChange = (params: Record<string, any>) => {
-    updateAlgorithmParameters(state.selectedAlgorithm, params);
-  };
-
-  const handleTestWithParameters = async (params: Record<string, any>) => {
-    updateAlgorithmParameters(state.selectedAlgorithm, params);
-    await runValidation(
-      state.selectedAlgorithm,
-      state.sampleSize,
-      state.selectedOrigin
-    );
-
-    // Ajouter aux benchmarks
-    if (state.metrics) {
-      const benchmarkData = {
-        algorithmName: state.selectedAlgorithm,
-        type:
-          availableAlgorithms.find((a) => a.name === state.selectedAlgorithm)
-            ?.type || "conseiller",
-        metrics: state.metrics,
-        sampleSize: state.sampleSize,
-        executionTime: Date.now(),
-        parameters: params,
-      };
-      setBenchmarkHistory((prev) => [...prev.slice(-4), benchmarkData]); // Garder les 5 derniers
-    }
-  };
-
-  const currentAlgorithm = availableAlgorithms.find(
-    (a) => a.name === state.selectedAlgorithm
-  );
+  useEffect(() => {
+    initializeClassifiers();
+  }, []);
 
   return (
     <Box sx={{ width: "100%" }}>
-      {/* Header avec statut prérequis */}
-      <Alert severity="info" sx={{ mb: 3 }}>
-        <Typography variant="body2">
-          <strong>Niveau 1 - Validation Technique:</strong> Évaluation des
-          performances algorithmiques par rapport au gold standard expert.
-          Prérequis: Kappa inter-annotateurs {">"} 0.70 du Niveau 0.
-        </Typography>
-      </Alert>
+      <Typography variant="h3" gutterBottom>
+        Niveau 1 : Validation Technique
+      </Typography>
 
-      {/* Navigation par onglets */}
-      <Paper sx={{ mb: 3 }}>
+      <Typography variant="body1" sx={{ mb: 3, color: "text.secondary" }}>
+        Test de performance des algorithmes de classification contre le gold
+        standard expert
+      </Typography>
+
+      <Divider sx={{ mb: 3 }} />
+
+      {/* Navigation principale */}
+      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs
-          value={currentTab}
+          value={tabValue}
           onChange={handleTabChange}
-          variant="fullWidth"
-          sx={{
-            borderBottom: `1px solid ${theme.palette.divider}`,
-            "& .MuiTab-root": {
-              textTransform: "none",
-              fontSize: "0.95rem",
-              fontWeight: 500,
-            },
-          }}
+          aria-label="Level 1 validation tabs"
         >
-          <Tab
-            icon={<Assessment />}
-            label="Validation Principale"
-            sx={{ minHeight: 72 }}
-          />
-          <Tab
-            icon={<GridView />}
-            label="Matrice de Confusion"
-            sx={{ minHeight: 72 }}
-          />
-          <Tab
-            icon={<Tune />}
-            label="Optimisation Paramètres"
-            sx={{ minHeight: 72 }}
-          />
-          <Tab
-            icon={<CompareArrows />}
-            label="Benchmark Comparatif"
-            sx={{ minHeight: 72 }}
-          />
+          {/* Section Analyses Individuelles */}
+          <Tab label="Validation Technique" />
+          <Tab label="Matrice Confusion" />
+          <Tab label="Analyse Erreurs" />
+          <Tab label="Optimisation" />
+
+          {/* Séparateur visuel */}
+          <Tab label="─────────" disabled sx={{ minWidth: 20, opacity: 0.3 }} />
+
+          {/* Section Analyses Comparatives */}
+          <Tab label="Comparaison Multi-Algo" />
+          <Tab label="Configuration" />
+          <Tab label="Validation Croisée" />
+
+          {/* Section Synthèse */}
+          <Tab label="─────────" disabled sx={{ minWidth: 20, opacity: 0.3 }} />
+          <Tab label="Benchmark Global" />
         </Tabs>
-      </Paper>
+      </Box>
 
       {/* Contenu des onglets */}
-      <TabPanel value={currentTab} index={0}>
+
+      {/* ANALYSES INDIVIDUELLES */}
+      <TabPanel value={tabValue} index={0}>
         <TechnicalValidation />
       </TabPanel>
 
-      <TabPanel value={currentTab} index={1}>
-        <ConfusionMatrix
-          metrics={state.metrics}
-          title="Matrice de Confusion - Analyse des Erreurs"
-        />
+      <TabPanel value={tabValue} index={1}>
+        <ConfusionMatrix />
       </TabPanel>
 
-      <TabPanel value={currentTab} index={2}>
-        {currentAlgorithm && (
-          <ParameterOptimization
-            algorithm={currentAlgorithm}
-            onParametersChange={handleParametersChange}
-            onTestWithParameters={handleTestWithParameters}
-            isRunning={state.isRunning}
-          />
-        )}
+      <TabPanel value={tabValue} index={2}>
+        <EnhancedErrorAnalysis />
       </TabPanel>
 
-      <TabPanel value={currentTab} index={3}>
-        <TechnicalBenchmark
-          benchmarkResults={benchmarkHistory}
-          title="Historique des Performances"
-        />
+      <TabPanel value={tabValue} index={3}>
+        <ParameterOptimization />
+      </TabPanel>
+
+      {/* ANALYSES COMPARATIVES */}
+      <TabPanel value={tabValue} index={5}>
+        <AlgorithmComparison />
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={6}>
+        <ClassifierConfiguration />
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={7}>
+        <CrossValidation />
+      </TabPanel>
+
+      {/* SYNTHÈSE */}
+      <TabPanel value={tabValue} index={9}>
+        <TechnicalBenchmark />
       </TabPanel>
     </Box>
   );
 };
-
-export default Level1Interface;

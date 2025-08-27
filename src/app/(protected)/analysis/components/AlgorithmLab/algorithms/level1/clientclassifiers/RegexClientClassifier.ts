@@ -1,5 +1,5 @@
 // algorithms/level1/AlgorithmeClassificationClient.ts - VERSION CORRIGÉE
-export class AlgorithmeClassificationClient {
+export class RegexClientClassifier {
   private config: Record<string, any>;
 
   constructor(config: Record<string, any> = {}) {
@@ -182,7 +182,7 @@ export class AlgorithmeClassificationClient {
 }
 
 // utils/metricsCalculation.ts - VERSION CORRIGÉE
-import { AlgorithmResult, ValidationMetrics } from "../../types/Level1Types";
+import { AlgorithmResult, ValidationMetrics } from "../../../types/Level1Types";
 
 export function calculateValidationMetrics(
   results: AlgorithmResult[]

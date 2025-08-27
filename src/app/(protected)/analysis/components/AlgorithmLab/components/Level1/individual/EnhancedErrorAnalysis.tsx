@@ -1,4 +1,4 @@
-// components/Level1/EnhancedErrorAnalysis.tsx
+// components/Level1/EnhancedErrorAnalysis.tsx - Version corrigée
 import React, { useState, useCallback } from "react";
 import {
   Box,
@@ -18,6 +18,7 @@ import {
   IconButton,
   Alert,
   useTheme,
+  CircularProgress,
 } from "@mui/material";
 import {
   Edit,
@@ -28,7 +29,7 @@ import {
   Assignment,
   Warning,
 } from "@mui/icons-material";
-import { AlgorithmResult } from "../../types/Level1Types";
+import { AlgorithmResult } from "../../../types/Level1Types";
 import { useTaggingData } from "@/context/TaggingDataContext";
 import { supabase } from "@/lib/supabaseClient";
 import { generateSignedUrl } from "@/components/utils/signedUrls";
@@ -41,6 +42,8 @@ import type { SupervisionTurnTagged } from "@/app/(protected)/supervision/types"
 interface EnhancedErrorAnalysisProps {
   results: AlgorithmResult[];
   algorithmName: string;
+  classifierType?: string; // AJOUTER
+  classifierMetadata?: any; // AJOUTER
 }
 
 // Interface étendue pour inclure les données contextuelles
@@ -179,7 +182,7 @@ const VerbatimDisplay: React.FC<{
   );
 };
 
-// Composant pour afficher le statut des ressources (inspiré de supervision)
+// Composant pour afficher le statut des ressources
 const StatusDisplay: React.FC<{
   hasAudio: boolean;
   hasTranscript: boolean;
@@ -217,6 +220,7 @@ const StatusDisplay: React.FC<{
     </Box>
   );
 };
+
 const ConfidenceScore: React.FC<{
   confidence: number;
   isCorrect: boolean;
@@ -261,6 +265,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
   const [isTaggingModalOpen, setIsTaggingModalOpen] = useState(false);
   const [isProcessingModalOpen, setIsProcessingModalOpen] = useState(false);
   const [taggingAudioUrl, setTaggingAudioUrl] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const [enhancedResults, setEnhancedResults] = useState<
     EnhancedAlgorithmResult[]
@@ -270,131 +275,235 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
   const { selectTaggingCall, fetchTaggingTranscription, fetchTaggedTurns } =
     useTaggingData();
 
-  // Enrichir les résultats avec les données contextuelles ET le statut
+  // ✅ CORRECTION PRINCIPALE : Requêtes Supabase optimisées et sécurisées
   React.useEffect(() => {
     const loadContextualData = async () => {
-      const errors = results.filter((r) => !r.correct).slice(0, 100);
+      if (results.length === 0) return;
+
+      setIsLoading(true);
+      const errors = results.filter((r) => !r.correct).slice(0, 20);
       const enhanced: EnhancedAlgorithmResult[] = [];
 
-      for (const error of errors) {
-        try {
-          // Récupérer les données contextuelles de l'appel avec statut des ressources
-          const { data: callData } = await supabase
+      // Regrouper les requêtes par call_id pour éviter les doublons
+      const uniqueCallIds = [...new Set(errors.map((e) => e.callId))];
+
+      try {
+        // ✅ Requête groupée pour les données d'appels
+        const { data: callsData, error: callsError } = await supabase
+          .from("call")
+          .select("callid, filename, filepath, audiourl")
+          .in("callid", uniqueCallIds);
+
+        if (callsError) {
+          console.error(
+            "Erreur lors de la récupération des appels:",
+            callsError
+          );
+        }
+
+        // ✅ Requête groupée pour les transcriptions
+        const { data: transcriptsData, error: transcriptsError } =
+          await supabase
+            .from("transcript")
+            .select("callid, transcriptid")
+            .in("callid", uniqueCallIds);
+
+        if (transcriptsError) {
+          console.error(
+            "Erreur lors de la récupération des transcriptions:",
+            transcriptsError
+          );
+        }
+
+        // ✅ Requête groupée pour les tours taggés (contexte client)
+        let turnsData = null;
+        if (algorithmName === "client_classification") {
+          const turnsQuery = errors.map((e) => ({
+            call_id: e.callId,
+            start_time: e.startTime,
+          }));
+
+          // Construction d'une requête OR pour tous les tours
+          const orConditions = turnsQuery
+            .map(
+              (t) =>
+                `(call_id.eq.${t.call_id}.and.start_time.eq.${t.start_time})`
+            )
+            .join(",");
+
+          const { data: turns, error: turnsError } = await supabase
+            .from("turntagged")
+            .select("call_id, start_time, next_turn_verbatim, next_turn_tag")
+            .or(orConditions);
+
+          if (turnsError) {
+            console.error(
+              "Erreur lors de la récupération des tours:",
+              turnsError
+            );
+          } else {
+            turnsData = turns;
+          }
+        }
+
+        // Créer des maps pour un accès rapide
+        const callsMap = new Map((callsData || []).map((c) => [c.callid, c]));
+        const transcriptsMap = new Set(
+          (transcriptsData || []).map((t) => t.callid)
+        );
+        const turnsMap = new Map(
+          (turnsData || []).map((t) => [`${t.call_id}_${t.start_time}`, t])
+        );
+
+        // ✅ Construire les résultats enrichis
+        for (const error of errors) {
+          const callData = callsMap.get(error.callId);
+          const hasTranscript = transcriptsMap.has(error.callId);
+          const turnKey = `${error.callId}_${error.startTime}`;
+          const turnContext = turnsMap.get(turnKey);
+
+          enhanced.push({
+            ...error,
+            filename: callData?.filename || undefined,
+            next_turn_verbatim: turnContext?.next_turn_verbatim || undefined,
+            next_turn_tag: turnContext?.next_turn_tag || undefined,
+            hasAudio: !!(callData?.filepath || callData?.audiourl),
+            hasTranscript: hasTranscript,
+          });
+        }
+
+        setEnhancedResults(enhanced);
+        console.log(`✅ ${enhanced.length} erreurs enrichies avec succès`);
+      } catch (err) {
+        console.error("Erreur lors de l'enrichissement des données:", err);
+        // En cas d'erreur, utiliser les données de base
+        setEnhancedResults(
+          errors.map((e) => ({
+            ...e,
+            hasAudio: false,
+            hasTranscript: false,
+          }))
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadContextualData();
+  }, [results, algorithmName]);
+
+  // ✅ CORRECTION : Gestionnaire de clic optimisé avec gestion d'erreurs
+  const handleRowClick = useCallback(
+    async (error: EnhancedAlgorithmResult) => {
+      setIsLoading(true);
+      try {
+        // ✅ Requête sécurisée avec vérification d'existence
+        const { data: turnData, error: turnError } = await supabase
+          .from("turntagged")
+          .select(
+            `
+            *,
+            lpltag:tag (color),
+            call:call_id (filename, filepath, audiourl)
+          `
+          )
+          .eq("call_id", error.callId)
+          .gte("start_time", error.startTime - 0.1) // Tolérance pour les timestamps
+          .lte("start_time", error.startTime + 0.1)
+          .limit(1)
+          .single();
+
+        if (turnError) {
+          console.error("Erreur lors de la récupération du turn:", turnError);
+
+          // ✅ Fallback : essayer avec une requête moins stricte
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from("turntagged")
+            .select(
+              `
+              *,
+              lpltag:tag (color)
+            `
+            )
+            .eq("call_id", error.callId)
+            .gte("start_time", error.startTime - 1)
+            .lte("start_time", error.startTime + 1)
+            .limit(1)
+            .maybeSingle();
+
+          if (fallbackError || !fallbackData) {
+            throw new Error(
+              `Turn non trouvé pour call_id: ${error.callId}, start_time: ${error.startTime}`
+            );
+          }
+
+          // Utiliser les données de fallback
+          const { data: callFallback } = await supabase
             .from("call")
             .select("filename, filepath, audiourl")
             .eq("callid", error.callId)
             .single();
 
-          // Vérifier si transcription existe
-          const { data: transcriptData } = await supabase
-            .from("transcript")
-            .select("transcriptid")
-            .eq("callid", error.callId)
-            .single();
+          const supervisionRow: SupervisionTurnTagged = {
+            ...fallbackData,
+            color: fallbackData.lpltag?.color || "#1976d2",
+            filename: callFallback?.filename || `call_${error.callId}`,
+            hasAudio: !!(callFallback?.filepath || callFallback?.audiourl),
+            hasTranscript: true,
+          };
 
-          // Récupérer le contexte du tour si algorithme client
-          let contextData = null;
-          if (algorithmName === "client_classification") {
-            const { data: turnData } = await supabase
-              .from("turntagged")
-              .select("next_turn_verbatim, next_turn_tag")
-              .eq("call_id", error.callId)
-              .eq("start_time", error.startTime)
-              .single();
-            contextData = turnData;
-          }
-
-          enhanced.push({
-            ...error,
-            filename: callData?.filename || undefined,
-            next_turn_verbatim: contextData?.next_turn_verbatim || undefined,
-            next_turn_tag: contextData?.next_turn_tag || undefined,
-            // Ajout du statut des ressources
-            hasAudio: !!(callData?.filepath || callData?.audiourl),
-            hasTranscript: !!transcriptData?.transcriptid,
-          });
-        } catch (err) {
-          enhanced.push({
-            ...error,
-            hasAudio: false,
-            hasTranscript: false,
-          } as EnhancedAlgorithmResult);
-        }
-      }
-
-      setEnhancedResults(enhanced);
-    };
-
-    if (results.length > 0) {
-      loadContextualData();
-    }
-  }, [results, algorithmName]);
-
-  // Gestionnaire de clic - utilise les composants supervision
-  const handleRowClick = useCallback(
-    async (error: EnhancedAlgorithmResult) => {
-      try {
-        // Récupérer directement le turn depuis turntagged avec jointures
-        const { data: turnData, error: turnError } = await supabase
-          .from("turntagged")
-          .select(
-            `
-          *,
-          lpltag:tag (color),
-          call:call_id (filename, filepath, audiourl)
-        `
-          )
-          .eq("call_id", error.callId)
-          .eq("id", error.turnId)
-          .single();
-
-        if (turnError || !turnData) {
-          throw new Error("Turn non trouvé dans la base de données");
+          setSelectedError(supervisionRow);
+          setIsProcessingModalOpen(true);
+          return;
         }
 
-        // Construire l'objet supervision
+        // Construction de l'objet supervision
         const supervisionRow: SupervisionTurnTagged = {
           ...turnData,
           color: turnData.lpltag?.color || "#1976d2",
-          filename: turnData.call?.filename || "",
+          filename: turnData.call?.filename || `call_${error.callId}`,
           hasAudio: !!(turnData.call?.filepath || turnData.call?.audiourl),
-          hasTranscript: true, // Si on a le turn, on a la transcription
+          hasTranscript: true,
         };
 
-        console.log("Données récupérées pour supervision:", supervisionRow);
+        console.log("✅ Données récupérées pour supervision:", supervisionRow);
 
-        // Vérifier les ressources et ouvrir le bon modal
+        // Ouvrir le bon modal selon les ressources disponibles
         if (supervisionRow.hasAudio && supervisionRow.hasTranscript) {
-          // Ouvrir l'éditeur de tagging
           setSelectedError(supervisionRow);
           setIsTaggingModalOpen(true);
 
-          // Charger l'audio comme supervision
+          // Charger l'audio
           if (turnData.call?.filepath) {
-            const audioUrl = await generateSignedUrl(turnData.call.filepath);
-            setTaggingAudioUrl(audioUrl);
+            try {
+              const audioUrl = await generateSignedUrl(turnData.call.filepath);
+              setTaggingAudioUrl(audioUrl);
+            } catch (audioError) {
+              console.error("Erreur génération URL audio:", audioError);
+              setTaggingAudioUrl(turnData.call?.audiourl || "");
+            }
+          } else {
+            setTaggingAudioUrl(turnData.call?.audiourl || "");
+          }
 
-            // Préparer l'appel pour le tagging
+          // Préparer pour le tagging
+          try {
             selectTaggingCall({
               callid: error.callId,
-              audiourl: audioUrl,
+              audiourl: turnData.call?.audiourl || "",
               filename: turnData.call?.filename || "",
               is_tagging_call: true,
               preparedfortranscript: true,
             });
 
-            // Charger transcription et tags
             await Promise.all([
               fetchTaggingTranscription(error.callId),
               fetchTaggedTurns(error.callId),
             ]);
-
-            console.log(`Appel ${error.callId} préparé pour le tagging`);
-          } else if (turnData.call?.audiourl) {
-            setTaggingAudioUrl(turnData.call.audiourl);
+          } catch (taggingError) {
+            console.error("Erreur préparation tagging:", taggingError);
           }
         } else {
-          // Ouvrir le modal de traitement
           setSelectedError(supervisionRow);
           setIsProcessingModalOpen(true);
         }
@@ -405,6 +514,8 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
             error instanceof Error ? error.message : "Erreur inconnue"
           }`
         );
+      } finally {
+        setIsLoading(false);
       }
     },
     [selectTaggingCall, fetchTaggingTranscription, fetchTaggedTurns]
@@ -424,8 +535,18 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
 
   const handleProcessingComplete = useCallback(() => {
     console.log("Traitement terminé avec succès");
-    // Optionnel: recharger les données d'erreurs
   }, []);
+
+  if (isLoading) {
+    return (
+      <Box sx={{ mt: 3, textAlign: "center", p: 3 }}>
+        <CircularProgress />
+        <Typography variant="body2" sx={{ mt: 2 }}>
+          Chargement de l'analyse des erreurs...
+        </Typography>
+      </Box>
+    );
+  }
 
   if (enhancedResults.length === 0) {
     return (
@@ -469,7 +590,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
               <TableBody>
                 {enhancedResults.map((error, idx) => (
                   <TableRow
-                    key={idx}
+                    key={`${error.callId}_${error.startTime}_${idx}`}
                     hover
                     sx={{
                       cursor: "pointer",
@@ -477,7 +598,6 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
                     }}
                     onClick={() => handleRowClick(error)}
                   >
-                    {/* Colonne Tags */}
                     <TableCell>
                       <TagChain
                         mainTag={error.goldStandard}
@@ -487,7 +607,6 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
                       />
                     </TableCell>
 
-                    {/* Colonne Call ID */}
                     <TableCell>
                       <Typography variant="body2" fontWeight="medium">
                         {error.callId}
@@ -505,7 +624,6 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
                       )}
                     </TableCell>
 
-                    {/* Colonne Tours de Parole */}
                     <TableCell>
                       <VerbatimDisplay
                         verbatim={error.input}
@@ -516,7 +634,6 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
                       />
                     </TableCell>
 
-                    {/* Colonne Temps */}
                     <TableCell>
                       <Typography variant="caption" display="block">
                         {formatTime(error.startTime)}
@@ -537,7 +654,6 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
                       </Typography>
                     </TableCell>
 
-                    {/* Colonne Statut */}
                     <TableCell>
                       <StatusDisplay
                         hasAudio={error.hasAudio || false}
@@ -545,7 +661,6 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
                       />
                     </TableCell>
 
-                    {/* Colonne Prédit */}
                     <TableCell>
                       <Chip
                         label={error.predicted}
@@ -555,7 +670,6 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
                       />
                     </TableCell>
 
-                    {/* Colonne Réel */}
                     <TableCell>
                       <Chip
                         label={error.goldStandard}
@@ -565,7 +679,6 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
                       />
                     </TableCell>
 
-                    {/* Colonne Confiance */}
                     <TableCell>
                       <ConfidenceScore
                         confidence={error.confidence}
@@ -573,7 +686,6 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
                       />
                     </TableCell>
 
-                    {/* Colonne Action */}
                     <TableCell>
                       <Tooltip title="Analyser dans le contexte complet">
                         <IconButton size="small" color="primary">
