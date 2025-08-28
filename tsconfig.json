@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
@@ -20,7 +21,9 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@/analysis-components/*": ["./src/app/(protected)/analysis/components/*"]
+      "@/algorithms/*": [
+        "./src/app/(protected)/analysis/components/AlgorithmLab/algorithms/*"
+      ]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

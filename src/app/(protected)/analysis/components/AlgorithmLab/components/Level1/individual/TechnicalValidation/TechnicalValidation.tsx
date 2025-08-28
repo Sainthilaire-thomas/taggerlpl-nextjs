@@ -1,32 +1,25 @@
-import React, { useState, useEffect, useMemo } from "react";
+"use client";
+
+import React from "react";
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
-  Button,
-  Alert,
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  LinearProgress,
   Chip,
   Stack,
+  Alert,
+  LinearProgress,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import StopIcon from "@mui/icons-material/Stop";
 
 import { ClassifierSelector } from "../../../shared/ClassifierSelector";
-import { ClassifierRegistry } from "../../../../algorithms/level1/shared/ClassifierRegistry";
-import { BaseClassifier } from "../../../../algorithms/level1/shared/BaseClassifier";
 import { useLevel1Testing } from "../../../../hooks/useLevel1Testing";
-import { initializeClassifiers } from "../../../../algorithms/level1/shared/initializeClassifiers";
-
-// ⬇️ nouveaux imports
 import { RunPanel } from "./RunPanel";
-import { MetricsPanel, type SimpleMetrics } from "./MetricsPanel";
+import { MetricsPanel } from "./MetricsPanel";
 import { ResultsSample } from "./ResultsSample";
+import { useClassifierStatus } from "../../../../hooks/useClassifierStatus";
 
 interface ValidationResult {
   verbatim: string;
@@ -38,134 +31,105 @@ interface ValidationResult {
   metadata?: Record<string, any>;
 }
 
-initializeClassifiers();
-
 export const TechnicalValidation: React.FC = () => {
-  const [selectedClassifier, setSelectedClassifier] = useState<string>(
+  // ✅ SOLUTION 1: État pour éviter la réinitialisation en boucle
+  const [sampleSizeInitialized, setSampleSizeInitialized] =
+    React.useState(false);
+
+  // TOUS les hooks d'état d'abord, dans un ordre fixe
+  const [selectedClassifier, setSelectedClassifier] = React.useState<string>(
     "RegexConseillerClassifier"
   );
-  const [classifierInstance, setClassifierInstance] =
-    useState<BaseClassifier | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<Record<string, any>>(
-    {}
-  );
-  const [testResults, setTestResults] = useState<ValidationResult[]>([]);
-  const [isRunning, setIsRunning] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const [testResults, setTestResults] = React.useState<ValidationResult[]>([]);
+  const [isRunning, setIsRunning] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [sampleSize, setSampleSize] = React.useState<number>(100);
 
-  const {
-    goldStandardData,
+  // TOUS les hooks personnalisés après, dans un ordre fixe
+  const level1Testing = useLevel1Testing();
+  const classifierStatus = useClassifierStatus(selectedClassifier);
+
+  // Extraction des valeurs des hooks (pas de destructuring conditionnel)
+  const goldStandardData = level1Testing.goldStandardData;
+  const validateAlgorithm = level1Testing.validateAlgorithm;
+  const calculateMetrics = level1Testing.calculateMetrics;
+  const analyzeErrors = level1Testing.analyzeErrors;
+  const getRelevantCountFor = level1Testing.getRelevantCountFor;
+
+  const statusLoading = classifierStatus.loading;
+  const statusError = classifierStatus.error;
+  const selectedInfo = classifierStatus.selected;
+  const isConfigValid = classifierStatus.isConfigValid;
+  const supportsBatch = classifierStatus.supportsBatch;
+  const domainLabel = classifierStatus.domainLabel;
+
+  // ✅ SOLUTION 2: useEffect corrigé sans boucle infinie
+  React.useEffect(() => {
+    // Éviter la réinitialisation multiple
+    if (sampleSizeInitialized) return;
+
+    const total = goldStandardData?.length || 0;
+    if (total > 0) {
+      const newSampleSize = Math.min(1000, total);
+      setSampleSize(newSampleSize);
+      setSampleSizeInitialized(true);
+    }
+  }, [goldStandardData, sampleSizeInitialized]); // ❌ Retiré sampleSize des deps
+
+  // Tous les useMemo après, dans un ordre fixe
+  const totalForCurrent = React.useMemo(() => {
+    if (!getRelevantCountFor || !selectedClassifier) return 0;
+    return getRelevantCountFor(selectedClassifier);
+  }, [getRelevantCountFor, selectedClassifier]);
+
+  // ✅ SOLUTION 3: Valeurs avec fallbacks stables
+  const typeLabel = selectedInfo?.type ?? "rule-based";
+  const chipColor = typeLabel === "rule-based" ? "primary" : "secondary";
+
+  // ✅ SOLUTION 4: Callback stable avec dépendances explicites
+  const runValidation = React.useCallback(async () => {
+    if (!validateAlgorithm) return;
+
+    setError(null);
+    setTestResults([]);
+    setIsRunning(true);
+
+    try {
+      const results = await validateAlgorithm(selectedClassifier, sampleSize);
+      setTestResults(results);
+
+      if (calculateMetrics && analyzeErrors) {
+        const metrics = calculateMetrics(results);
+        const errorAnalysis = analyzeErrors(results);
+        console.log("📊 Métriques individuelles:", metrics);
+        console.log("🔍 Analyse erreurs:", errorAnalysis);
+      }
+    } catch (e: any) {
+      console.error("❌ Erreur validation individuelle:", e);
+      setError(e?.message || "Erreur inconnue");
+    } finally {
+      setIsRunning(false);
+    }
+  }, [
     validateAlgorithm,
     calculateMetrics,
     analyzeErrors,
-  } = useLevel1Testing();
+    selectedClassifier,
+    sampleSize,
+  ]);
 
-  const [sampleSize, setSampleSize] = useState<number>(0);
+  // ✅ SOLUTION 5: Guard avec return précoce APRÈS tous les hooks
+  const isDataReady = level1Testing && classifierStatus && goldStandardData;
 
-  useEffect(() => {
-    const total = goldStandardData?.length || 0;
-    if (total > 0 && sampleSize === 0) {
-      // valeur initiale raisonnable
-      setSampleSize(Math.min(1000, total));
-    }
-  }, [goldStandardData, sampleSize]);
-
-  useEffect(() => {
-    const classifier = ClassifierRegistry.getClassifier(selectedClassifier);
-    setClassifierInstance(classifier || null);
-    setError(null);
-
-    if (classifier && "testConnection" in classifier) {
-      (classifier as any)
-        .testConnection()
-        .then((result: any) => {
-          setConnectionStatus((prev) => ({
-            ...prev,
-            [selectedClassifier]: result,
-          }));
-        })
-        .catch(() => {
-          setConnectionStatus((prev) => ({
-            ...prev,
-            [selectedClassifier]: {
-              success: false,
-              message: "Test connexion échoué",
-            },
-          }));
-        });
-    }
-  }, [selectedClassifier]);
-
-  const runValidation = async () => {
-    if (!classifierInstance) {
-      setError("Aucun classificateur sélectionné");
-      return;
-    }
-    setIsRunning(true);
-    setError(null);
-    setTestResults([]);
-    setProgress(0);
-
-    try {
-      const results = await validateAlgorithm(selectedClassifier, sampleSize); // <-- ICI
-      setTestResults(results);
-      const metrics = calculateMetrics(results);
-      const errorAnalysis = analyzeErrors(results);
-      console.log("📊 Métriques individuelles:", metrics);
-      console.log("🔍 Analyse erreurs:", errorAnalysis);
-    } catch (error) {
-      console.error("❌ Erreur validation individuelle:", error);
-      setError(error instanceof Error ? error.message : "Erreur inconnue");
-    } finally {
-      setIsRunning(false);
-      setProgress(0);
-    }
-  };
-  // Transforme en métriques simples pour le panel
-  const currentMetrics: SimpleMetrics | null = React.useMemo(() => {
-    if (testResults.length === 0) return null;
-
-    const correct = testResults.filter((r) => r.correct).length;
-    const total = testResults.length;
-    const accuracy = (correct / total) * 100;
-
-    const avgProcessingTime =
-      testResults
-        .filter((r) => r.processingTime)
-        .reduce((s, r) => s + (r.processingTime || 0), 0) / testResults.length;
-
-    const confidenceStats = testResults.reduce(
-      (acc, r) => {
-        acc.sum += r.confidence;
-        acc.min = Math.min(acc.min, r.confidence);
-        acc.max = Math.max(acc.max, r.confidence);
-        return acc;
-      },
-      { sum: 0, min: 1, max: 0 }
+  if (!isDataReady) {
+    return (
+      <Box sx={{ p: 3, textAlign: "center" }}>
+        <Typography variant="h6" color="text.secondary">
+          Chargement des données...
+        </Typography>
+      </Box>
     );
-
-    return {
-      accuracy: accuracy.toFixed(1),
-      correctPredictions: correct,
-      totalSamples: total,
-      avgProcessingTime: Math.round(avgProcessingTime),
-      avgConfidence: (confidenceStats.sum / total).toFixed(2),
-      minConfidence: confidenceStats.min.toFixed(2),
-      maxConfidence: confidenceStats.max.toFixed(2),
-    };
-  }, [testResults]);
-
-  const classifierMetadata = classifierInstance?.getMetadata();
-  const isConfigValid = classifierInstance?.validateConfig() ?? false;
-  const apiOnline = connectionStatus[selectedClassifier]?.success; // boolean | undefined
-
-  const { getRelevantCountFor } = useLevel1Testing();
-
-  const totalForCurrent = useMemo(
-    () => getRelevantCountFor(selectedClassifier),
-    [getRelevantCountFor, selectedClassifier]
-  );
+  }
 
   return (
     <Box sx={{ p: 3 }}>
@@ -178,7 +142,6 @@ export const TechnicalValidation: React.FC = () => {
         standard
       </Typography>
 
-      {/* Sélection et configuration du classificateur */}
       <Accordion defaultExpanded sx={{ mb: 3 }}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
@@ -186,26 +149,13 @@ export const TechnicalValidation: React.FC = () => {
               Algorithme: <strong>{selectedClassifier}</strong>
             </Typography>
 
-            {classifierMetadata && (
+            {selectedInfo && (
               <>
-                <Chip
-                  label={classifierMetadata.type}
-                  color={
-                    classifierMetadata.type === "rule-based"
-                      ? "primary"
-                      : "secondary"
-                  }
-                  size="small"
-                />
-                <Chip
-                  label={`v${classifierMetadata.version}`}
-                  variant="outlined"
-                  size="small"
-                />
-                {connectionStatus[selectedClassifier] && (
+                <Chip label={typeLabel} color={chipColor as any} size="small" />
+                {selectedInfo.version && (
                   <Chip
-                    label={apiOnline ? "En ligne" : "Hors ligne"}
-                    color={apiOnline ? "success" : "warning"}
+                    label={`v${selectedInfo.version}`}
+                    variant="outlined"
                     size="small"
                   />
                 )}
@@ -222,25 +172,23 @@ export const TechnicalValidation: React.FC = () => {
             showConfiguration
           />
 
-          {error && (
+          {(error || statusError) && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              {error}
+              {error || statusError}
             </Alert>
           )}
         </AccordionDetails>
       </Accordion>
 
-      {/* ▶️ Run Panel */}
-
       <RunPanel
-        isRunning={isRunning}
+        isRunning={isRunning || statusLoading}
         isConfigValid={isConfigValid}
         goldStandardCount={totalForCurrent}
         sampleSize={sampleSize}
         onSampleSizeChange={setSampleSize}
         onRun={runValidation}
-        domainLabel={classifierMetadata?.targetDomain || "Général"}
-        supportsBatch={!!classifierMetadata?.supportsBatch}
+        domainLabel={domainLabel || "Général"}
+        supportsBatch={!!supportsBatch}
       />
 
       {isRunning && (
@@ -252,15 +200,13 @@ export const TechnicalValidation: React.FC = () => {
         </Box>
       )}
 
-      {/* 📊 Metrics Panel */}
-      {currentMetrics && (
+      {testResults.length > 0 && (
         <MetricsPanel
-          classifierLabel={classifierMetadata?.name || selectedClassifier}
+          classifierLabel={selectedInfo?.displayName || selectedClassifier}
           results={testResults}
         />
       )}
 
-      {/* 🧪 Results Sample */}
       <ResultsSample results={testResults} limit={10} />
     </Box>
   );

@@ -6,16 +6,23 @@ export interface ClassificationResult {
   metadata?: Record<string, any>;
 }
 
+export interface TestConnectionResult {
+  success: boolean;
+  message?: string;
+  latency?: number;
+  tagsInfo?: string;
+}
+
 export interface ClassifierMetadata {
   name: string;
   version: string;
-  type: "rule-based" | "ml" | "llm" | "ensemble";
+  type: "rule-based" | "ml" | "llm";
   description: string;
-  configSchema: Record<string, any>;
-  requiresTraining: boolean;
-  requiresAPIKey: boolean;
-  supportsBatch: boolean;
+  supportsBatch?: boolean;
+  requiresTraining?: boolean;
+  requiresAPIKey?: boolean;
   categories?: string[];
+  configSchema?: Record<string, any>;
   targetDomain?: string;
 }
 
@@ -24,7 +31,13 @@ export abstract class BaseClassifier {
   abstract getMetadata(): ClassifierMetadata;
   abstract validateConfig(): boolean;
 
-  async batchClassify?(verbatims: string[]): Promise<ClassificationResult[]> {
-    return Promise.all(verbatims.map((v) => this.classify(v)));
-  }
+  // Méthodes optionnelles pour la configuration
+  updateConfig?(config: any): void;
+  getConfig?(): any;
+
+  // Méthode optionnelle pour les tests de batch
+  async batchClassify?(verbatims: string[]): Promise<ClassificationResult[]>;
+
+  // Méthode optionnelle pour les tests de connexion - signature harmonisée
+  async testConnection?(): Promise<boolean | TestConnectionResult>;
 }

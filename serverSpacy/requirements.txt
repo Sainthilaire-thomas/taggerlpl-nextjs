@@ -1,0 +1,6 @@
+# requirements.txt pour le serveur spaCy - Versions compatibles
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+spacy==3.6.1
+pydantic==1.10.13
+python-multipart==0.0.6

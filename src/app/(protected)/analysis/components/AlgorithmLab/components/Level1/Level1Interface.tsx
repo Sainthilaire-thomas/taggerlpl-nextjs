@@ -1,6 +1,6 @@
 // components/AlgorithmLab/Level1Interface.tsx
 // Interface principale Level1 avec distinction individual/comparison
-
+"use client";
 import React, { useState, useEffect } from "react";
 import { Box, Tabs, Tab, Typography, Divider } from "@mui/material";
 
@@ -18,6 +18,10 @@ import { initializeClassifiers } from "../../algorithms/level1/shared/initialize
 
 // Shared components
 import { TechnicalBenchmark } from "./TechnicalBenchmark";
+
+// Hooks
+import { useLevel1Testing } from "../../hooks/useLevel1Testing";
+import { ClassifierRegistry } from "../../algorithms/level1/shared/ClassifierRegistry";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -39,6 +43,32 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
 export const Level1Interface: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
 
+  // État pour les données partagées entre composants
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState(
+    "RegexConseillerClassifier"
+  );
+  const [validationResults, setValidationResults] = useState<any[]>([]);
+  const [benchmarkResults, setBenchmarkResults] = useState<any[]>([]);
+
+  // Récupération des infos de l'algorithme depuis le registry
+
+  const algorithmConfig = React.useMemo(() => {
+    const classifier = ClassifierRegistry.getClassifier(selectedAlgorithm);
+    const metadata = classifier?.getMetadata();
+
+    return {
+      name: selectedAlgorithm,
+      description:
+        metadata?.description || `Classificateur ${selectedAlgorithm}`,
+      parameters: {}, // ✅ Plus d'accès à defaultParameters
+      type: metadata?.type || "rule-based",
+      enabled: true,
+    };
+  }, [selectedAlgorithm]);
+
+  // Hook pour les tests Level 1
+  const { calculateMetrics } = useLevel1Testing();
+
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
@@ -46,6 +76,37 @@ export const Level1Interface: React.FC = () => {
   useEffect(() => {
     initializeClassifiers();
   }, []);
+
+  // Calcul des métriques pour ConfusionMatrix
+  const currentMetrics = React.useMemo(() => {
+    if (validationResults.length === 0) return null;
+
+    const baseMetrics = calculateMetrics(validationResults);
+
+    // Conversion vers ValidationMetrics pour ConfusionMatrix
+    return {
+      accuracy: baseMetrics?.accuracy || 0,
+      precision: baseMetrics?.precision || 0,
+      recall: baseMetrics?.recall || 0,
+      f1Score: baseMetrics?.f1Score || 0,
+      confusionMatrix: baseMetrics?.confusionMatrix || [],
+      totalSamples: validationResults.length,
+      correctPredictions: validationResults.filter((r) => r.correct).length,
+      kappa: baseMetrics?.kappa || 0,
+    };
+  }, [validationResults, calculateMetrics]);
+
+  // Handlers pour les événements des composants
+  const handleParametersChange = (newParams: Record<string, any>) => {
+    console.log("Nouveaux paramètres:", newParams);
+    // TODO: Appliquer les nouveaux paramètres à l'algorithme
+  };
+
+  const handleTestWithParameters = async (params: Record<string, any>) => {
+    console.log("Test avec paramètres:", params);
+    // TODO: Lancer un test avec les nouveaux paramètres
+    return { success: true, results: [] };
+  };
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -95,15 +156,22 @@ export const Level1Interface: React.FC = () => {
       </TabPanel>
 
       <TabPanel value={tabValue} index={1}>
-        <ConfusionMatrix />
+        <ConfusionMatrix metrics={currentMetrics} />
       </TabPanel>
 
       <TabPanel value={tabValue} index={2}>
-        <EnhancedErrorAnalysis />
+        <EnhancedErrorAnalysis
+          results={validationResults}
+          algorithmName={selectedAlgorithm}
+        />
       </TabPanel>
 
       <TabPanel value={tabValue} index={3}>
-        <ParameterOptimization />
+        <ParameterOptimization
+          algorithm={algorithmConfig}
+          onParametersChange={handleParametersChange}
+          onTestWithParameters={handleTestWithParameters}
+        />
       </TabPanel>
 
       {/* ANALYSES COMPARATIVES */}
@@ -121,7 +189,7 @@ export const Level1Interface: React.FC = () => {
 
       {/* SYNTHÈSE */}
       <TabPanel value={tabValue} index={9}>
-        <TechnicalBenchmark />
+        <TechnicalBenchmark benchmarkResults={benchmarkResults} />
       </TabPanel>
     </Box>
   );

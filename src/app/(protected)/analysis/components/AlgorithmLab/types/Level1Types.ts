@@ -25,7 +25,7 @@ export interface ValidationMetrics {
 export interface AlgorithmConfig {
   name: string;
   description: string;
-  type: "conseiller" | "client";
+  type: string;
   parameters: Record<string, any>;
   enabled: boolean;
 }

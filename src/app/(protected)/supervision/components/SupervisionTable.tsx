@@ -1,4 +1,5 @@
-import React from "react";
+// supervision/components/SupervisionTable.tsx
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -14,331 +15,569 @@ import {
   Tooltip,
   CircularProgress,
   Stack,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Autocomplete,
+  TextField,
 } from "@mui/material";
 import {
   Edit,
-  Visibility,
   AudioFile,
   Assignment,
   Build,
   Warning,
+  Speed, // Pour l'édition rapide
+  OpenInNew, // Pour l'éditeur complet
 } from "@mui/icons-material";
-import { SupervisionTurnTagged } from "../types";
+
+import { SupervisionTurnTaggedWithMeta } from "../types";
 import { formatTime, truncateText } from "../utils/formatters";
 import { useProcessingJobs } from "../hooks/useProcessingJobs";
+import TurnWithContext from "../../shared/TurnWithContext";
+import { useTaggingData } from "@/context/TaggingDataContext";
 
 interface SupervisionTableProps {
-  data: SupervisionTurnTagged[];
-  onRowClick: (row: SupervisionTurnTagged) => void;
-  onProcessingClick?: (row: SupervisionTurnTagged) => void;
+  data: SupervisionTurnTaggedWithMeta[];
+  onRowClick: (row: SupervisionTurnTaggedWithMeta) => void;
+  onProcessingClick?: (row: SupervisionTurnTaggedWithMeta) => void;
+  onQuickTagEdit?: (
+    row: SupervisionTurnTaggedWithMeta,
+    newTag: string,
+    newNextTag?: string
+  ) => Promise<void>;
 }
 
-// Composant pour afficher les verbatims de manière compacte
-const VerbatimDisplay: React.FC<{
-  verbatim: string;
-  tag: string;
-  color: string;
-  maxLength?: number;
-}> = ({ verbatim, tag, color, maxLength = 60 }) => {
-  const truncated = truncateText(verbatim, maxLength);
-
-  return (
-    <Tooltip title={`${tag}: "${verbatim}"`} arrow placement="top">
-      <Box
-        sx={{
-          p: 1,
-          borderRadius: 1,
-          backgroundColor: `${color}15`, // Couleur très légère
-          borderLeft: `3px solid ${color}`,
-          minHeight: 40,
-          display: "flex",
-          alignItems: "center",
-          cursor: "help",
-          "&:hover": {
-            backgroundColor: `${color}25`,
-          },
-        }}
-      >
-        <Typography
-          variant="body2"
-          sx={{ fontSize: "0.875rem", lineHeight: 1.2 }}
-        >
-          {truncated}
-        </Typography>
-      </Box>
-    </Tooltip>
-  );
-};
-
-// Composant pour les tags avec couleurs
-const TagChips: React.FC<{
-  tag: string;
-  nextTurnTag?: string;
-  color: string;
-  nextTurnColor?: string;
-}> = ({ tag, nextTurnTag, color, nextTurnColor }) => {
-  return (
-    <Stack spacing={0.5} direction="column" alignItems="flex-start">
-      <Chip
-        label={tag}
-        size="small"
-        sx={{
-          backgroundColor: color,
-          color: "white",
-          fontWeight: "bold",
-          fontSize: "0.75rem",
-          height: 24,
-        }}
-      />
-      {nextTurnTag && (
-        <Chip
-          label={`→ ${nextTurnTag}`}
-          size="small"
-          variant="outlined"
-          sx={{
-            borderColor: nextTurnColor || "#1976d2",
-            color: nextTurnColor || "#1976d2",
-            fontSize: "0.7rem",
-            height: 20,
-            backgroundColor: "rgba(25, 118, 210, 0.05)",
-          }}
-        />
-      )}
-    </Stack>
-  );
-};
-
-export const SupervisionTable: React.FC<SupervisionTableProps> = ({
-  data,
-  onRowClick,
-  onProcessingClick,
+// Composant pour l'édition rapide des tags
+const QuickTagEditDialog: React.FC<{
+  open: boolean;
+  onClose: () => void;
+  currentTag: string;
+  currentNextTag?: string;
+  availableTags: Array<{ label: string; family: string; color: string }>;
+  onSave: (newTag: string, newNextTag?: string) => Promise<void>;
+  rowContext?: SupervisionTurnTaggedWithMeta;
+}> = ({
+  open,
+  onClose,
+  currentTag,
+  currentNextTag,
+  availableTags,
+  onSave,
+  rowContext,
 }) => {
-  const { getJob, isProcessing } = useProcessingJobs();
+  const [selectedTag, setSelectedTag] = useState(currentTag);
+  const [selectedNextTag, setSelectedNextTag] = useState(currentNextTag || "");
+  const [saving, setSaving] = useState(false);
 
-  const handleTableRowClick = (row: SupervisionTurnTagged) => {
-    if (isProcessing(row.call_id)) return;
-
-    if (row.hasAudio && row.hasTranscript) {
-      onRowClick(row);
-    } else if (onProcessingClick) {
-      onProcessingClick(row);
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await onSave(selectedTag, selectedNextTag || undefined);
+      onClose();
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde:", error);
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <TableContainer component={Paper} sx={{ maxHeight: "70vh" }}>
-      <Table size="small" stickyHeader>
-        <TableHead>
-          <TableRow>
-            <TableCell sx={{ minWidth: 120 }}>
-              <Typography variant="subtitle2" fontWeight="bold">
-                Tags
-              </Typography>
-            </TableCell>
-            <TableCell sx={{ minWidth: 100 }}>
-              <Typography variant="subtitle2" fontWeight="bold">
-                Call ID
-              </Typography>
-            </TableCell>
-            <TableCell sx={{ minWidth: 80 }}>
-              <Typography variant="subtitle2" fontWeight="bold">
-                Speaker
-              </Typography>
-            </TableCell>
-            <TableCell sx={{ minWidth: 200 }}>
-              <Typography variant="subtitle2" fontWeight="bold">
-                Tour Principal
-              </Typography>
-            </TableCell>
-            <TableCell sx={{ minWidth: 200 }}>
-              <Typography variant="subtitle2" fontWeight="bold">
-                Tour Suivant
-              </Typography>
-            </TableCell>
-            <TableCell sx={{ minWidth: 100 }}>
-              <Typography variant="subtitle2" fontWeight="bold">
-                Temps
-              </Typography>
-            </TableCell>
-            <TableCell sx={{ minWidth: 80 }}>
-              <Typography variant="subtitle2" fontWeight="bold">
-                Statut
-              </Typography>
-            </TableCell>
-            <TableCell sx={{ minWidth: 80 }}>
-              <Typography variant="subtitle2" fontWeight="bold">
-                Actions
-              </Typography>
-            </TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {data.map((row) => {
-            const job = getJob(row.call_id);
-            const isCurrentlyProcessing = isProcessing(row.call_id);
-            const isComplete = row.hasAudio && row.hasTranscript;
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: { minHeight: "400px" },
+      }}
+    >
+      <DialogTitle>🏷️ Édition Rapide - Call {rowContext?.call_id}</DialogTitle>
 
-            return (
-              <TableRow
-                key={row.id}
-                hover
-                sx={{
-                  cursor: !isCurrentlyProcessing ? "pointer" : "default",
-                  opacity: isCurrentlyProcessing ? 0.7 : 1,
-                  backgroundColor: isCurrentlyProcessing
-                    ? "action.hover"
-                    : "transparent",
-                  "&:hover": {
-                    backgroundColor: "action.hover",
-                  },
-                }}
-                onClick={() => handleTableRowClick(row)}
-              >
-                {/* Colonne Tags */}
-                <TableCell>
-                  <TagChips
-                    tag={row.tag}
-                    nextTurnTag={row.next_turn_tag}
-                    color={row.color}
-                    nextTurnColor={row.next_turn_color}
+      <DialogContent>
+        {/* Contexte résumé */}
+        {rowContext && (
+          <Box
+            sx={{ mb: 3, p: 2, bgcolor: "background.paper", borderRadius: 1 }}
+          >
+            <Typography variant="subtitle2" gutterBottom>
+              📋 Contexte de la conversation :
+            </Typography>
+            <TurnWithContext
+              prev2Text={rowContext.metadata?.prev2_turn_verbatim}
+              prev1Text={rowContext.metadata?.prev1_turn_verbatim}
+              currentText={rowContext.verbatim}
+              next1Text={rowContext.metadata?.next_turn_verbatim}
+              prev2Speaker={rowContext.metadata?.prev2_speaker}
+              prev1Speaker={rowContext.metadata?.prev1_speaker}
+              currentSpeaker={rowContext.speaker}
+              next1Speaker={rowContext.metadata?.next_turn_speaker}
+              currentLines={3}
+            />
+          </Box>
+        )}
+
+        {/* Sélection du tag principal */}
+        <Box sx={{ mb: 2 }}>
+          <Autocomplete
+            options={availableTags}
+            groupBy={(option) => option.family}
+            getOptionLabel={(option) => option.label}
+            value={availableTags.find((t) => t.label === selectedTag) || null}
+            onChange={(_, newValue) =>
+              setSelectedTag(newValue?.label || currentTag)
+            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Tag principal"
+                variant="outlined"
+                fullWidth
+              />
+            )}
+            renderOption={(props, option) => {
+              const { key, ...otherProps } = props;
+              return (
+                <Box
+                  key={key}
+                  component="li"
+                  {...otherProps}
+                  sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                >
+                  <Box
+                    sx={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: "50%",
+                      backgroundColor: option.color,
+                    }}
                   />
-                </TableCell>
+                  {option.label}
+                </Box>
+              );
+            }}
+          />
+        </Box>
 
-                {/* Colonne Call ID */}
-                <TableCell>
-                  <Typography variant="body2" fontWeight="medium">
-                    {row.call_id}
-                  </Typography>
-                  {row.filename && (
+        {/* Sélection du next_turn_tag (optionnel) */}
+        <Box sx={{ mb: 2 }}>
+          <Autocomplete
+            options={[
+              { label: "(Aucun)", family: "", color: "" },
+              ...availableTags,
+            ]}
+            groupBy={(option) => option.family || "Aucun"}
+            getOptionLabel={(option) => option.label}
+            value={
+              availableTags.find((t) => t.label === selectedNextTag) || {
+                label: "(Aucun)",
+                family: "",
+                color: "",
+              }
+            }
+            onChange={(_, newValue) =>
+              setSelectedNextTag(
+                newValue?.label === "(Aucun)" ? "" : newValue?.label || ""
+              )
+            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Tag du tour suivant (optionnel)"
+                variant="outlined"
+                fullWidth
+              />
+            )}
+            renderOption={(props, option) => {
+              const { key, ...otherProps } = props;
+              return (
+                <Box
+                  key={key}
+                  component="li"
+                  {...otherProps}
+                  sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                >
+                  {option.color && (
+                    <Box
+                      sx={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: "50%",
+                        backgroundColor: option.color,
+                      }}
+                    />
+                  )}
+                  {option.label}
+                </Box>
+              );
+            }}
+          />
+        </Box>
+
+        {/* Aperçu des modifications */}
+        {(selectedTag !== currentTag || selectedNextTag !== currentNextTag) && (
+          <Box sx={{ p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              📝 Modifications :
+            </Typography>
+            <Typography variant="body2">
+              Tag principal : <strong>{currentTag}</strong> →{" "}
+              <strong>{selectedTag}</strong>
+            </Typography>
+            {selectedNextTag !== currentNextTag && (
+              <Typography variant="body2">
+                Tag suivant : <strong>{currentNextTag || "(aucun)"}</strong> →{" "}
+                <strong>{selectedNextTag || "(aucun)"}</strong>
+              </Typography>
+            )}
+          </Box>
+        )}
+      </DialogContent>
+
+      <DialogActions sx={{ p: 2, gap: 1 }}>
+        <Button onClick={onClose} disabled={saving}>
+          Annuler
+        </Button>
+        <Button
+          onClick={handleSave}
+          variant="contained"
+          disabled={
+            saving ||
+            (selectedTag === currentTag && selectedNextTag === currentNextTag)
+          }
+          startIcon={saving ? <CircularProgress size={16} /> : <Speed />}
+        >
+          {saving ? "Sauvegarde..." : "Sauvegarder"}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+// Composant principal du tableau
+export const SupervisionTable: React.FC<SupervisionTableProps> = ({
+  data,
+  onRowClick,
+  onProcessingClick,
+  onQuickTagEdit,
+}) => {
+  const { getJob, isProcessing } = useProcessingJobs();
+  const { tags } = useTaggingData();
+
+  // État pour l'édition rapide
+  const [quickEditOpen, setQuickEditOpen] = useState(false);
+  const [quickEditRow, setQuickEditRow] = useState<
+    SupervisionTurnTaggedWithMeta | undefined
+  >(undefined);
+
+  const availableTags = tags.map((tag) => ({
+    label: tag.label,
+    family: tag.family || "Autres",
+    color: tag.color || "#1976d2",
+  }));
+
+  // Gestion de l'édition rapide
+  const handleQuickEditClick = (
+    e: React.MouseEvent,
+    row: SupervisionTurnTaggedWithMeta
+  ) => {
+    e.stopPropagation(); // Empêche le clic sur la ligne
+    setQuickEditRow(row);
+    setQuickEditOpen(true);
+  };
+
+  // Gestion de l'ouverture complète
+  const handleFullEditClick = (
+    e: React.MouseEvent,
+    row: SupervisionTurnTaggedWithMeta
+  ) => {
+    e.stopPropagation();
+    onRowClick(row);
+  };
+
+  // Sauvegarde de l'édition rapide
+  const handleQuickEditSave = async (newTag: string, newNextTag?: string) => {
+    if (quickEditRow && onQuickTagEdit) {
+      await onQuickTagEdit(quickEditRow, newTag, newNextTag);
+      setQuickEditOpen(false);
+      setQuickEditRow(undefined);
+    }
+  };
+
+  return (
+    <>
+      <TableContainer component={Paper} sx={{ maxHeight: "70vh" }}>
+        <Table size="small" stickyHeader>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ minWidth: 120 }}>
+                <Typography variant="subtitle2" fontWeight="bold">
+                  Tags
+                </Typography>
+              </TableCell>
+              <TableCell sx={{ minWidth: 100 }}>
+                <Typography variant="subtitle2" fontWeight="bold">
+                  Call ID
+                </Typography>
+              </TableCell>
+              <TableCell sx={{ minWidth: 80 }}>
+                <Typography variant="subtitle2" fontWeight="bold">
+                  Speaker
+                </Typography>
+              </TableCell>
+              <TableCell sx={{ minWidth: 420 }}>
+                <Typography variant="subtitle2" fontWeight="bold">
+                  Contexte (−2 / −1 / 0 / +1)
+                </Typography>
+              </TableCell>
+              <TableCell sx={{ minWidth: 100 }}>
+                <Typography variant="subtitle2" fontWeight="bold">
+                  Temps
+                </Typography>
+              </TableCell>
+              <TableCell sx={{ minWidth: 80 }}>
+                <Typography variant="subtitle2" fontWeight="bold">
+                  Statut
+                </Typography>
+              </TableCell>
+              <TableCell sx={{ minWidth: 120 }}>
+                <Typography variant="subtitle2" fontWeight="bold">
+                  Actions
+                </Typography>
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {data.map((row) => {
+              const job = getJob(row.call_id);
+              const isCurrentlyProcessing = isProcessing(row.call_id);
+              const isComplete = row.hasAudio && row.hasTranscript;
+
+              const m: any = row.metadata ?? row.metadata_context ?? {};
+
+              return (
+                <TableRow
+                  key={row.id}
+                  hover
+                  sx={{
+                    cursor: !isCurrentlyProcessing ? "pointer" : "default",
+                    opacity: isCurrentlyProcessing ? 0.7 : 1,
+                    backgroundColor: isCurrentlyProcessing
+                      ? "action.hover"
+                      : "transparent",
+                    "&:hover": { backgroundColor: "action.hover" },
+                  }}
+                >
+                  {/* Tags */}
+                  <TableCell>
+                    <Stack
+                      spacing={0.5}
+                      direction="column"
+                      alignItems="flex-start"
+                    >
+                      <Chip
+                        label={row.tag}
+                        size="small"
+                        sx={{
+                          backgroundColor: row.color,
+                          color: "white",
+                          fontWeight: "bold",
+                          fontSize: "0.75rem",
+                          height: 24,
+                        }}
+                      />
+                      {row.next_turn_tag && (
+                        <Chip
+                          label={`→ ${row.next_turn_tag}`}
+                          size="small"
+                          variant="outlined"
+                          sx={{
+                            borderColor: row.next_turn_color || "#1976d2",
+                            color: row.next_turn_color || "#1976d2",
+                            fontSize: "0.7rem",
+                            height: 20,
+                            backgroundColor: "rgba(25, 118, 210, 0.05)",
+                          }}
+                        />
+                      )}
+                    </Stack>
+                  </TableCell>
+
+                  {/* Call ID */}
+                  <TableCell>
+                    <Typography variant="body2" fontWeight="medium">
+                      {row.call_id}
+                    </Typography>
+                    {row.filename && (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        display="block"
+                      >
+                        {truncateText(row.filename, 25)}
+                      </Typography>
+                    )}
+                  </TableCell>
+
+                  {/* Speaker */}
+                  <TableCell>
+                    <Chip
+                      label={row.speaker}
+                      size="small"
+                      variant="outlined"
+                      color={
+                        row.speaker === "conseiller" ? "primary" : "secondary"
+                      }
+                      sx={{ fontSize: "0.75rem" }}
+                    />
+                  </TableCell>
+
+                  {/* Contexte */}
+                  <TableCell sx={{ py: 0.75 }}>
+                    <TurnWithContext
+                      prev2Text={m.prev2_turn_verbatim}
+                      prev1Text={m.prev1_turn_verbatim}
+                      currentText={row.verbatim}
+                      next1Text={m.next_turn_verbatim}
+                      prev2Speaker={m.prev2_speaker}
+                      prev1Speaker={m.prev1_speaker}
+                      currentSpeaker={row.speaker}
+                      next1Speaker={m.next_turn_speaker}
+                      currentLines={2}
+                    />
+                  </TableCell>
+
+                  {/* Temps */}
+                  <TableCell>
+                    <Typography variant="caption" display="block">
+                      {formatTime(row.start_time)}
+                    </Typography>
                     <Typography
                       variant="caption"
                       color="text.secondary"
                       display="block"
                     >
-                      {truncateText(row.filename, 25)}
+                      {formatTime(row.end_time)}
                     </Typography>
-                  )}
-                </TableCell>
+                    <Typography
+                      variant="caption"
+                      color="primary"
+                      display="block"
+                    >
+                      {Math.round(row.end_time - row.start_time)}s
+                    </Typography>
+                  </TableCell>
 
-                {/* Colonne Speaker */}
-                <TableCell>
-                  <Chip
-                    label={row.speaker}
-                    size="small"
-                    variant="outlined"
-                    color={
-                      row.speaker === "conseiller" ? "primary" : "secondary"
-                    }
-                    sx={{ fontSize: "0.75rem" }}
-                  />
-                </TableCell>
+                  {/* Statut */}
+                  <TableCell>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 0.5,
+                        alignItems: "center",
+                        flexDirection: "column",
+                      }}
+                    >
+                      {isCurrentlyProcessing ? (
+                        <Tooltip title={job?.message || "Traitement en cours"}>
+                          <CircularProgress size={16} />
+                        </Tooltip>
+                      ) : (
+                        <>
+                          <Box sx={{ display: "flex", gap: 0.5 }}>
+                            {row.hasAudio && (
+                              <Tooltip title="Audio disponible">
+                                <AudioFile fontSize="small" color="success" />
+                              </Tooltip>
+                            )}
+                            {row.hasTranscript && (
+                              <Tooltip title="Transcription disponible">
+                                <Assignment fontSize="small" color="success" />
+                              </Tooltip>
+                            )}
+                          </Box>
+                          {(!row.hasAudio || !row.hasTranscript) && (
+                            <Tooltip
+                              title={`Manque: ${!row.hasAudio ? "audio" : ""} ${
+                                !row.hasAudio && !row.hasTranscript ? "et " : ""
+                              }${!row.hasTranscript ? "transcription" : ""}`}
+                            >
+                              <Warning fontSize="small" color="warning" />
+                            </Tooltip>
+                          )}
+                        </>
+                      )}
+                    </Box>
+                  </TableCell>
 
-                {/* Colonne Tour Principal */}
-                <TableCell>
-                  <VerbatimDisplay
-                    verbatim={row.verbatim}
-                    tag={row.tag}
-                    color={row.color}
-                    maxLength={80}
-                  />
-                </TableCell>
-
-                {/* Colonne Tour Suivant */}
-                <TableCell>
-                  {row.next_turn_verbatim && (
-                    <VerbatimDisplay
-                      verbatim={row.next_turn_verbatim}
-                      tag={row.next_turn_tag || "Non taggé"}
-                      color={row.next_turn_color || "#9e9e9e"}
-                      maxLength={80}
-                    />
-                  )}
-                </TableCell>
-
-                {/* Colonne Temps */}
-                <TableCell>
-                  <Typography variant="caption" display="block">
-                    {formatTime(row.start_time)}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                  >
-                    {formatTime(row.end_time)}
-                  </Typography>
-                  <Typography variant="caption" color="primary" display="block">
-                    {Math.round(row.end_time - row.start_time)}s
-                  </Typography>
-                </TableCell>
-
-                {/* Colonne Statut */}
-                <TableCell>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      gap: 0.5,
-                      alignItems: "center",
-                      flexDirection: "column",
-                    }}
-                  >
+                  {/* Actions - VERSION CORRIGÉE : Speed toujours visible */}
+                  <TableCell>
                     {isCurrentlyProcessing ? (
-                      <Tooltip title={job?.message || "Traitement en cours"}>
-                        <CircularProgress size={16} />
-                      </Tooltip>
+                      <Typography variant="caption" color="text.secondary">
+                        En traitement...
+                      </Typography>
                     ) : (
-                      <>
-                        <Box sx={{ display: "flex", gap: 0.5 }}>
-                          {row.hasAudio && (
-                            <Tooltip title="Audio disponible">
-                              <AudioFile fontSize="small" color="success" />
-                            </Tooltip>
-                          )}
-                          {row.hasTranscript && (
-                            <Tooltip title="Transcription disponible">
-                              <Assignment fontSize="small" color="success" />
-                            </Tooltip>
-                          )}
-                        </Box>
-                        {(!row.hasAudio || !row.hasTranscript) && (
-                          <Tooltip
-                            title={`Manque: ${!row.hasAudio ? "audio" : ""} ${
-                              !row.hasAudio && !row.hasTranscript ? "et " : ""
-                            }${!row.hasTranscript ? "transcription" : ""}`}
+                      <Box
+                        sx={{ display: "flex", gap: 0.5, alignItems: "center" }}
+                      >
+                        {/* Édition rapide - TOUJOURS disponible */}
+                        <Tooltip title="Édition rapide du tag">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={(e) => handleQuickEditClick(e, row)}
                           >
-                            <Warning fontSize="small" color="warning" />
+                            <Speed />
+                          </IconButton>
+                        </Tooltip>
+
+                        {/* Éditeur complet - seulement si ressources complètes */}
+                        {isComplete ? (
+                          <Tooltip title="Ouvrir dans l'éditeur complet">
+                            <IconButton
+                              size="small"
+                              color="secondary"
+                              onClick={(e) => handleFullEditClick(e, row)}
+                            >
+                              <OpenInNew />
+                            </IconButton>
+                          </Tooltip>
+                        ) : (
+                          <Tooltip title="Traiter les ressources manquantes">
+                            <IconButton
+                              size="small"
+                              color="warning"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onProcessingClick?.(row);
+                              }}
+                            >
+                              <Build />
+                            </IconButton>
                           </Tooltip>
                         )}
-                      </>
+                      </Box>
                     )}
-                  </Box>
-                </TableCell>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
-                {/* Colonne Actions */}
-                <TableCell>
-                  {isCurrentlyProcessing ? (
-                    <Typography variant="caption" color="text.secondary">
-                      En traitement...
-                    </Typography>
-                  ) : isComplete ? (
-                    <Tooltip title="Ouvrir dans l'éditeur de tagging">
-                      <IconButton size="small" color="primary">
-                        <Edit />
-                      </IconButton>
-                    </Tooltip>
-                  ) : (
-                    <Tooltip title="Traiter les ressources manquantes">
-                      <IconButton size="small" color="warning">
-                        <Build />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </TableContainer>
+      {/* Dialog d'édition rapide */}
+      <QuickTagEditDialog
+        open={quickEditOpen}
+        onClose={() => setQuickEditOpen(false)}
+        currentTag={quickEditRow?.tag || ""}
+        currentNextTag={quickEditRow?.next_turn_tag}
+        availableTags={availableTags}
+        onSave={handleQuickEditSave}
+        rowContext={quickEditRow}
+      />
+    </>
   );
 };

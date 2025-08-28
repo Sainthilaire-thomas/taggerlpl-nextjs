@@ -7,6 +7,11 @@ import {
   SupervisionFiltersHook,
 } from "../types";
 
+/**
+ * ⚠️ Ce hook ne reconstruit PAS les objets,
+ * il filtre seulement le tableau — ainsi `row.metadata` est conservé tel quel.
+ */
+
 const initialFilters: SupervisionFilters = {
   selectedTag: "all",
   selectedFamily: "all",
@@ -41,7 +46,7 @@ export const useSupervisionFilters = (
       );
     }
 
-    // Filtre par tag - SEULEMENT le tag principal
+    // Filtre par tag (tag principal)
     if (filters.selectedTag !== "all") {
       filtered = filtered.filter((item) => item.tag === filters.selectedTag);
     }
@@ -60,37 +65,48 @@ export const useSupervisionFilters = (
       );
     }
 
-    // ← NOUVEAU : Filtre par origine
+    // Filtre par origine
     if (filters.selectedOrigine !== "all") {
       filtered = filtered.filter(
         (item) => item.origine === filters.selectedOrigine
       );
     }
 
-    // Filtre par texte de recherche (recherche étendue)
+    // Recherche texte (étendue)
     if (filters.searchText.trim()) {
       const searchLower = filters.searchText.toLowerCase();
-      filtered = filtered.filter(
-        (item) =>
-          item.verbatim.toLowerCase().includes(searchLower) ||
-          item.next_turn_verbatim.toLowerCase().includes(searchLower) ||
-          item.tag.toLowerCase().includes(searchLower) ||
-          (item.next_turn_tag &&
-            item.next_turn_tag.toLowerCase().includes(searchLower)) ||
-          String(item.call_id).toLowerCase().includes(searchLower) ||
-          (item.filename &&
-            item.filename.toLowerCase().includes(searchLower)) ||
-          (item.origine && item.origine.toLowerCase().includes(searchLower)) || // ← NOUVEAU
-          item.speaker.toLowerCase().includes(searchLower)
-      );
+      filtered = filtered.filter((item) => {
+        const inVerbatim = item.verbatim?.toLowerCase().includes(searchLower);
+        const inNext = item.next_turn_verbatim
+          ?.toLowerCase()
+          .includes(searchLower);
+        const inTag = item.tag?.toLowerCase().includes(searchLower);
+        const inNextTag = item.next_turn_tag
+          ?.toLowerCase()
+          .includes(searchLower);
+        const inCall = String(item.call_id).toLowerCase().includes(searchLower);
+        const inFile = item.filename?.toLowerCase().includes(searchLower);
+        const inOrigine = item.origine?.toLowerCase().includes(searchLower);
+        const inSpeaker = item.speaker?.toLowerCase().includes(searchLower);
+        return (
+          inVerbatim ||
+          inNext ||
+          inTag ||
+          inNextTag ||
+          inCall ||
+          inFile ||
+          inOrigine ||
+          inSpeaker
+        );
+      });
     }
 
-    // Filtre par présence d'audio
+    // Filtre audio
     if (filters.hasAudio !== null) {
       filtered = filtered.filter((item) => item.hasAudio === filters.hasAudio);
     }
 
-    // Filtre par présence de transcription
+    // Filtre transcription
     if (filters.hasTranscript !== null) {
       filtered = filtered.filter(
         (item) => item.hasTranscript === filters.hasTranscript
@@ -100,33 +116,38 @@ export const useSupervisionFilters = (
     return filtered;
   }, [supervisionData, filters]);
 
-  // Calculer les valeurs uniques pour les filtres
-  const uniqueFamilies = useMemo(() => {
-    return [...new Set(supervisionData.map((item) => item.family))].sort();
-  }, [supervisionData]);
+  // Valeurs uniques pour les filtres
+  const uniqueFamilies = useMemo(
+    () => [...new Set(supervisionData.map((item) => item.family))].sort(),
+    [supervisionData]
+  );
 
-  const uniqueSpeakers = useMemo(() => {
-    return [...new Set(supervisionData.map((item) => item.speaker))].sort();
-  }, [supervisionData]);
+  const uniqueSpeakers = useMemo(
+    () => [...new Set(supervisionData.map((item) => item.speaker))].sort(),
+    [supervisionData]
+  );
 
-  const uniqueCallIds = useMemo(() => {
-    return [...new Set(supervisionData.map((item) => item.call_id))].sort(
-      (a, b) => b.localeCompare(a)
-    );
-  }, [supervisionData]);
-
-  // ← NOUVEAU : Calculer les origines uniques
-  const uniqueOrigines = useMemo(() => {
-    return [
-      ...new Set(
-        supervisionData
-          .map((item) => item.origine)
-          .filter((origine): origine is string => Boolean(origine)) // ← Type guard explicite
+  const uniqueCallIds = useMemo(
+    () =>
+      [...new Set(supervisionData.map((item) => item.call_id))].sort((a, b) =>
+        b.localeCompare(a)
       ),
-    ].sort();
-  }, [supervisionData]);
+    [supervisionData]
+  );
 
-  // ← NOUVEAU : Créer une map Call ID → Filename
+  const uniqueOrigines = useMemo(
+    () =>
+      [
+        ...new Set(
+          supervisionData
+            .map((item) => item.origine)
+            .filter((o): o is string => Boolean(o))
+        ),
+      ].sort(),
+    [supervisionData]
+  );
+
+  // Map Call ID → Filename (utile pour les labels UI)
   const callIdToFilename = useMemo(() => {
     const map = new Map<string, string>();
     supervisionData.forEach((item) => {
@@ -145,7 +166,7 @@ export const useSupervisionFilters = (
     uniqueFamilies,
     uniqueSpeakers,
     uniqueCallIds,
-    uniqueOrigines, // ← NOUVEAU
-    callIdToFilename, // ← NOUVEAU
+    uniqueOrigines,
+    callIdToFilename,
   };
 };

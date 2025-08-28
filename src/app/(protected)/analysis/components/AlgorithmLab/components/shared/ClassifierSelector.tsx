@@ -1,6 +1,7 @@
 // components/shared/ClassifierSelector.tsx
+"use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   FormControl,
@@ -19,9 +20,29 @@ import {
   Button,
   Alert,
   Divider,
+  CircularProgress,
 } from "@mui/material";
-import { ClassifierRegistry } from "../../algorithms/level1/shared/ClassifierRegistry";
-import { ClassifierMetadata } from "../../algorithms/level1/shared/BaseClassifier";
+
+interface ClassifierMetaFromAPI {
+  name: string; // registryName (ex: "OpenAIConseillerClassifier")
+  registryName: string;
+  displayName?: string; // joli nom
+  type?: string; // "rule-based" | "ml" | "llm"...
+  version?: string;
+  supportsBatch?: boolean;
+  isValid?: boolean;
+  isAvailable?: boolean; // même chose ici
+  description?: string;
+  targetDomain?: string;
+  requiresTraining?: boolean;
+  requiresAPIKey?: boolean;
+  categories?: string[];
+  configSchema?: Record<string, any>;
+}
+
+type StatusResponse = {
+  classifiers: ClassifierMetaFromAPI[];
+};
 
 interface ClassifierSelectorProps {
   selectedClassifier: string;
@@ -36,126 +57,195 @@ export const ClassifierSelector: React.FC<ClassifierSelectorProps> = ({
   showDescription = true,
   showConfiguration = false,
 }) => {
-  const [availableClassifiers, setAvailableClassifiers] = useState<string[]>(
-    []
-  );
-  const [classifierMetadata, setClassifierMetadata] = useState<
-    Record<string, ClassifierMetadata>
-  >({});
+  const [loading, setLoading] = useState(true);
+  const [classifiers, setClassifiers] = useState<ClassifierMetaFromAPI[]>([]);
   const [configuration, setConfiguration] = useState<Record<string, any>>({});
   const [configValid, setConfigValid] = useState<boolean>(true);
 
-  // Chargement des classificateurs disponibles
+  // Récupère la liste depuis le serveur
   useEffect(() => {
-    const registered = ClassifierRegistry.listRegistered();
-    setAvailableClassifiers(registered);
-
-    // Récupération des métadonnées
-    const metadata: Record<string, ClassifierMetadata> = {};
-    registered.forEach((name) => {
-      const classifier = ClassifierRegistry.getClassifier(name);
-      if (classifier) {
-        metadata[name] = classifier.getMetadata();
-      }
-    });
-    setClassifierMetadata(metadata);
-
-    // Initialisation configuration par défaut
-    if (registered.includes(selectedClassifier)) {
-      const classifier = ClassifierRegistry.getClassifier(selectedClassifier);
-      if (classifier) {
-        const meta = classifier.getMetadata();
-        const defaultConfig: Record<string, any> = {};
-
-        Object.entries(meta.configSchema || {}).forEach(([key, schema]) => {
-          if (typeof schema === "object" && "default" in schema) {
-            defaultConfig[key] = schema.default;
-          }
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/algolab/classifiers", {
+          cache: "no-store",
         });
+        const data: StatusResponse = await res.json();
+        if (!mounted) return;
+        setClassifiers(data.classifiers ?? []);
+      } catch (e) {
+        console.warn("Impossible de charger les classificateurs:", e);
+        setClassifiers([]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
-        setConfiguration(defaultConfig);
-        setConfigValid(classifier.validateConfig());
+  // Classement/tri (optionnel)
+  const sorted = useMemo(() => {
+    const arr = [...classifiers];
+    // 1) disponibles d’abord, 2) par label
+    arr.sort((a, b) => {
+      const av = (b.isAvailable ? 1 : 0) - (a.isAvailable ? 1 : 0);
+      if (av !== 0) return av;
+      const an = a.displayName || a.registryName;
+      const bn = b.displayName || b.registryName;
+      return an.localeCompare(bn, "fr");
+    });
+    return arr;
+  }, [classifiers]);
+
+  // Métadonnées du classif courant
+  const current = useMemo(
+    () => sorted.find((c) => c.registryName === selectedClassifier),
+    [sorted, selectedClassifier]
+  );
+
+  // Initialisation de la config par défaut quand on change de classificateur
+  useEffect(() => {
+    if (!current?.configSchema) return;
+    const defaults: Record<string, any> = {};
+    Object.entries(current.configSchema).forEach(([key, schema]) => {
+      const s = typeof schema === "object" ? schema : { type: "string" };
+      if ("default" in s) defaults[key] = s.default;
+    });
+    setConfiguration(defaults);
+    // On considère la config valide si le classificateur est disponible
+    setConfigValid(Boolean(current.isAvailable));
+  }, [current?.registryName]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Si la valeur sélectionnée n’existe pas (au 1er rendu), on choisit une valeur sûre
+  useEffect(() => {
+    if (loading) return;
+    const exists = sorted.some((c) => c.registryName === selectedClassifier);
+    if (!exists) {
+      // on prend le 1er dispo, sinon le 1er tout court, sinon vide
+      const fallback =
+        sorted.find((c) => c.isAvailable)?.registryName ||
+        sorted[0]?.registryName ||
+        "";
+      if (fallback && fallback !== selectedClassifier) {
+        onSelectClassifier(fallback);
       }
     }
-  }, [selectedClassifier]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, sorted.length]);
 
   const handleClassifierChange = (event: any) => {
     onSelectClassifier(event.target.value);
   };
 
-  const handleConfigChange = (key: string, value: any) => {
+  const handleConfigChange = async (key: string, value: any) => {
     const newConfig = { ...configuration, [key]: value };
     setConfiguration(newConfig);
 
-    // Validation configuration en temps réel
-    const classifier = ClassifierRegistry.getClassifier(selectedClassifier);
-    if (classifier) {
-      // Note: Ici on devrait appliquer la configuration au classifier pour validation
-      // Pour simplifier, on assume que la validation basique est OK
-      setConfigValid(true);
+    // Mise à jour côté serveur
+    try {
+      const response = await fetch(
+        `/api/algolab/classifiers/${current?.registryName}/config`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newConfig),
+        }
+      );
+
+      if (response.ok) {
+        setConfigValid(true);
+      } else {
+        setConfigValid(false);
+      }
+    } catch (error) {
+      console.error("Erreur mise à jour config:", error);
+      setConfigValid(false);
     }
   };
 
   const resetToDefaults = () => {
-    const classifier = ClassifierRegistry.getClassifier(selectedClassifier);
-    if (classifier) {
-      const meta = classifier.getMetadata();
-      const defaultConfig: Record<string, any> = {};
-
-      Object.entries(meta.configSchema || {}).forEach(([key, schema]) => {
-        if (typeof schema === "object" && "default" in schema) {
-          defaultConfig[key] = schema.default;
-        }
-      });
-
-      setConfiguration(defaultConfig);
-    }
+    if (!current?.configSchema) return;
+    const defaults: Record<string, any> = {};
+    Object.entries(current.configSchema).forEach(([key, schema]) => {
+      const s = typeof schema === "object" ? schema : { type: "string" };
+      if ("default" in s) defaults[key] = s.default;
+    });
+    setConfiguration(defaults);
   };
 
-  const currentMetadata = classifierMetadata[selectedClassifier];
+  // Empêche le warning “out-of-range”: valeur vide tant que l’option n’existe pas
+  const valueIsValid = sorted.some(
+    (c) => c.registryName === selectedClassifier
+  );
+  const selectValue = valueIsValid ? selectedClassifier : "";
 
   return (
     <Box>
-      {/* Sélecteur principal */}
       <FormControl fullWidth sx={{ mb: 2 }}>
-        <InputLabel>Classificateur</InputLabel>
+        <InputLabel id="classifier-select-label">Classificateur</InputLabel>
         <Select
-          value={selectedClassifier}
-          onChange={handleClassifierChange}
+          labelId="classifier-select-label"
           label="Classificateur"
+          value={loading ? "" : selectValue}
+          onChange={handleClassifierChange}
+          disabled={loading}
+          renderValue={(val) => {
+            const item = sorted.find((c) => c.registryName === val);
+            return item ? item.displayName || item.registryName : "";
+          }}
         >
-          {availableClassifiers.map((name) => (
-            <MenuItem key={name} value={name}>
-              <Stack
-                direction="row"
-                alignItems="center"
-                spacing={2}
-                width="100%"
-              >
-                <Typography>
-                  {classifierMetadata[name]?.name || name}
-                </Typography>
-                {classifierMetadata[name] && (
-                  <Chip
-                    label={classifierMetadata[name].type}
-                    size="small"
-                    color={
-                      classifierMetadata[name].type === "rule-based"
-                        ? "primary"
-                        : classifierMetadata[name].type === "ml"
-                        ? "secondary"
-                        : "default"
-                    }
-                  />
-                )}
+          {loading && (
+            <MenuItem disabled>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <CircularProgress size={16} /> <span>Chargement…</span>
               </Stack>
             </MenuItem>
-          ))}
+          )}
+
+          {!loading &&
+            sorted.map((c) => (
+              <MenuItem
+                key={c.registryName}
+                value={c.registryName}
+                disabled={!c.isAvailable}
+              >
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  spacing={2}
+                  width="100%"
+                >
+                  <Typography>{c.displayName || c.registryName}</Typography>
+                  {c.type && (
+                    <Chip
+                      label={c.type}
+                      size="small"
+                      color={
+                        c.type === "rule-based"
+                          ? "primary"
+                          : c.type === "ml"
+                          ? "secondary"
+                          : "default"
+                      }
+                    />
+                  )}
+                  {!c.isAvailable && (
+                    <Chip
+                      label="non configuré"
+                      size="small"
+                      variant="outlined"
+                    />
+                  )}
+                </Stack>
+              </MenuItem>
+            ))}
         </Select>
       </FormControl>
 
-      {/* Métadonnées du classificateur */}
-      {currentMetadata && showDescription && (
+      {/* Carte de description */}
+      {current && showDescription && (
         <Card variant="outlined" sx={{ mb: 2 }}>
           <CardContent sx={{ pb: "16px !important" }}>
             <Stack
@@ -166,70 +256,73 @@ export const ClassifierSelector: React.FC<ClassifierSelectorProps> = ({
             >
               <Box>
                 <Typography variant="h6" gutterBottom>
-                  {currentMetadata.name}
+                  {current.displayName || current.registryName}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {currentMetadata.description}
+                  {current.description}
                 </Typography>
               </Box>
 
               <Stack direction="row" spacing={1}>
-                <Chip label={currentMetadata.type} size="small" />
-                <Chip
-                  label={`v${currentMetadata.version}`}
-                  size="small"
-                  variant="outlined"
-                />
-                {currentMetadata.supportsBatch && (
+                {current.type && <Chip label={current.type} size="small" />}
+                {current.version && (
+                  <Chip
+                    label={`v${current.version}`}
+                    size="small"
+                    variant="outlined"
+                  />
+                )}
+                {current.supportsBatch && (
                   <Chip label="Support batch" size="small" color="success" />
                 )}
               </Stack>
             </Stack>
 
-            {/* Informations techniques */}
             <Stack direction="row" spacing={3} sx={{ mb: 1 }}>
-              <Typography variant="caption">
-                <strong>Training requis:</strong>{" "}
-                {currentMetadata.requiresTraining ? "Oui" : "Non"}
-              </Typography>
-              <Typography variant="caption">
-                <strong>API Key:</strong>{" "}
-                {currentMetadata.requiresAPIKey ? "Requise" : "Non"}
-              </Typography>
-              {currentMetadata.targetDomain && (
+              {"requiresTraining" in current && (
                 <Typography variant="caption">
-                  <strong>Domaine:</strong> {currentMetadata.targetDomain}
+                  <strong>Training requis:</strong>{" "}
+                  {current.requiresTraining ? "Oui" : "Non"}
+                </Typography>
+              )}
+              {"requiresAPIKey" in current && (
+                <Typography variant="caption">
+                  <strong>API Key:</strong>{" "}
+                  {current.requiresAPIKey ? "Requise" : "Non"}
+                </Typography>
+              )}
+              {current.targetDomain && (
+                <Typography variant="caption">
+                  <strong>Domaine:</strong> {current.targetDomain}
                 </Typography>
               )}
             </Stack>
 
-            {/* Catégories supportées */}
-            {currentMetadata.categories &&
-              currentMetadata.categories.length > 0 && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="caption" display="block" gutterBottom>
-                    <strong>Catégories:</strong>
-                  </Typography>
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {currentMetadata.categories.map((category) => (
-                      <Chip
-                        key={category}
-                        label={category}
-                        size="small"
-                        variant="outlined"
-                      />
-                    ))}
-                  </Stack>
-                </Box>
-              )}
+            {current.categories && current.categories.length > 0 && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="caption" display="block" gutterBottom>
+                  <strong>Catégories:</strong>
+                </Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {current.categories.map((cat) => (
+                    <Chip
+                      key={cat}
+                      label={cat}
+                      size="small"
+                      variant="outlined"
+                    />
+                  ))}
+                </Stack>
+              </Box>
+            )}
           </CardContent>
         </Card>
       )}
 
       {/* Configuration avancée */}
       {showConfiguration &&
-        currentMetadata?.configSchema &&
-        Object.keys(currentMetadata.configSchema).length > 0 && (
+        current?.configSchema &&
+        Object.keys(current.configSchema).length > 0 && (
           <Card variant="outlined">
             <CardContent>
               <Stack
@@ -254,116 +347,104 @@ export const ClassifierSelector: React.FC<ClassifierSelectorProps> = ({
 
               <Divider sx={{ mb: 2 }} />
 
-              {Object.entries(currentMetadata.configSchema).map(
-                ([key, schema]) => {
-                  const schemaObj =
-                    typeof schema === "object" ? schema : { type: "string" };
-                  const currentValue = configuration[key] ?? schemaObj.default;
+              {Object.entries(current.configSchema).map(([key, schema]) => {
+                const s =
+                  typeof schema === "object" ? schema : { type: "string" };
+                const value = configuration[key] ?? s.default;
 
-                  return (
-                    <Box key={key} sx={{ mb: 3 }}>
-                      {/* Configuration Boolean */}
-                      {schemaObj.type === "boolean" && (
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={currentValue || false}
-                              onChange={(e) =>
-                                handleConfigChange(key, e.target.checked)
-                              }
-                            />
-                          }
-                          label={
-                            <Stack>
-                              <Typography variant="body2">{key}</Typography>
-                              {schemaObj.description && (
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                >
-                                  {schemaObj.description}
-                                </Typography>
-                              )}
-                            </Stack>
-                          }
-                        />
-                      )}
+                return (
+                  <Box key={key} sx={{ mb: 3 }}>
+                    {s.type === "boolean" && (
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={Boolean(value)}
+                            onChange={(e) =>
+                              handleConfigChange(key, e.target.checked)
+                            }
+                          />
+                        }
+                        label={
+                          <Stack>
+                            <Typography variant="body2">{key}</Typography>
+                            {s.description && (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {s.description}
+                              </Typography>
+                            )}
+                          </Stack>
+                        }
+                      />
+                    )}
 
-                      {/* Configuration String */}
-                      {schemaObj.type === "string" && !schemaObj.options && (
-                        <TextField
-                          fullWidth
-                          label={key}
-                          value={currentValue || ""}
+                    {s.type === "string" && !s.options && (
+                      <TextField
+                        fullWidth
+                        label={key}
+                        value={value || ""}
+                        onChange={(e) =>
+                          handleConfigChange(key, e.target.value)
+                        }
+                        helperText={s.description}
+                        size="small"
+                      />
+                    )}
+
+                    {s.type === "string" && s.options && (
+                      <FormControl fullWidth size="small">
+                        <InputLabel>{key}</InputLabel>
+                        <Select
+                          value={value ?? s.default}
                           onChange={(e) =>
                             handleConfigChange(key, e.target.value)
                           }
-                          helperText={schemaObj.description}
-                          size="small"
-                        />
-                      )}
-
-                      {/* Configuration Select */}
-                      {schemaObj.type === "string" && schemaObj.options && (
-                        <FormControl fullWidth size="small">
-                          <InputLabel>{key}</InputLabel>
-                          <Select
-                            value={currentValue || schemaObj.default}
-                            onChange={(e) =>
-                              handleConfigChange(key, e.target.value)
-                            }
-                            label={key}
+                          label={key}
+                        >
+                          {s.options.map((opt: string) => (
+                            <MenuItem key={opt} value={opt}>
+                              {opt}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        {s.description && (
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ mt: 1 }}
                           >
-                            {schemaObj.options.map((option: string) => (
-                              <MenuItem key={option} value={option}>
-                                {option}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                          {schemaObj.description && (
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ mt: 1 }}
-                            >
-                              {schemaObj.description}
-                            </Typography>
-                          )}
-                        </FormControl>
-                      )}
-
-                      {/* Configuration Number/Slider */}
-                      {schemaObj.type === "number" && (
-                        <Box>
-                          <Typography variant="body2" gutterBottom>
-                            {key}: {currentValue}
+                            {s.description}
                           </Typography>
-                          <Slider
-                            value={currentValue || schemaObj.default || 0}
-                            onChange={(e, value) =>
-                              handleConfigChange(key, value)
-                            }
-                            min={schemaObj.min || 0}
-                            max={schemaObj.max || 100}
-                            step={schemaObj.step || 0.1}
-                            valueLabelDisplay="auto"
-                          />
-                          {schemaObj.description && (
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              {schemaObj.description}
-                            </Typography>
-                          )}
-                        </Box>
-                      )}
-                    </Box>
-                  );
-                }
-              )}
+                        )}
+                      </FormControl>
+                    )}
 
-              {/* Actions de configuration */}
+                    {s.type === "number" && (
+                      <Box>
+                        <Typography variant="body2" gutterBottom>
+                          {key}: {value}
+                        </Typography>
+                        <Slider
+                          value={value ?? s.default ?? 0}
+                          onChange={(_, v) => handleConfigChange(key, v)}
+                          min={s.min ?? 0}
+                          max={s.max ?? 100}
+                          step={s.step ?? 0.1}
+                          valueLabelDisplay="auto"
+                        />
+                        {s.description && (
+                          <Typography variant="caption" color="text.secondary">
+                            {s.description}
+                          </Typography>
+                        )}
+                      </Box>
+                    )}
+                  </Box>
+                );
+              })}
+
               <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
                 <Button
                   variant="contained"
@@ -372,13 +453,10 @@ export const ClassifierSelector: React.FC<ClassifierSelectorProps> = ({
                 >
                   Appliquer Configuration
                 </Button>
-
                 <Button
                   variant="outlined"
                   size="small"
-                  onClick={() =>
-                    console.log("Configuration actuelle:", configuration)
-                  }
+                  onClick={() => console.log("Configuration:", configuration)}
                 >
                   Debug Config
                 </Button>

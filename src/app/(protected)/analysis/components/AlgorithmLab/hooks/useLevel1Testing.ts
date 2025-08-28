@@ -68,13 +68,42 @@ const useAllowedConseillerLabels = (tags: any[]) => {
   return allowed;
 };
 
+// 🔹 1a) petit indexeur: récupère le tour précédent (−1) et l'avant-précédent (−2)
+const buildPrevIndex = (rows: any[]) => {
+  const byCall = new Map<any, any[]>();
+  for (const r of rows || []) {
+    const key = r.call_id ?? "__no_call__";
+    if (!byCall.has(key)) byCall.set(key, []);
+    byCall.get(key)!.push(r);
+  }
+  for (const arr of byCall.values()) {
+    arr.sort((a, b) => (a.start_time ?? 0) - (b.start_time ?? 0));
+  }
+  const prev1 = new Map<any, any>();
+  const prev2 = new Map<any, any>();
+  for (const arr of byCall.values()) {
+    for (let i = 0; i < arr.length; i++) {
+      const cur = arr[i];
+      prev1.set(cur?.id, i > 0 ? arr[i - 1] : null);
+      prev2.set(cur?.id, i > 1 ? arr[i - 2] : null);
+    }
+  }
+  return { prev1, prev2 };
+};
+
+// 🔹 1b) map vers le gold standard en incluant prev1/prev2 et next (+1)
 const mapTurnsToGoldStandard = (
   allTurnTagged: any[],
   allowedConseiller?: Set<string>
 ): GoldStandardSample[] => {
   const out: GoldStandardSample[] = [];
+  const { prev1, prev2 } = buildPrevIndex(allTurnTagged);
+
   for (const t of allTurnTagged) {
-    // CONSEILLER (on filtre sur 'allowedConseiller' si fourni)
+    const p1 = prev1.get(t?.id) || null;
+    const p2 = prev2.get(t?.id) || null;
+
+    // CONSEILLER (tour courant = t)
     if (t?.verbatim && t?.tag) {
       const norm = normalizeLabel(t.tag);
       if (!allowedConseiller || allowedConseiller.has(norm)) {
@@ -88,23 +117,57 @@ const mapTurnsToGoldStandard = (
             start: t.start_time,
             end: t.end_time,
             turnId: t.id,
+
+            // +1
             next_turn_verbatim: t.next_turn_verbatim || undefined,
             next_turn_tag: t.next_turn_tag
               ? normalizeLabel(t.next_turn_tag)
               : undefined,
+
+            // -1
+            prev1_turn_id: p1?.id,
+            prev1_turn_verbatim: p1?.verbatim,
+            prev1_turn_tag: p1?.tag ? normalizeLabel(p1.tag) : undefined,
+            prev1_speaker: p1?.speaker,
+
+            // -2
+            prev2_turn_id: p2?.id,
+            prev2_turn_verbatim: p2?.verbatim,
+            prev2_turn_tag: p2?.tag ? normalizeLabel(p2.tag) : undefined,
+            prev2_speaker: p2?.speaker,
           },
         });
       }
     }
-    // CLIENT (laisse tel quel)
+
+    // CLIENT (tour suivant du conseiller t)
     if (t?.next_turn_verbatim && t?.next_turn_tag) {
+      const p1ForClient = t; // le -1 du client est le conseiller courant
+      const p2ForClient = prev1.get(t?.id) || null; // le -2 du client
+
       out.push({
         verbatim: t.next_turn_verbatim,
         expectedTag: normalizeLabel(t.next_turn_tag),
         metadata: {
           target: "client",
           callId: t.call_id,
-          nextOf: t.id, // référence au tour conseiller
+          nextOf: t.id,
+
+          // -1
+          prev1_turn_id: p1ForClient?.id,
+          prev1_turn_verbatim: p1ForClient?.verbatim,
+          prev1_turn_tag: p1ForClient?.tag
+            ? normalizeLabel(p1ForClient.tag)
+            : undefined,
+          prev1_speaker: p1ForClient?.speaker,
+
+          // -2
+          prev2_turn_id: p2ForClient?.id,
+          prev2_turn_verbatim: p2ForClient?.verbatim,
+          prev2_turn_tag: p2ForClient?.tag
+            ? normalizeLabel(p2ForClient.tag)
+            : undefined,
+          prev2_speaker: p2ForClient?.speaker,
         },
       });
     }
@@ -217,14 +280,81 @@ export const useLevel1Testing = () => {
       }
 
       const samples = randomSample(base, sampleSize);
-      const results: ValidationResult[] = [];
+      const verbatims = samples.map((s) => s.verbatim);
 
+      // 1) Si le classifieur propose un batch natif → on l’utilise
+      if (typeof (classifier as any).batchClassify === "function") {
+        try {
+          const outs = await (classifier as any).batchClassify(verbatims);
+          return outs.map((out: ClassificationResult, i: number) => ({
+            verbatim: samples[i].verbatim,
+            goldStandard: samples[i].expectedTag,
+            predicted: out.prediction,
+            confidence: out.confidence ?? 0,
+            correct: out.prediction === samples[i].expectedTag,
+            processingTime: out.processingTime ?? 0,
+            metadata: {
+              ...samples[i].metadata,
+              classifier: classifierName,
+              ...(out.metadata || {}),
+            },
+          }));
+        } catch (e) {
+          console.warn("batchClassify a échoué, fallback route/classify :", e);
+          // on continue vers 2)
+        }
+      }
+
+      // 2) Si LLM côté client (OpenAI/GPT) ou config invalide → route serveur
+      const md = classifier.getMetadata?.();
+      const isClient = typeof window !== "undefined";
+      const isLLM =
+        md?.type === "llm" ||
+        /openai|gpt/i.test(md?.name || "") ||
+        /openai|gpt/i.test(md?.description || "");
+      const configOK = classifier.validateConfig?.() ?? true;
+
+      if (isClient && (isLLM || !configOK)) {
+        try {
+          const r = await fetch("/api/algolab/classify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ verbatims }),
+          });
+          const j = await r.json();
+          if (!j.ok || !Array.isArray(j.results)) {
+            throw new Error(j.error || "Route /api/algolab/classify en erreur");
+          }
+          const outs: ClassificationResult[] = j.results;
+          return outs.map((out, i) => ({
+            verbatim: samples[i].verbatim,
+            goldStandard: samples[i].expectedTag,
+            predicted: out.prediction,
+            confidence: out.confidence ?? 0,
+            correct: out.prediction === samples[i].expectedTag,
+            processingTime: out.processingTime ?? 0,
+            metadata: {
+              ...samples[i].metadata,
+              classifier: classifierName,
+              ...(out.metadata || {}),
+            },
+          }));
+        } catch (e: any) {
+          console.warn(
+            "Appel route /api/algolab/classify échoué :",
+            e?.message || e
+          );
+          // on continue vers 3)
+        }
+      }
+
+      // 3) Fallback : boucle item par item (comportement historique)
+      const results: ValidationResult[] = [];
       for (const sample of samples) {
         try {
           const start = Date.now();
           const prediction = await classifier.classify(sample.verbatim);
-          const expected = sample.expectedTag; // déjà normalisé
-
+          const expected = sample.expectedTag;
           results.push({
             verbatim: sample.verbatim,
             goldStandard: expected,

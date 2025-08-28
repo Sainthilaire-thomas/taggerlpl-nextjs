@@ -52,7 +52,46 @@ export interface Postit {
   content: string;
   [key: string]: any;
 }
+export type TurnAnnotation = {
+  id: string;
+  author: string;
+  created_at: string; // ISO
+  rationale: string; // commentaire principal
+  proposed_label?: string | null; // label proposé (prédit)
+  gold_label?: string | null; // label gold
+  verbatim?: string | null; // snapshot du tour
+  context?: { prev2?: string; prev1?: string; next1?: string } | null;
+  source?: string | null; // "ui/analysis" etc.
+  _pending?: boolean; // flag UI (optimistic)
+  algo?: {
+    classifier: string; // ex: "OpenAIConseillerClassifier"
+    type?: "rule-based" | "ml" | "llm"; // si dispo
+    model?: string | null; // ex: "gpt-4o-mini"
+    provider?: string | null; // ex: "openai"
+    temperature?: number | null;
+    max_tokens?: number | null;
+  } | null;
+};
+export type AddAnnotationPayload = {
+  comment: string;
+  author?: string;
+  proposedLabel?: string | null;
+  goldLabel?: string | null;
+  verbatim?: string | null;
+  context?: { prev2?: string; prev1?: string; next1?: string } | null;
+  source?: string | null;
+};
 
+export type AnnotationCreateResult = {
+  ok: boolean;
+  error?: string;
+  annotation?: TurnAnnotation;
+};
+
+export type AnnotationOpResult = {
+  ok: boolean;
+  error?: string;
+};
 export interface TaggedTurn {
   id: number;
   call_id: string;
@@ -65,6 +104,7 @@ export interface TaggedTurn {
   speaker: string; // ✅ Ajout du champ
   color: string;
   [key: string]: any;
+  annotations?: TurnAnnotation[];
 }
 
 export interface NewTag {
@@ -140,6 +180,27 @@ interface TaggingDataContextType {
     callId: string
   ) => Promise<RelationsStatus | null>;
   getRelationsStatus: (callId: string) => Promise<RelationsStatus | null>;
+  // Annotations
+  addAnnotation: (
+    turnId: number,
+    payload: AddAnnotationPayload
+  ) => Promise<AnnotationCreateResult>;
+
+  updateAnnotation: (
+    turnId: number,
+    annotationId: string,
+    patch: Partial<
+      Pick<
+        TurnAnnotation,
+        "rationale" | "proposed_label" | "gold_label" | "context"
+      >
+    >
+  ) => Promise<AnnotationOpResult>;
+
+  deleteAnnotation: (
+    turnId: number,
+    annotationId: string
+  ) => Promise<AnnotationOpResult>;
 
   // 🆕 NOUVELLES PROPRIÉTÉS (ajoutées sans conflit)
   allTurnTagged: TaggedTurn[]; // ← Pour analyse globale
@@ -409,6 +470,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
           next_turn_tag: turn.next_turn_tag,
           speaker: turn.speaker,
           color: turn.lpltag?.color || "#gray",
+          annotations: Array.isArray(turn.annotations) ? turn.annotations : [],
 
           // Données enrichies
           family: turn.lpltag?.family || "UNKNOWN",
@@ -784,39 +846,38 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
         console.log("=== FETCH TAGGED TURNS ===");
         console.log("Call ID:", callId);
 
-        // Récupérer tous les tags avec leurs couleurs en une seule requête
         const { data: enrichedTags, error } = await supabase
           .from("turntagged")
           .select(
             `
-          *,
-          lpltag:tag (color)
-        `
+            *,
+            lpltag:tag (color)
+          `
           )
           .eq("call_id", callId)
-          .order("start_time", { ascending: true });
+          .order("start_time", { ascending: true })
+          .order("id", { ascending: true }); // stabilité si mêmes timestamps
 
         if (error) {
           console.error("Erreur fetch tags:", error);
           throw error;
         }
 
-        // Traiter les données pour avoir la structure attendue
         const processedTags: TaggedTurn[] = (enrichedTags || []).map(
           (tag: any) => ({
             ...tag,
             color: tag.lpltag?.color || "#gray",
             verbatim: tag.verbatim || "",
+            // ✅ les annotations JSONB sont normalisées en tableau
+            annotations: Array.isArray(tag.annotations) ? tag.annotations : [],
           })
         );
 
         console.log(`✅ ${processedTags.length} tags récupérés`);
-
-        // Mise à jour de l'état en une seule fois
         setTaggedTurns(processedTags);
       } catch (err) {
         console.error("Erreur dans fetchTaggedTurns:", err);
-        setTaggedTurns([]); // État par défaut en cas d'erreur
+        setTaggedTurns([]);
       }
     },
     [supabase]
@@ -1146,6 +1207,235 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     [supabase]
   );
 
+  //Méthodes d'annotation
+  // met à jour le même tour dans les 2 états (liste globale + liste par appel)
+  const replaceTurnInStates = useCallback(
+    (turnId: number, updater: (t: TaggedTurn) => TaggedTurn) => {
+      setAllTurnTagged((prev) =>
+        prev.map((t) => (t.id === turnId ? updater(t) : t))
+      );
+      setTaggedTurns((prev) =>
+        prev.map((t) => (t.id === turnId ? updater(t) : t))
+      );
+    },
+    []
+  );
+
+  const getLocalAnnotations = (
+    turnId: number
+  ): TurnAnnotation[] | undefined => {
+    const inTagged = taggedTurns.find((t) => t.id === turnId)?.annotations;
+    if (inTagged) return inTagged;
+    return allTurnTagged.find((t) => t.id === turnId)?.annotations;
+  };
+
+  const fetchDbAnnotations = async (
+    turnId: number
+  ): Promise<TurnAnnotation[]> => {
+    const { data, error } = await supabase
+      .from("turntagged")
+      .select("annotations")
+      .eq("id", turnId)
+      .single();
+    if (error) throw error;
+    return Array.isArray(data?.annotations)
+      ? (data!.annotations as TurnAnnotation[])
+      : [];
+  };
+
+  // CREATE
+  const addAnnotation = useCallback(
+    async (
+      turnId: number,
+      payload: {
+        comment: string;
+        author?: string;
+        proposedLabel?: string | null;
+        goldLabel?: string | null;
+        verbatim?: string | null;
+        context?: { prev2?: string; prev1?: string; next1?: string } | null;
+        source?: string | null;
+        algo?: {
+          classifier: string;
+          type?: "rule-based" | "ml" | "llm";
+          model?: string | null;
+          provider?: string | null;
+          temperature?: number | null;
+          max_tokens?: number | null;
+        } | null;
+      }
+    ) => {
+      if (!supabase) return { ok: false, error: "Supabase indisponible" };
+
+      const temp: TurnAnnotation = {
+        id:
+          (globalThis.crypto?.randomUUID?.() ??
+            Math.random().toString(36).slice(2)) + Date.now().toString(36),
+        author: payload.author || "analyst",
+        created_at: new Date().toISOString(),
+        rationale: payload.comment.trim(),
+        proposed_label: payload.proposedLabel ?? null,
+        gold_label: payload.goldLabel ?? null,
+        verbatim: payload.verbatim ?? null,
+        context: payload.context ?? null,
+        source: payload.source ?? "ui/analysis",
+        algo: payload.algo ?? null,
+        _pending: true,
+      };
+
+      // 1) Optimistic
+      replaceTurnInStates(turnId, (t) => ({
+        ...t,
+        annotations: [...(t.annotations ?? []), temp],
+      }));
+
+      try {
+        // 2) DB merge (on relit pour éviter les écrasements)
+        const current = await fetchDbAnnotations(turnId);
+        const merged = [...current, { ...temp, _pending: undefined }];
+
+        const { data, error } = await supabase
+          .from("turntagged")
+          .update({ annotations: merged })
+          .eq("id", turnId)
+          .select("id, annotations")
+          .single();
+
+        if (error) throw error;
+
+        // 3) Remise au propre (supprimer _pending)
+        replaceTurnInStates(turnId, (t) => ({
+          ...t,
+          annotations: Array.isArray(data?.annotations)
+            ? (data!.annotations as TurnAnnotation[])
+            : [],
+        }));
+
+        return { ok: true, annotation: merged[merged.length - 1] };
+      } catch (e: any) {
+        // rollback
+        replaceTurnInStates(turnId, (t) => ({
+          ...t,
+          annotations: (t.annotations ?? []).filter((a) => a.id !== temp.id),
+        }));
+        return { ok: false, error: e?.message || "Échec de l'enregistrement" };
+      }
+    },
+    [supabase, replaceTurnInStates]
+  );
+
+  // UPDATE (patch partiel)
+  const updateAnnotation = useCallback(
+    async (
+      turnId: number,
+      annotationId: string,
+      patch: Partial<
+        Pick<
+          TurnAnnotation,
+          "rationale" | "proposed_label" | "gold_label" | "context" | "algo"
+        >
+      >
+    ) => {
+      if (!supabase) return { ok: false, error: "Supabase indisponible" };
+
+      const prev = getLocalAnnotations(turnId) ?? [];
+      const before = prev.find((a) => a.id === annotationId);
+      if (!before)
+        return { ok: false, error: "Annotation introuvable en mémoire" };
+
+      // 1) Optimistic
+      replaceTurnInStates(turnId, (t) => ({
+        ...t,
+        annotations: (t.annotations ?? []).map((a) =>
+          a.id === annotationId ? { ...a, ...patch, _pending: true } : a
+        ),
+      }));
+
+      try {
+        // 2) DB: on repart de l’état DB
+        const current = await fetchDbAnnotations(turnId);
+        const updated = current.map((a) =>
+          a.id === annotationId ? { ...a, ...patch } : a
+        );
+
+        const { data, error } = await supabase
+          .from("turntagged")
+          .update({ annotations: updated })
+          .eq("id", turnId)
+          .select("id, annotations")
+          .single();
+
+        if (error) throw error;
+
+        replaceTurnInStates(turnId, (t) => ({
+          ...t,
+          annotations: Array.isArray(data?.annotations)
+            ? (data!.annotations as TurnAnnotation[])
+            : [],
+        }));
+
+        return { ok: true };
+      } catch (e: any) {
+        // rollback
+        replaceTurnInStates(turnId, (t) => ({
+          ...t,
+          annotations: prev, // on remet les annotations avant patch
+        }));
+        return { ok: false, error: e?.message || "Échec de la mise à jour" };
+      }
+    },
+    [supabase, replaceTurnInStates, getLocalAnnotations]
+  );
+
+  // DELETE
+  const deleteAnnotation = useCallback(
+    async (turnId: number, annotationId: string) => {
+      if (!supabase) return { ok: false, error: "Supabase indisponible" };
+
+      const prev = getLocalAnnotations(turnId) ?? [];
+      const removed = prev.find((a) => a.id === annotationId);
+      if (!removed) return { ok: false, error: "Annotation introuvable" };
+
+      // 1) Optimistic
+      replaceTurnInStates(turnId, (t) => ({
+        ...t,
+        annotations: (t.annotations ?? []).filter((a) => a.id !== annotationId),
+      }));
+
+      try {
+        // 2) DB
+        const current = await fetchDbAnnotations(turnId);
+        const updated = current.filter((a) => a.id !== annotationId);
+
+        const { data, error } = await supabase
+          .from("turntagged")
+          .update({ annotations: updated })
+          .eq("id", turnId)
+          .select("id, annotations")
+          .single();
+
+        if (error) throw error;
+
+        replaceTurnInStates(turnId, (t) => ({
+          ...t,
+          annotations: Array.isArray(data?.annotations)
+            ? (data!.annotations as TurnAnnotation[])
+            : [],
+        }));
+
+        return { ok: true };
+      } catch (e: any) {
+        // rollback
+        replaceTurnInStates(turnId, (t) => ({
+          ...t,
+          annotations: prev,
+        }));
+        return { ok: false, error: e?.message || "Échec de la suppression" };
+      }
+    },
+    [supabase, replaceTurnInStates, getLocalAnnotations]
+  );
+
   return (
     <TaggingDataContext.Provider
       value={{
@@ -1185,6 +1475,10 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
         errorGlobalData,
         getFilteredTurnsForAnalysis,
         refreshGlobalDataIfNeeded,
+        // Méthodes d'annotation
+        addAnnotation, // ⬅️ nouveau
+        updateAnnotation, // ⬅️ nouveau
+        deleteAnnotation, // ⬅️ nouveau
       }}
     >
       {children}

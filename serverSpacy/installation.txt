@@ -1,0 +1,14 @@
+pip install -r requirements.txt
+
+# Installation du modèle français spaCy
+python -m spacy download fr_core_news_md
+
+# Alternative si le modèle moyen n'est pas disponible
+python -m spacy download fr_core_news_sm
+
+# Vérification de l'installation
+python -c "import spacy; nlp = spacy.load('fr_core_news_md'); print('✅ Modèle chargé avec succès')"
+
+# Démarrage du serveur
+python spacy_api_server.py
+python spacy_api_server.py

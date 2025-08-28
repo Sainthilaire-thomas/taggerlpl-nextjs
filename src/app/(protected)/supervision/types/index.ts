@@ -1,6 +1,6 @@
 // supervision/types.ts
 
-// Interface existante étendue
+// ====== Base row (sans contexte) ======
 export interface SupervisionTurnTagged {
   id: number;
   call_id: string;
@@ -25,6 +25,27 @@ export interface SupervisionTurnTagged {
   processingStatus?: "idle" | "processing" | "completed" | "error";
 }
 
+// ====== Contexte (−2 / −1 / +1) ======
+export type TurnMetadata = {
+  prev2_turn_verbatim?: string;
+  prev1_turn_verbatim?: string;
+  next_turn_verbatim?: string;
+  prev2_speaker?: string;
+  prev1_speaker?: string;
+  next_turn_speaker?: string;
+  prev2_turn_tag?: string;
+  prev1_turn_tag?: string;
+  next_turn_tag?: string;
+  [k: string]: any;
+};
+
+// ====== Ligne étendue avec contexte ======
+export type SupervisionTurnTaggedWithMeta = SupervisionTurnTagged & {
+  metadata?: TurnMetadata; // ← utilisé par SupervisionTable / TurnWithContext
+  metadata_context?: TurnMetadata; // ← renvoyé par la vue SQL
+};
+
+// ====== Stats tag ======
 export interface TagGroupStats {
   label: string;
   count: number;
@@ -32,6 +53,7 @@ export interface TagGroupStats {
   family: string;
 }
 
+// ====== Filtres ======
 export interface SupervisionFilters {
   selectedTag: string;
   selectedFamily: string;
@@ -43,10 +65,11 @@ export interface SupervisionFilters {
   hasTranscript: boolean | null;
 }
 
+// ====== Métriques globales ======
 export interface SupervisionMetrics {
   total: number;
   uniqueTags: number;
-  uniqueCallIds: number; // Nouveau métrique
+  uniqueCallIds: number; // Nouvelle métrique
   withAudio: number;
   withTranscript: number;
   modifiable: number;
@@ -55,8 +78,9 @@ export interface SupervisionMetrics {
   callsWithMultipleTags: number; // Nouvelle métrique
 }
 
+// ====== Hook data ======
 export interface SupervisionDataHook {
-  supervisionData: SupervisionTurnTagged[];
+  supervisionData: SupervisionTurnTaggedWithMeta[]; // ← type étendu
   tagStats: TagGroupStats[];
   stats: SupervisionMetrics;
   loading: boolean;
@@ -64,9 +88,10 @@ export interface SupervisionDataHook {
   loadSupervisionData: () => Promise<void>;
 }
 
+// ====== Hook filtres ======
 export interface SupervisionFiltersHook {
   filters: SupervisionFilters;
-  filteredData: SupervisionTurnTagged[];
+  filteredData: SupervisionTurnTaggedWithMeta[]; // ← type étendu
   updateFilters: (updates: Partial<SupervisionFilters>) => void;
   resetFilters: () => void;
   uniqueFamilies: string[];
@@ -76,7 +101,7 @@ export interface SupervisionFiltersHook {
   callIdToFilename: Map<string, string>; // ← NOUVEAU
 }
 
-// Nouveaux types pour le traitement
+// ====== Traitement (inchangé) ======
 export interface ProcessingStep {
   name: string;
   status: "pending" | "active" | "completed" | "error";
@@ -114,11 +139,11 @@ export interface ProcessingJobsHook {
 export interface ProcessingModalProps {
   open: boolean;
   onClose: () => void;
-  selectedRow: SupervisionTurnTagged | null;
+  selectedRow: SupervisionTurnTaggedWithMeta | null; // ← type étendu
   onProcessingComplete: () => void;
 }
 
-// Nouveau type pour les statistiques de cohérence
+// ====== Cohérence (inchangé) ======
 export interface CoherenceMetrics {
   totalTransitions: number;
   taggedTransitions: number;

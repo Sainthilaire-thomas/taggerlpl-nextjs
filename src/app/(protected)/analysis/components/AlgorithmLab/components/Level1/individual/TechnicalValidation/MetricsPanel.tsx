@@ -1,5 +1,4 @@
-// components/AlgorithmLab/components/Level1/individual/TechnicalValidation/MetricsPanel.tsx
-
+"use client";
 import React, { useMemo } from "react";
 import {
   Box,
@@ -19,21 +18,30 @@ import {
   Divider,
 } from "@mui/material";
 import AssessmentIcon from "@mui/icons-material/Assessment";
-import { useLevel1Testing } from "../../../../hooks/useLevel1Testing";
-import type { TVValidationResult } from "./ResultsSample";
 
+// Types locaux pour éviter la dépendance au hook externe
 export type SimpleMetrics = {
-  accuracy: number; // %
+  accuracy: number;
   correct: number;
   total: number;
-  avgProcessingTime: number; // ms
-  avgConfidence: number; // 0..1
+  avgProcessingTime: number;
+  avgConfidence: number;
   kappa?: number;
 };
 
+export interface TVValidationResult {
+  verbatim: string;
+  goldStandard: string;
+  predicted: string;
+  confidence: number;
+  correct: boolean;
+  processingTime?: number;
+  metadata?: Record<string, any>;
+}
+
 type MetricsPanelProps = {
-  classifierLabel?: string; // ex: "Regex Conseiller Classifier"
-  results: TVValidationResult[]; // résultats bruts du test
+  classifierLabel?: string;
+  results: TVValidationResult[];
 };
 
 export const MetricsPanel: React.FC<MetricsPanelProps> = ({
@@ -41,30 +49,106 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
   results,
 }) => {
   const theme = useTheme();
-  const { calculateMetrics } = useLevel1Testing();
 
-  const summary = useMemo(() => {
+  // ✅ SOLUTION : TOUS les hooks d'abord, sans conditions
+  const metrics = useMemo(() => {
+    // Guard à l'intérieur du useMemo
+    if (!results.length) return null;
+
     const total = results.length;
     const correct = results.filter((r) => r.correct).length;
+    const accuracy = (correct / total) * 100;
 
-    const m = calculateMetrics(results as any);
-    const sm: SimpleMetrics = {
-      accuracy: m.accuracy, // déjà en %
+    const avgProcessingTime =
+      results.reduce((s, r) => s + (r.processingTime || 0), 0) / total;
+    const avgConfidence = results.reduce((s, r) => s + r.confidence, 0) / total;
+
+    // Calcul des métriques par classe
+    const classes = Array.from(
+      new Set([
+        ...results.map((r) => r.goldStandard),
+        ...results.map((r) => r.predicted),
+      ])
+    );
+
+    const precision: Record<string, number> = {};
+    const recall: Record<string, number> = {};
+    const f1Score: Record<string, number> = {};
+
+    classes.forEach((cls) => {
+      const tp = results.filter(
+        (r) => r.predicted === cls && r.goldStandard === cls
+      ).length;
+      const fp = results.filter(
+        (r) => r.predicted === cls && r.goldStandard !== cls
+      ).length;
+      const fn = results.filter(
+        (r) => r.predicted !== cls && r.goldStandard === cls
+      ).length;
+
+      precision[cls] = tp + fp > 0 ? tp / (tp + fp) : 0;
+      recall[cls] = tp + fn > 0 ? tp / (tp + fn) : 0;
+      f1Score[cls] =
+        precision[cls] + recall[cls] > 0
+          ? (2 * precision[cls] * recall[cls]) / (precision[cls] + recall[cls])
+          : 0;
+    });
+
+    // Calcul Kappa de Cohen simplifié
+    const expectedAccuracy = classes.reduce((sum, cls) => {
+      const actualCount = results.filter((r) => r.goldStandard === cls).length;
+      const predictedCount = results.filter((r) => r.predicted === cls).length;
+      return sum + (actualCount * predictedCount) / (total * total);
+    }, 0);
+
+    const kappa =
+      expectedAccuracy < 1
+        ? (accuracy / 100 - expectedAccuracy) / (1 - expectedAccuracy)
+        : 0;
+
+    const summary: SimpleMetrics = {
+      accuracy: Number(accuracy.toFixed(1)),
       correct,
       total,
-      avgProcessingTime: m.avgProcessingTime,
-      avgConfidence: m.avgConfidence,
-      kappa: m.kappa,
+      avgProcessingTime: Math.round(avgProcessingTime),
+      avgConfidence: Number(avgConfidence.toFixed(2)),
+      kappa: Number(kappa.toFixed(3)),
     };
-    return { m, sm };
-  }, [results, calculateMetrics]);
 
-  if (!results.length) return null;
+    return {
+      summary,
+      precision,
+      recall,
+      f1Score,
+      classes: classes.sort(),
+    };
+  }, [results]);
 
-  const { m, sm } = summary;
+  // ✅ Guard APRÈS tous les hooks
+  if (!results.length || !metrics) {
+    return (
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" color="text.secondary">
+            Aucune donnée de métrique disponible
+          </Typography>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  const f1Color = (f1: number) =>
+  const { summary, precision, recall, f1Score, classes } = metrics;
+
+  const getF1Color = (f1: number) =>
     f1 > 0.8 ? "success.main" : f1 > 0.6 ? "warning.main" : "error.main";
+
+  const getKappaInterpretation = (kappa: number) => {
+    if (kappa > 0.7)
+      return { severity: "success" as const, text: "Accord substantiel" };
+    if (kappa > 0.4)
+      return { severity: "warning" as const, text: "Accord modéré" };
+    return { severity: "error" as const, text: "Accord faible" };
+  };
 
   return (
     <Card sx={{ mb: 3 }}>
@@ -76,55 +160,102 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
         >
           <AssessmentIcon />
           Métriques de Performance
-          {classifierLabel ? ` - ${classifierLabel}` : ""}
+          {classifierLabel && ` - ${classifierLabel}`}
         </Typography>
 
         {/* Tuiles synthèse */}
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mb: 2 }}>
-          <Box sx={{ flex: "1 1 200px", textAlign: "center" }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: 2,
+            mb: 3,
+          }}
+        >
+          <Box
+            sx={{
+              textAlign: "center",
+              p: 2,
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 1,
+            }}
+          >
             <Typography variant="h4" color="primary" sx={{ fontWeight: 700 }}>
-              {sm.accuracy.toFixed(1)}%
+              {summary.accuracy}%
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Accuracy
             </Typography>
           </Box>
 
-          <Box sx={{ flex: "1 1 200px", textAlign: "center" }}>
+          <Box
+            sx={{
+              textAlign: "center",
+              p: 2,
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 1,
+            }}
+          >
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
-              {sm.correct}/{sm.total}
+              {summary.correct}/{summary.total}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Classifications Correctes
             </Typography>
           </Box>
 
-          <Box sx={{ flex: "1 1 200px", textAlign: "center" }}>
+          <Box
+            sx={{
+              textAlign: "center",
+              p: 2,
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 1,
+            }}
+          >
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
-              {sm.avgProcessingTime}ms
+              {summary.avgProcessingTime}ms
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Temps de Traitement Moyen
+              Temps Moyen
             </Typography>
           </Box>
 
-          <Box sx={{ flex: "1 1 200px", textAlign: "center" }}>
+          <Box
+            sx={{
+              textAlign: "center",
+              p: 2,
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 1,
+            }}
+          >
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
-              {sm.avgConfidence.toFixed(2)}
+              {summary.avgConfidence}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Confiance Moyenne
             </Typography>
           </Box>
 
-          {typeof sm.kappa === "number" && (
-            <Box sx={{ flex: "1 1 200px", textAlign: "center" }}>
+          {typeof summary.kappa === "number" && (
+            <Box
+              sx={{
+                textAlign: "center",
+                p: 2,
+                border: 1,
+                borderColor: "divider",
+                borderRadius: 1,
+              }}
+            >
               <Typography
                 variant="h4"
                 color="success.main"
                 sx={{ fontWeight: 700 }}
               >
-                {sm.kappa.toFixed(3)}
+                {summary.kappa.toFixed(3)}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Kappa (Cohen)
@@ -159,7 +290,7 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {Object.keys(m.precision).map((cls) => (
+              {classes.map((cls) => (
                 <TableRow key={cls}>
                   <TableCell>
                     <Chip
@@ -176,19 +307,19 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
                     />
                   </TableCell>
                   <TableCell align="center">
-                    {(m.precision[cls] * 100).toFixed(1)}%
+                    {((precision[cls] || 0) * 100).toFixed(1)}%
                   </TableCell>
                   <TableCell align="center">
-                    {(m.recall[cls] * 100).toFixed(1)}%
+                    {((recall[cls] || 0) * 100).toFixed(1)}%
                   </TableCell>
                   <TableCell align="center">
                     <Box
                       sx={{
-                        color: f1Color(m.f1Score[cls]),
+                        color: getF1Color(f1Score[cls] || 0),
                         fontWeight: 700,
                       }}
                     >
-                      {(m.f1Score[cls] * 100).toFixed(1)}%
+                      {((f1Score[cls] || 0) * 100).toFixed(1)}%
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -197,27 +328,21 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
           </Table>
         </TableContainer>
 
-        {/* Interprétation kappa si présent */}
-        {typeof sm.kappa === "number" && (
+        {/* Interprétation kappa */}
+        {typeof summary.kappa === "number" && (
           <Alert
-            severity={
-              sm.kappa > 0.7 ? "success" : sm.kappa > 0.4 ? "warning" : "error"
-            }
+            severity={getKappaInterpretation(summary.kappa).severity}
             sx={{ mt: 2 }}
           >
             <Typography variant="body2">
-              <strong>Interprétation&nbsp;:</strong>{" "}
-              {sm.kappa > 0.7
-                ? `Accord substantiel (κ=${sm.kappa.toFixed(
-                    3
-                  )}) - Performance validée`
-                : sm.kappa > 0.4
-                ? `Accord modéré (κ=${sm.kappa.toFixed(
-                    3
-                  )}) - Optimisation requise`
-                : `Accord faible (κ=${sm.kappa.toFixed(
-                    3
-                  )}) - Révision algorithmique nécessaire`}
+              <strong>Interprétation:</strong>{" "}
+              {getKappaInterpretation(summary.kappa).text} (κ=
+              {summary.kappa.toFixed(3)}) -
+              {summary.kappa > 0.7
+                ? " Performance validée"
+                : summary.kappa > 0.4
+                ? " Optimisation requise"
+                : " Révision algorithmique nécessaire"}
             </Typography>
           </Alert>
         )}

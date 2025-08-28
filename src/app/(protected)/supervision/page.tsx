@@ -22,10 +22,28 @@ import {
   SupervisionFiltersComponent,
   SupervisionTable,
   TaggingModal,
-  ProcessingModal, // Nouveau
+  ProcessingModal,
 } from "./components";
 
 const ITEMS_PER_PAGE = 50;
+
+type TurnMetadata = {
+  prev2_turn_verbatim?: string;
+  prev1_turn_verbatim?: string;
+  next_turn_verbatim?: string;
+  prev2_speaker?: string;
+  prev1_speaker?: string;
+  next_turn_speaker?: string;
+  prev2_turn_tag?: string;
+  prev1_turn_tag?: string;
+  next_turn_tag?: string;
+  [k: string]: any;
+};
+
+type SupervisionTurnTaggedWithMeta = SupervisionTurnTagged & {
+  metadata?: TurnMetadata;
+  metadata_context?: TurnMetadata;
+};
 
 export default function SupervisionPage() {
   // Hooks pour les données et filtres
@@ -46,8 +64,8 @@ export default function SupervisionPage() {
     uniqueFamilies,
     uniqueSpeakers,
     uniqueCallIds,
-    uniqueOrigines, // ← AJOUTER
-    callIdToFilename, // ← AJOUTER
+    uniqueOrigines,
+    callIdToFilename,
   } = useSupervisionFilters(supervisionData);
 
   // États pour la pagination
@@ -56,13 +74,13 @@ export default function SupervisionPage() {
   // États pour le modal de tagging
   const [isTaggingModalOpen, setIsTaggingModalOpen] = useState(false);
   const [selectedRowForTagging, setSelectedRowForTagging] =
-    useState<SupervisionTurnTagged | null>(null);
+    useState<SupervisionTurnTaggedWithMeta | null>(null);
   const [taggingAudioUrl, setTaggingAudioUrl] = useState<string>("");
 
   // États pour le modal de traitement
   const [isProcessingModalOpen, setIsProcessingModalOpen] = useState(false);
   const [selectedRowForProcessing, setSelectedRowForProcessing] =
-    useState<SupervisionTurnTagged | null>(null);
+    useState<SupervisionTurnTaggedWithMeta | null>(null);
 
   // État pour les notifications
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -81,6 +99,14 @@ export default function SupervisionPage() {
     return filteredData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [filteredData, page]);
 
+  // Données prêtes pour le tableau : on aligne metadata
+  const paginatedDataReady: SupervisionTurnTaggedWithMeta[] = useMemo(() => {
+    return (paginatedData as SupervisionTurnTaggedWithMeta[]).map((r) => ({
+      ...r,
+      metadata: r.metadata ?? r.metadata_context ?? undefined,
+    }));
+  }, [paginatedData]);
+
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
   // Fonction utilitaire pour les notifications
@@ -93,8 +119,92 @@ export default function SupervisionPage() {
     setSnackbarOpen(true);
   };
 
+  // NOUVELLE FONCTION : Édition rapide des tags
+  const handleQuickTagEdit = async (
+    row: SupervisionTurnTaggedWithMeta,
+    newTag: string,
+    newNextTag?: string
+  ) => {
+    try {
+      console.log(
+        `🏷️ Édition rapide - ID: ${row.id}, ancien tag: ${row.tag}, nouveau: ${newTag}`
+      );
+
+      // Préparer les données à mettre à jour
+      const updateData: any = {
+        tag: newTag,
+      };
+
+      // Si newNextTag est défini (même vide), on l'inclut
+      if (newNextTag !== undefined) {
+        updateData.next_turn_tag = newNextTag || null;
+      }
+
+      // Mettre à jour en base
+      const { error } = await supabase
+        .from("turntagged")
+        .update(updateData)
+        .eq("id", row.id);
+
+      if (error) {
+        console.error("❌ Erreur Supabase:", error);
+        throw new Error(`Erreur base de données: ${error.message}`);
+      }
+
+      // Audit trail (optionnel - si vous avez une table d'audit)
+      try {
+        await supabase.from("tag_modifications").insert({
+          action: "quick_edit",
+          call_id: row.call_id,
+          old_tag: row.tag,
+          new_tag: newTag,
+          old_next_tag: row.next_turn_tag,
+          new_next_tag: newNextTag || null,
+          modified_at: new Date().toISOString(),
+          modified_by: "supervision_user", // ou récupérer l'utilisateur actuel
+          previous_data: {
+            verbatim: row.verbatim,
+            speaker: row.speaker,
+            start_time: row.start_time,
+            end_time: row.end_time,
+          },
+        });
+      } catch (auditError) {
+        // Ne pas faire échouer l'opération si l'audit échoue
+        console.warn("⚠️ Audit trail failed:", auditError);
+      }
+
+      // Recharger les données pour refléter les modifications
+      await loadSupervisionData();
+
+      // Message de succès
+      const tagChange = `${row.tag} → ${newTag}`;
+      const nextTagChange =
+        newNextTag !== row.next_turn_tag
+          ? ` | Next: ${row.next_turn_tag || "(vide)"} → ${
+              newNextTag || "(vide)"
+            }`
+          : "";
+
+      showMessage(
+        `Tag modifié avec succès : ${tagChange}${nextTagChange}`,
+        "success"
+      );
+
+      console.log(`✅ Tag mis à jour - Call: ${row.call_id}, Turn: ${row.id}`);
+    } catch (error) {
+      console.error("❌ Erreur lors de l'édition rapide:", error);
+      showMessage(
+        `Erreur lors de la modification : ${
+          error instanceof Error ? error.message : "Erreur inconnue"
+        }`,
+        "error"
+      );
+    }
+  };
+
   // Gestionnaire pour le clic sur une ligne complète (audio + transcription)
-  const handleRowClick = async (row: SupervisionTurnTagged) => {
+  const handleRowClick = async (row: SupervisionTurnTaggedWithMeta) => {
     if (!row.hasTranscript || !row.hasAudio) {
       showMessage(
         "Cet appel n'a pas de transcription ou d'audio disponible",
@@ -142,7 +252,7 @@ export default function SupervisionPage() {
   };
 
   // Gestionnaire pour le clic sur une ligne incomplète (traitement requis)
-  const handleProcessingClick = (row: SupervisionTurnTagged) => {
+  const handleProcessingClick = (row: SupervisionTurnTaggedWithMeta) => {
     setSelectedRowForProcessing(row);
     setIsProcessingModalOpen(true);
   };
@@ -211,7 +321,7 @@ export default function SupervisionPage() {
             🔍 Supervision des Taggages
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Supervision et retaggage contextualisé des {supervisionData.length}{" "}
+            Supervision et retaggage contextualisé des {filteredData.length}{" "}
             éléments taggés
           </Typography>
         </Box>
@@ -228,16 +338,17 @@ export default function SupervisionPage() {
           uniqueFamilies={uniqueFamilies}
           uniqueSpeakers={uniqueSpeakers}
           uniqueCallIds={uniqueCallIds}
-          uniqueOrigines={uniqueOrigines} // ← AJOUTER
-          callIdToFilename={callIdToFilename} // ← AJOUTER
+          uniqueOrigines={uniqueOrigines}
+          callIdToFilename={callIdToFilename}
           onPageReset={handlePageReset}
         />
 
-        {/* Tableau */}
+        {/* Tableau avec Édition Rapide */}
         <SupervisionTable
-          data={paginatedData}
+          data={paginatedDataReady}
           onRowClick={handleRowClick}
           onProcessingClick={handleProcessingClick}
+          onQuickTagEdit={handleQuickTagEdit} // 👈 NOUVELLE PROP
         />
 
         {/* Pagination */}
