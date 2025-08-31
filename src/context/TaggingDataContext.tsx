@@ -480,6 +480,8 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
         }));
 
         setAllTurnTagged(processedData);
+        console.log("✅ CONTEXTE MIS À JOUR:", processedData.length, "turns");
+        window.allTurnTagged = processedData;
         setLastGlobalFetch(new Date());
 
         console.log(`📈 État mis à jour avec ${processedData.length} turns`);

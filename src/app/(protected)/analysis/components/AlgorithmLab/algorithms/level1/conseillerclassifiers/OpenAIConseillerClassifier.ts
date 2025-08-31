@@ -1,3 +1,4 @@
+// OpenAIConseillerClassifier.ts
 import {
   BaseClassifier,
   ClassificationResult,
@@ -11,6 +12,7 @@ interface OpenAIConfig {
   maxTokens: number;
   timeout: number;
   enableFallback: boolean;
+  strictPromptMode?: boolean; // NEW: si true, pas d’heuristiques ni de normalisation “maligne”
 }
 
 interface OpenAIResponse {
@@ -33,6 +35,7 @@ const DEFAULTS: OpenAIConfig = {
   maxTokens: 6, // on ne veut qu’un label
   timeout: 10_000,
   enableFallback: true,
+  strictPromptMode: true, // on fait confiance au prompt
 };
 
 const ALLOWED = [
@@ -49,6 +52,11 @@ export class OpenAIConseillerClassifier extends BaseClassifier {
   private config: OpenAIConfig;
   private apiKey?: string;
 
+  // Set utile pour les checks exacts en mode strict
+  private static readonly ALLOWED_SET = new Set<string>(
+    ALLOWED as unknown as string[]
+  );
+
   constructor(config: OpenAIConfig) {
     super();
     this.config = { ...DEFAULTS, ...config };
@@ -63,10 +71,10 @@ export class OpenAIConseillerClassifier extends BaseClassifier {
   getMetadata(): ClassifierMetadata {
     return {
       name: "OpenAI Conseiller Classifier",
-      version: "1.3.0",
+      version: "1.4.0",
       type: "llm",
       description:
-        "Classification via GPT des verbatims conseiller (priorité action, ignorent [TC]/[AP], anti-AUTRE).",
+        "Classification via GPT des verbatims conseiller (priorité action). Mode strict prompt-first par défaut.",
       configSchema: {
         model: {
           type: "string",
@@ -103,6 +111,12 @@ export class OpenAIConseillerClassifier extends BaseClassifier {
           default: true,
           description: "Activer un fallback en cas d’erreur OpenAI",
         },
+        strictPromptMode: {
+          type: "boolean",
+          default: true,
+          description:
+            "Si vrai, aucune heuristique ni correction locale n’est appliquée.",
+        },
       },
       requiresTraining: false,
       requiresAPIKey: true,
@@ -132,36 +146,35 @@ export class OpenAIConseillerClassifier extends BaseClassifier {
   }
 
   private createMessages(verbatim: string): ChatMessage[] {
-    const allowed = [
-      "ENGAGEMENT",
-      "OUVERTURE",
-      "REFLET_VOUS",
-      "REFLET_JE",
-      "REFLET_ACQ",
-      "EXPLICATION",
-      "AUTRE",
-    ].join(", ");
+    const allowed = ALLOWED.join(", ");
 
-    const system = `Tu es un classificateur déterministe pour des verbatims de CONSEILLER.
-Retourne EXACTEMENT un label parmi: ${allowed}.
-N'UTILISE "AUTRE" QUE si le texte est vide ou ne contient aucun indice d'action ou d'explication.
+    const system = `Tu es un classificateur **déterministe** de tours CONSEILLER.
+Tu dois répondre **EXACTEMENT** par **un unique label** parmi:
+${allowed}
 
-RÈGLE DE PRIORITÉ (strict) :
-1) ENGAGEMENT — action du conseiller (je vais/je fais/je m'occupe/je vérifie/je transfère…)
-2) OUVERTURE — action demandée/projetée pour le client (vous allez/vous devez/veuillez/merci de/vous recevrez…)
-3) REFLET
-   • REFLET_VOUS — description des actions/paroles du client (vous avez/vous dites…)
-   • REFLET_JE   — état cognitif du conseiller (je comprends/je vois/je note…)
-   • REFLET_ACQ  — acquiescement court (d'accord/ok/oui/mmh/tout à fait/effectivement…)
-4) EXPLICATION — information procédurale/réglementaire sans action concrète.
-5) AUTRE — seulement si rien ne correspond.
+**Règle de priorité stricte** (si plusieurs fonctions coexistent):
+ENGAGEMENT > OUVERTURE > REFLET_VOUS > REFLET_JE > REFLET_ACQ > EXPLICATION > AUTRE
 
-Si un tour contient à la fois un acquiescement et une action du conseiller → ENGAGEMENT.
-Si un tour contient explication + instruction au client → OUVERTURE.
-"C'est normal, vous allez…" → OUVERTURE.
-"Je comprends, mais je vais vérifier" → ENGAGEMENT.`;
+**Définitions opérationnelles (rappel court)**
+- ENGAGEMENT (je vais/je fais/je vérifie/je m’occupe/je transfère/je vous donne/je vais voir/je vous envoie/on va…).
+- OUVERTURE (vous allez/devrez/pouvez-vous/veuillez/merci de/il faut que vous/je vous invite à/impératifs “indiquez, donnez, joignez, cliquez, présentez…”/futur passif “vous serez/allez être …”/guidage “ça sera la 3e ligne”).
+- REFLET_VOUS (décrire l’action/état du client: “vous avez…”, sans directive ni justification).
+- REFLET_JE (état cognitif du conseiller: “je comprends/je vois/je note”, sans action).
+- REFLET_ACQ (micro-acquiescement court: “oui, d’accord, ok, hum-hum, ah, exact…”, typiquement ≤ 20 caractères).
+- EXPLICATION (procédure/règlement/justification, listes/chiffrages; “parce que/c’est normal/il s’agit de/le système/la procédure…”).
+- AUTRE (vide, bruit).
+
+**Garde-fous anti-erreur fréquente**
+- Justification + instruction → **OUVERTURE**.
+- “C’est normal, vous allez …” → **OUVERTURE**.
+- Guidage d’interface (“ça sera la 3e ligne…”) → **OUVERTURE**.
+- Micro-tours très courts (“ah”, “ok”, “oui”, “hm”) → **REFLET_ACQ**.
+- “Je vais/je vous donne/je vais voir/je m’en occupe” → **ENGAGEMENT**.
+
+**Sortie**: retourne **uniquement** l’un des 7 labels, sans ponctuation ni texte additionnel.`;
 
     const fewShots: ChatMessage[] = [
+      // Tes exemples originaux (conservés)
       { role: "user", content: "d'accord, je vais faire le nécessaire" },
       { role: "assistant", content: "ENGAGEMENT" },
       {
@@ -186,6 +199,45 @@ Si un tour contient explication + instruction au client → OUVERTURE.
       { role: "assistant", content: "REFLET_ACQ" },
       { role: "user", content: "oui" },
       { role: "assistant", content: "REFLET_ACQ" },
+
+      // Ajouts ciblés (observations d’erreurs fréquentes)
+      {
+        role: "user",
+        content: "ça sera la troisième ligne, au niveau de la recherche",
+      },
+      { role: "assistant", content: "OUVERTURE" },
+
+      {
+        role: "user",
+        content:
+          "vous appelez d'un fixe, si vous pouvez, c'est non surtaxé, c'est gratuit",
+      },
+      { role: "assistant", content: "OUVERTURE" },
+
+      { role: "user", content: "ah" },
+      { role: "assistant", content: "REFLET_ACQ" },
+
+      {
+        role: "user",
+        content: "je vous donne votre numéro de dossier s'il vous plaît",
+      },
+      { role: "assistant", content: "ENGAGEMENT" },
+
+      {
+        role: "user",
+        content:
+          "donnez-moi le numéro de fiche, je vais déjà voir s'ils ont enregistré",
+      },
+      { role: "assistant", content: "ENGAGEMENT" },
+
+      { role: "user", content: "le 18" },
+      { role: "assistant", content: "EXPLICATION" },
+
+      { role: "user", content: "si vous pensez que c'est le facteur..." },
+      { role: "assistant", content: "EXPLICATION" },
+
+      { role: "user", content: "alors votre numéro c'est ?" },
+      { role: "assistant", content: "OUVERTURE" },
     ];
 
     const user: ChatMessage = {
@@ -198,26 +250,14 @@ Si un tour contient explication + instruction au client → OUVERTURE.
     return [{ role: "system", content: system }, ...fewShots, user];
   }
 
+  // ---- Normalisation strictement minimale (prompt-first) --------------------
   private normalizeLabel(prediction: string): string {
-    const cleaned = prediction.replace(/[^A-Z_]/gi, "").toUpperCase();
-    const map: Record<string, string> = {
-      ENGAGEMENT: "ENGAGEMENT",
-      OUVERTURE: "OUVERTURE",
-      REFLET_VOUS: "REFLET_VOUS",
-      REFLETVOUS: "REFLET_VOUS",
-      REFLET_JE: "REFLET_JE",
-      REFLETJE: "REFLET_JE",
-      REFLET_ACQ: "REFLET_ACQ",
-      REFLETACQ: "REFLET_ACQ",
-      REFLET: "REFLET_ACQ",
-      EXPLICATION: "EXPLICATION",
-      AUTRE: "AUTRE",
-      OTHER: "AUTRE",
-      UNKNOWN: "AUTRE",
-    };
-    return map[cleaned] || "AUTRE";
+    if (!prediction) return "AUTRE";
+    const t = prediction.trim().toUpperCase();
+    return OpenAIConseillerClassifier.ALLOWED_SET.has(t) ? t : "AUTRE";
   }
 
+  // ---- Appel OpenAI ---------------------------------------------------------
   private async callOpenAI(messages: ChatMessage[]): Promise<OpenAIResponse> {
     if (!this.isServer())
       throw new Error("OpenAIConseillerClassifier est server-only");
@@ -269,22 +309,38 @@ Si un tour contient explication + instruction au client → OUVERTURE.
     }
   }
 
+  // ---- Heuristiques (désactivées en strictPromptMode) -----------------------
+  // Micro-tours (≤ 20 chars) -> REFLET_ACQ
+  private microAcq(verbatim: string): string | null {
+    const v = verbatim.trim().toLowerCase();
+    if (v.length <= 20) {
+      if (/\b(ah|oui|ok|d['’]?accord|hum+|mm+h*|exactement)\b/.test(v)) {
+        return "REFLET_ACQ";
+      }
+    }
+    return null;
+  }
+
   // Heuristique forte (anti-AUTRE) respectant la priorité
   private strongHeuristic(verbatim: string): string | null {
     const t = verbatim.toLowerCase();
 
     // 1) ENGAGEMENT (priorité max)
     if (
-      /\b(je\s+vais|je\s+fais|je\s+m['’]occupe|je\s+m’en\s+occupe|je\s+vérifie|je\s+transfère|je\s+demande|je\s+regarde|je\s+vous\s+envoie|on\s+va)\b/.test(
+      /\b(je\s+vais|je\s+fais|je\s+m['’]occupe|je\s+m’en\s+occupe|je\s+vérifie|je\s+transfère|je\s+demande|je\s+regarde|je\s+vous\s+envoie|je\s+vous\s+donne|je\s+vais\s+voir|on\s+va)\b/.test(
         t
       )
     ) {
       return "ENGAGEMENT";
     }
 
-    // 2) OUVERTURE
+    // 2) OUVERTURE (directifs client, futur passif, guidage/impératifs)
     if (
-      /\b(vous\s+allez|vous\s+devrez|vous\s+pourrez|vous\s+recevrez|veuillez|merci\s+de|pouvez[-\s]?vous|pourriez[-\s]?vous)\b/.test(
+      /\b(vous\s+allez|vous\s+devrez|vous\s+pourrez|vous\s+recevrez|veuillez|merci\s+de|pouvez[-\s]?vous|pourriez[-\s]?vous|il\s+faut\s+que\s+vous|je\s+vous\s+invite\s+à|vous\s+allez\s+être|vous\s+serez)\b/.test(
+        t
+      ) ||
+      /\b(indiquez|donnez|joignez|cliquez|complétez|présentez)\b/.test(t) ||
+      /\b(ça\s+sera\s+la\s+(première|deuxième|troisième|[0-9]+(ère|e)?))\b/.test(
         t
       )
     ) {
@@ -318,7 +374,8 @@ Si un tour contient explication + instruction au client → OUVERTURE.
     if (
       /\b(parce\s+que|notre\s+politique|la\s+procédure|le\s+règlement|le\s+système|il\s+s'agit|cela\s+fonctionne)\b/.test(
         t
-      )
+      ) ||
+      /\b\d+([.,]\d+)?\b.*\b\d+([.,]\d+)?\b/.test(t) // présence de plusieurs nombres
     ) {
       return "EXPLICATION";
     }
@@ -359,22 +416,40 @@ Si un tour contient explication + instruction au client → OUVERTURE.
     }
 
     try {
+      // En mode strict, on ne court-circuite rien avec des heuristiques locales.
+      if (!this.config.strictPromptMode) {
+        // Micro-tour: retourne tout de suite (anti-AUTRE)
+        const micro = this.microAcq(text);
+        if (micro) {
+          return {
+            prediction: micro,
+            confidence: 0.8,
+            processingTime: Date.now() - startTime,
+            metadata: { microTurn: true, strictPromptMode: false },
+          };
+        }
+      }
+
       const messages = this.createMessages(text);
       const response = await this.callOpenAI(messages);
       const raw = response.choices[0]?.message?.content?.trim() || "AUTRE";
-      const normalized = this.normalizeLabel(raw);
 
-      // score "LLM a trouvé un label exact" vs "normalisation"
-      let finalPrediction = normalized;
-      let finalConfidence = this.calculateConfidence(raw, normalized);
+      // Normalisation strictement exacte
+      let finalPrediction = this.normalizeLabel(raw);
+
+      // Confiance simple et lisible
+      let finalConfidence =
+        OpenAIConseillerClassifier.ALLOWED_SET.has(finalPrediction) &&
+        finalPrediction !== "AUTRE"
+          ? 0.96
+          : 0.3;
       let forcedByHeuristic = false;
 
-      // ---- Anti-AUTRE : si le LLM rend AUTRE, on force via heuristique
-      if (finalPrediction === "AUTRE") {
+      // Si non-strict ET le modèle rend AUTRE, on tente l’heuristique (anti-AUTRE)
+      if (!this.config.strictPromptMode && finalPrediction === "AUTRE") {
         const forced = this.strongHeuristic(text);
         if (forced) {
           finalPrediction = forced;
-          // confiance plancher raisonnable
           finalConfidence = Math.max(finalConfidence, 0.68);
           forcedByHeuristic = true;
         }
@@ -390,6 +465,7 @@ Si un tour contient explication + instruction au client → OUVERTURE.
           forcedByHeuristic,
           usage: response.usage,
           temperature: this.config.temperature,
+          strictPromptMode: this.config.strictPromptMode,
         },
       };
     } catch (err: unknown) {
@@ -401,6 +477,7 @@ Si un tour contient explication + instruction au client → OUVERTURE.
           metadata: {
             error: err instanceof Error ? err.message : "Erreur OpenAI",
             usedFallback: true,
+            strictPromptMode: this.config.strictPromptMode,
           },
         };
       }
@@ -410,16 +487,10 @@ Si un tour contient explication + instruction au client → OUVERTURE.
         processingTime: Date.now() - startTime,
         metadata: {
           error: err instanceof Error ? err.message : "Erreur OpenAI",
+          strictPromptMode: this.config.strictPromptMode,
         },
       };
     }
-  }
-
-  private calculateConfidence(raw: string, normalized: string): number {
-    const upper = raw.toUpperCase().trim();
-    if ((ALLOWED as readonly string[]).includes(upper)) return 0.96;
-    if (normalized !== "AUTRE") return 0.82;
-    return 0.3;
   }
 
   // ---- Fallback simple ------------------------------------------------------
@@ -427,8 +498,10 @@ Si un tour contient explication + instruction au client → OUVERTURE.
     prediction: string;
     confidence: number;
   } {
-    const forced = this.strongHeuristic(verbatim);
-    if (forced) return { prediction: forced, confidence: 0.62 };
+    if (!this.config.strictPromptMode) {
+      const forced = this.strongHeuristic(verbatim);
+      if (forced) return { prediction: forced, confidence: 0.62 };
+    }
     return { prediction: "AUTRE", confidence: 0.3 };
   }
 

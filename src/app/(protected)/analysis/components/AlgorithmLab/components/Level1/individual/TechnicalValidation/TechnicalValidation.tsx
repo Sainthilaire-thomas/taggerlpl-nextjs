@@ -18,7 +18,7 @@ import { ClassifierSelector } from "../../../shared/ClassifierSelector";
 import { useLevel1Testing } from "../../../../hooks/useLevel1Testing";
 import { RunPanel } from "./RunPanel";
 import { MetricsPanel } from "./MetricsPanel";
-import { ResultsSample } from "./ResultsSample";
+import { ResultsPanel } from "./ResultsSample/ResultsPanel";
 import { useClassifierStatus } from "../../../../hooks/useClassifierStatus";
 
 interface ValidationResult {
@@ -207,7 +207,7 @@ export const TechnicalValidation: React.FC = () => {
         />
       )}
 
-      <ResultsSample results={testResults} limit={10} />
+      <ResultsPanel results={testResults} limit={10} />
     </Box>
   );
 };

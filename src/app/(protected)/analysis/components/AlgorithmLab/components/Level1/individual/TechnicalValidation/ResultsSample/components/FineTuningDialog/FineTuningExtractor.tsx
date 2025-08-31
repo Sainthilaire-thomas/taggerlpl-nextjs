@@ -1,5 +1,4 @@
 import { TVValidationResult, FineTuningData } from "../../types";
-import { generateErrorAnalysis } from "../../utils/errorAnalysis";
 import { formatFineTuningPrompt } from "./FineTuningFormatter";
 
 export class FineTuningExtractor {
@@ -15,64 +14,34 @@ export class FineTuningExtractor {
   }
 
   async extract(): Promise<string> {
-    const annotatedResults: FineTuningData[] = [];
-    let processedCount = 0;
-    let annotationsFound = 0;
+    console.log(`🔍 EXTRACTION pour ${this.results.length} résultats`);
 
-    console.log(`🔍 Début extraction pour ${this.results.length} résultats...`);
-
-    for (const result of this.results) {
-      const m = result.metadata || {};
-      const turnId = m.turnId ?? m.id;
-
-      processedCount++;
-      this.onProgress?.(processedCount, this.results.length);
-
-      if (!turnId) {
-        console.warn(`❌ Pas de turnId pour le résultat ${processedCount}`);
-        continue;
-      }
-
-      // ✅ CORRECTION : Utiliser les annotations des métadonnées directement
-      let annotations = [];
-
-      // Vérifier si les annotations sont dans metadata.annotations
-      if (
-        m.annotations &&
-        Array.isArray(m.annotations) &&
-        m.annotations.length > 0
-      ) {
-        annotations = m.annotations;
-        console.log(
-          `📝 Trouvé ${annotations.length} annotations dans metadata pour turnId ${turnId}`
-        );
-      } else {
-        console.warn(
-          `⚠️ Aucune annotation trouvée dans metadata pour turnId ${turnId}`
-        );
-      }
-
-      if (annotations.length > 0) {
-        annotationsFound++;
-        const fineTuningData = this.createFineTuningData(result, annotations);
-        annotatedResults.push(fineTuningData);
-      } else {
-        console.warn(`⚠️ Aucune annotation trouvée pour turnId ${turnId}`);
-      }
-    }
-
+    // 1) Sélection = **non conformes** (jeu d'entraînement)
+    const misclassified = this.results.filter((r) => r && !r.correct);
     console.log(
-      `✅ Extraction terminée: ${annotationsFound} exemples avec annotations trouvés sur ${processedCount} résultats traités`
+      `📊 Non conformes: ${misclassified.length}/${this.results.length}`
     );
 
-    if (annotatedResults.length === 0) {
-      throw new Error(
-        `Aucune annotation trouvée dans les ${this.results.length} résultats. 
-        Ajoutez des annotations avant d'extraire les données de fine-tuning.`
-      );
+    // 2) Convertit chaque non conforme en exemple JSONL (annotations = optionnel)
+    const trainingData: FineTuningData[] = [];
+    let processed = 0;
+
+    for (const result of misclassified) {
+      processed++;
+      this.onProgress?.(processed, misclassified.length);
+
+      const annotations = Array.isArray(result.metadata?.annotations)
+        ? (result.metadata!.annotations as any[])
+        : [];
+
+      const item = this.createFineTuningData(result, annotations);
+      trainingData.push(item);
     }
 
-    return formatFineTuningPrompt(annotatedResults, this.results);
+    console.log(`🎯 Générés: ${trainingData.length} exemples d'entraînement`);
+
+    // 3) Toujours générer le rapport (même si 0 non conformes → JSONL vide)
+    return formatFineTuningPrompt(trainingData, this.results);
   }
 
   private createFineTuningData(
@@ -88,32 +57,58 @@ export class FineTuningExtractor {
       next1: m.next_turn_verbatim || null,
     };
 
-    // Extraire les commentaires des annotations avec différents champs possibles
-    const expertComments = annotations
-      .map((ann: any) => ann.rationale || ann.comment || ann.note || ann.reason)
-      .filter(Boolean);
+    // commentaires experts si présents (facultatif)
+    const expertComments =
+      (annotations || [])
+        .map(
+          (ann: any) =>
+            ann?.rationale || ann?.comment || ann?.note || ann?.reason
+        )
+        .filter(Boolean) || [];
+
+    const systemHeader =
+      expertComments.length > 0
+        ? `Tu es un expert en analyse conversationnelle. Analyse le tour de parole dans son contexte et attribue le bon tag selon les annotations d'experts.
+
+Annotations disponibles :
+${expertComments.map((c: string, i: number) => `${i + 1}. ${c}`).join("\n")}`
+        : `Tu es un expert en analyse conversationnelle. Analyse le tour de parole dans son contexte et attribue le bon tag en respectant la charte de taggage (ENGAGEMENT > OUVERTURE > REFLET_VOUS > REFLET_JE > REFLET_ACQ > EXPLICATION).`;
 
     return {
       messages: [
-        {
-          role: "system",
-          content: this.generateSystemPrompt(expertComments),
-        },
+        { role: "system", content: systemHeader },
         {
           role: "user",
-          content: this.generateUserPrompt(context),
+          content: `Contexte conversationnel :
+${context.prev2 ? `Tour -2: "${context.prev2}"` : ""}
+${context.prev1 ? `Tour -1: "${context.prev1}"` : ""}
+**Tour à analyser**: "${context.current}"
+${context.next1 ? `Tour +1: "${context.next1}"` : ""}
+
+Algorithme actuel prédit: ${result.predicted} (confiance: ${(
+            (result.confidence || 0) * 100
+          ).toFixed(1)}%)
+Quel devrait être le bon tag selon vous ?`,
         },
         {
           role: "assistant",
-          content: this.generateAssistantResponse(
-            result,
-            expertComments,
-            annotations
-          ),
+          content: `Le tag correct est **${result.goldStandard}**.
+
+${
+  expertComments.length > 0
+    ? `Justification selon l'expert : ${expertComments[0]}`
+    : `Justification : application stricte de la charte (priorité à l'action).`
+}
+
+L'algorithme a ${
+            result.predicted === result.goldStandard
+              ? "correctement"
+              : "incorrectement"
+          } prédit "${result.predicted}" au lieu de "${result.goldStandard}".`,
         },
       ],
       metadata: {
-        turnId: parseInt(String(m.turnId || m.id)),
+        turnId: parseInt(String(m.turnId || m.id || 0), 10),
         verbatim: result.verbatim,
         context,
         predicted: result.predicted,
@@ -121,54 +116,14 @@ export class FineTuningExtractor {
         confidence: result.confidence,
         annotations: expertComments,
         algo: {
-          classifier:
-            m.classifier || annotations[0]?.algo?.classifier || "unknown",
+          classifier: m.classifier || "unknown",
           model: m.model || null,
           type: m.type || null,
           provider: m.provider || null,
           temperature: m.temperature || null,
           max_tokens: m.maxTokens || null,
         },
-        rawAnnotations: annotations, // Garder les annotations complètes
       },
     };
-  }
-
-  private generateSystemPrompt(expertComments: string[]): string {
-    return `Tu es un expert en analyse conversationnelle. Analyse le tour de parole dans son contexte et attribue le bon tag parmi les options disponibles. 
-
-Instructions :
-- Considère le contexte conversationnel complet (tours précédents et suivants)
-- Identifie la stratégie ou l'intention communicative du locuteur
-- Choisis le tag le plus approprié selon la taxonomie définie
-- Justifie brièvement ton choix
-
-Annotations d'experts disponibles :
-${expertComments.map((comment) => `- ${comment}`).join("\n")}`;
-  }
-
-  private generateUserPrompt(context: any): string {
-    return `Contexte conversationnel :
-${context.prev2 ? `Tour -2: ${context.prev2}` : ""}
-${context.prev1 ? `Tour -1: ${context.prev1}` : ""}
-**Tour à analyser**: ${context.current}
-${context.next1 ? `Tour +1: ${context.next1}` : ""}
-
-Quel tag attribuerais-tu à ce tour de parole ?`;
-  }
-
-  private generateAssistantResponse(
-    result: TVValidationResult,
-    expertComments: string[],
-    annotations: any[]
-  ): string {
-    // Utiliser le gold_label de l'annotation si disponible, sinon goldStandard
-    const correctTag = annotations[0]?.gold_label || result.goldStandard;
-
-    return `Le tag approprié est **${correctTag}**.
-
-Justification : ${
-      expertComments[0] || "Tag correct selon l'annotation experte."
-    }`;
   }
 }

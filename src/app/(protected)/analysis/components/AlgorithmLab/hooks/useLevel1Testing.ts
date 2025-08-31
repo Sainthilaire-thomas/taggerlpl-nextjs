@@ -118,6 +118,9 @@ const mapTurnsToGoldStandard = (
             end: t.end_time,
             turnId: t.id,
 
+            // ✅ AJOUT CRUCIAL: Inclusion des annotations
+            annotations: Array.isArray(t.annotations) ? t.annotations : [],
+
             // +1
             next_turn_verbatim: t.next_turn_verbatim || undefined,
             next_turn_tag: t.next_turn_tag
@@ -153,6 +156,9 @@ const mapTurnsToGoldStandard = (
           callId: t.call_id,
           nextOf: t.id,
 
+          // ✅ AJOUT CRUCIAL: Inclusion des annotations du tour parent
+          annotations: Array.isArray(t.annotations) ? t.annotations : [],
+
           // -1
           prev1_turn_id: p1ForClient?.id,
           prev1_turn_verbatim: p1ForClient?.verbatim,
@@ -172,6 +178,33 @@ const mapTurnsToGoldStandard = (
       });
     }
   }
+
+  // ✅ AJOUT: Debug pour vérifier la transmission des annotations
+  const totalAnnotations = out.reduce((total, sample) => {
+    const annotations = sample.metadata?.annotations || [];
+    return total + annotations.length;
+  }, 0);
+
+  console.log(`🔍 mapTurnsToGoldStandard: ${out.length} échantillons créés`);
+  console.log(`📝 ${totalAnnotations} annotations transmises au total`);
+
+  // Debug détaillé: afficher quelques exemples avec annotations
+  const withAnnotations = out.filter(
+    (s) => s.metadata?.annotations?.length > 0
+  );
+  if (withAnnotations.length > 0) {
+    console.log(
+      `✅ ${withAnnotations.length} échantillons contiennent des annotations`
+    );
+    console.log("📋 Premier exemple avec annotations:", {
+      verbatim: withAnnotations[0].verbatim.substring(0, 50) + "...",
+      annotationsCount: withAnnotations[0].metadata?.annotations?.length,
+      firstAnnotation: withAnnotations[0].metadata?.annotations?.[0],
+    });
+  } else {
+    console.warn("⚠️ Aucun échantillon ne contient d'annotations");
+  }
+
   return out;
 };
 
@@ -280,12 +313,19 @@ export const useLevel1Testing = () => {
       }
 
       const samples = randomSample(base, sampleSize);
-      const verbatims = samples.map((s) => s.verbatim);
+      const inputs = samples.map((s) => {
+        const m = s.metadata || {};
+        return /OpenAI3TConseillerClassifier/i.test(classifierName)
+          ? `T-2: ${m.prev2_turn_verbatim ?? "—"}\nT-1: ${
+              m.prev1_turn_verbatim ?? "—"
+            }\nT0: ${s.verbatim ?? ""}`
+          : s.verbatim;
+      });
 
       // 1) Si le classifieur propose un batch natif → on l’utilise
       if (typeof (classifier as any).batchClassify === "function") {
         try {
-          const outs = await (classifier as any).batchClassify(verbatims);
+          const outs = await (classifier as any).batchClassify(inputs);
           return outs.map((out: ClassificationResult, i: number) => ({
             verbatim: samples[i].verbatim,
             goldStandard: samples[i].expectedTag,
@@ -319,7 +359,7 @@ export const useLevel1Testing = () => {
           const r = await fetch("/api/algolab/classify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ verbatims }),
+            body: JSON.stringify({ verbatims: inputs }),
           });
           const j = await r.json();
           if (!j.ok || !Array.isArray(j.results)) {
@@ -348,22 +388,26 @@ export const useLevel1Testing = () => {
         }
       }
 
-      // 3) Fallback : boucle item par item (comportement historique)
+      // 3) Fallback : boucle item par item
       const results: ValidationResult[] = [];
-      for (const sample of samples) {
+      for (let i = 0; i < samples.length; i++) {
+        const sample = samples[i];
+        const input = inputs[i]; // ← IMPORTANT : T-2/T-1/T0 pour 3T, sinon verbatim
+
         try {
           const start = Date.now();
-          const prediction = await classifier.classify(sample.verbatim);
+          const prediction = await classifier.classify(input);
+
           const expected = sample.expectedTag;
           results.push({
-            verbatim: sample.verbatim,
+            verbatim: sample.verbatim, // on garde l’affichage du T0
             goldStandard: expected,
             predicted: prediction.prediction,
             confidence: prediction.confidence ?? 0,
             correct: prediction.prediction === expected,
             processingTime: prediction.processingTime ?? Date.now() - start,
             metadata: {
-              ...sample.metadata,
+              ...sample.metadata, // contient prev2/prev1/next1 pour l’UI
               classifier: classifierName,
               ...(prediction.metadata || {}),
             },

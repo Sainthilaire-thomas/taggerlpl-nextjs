@@ -133,6 +133,7 @@ export interface ResultsTableBodyProps {
   totalCount: number;
   onPageChange: (event: unknown, newPage: number) => void;
   onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  showPagination?: boolean; // 🚀 Nouvelle prop
 }
 
 export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
@@ -142,6 +143,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
   totalCount,
   onPageChange,
   onRowsPerPageChange,
+  showPagination = true,
 }) => {
   const theme = useTheme();
   const [openCommentFor, setOpenCommentFor] = useState<string | number | null>(
@@ -514,17 +516,46 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
           </TableBody>
         </Table>
       </TableContainer>
-
-      <TablePagination
-        component="div"
-        count={totalCount}
-        page={page}
-        onPageChange={onPageChange}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={onRowsPerPageChange}
-        rowsPerPageOptions={[10, 25, 50, 100]}
-        labelRowsPerPage="Taille de page"
-      />
+      {showPagination ? (
+        <TablePagination
+          component="div"
+          count={totalCount}
+          page={page}
+          onPageChange={onPageChange}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={onRowsPerPageChange}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          showFirstButton
+          showLastButton
+          labelRowsPerPage="Lignes par page"
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}-${to} sur ${count !== -1 ? count : `plus de ${to}`}`
+          }
+          sx={{
+            borderTop: 1,
+            borderColor: "divider",
+            bgcolor: "background.paper",
+          }}
+        />
+      ) : (
+        <Box
+          sx={{
+            p: 2,
+            borderTop: 1,
+            borderColor: "divider",
+            bgcolor: "action.hover",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 2,
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            📊 Tous les résultats affichés : <strong>{pageItems.length}</strong>
+            {pageItems.length > 100 && " • Scrollez pour naviguer"}
+          </Typography>
+        </Box>
+      )}
     </>
   );
 };

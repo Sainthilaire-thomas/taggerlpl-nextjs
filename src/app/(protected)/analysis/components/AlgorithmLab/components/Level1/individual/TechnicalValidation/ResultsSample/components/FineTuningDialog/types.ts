@@ -85,3 +85,26 @@ export interface FineTuningExtractionResult {
   errorAnalysis: ErrorAnalysis;
   annotatedExamples: FineTuningData[];
 }
+
+// types.ts (ajoute en bas)
+export interface LabelMetrics {
+  label: string;
+  support: number;
+  tp: number;
+  fp: number;
+  fn: number;
+  precision: number;
+  recall: number;
+  f1: number;
+}
+
+export interface MetricsSummary {
+  accuracy: number;
+  correct: number;
+  total: number;
+  avgProcessingTime?: number;
+  avgConfidence?: number;
+  kappa?: number; // si tu l’as déjà calculée côté MetricsPanel
+  perLabel: LabelMetrics[];
+  confusion: Record<string, Record<string, number>>; // predicted -> gold -> count
+}

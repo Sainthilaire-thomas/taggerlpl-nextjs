@@ -4,6 +4,7 @@ import { ClassifierRegistry } from "./ClassifierRegistry";
 import { RegexConseillerClassifier } from "../conseillerclassifiers/RegexConseillerClassifier";
 import { SpacyConseillerClassifier } from "../conseillerclassifiers/SpacyConseillerClassifier";
 import { OpenAIConseillerClassifier } from "../conseillerclassifiers/OpenAIConseillerClassifier";
+import { OpenAI3TConseillerClassifier } from "../conseillerclassifiers/OpenAI3TConseillerClassifier";
 
 export function initializeClassifiers(): void {
   console.log("🚀 Initialisation des classificateurs Algorithm Lab...");
@@ -47,8 +48,7 @@ export function initializeClassifiers(): void {
         console.warn("🟡 Test connexion spaCy échoué:", error.message);
       });
 
-    // 3. NOUVEAU : Classificateur OpenAI GPT
-    // 3) OpenAI — toujours enregistré, mais valide seulement si clé présente
+    // 3) OpenAI — classificateur 1 tour
     const openaiClassifier = new OpenAIConseillerClassifier({
       apiKey: process.env.OPENAI_API_KEY, // ✅ uniquement côté serveur
       model: "gpt-4o-mini",
@@ -58,8 +58,6 @@ export function initializeClassifiers(): void {
       enableFallback: true,
     });
     ClassifierRegistry.register("OpenAIConseillerClassifier", openaiClassifier);
-
-    // (optionnel) log serveur
     console.log("[Algolab] has OPENAI_API_KEY:", !!process.env.OPENAI_API_KEY);
 
     if (openaiClassifier.validateConfig()) {
@@ -68,11 +66,13 @@ export function initializeClassifiers(): void {
         .testConnection()
         .then((ok) => {
           console.log(
-            ok ? "🟢 OpenAI API: Connecté" : "🟡 OpenAI API: non accessible"
+            ok
+              ? "🟢 OpenAI API (1T): Connecté"
+              : "🟡 OpenAI API (1T): non accessible"
           );
         })
         .catch((e) =>
-          console.warn("🟡 Test connexion OpenAI échoué:", e?.message)
+          console.warn("🟡 Test connexion OpenAI (1T) échoué:", e?.message)
         );
     } else {
       console.log(
@@ -80,9 +80,39 @@ export function initializeClassifiers(): void {
       );
     }
 
-    // 4. FUTUR : Autres classificateurs (préparation)
-    /* 
-    // Mistral AI (nécessite clé API) 
+    // 4) OpenAI — classificateur 3 tours (T-2, T-1, T0)
+    const openai3T = new OpenAI3TConseillerClassifier({
+      apiKey: process.env.OPENAI_API_KEY,
+      model: "gpt-4o-mini",
+      temperature: 0,
+      maxTokens: 6,
+      timeout: 10000,
+      enableFallback: true,
+      strictPromptMode: true, // prompt-only
+    });
+    ClassifierRegistry.register("OpenAI3TConseillerClassifier", openai3T);
+    console.log("✓ OpenAI3TConseillerClassifier enregistré");
+
+    if (openai3T.validateConfig()) {
+      openai3T
+        .testConnection()
+        .then((ok) =>
+          console.log(
+            ok
+              ? "🟢 OpenAI API (3T): Connecté"
+              : "🟡 OpenAI API (3T): non accessible"
+          )
+        )
+        .catch((e) => console.warn("🟡 Test OpenAI (3T) échoué:", e?.message));
+    } else {
+      console.log(
+        "⚠️  OpenAI3TConseillerClassifier enregistré (clé API manquante)"
+      );
+    }
+
+    // 5) FUTUR : autres classificateurs (préparation)
+    /*
+    // Mistral AI (nécessite clé API)
     if (process.env.MISTRAL_API_KEY) {
       const mistralClassifier = new MistralConseillerClassifier({
         apiKey: process.env.MISTRAL_API_KEY
@@ -90,7 +120,7 @@ export function initializeClassifiers(): void {
       ClassifierRegistry.register('MistralConseillerClassifier', mistralClassifier);
       console.log('✓ MistralConseillerClassifier enregistré');
     }
-    
+
     // Hugging Face (nécessite clé API)
     if (process.env.HUGGINGFACE_API_KEY) {
       const hfClassifier = new HuggingFaceConseillerClassifier({
