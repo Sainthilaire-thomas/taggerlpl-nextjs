@@ -21,6 +21,7 @@ import { useWorkflowManagement } from "../../hooks/useWorkflowManagement";
 import { NavigationTabs } from "./NavigationTabs";
 import { InterAnnotatorAgreement } from "../Level0/InterAnnotatorAgreement";
 import { Level1Interface } from "../Level1/Level1Interface";
+import { Level2Interface } from "../Level2/Level2Interface";
 // Props pour l'intégration dans la page analysis
 interface AlgorithmLabInterfaceProps {
   selectedOrigin?: string | null;
@@ -103,39 +104,7 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
       case 1:
         return <Level1Interface />;
       case 2:
-        return (
-          <Box sx={styles.levelContentBox}>
-            <Typography
-              variant="h4"
-              gutterBottom
-              sx={{ fontWeight: "bold", color: theme.palette.text.primary }}
-            >
-              Validation Scientifique
-            </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-              Test des hypothèses de recherche H1-H2-H3
-            </Typography>
-            <Paper sx={styles.prerequisitePaper}>
-              <Typography
-                variant="body2"
-                sx={{ mb: 2, color: theme.palette.text.primary }}
-              >
-                <strong>Prérequis :</strong> Niveaux 0 et 1 validés
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{
-                  color:
-                    theme.palette.mode === "dark"
-                      ? theme.palette.text.secondary
-                      : theme.palette.primary.dark,
-                }}
-              >
-                Indicateurs: {availableIndicators.join(", ") || "Aucun"}
-              </Typography>
-            </Paper>
-          </Box>
-        );
+        return <Level2Interface />;
       default:
         return <InterAnnotatorAgreement />;
     }
