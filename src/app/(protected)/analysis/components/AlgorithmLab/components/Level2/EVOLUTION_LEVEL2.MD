@@ -1,343 +1,277 @@
-# Roadmap d’évolutions – AlgorithmLab Level2 (Validation scientifique H1)
+# Roadmap d'évolutions – AlgorithmLab Level2 (Validation scientifique H1) - MISE À JOUR
 
-## Objectifs
+## État actuel (réalisé) ✅
 
-- Aligner complètement la validation H1 avec la thèse (définitions, seuils, statistiques).
-- Remplacer toute valeur “mockée” par des **calculs réels** et **traçables** .
-- Améliorer la **reproductibilité** , la **sélection d’échantillons** , et la **comparabilité** des runs.
-- Garder une **UX claire** (aperçu → détails → stats → rapport).
+### Architecture existante fonctionnelle
 
----
+L'architecture de Level2 est maintenant stabilisée autour de composants factorisés :
 
-## Plan d’exécution (ordre recommandé)
+- **`Level2Interface.tsx`** : composant orchestrateur principal avec onglets
+- **`StatisticalSummary.tsx`** : synthèse académique complète (branché sur résultats réels)
+- **`StatisticalTestsPanel.tsx`** : détails techniques des tests statistiques
+- **`shared/stats.ts`** : moteur de calculs statistiques robuste
 
-### 1) Filtrage & normalisation des données (critique)
+### Filtrage et normalisation robustes ✅
 
-**But.** Garantir que l’échantillon H1 est strictement conforme (paires adjacentes complètes et tags normalisés).
+- Filtrage inspiré de `useLevel1Testing` avec validation stricte
+- Normalisation cohérente des tags conseiller (familles) et client
+- Extraction via fonctions dédiées (`extractConseillerStrategy`, `extractClientReaction`)
+- Logs de débogage pour traçabilité
 
-**Actions.**
+### Moteur statistique réel ✅
 
-- Centraliser une fonction `normalizeTag()` et `normalizeClientReaction()` (majuscules, espaces/underscores) dans `algorithms/shared/tags.ts`.
-- Appliquer la **même normalisation** lors du filtrage initial (pas seulement à l’analyse) : éviter l’`includes()` fragile sur `CLIENT POSITIF/NEGATIF/NEUTRE`.
-- Vérifier **l’adjacence** (conseiller → client suivant) et ignorer les cas ambigus.
-- (Option) Dédupliquer par `(callid, turnid)` si une même paire est chargée deux fois.
+- Chi-carré d'indépendance avec p-values calculées (approximation Abramowitz-Stegun)
+- Tests Fisher pairwise avec odds ratios
+- ANOVA sur proportions (indicative)
+- V de Cramér pour taille d'effet
+- Suppression de toutes les valeurs "mockées"
 
-  **Acceptation.**
+### Interface utilisateur mature ✅
 
-- Le panneau “Debug Filtrage” affiche le **même nombre** de paires valides entre l’étape filtrage et l’étape analyse.
-- Les 5 échantillons affichés montrent des tags **normalisés** cohérents.
-
----
-
-### 2) Critères H1 — ajouter le volet “négatif” (critique)
-
-**But.** Intégrer les seuils négatifs d’H1 (Actions < 25% négatif ; Explications > 80% négatif).
-
-**Actions.**
-
-- Dans `Level2Interface.tsx`, compléter `criteriaMet` par :
-
-  - `actionsNegativeBelow25` (moyenne ENGAGEMENT+OUVERTURE),
-  - `explanationsNegativeAbove80` (EXPLICATION seul).
-
-- Paramétrer les **seuils** via un objet `HYPOTHESIS_THRESHOLDS` (env ou constante exportée).
-
-  **Acceptation.**
-
-- Le verdict H1 tient compte de **≥ 2 critères** parmi positifs/écart et négatifs, avec badges dédiés.
+- Onglets structurés : Aperçu H1 → Données → Tests → Rapport
+- Tableaux avec codes couleurs selon seuils
+- Badges de validation dynamiques
+- Composants factorisés et réutilisables
 
 ---
 
-### 3) Moteur stats fiable (remplacer valeurs “mockées”) (critique)
+## Plan d'exécution restant (ordre recommandé)
 
-**But.** Calculer des p-values réelles et des tailles d’effet.
+### 1) Critères H1 complets - ajouter le volet "négatif" (critique)
 
-**Actions.**
+**Status : PARTIELLEMENT FAIT**
 
-- Créer `algorithms/shared/stats.ts` :
+- ✅ Seuils positifs implémentés (Actions > 50%, Explications < 5%)
+- ❌ Seuils négatifs manquants (Actions < 25% négatif, Explications > 80% négatif)
 
-  - **Chi-deux d’indépendance** sur tableau `stratégies × {pos, neutre, neg}`
-    - renvoyer `{chi2, ddl, pValue, cramersV}` (p via CDF χ²).
-  - **Fisher exact 2×2** (pairwise entre stratégies) sur `{positif, négatif}`.
-    - renvoyer `oddsRatio`, `pValue`.
-  - **IC de proportion** (95%) par stratégie (Wilson recommandé).
-  - (Option) **Test de proportions global** + **Marascuilo** en post-hoc au lieu d’ANOVA approximative.
+**Actions restantes :**
 
-- Ajouter **unit tests** simples (Jest) avec tableaux jouets pour vérifier les formules.
+- Compléter `summarizeH1()` avec critères négatifs
+- Ajouter paramétrage via `config/hypotheses.ts`
+- Mettre à jour le score de validation global
 
-  **Acceptation.**
+**Acceptation :**
 
-- `StatisticalTestsPanel` n’emploie plus de p-values “au doigt mouillé”.
-- `StatisticalSummary` **consomme** les résultats du moteur (props `validationResults`) et n’affiche **aucune constante** codée en dur.
+- Le verdict H1 tient compte de ≥ 3 critères sur 5 (2 positifs + 2 négatifs + écart)
 
 ---
 
-### 4) Câblage `StatisticalSummary` ← résultats réels
+### 2) Gestion REFLET granulaire (amélioration UX)
 
-**But.** Supprimer les chiffres figés (χ², F, V, IC ±5) et afficher les vrais résultats.
+**Status : NON COMMENCÉ**
 
-**Actions.**
+**Actions :**
 
-- Depuis `Level2Interface.tsx`, calculer et passer un objet `validationResults` à `StatisticalSummary` :
+- Toggle UI "Détailler REFLET" dans `Level2Interface`
+- Logique d'agrégation/désagrégation dans `computeH1Analysis`
+- Exclure REFLET des critères décisifs H1 (exploration uniquement)
 
-  - `chi2, ddl, p, V`,
-  - liste des `pairwiseFisher` significatifs (libellés clairs),
-  - IC par stratégie,
-  - synthèse (écart empirique Actions vs Explication).
+**Acceptation :**
 
-- Retirer les “127.43”, “p<.001” statiques, etc.
-
-  **Acceptation.**
-
-- Les valeurs changent quand l’échantillon change (preuve que c’est dynamique).
-- La section “Données Standardisées pour Publication” reprend **les vraies valeurs** .
+- Mode OFF : REFLET agrégé (défaut pour H1)
+- Mode ON : REFLET_VOUS/JE/ACQ séparés (exploration)
 
 ---
 
-### 5) Gestion REFLET (granularité optionnelle)
+### 3) Garde-fous sur la taille d'échantillon (robustesse)
 
-**But.** Gérer REFLET comme **famille** (agrégée) ou par **sous-types** si disponibles.
+**Status : NON COMMENCÉ**
 
-**Actions.**
+**Actions :**
 
-- Ajout d’un **toggle UI** (“Détailler REFLET”) qui :
+- Seuils `minNPerGroup` (30) et `minNTotal` (150) configurables
+- Messages d'avertissement si seuils non atteints
+- Forcer statut `PARTIALLY_VALIDATED` sur petits échantillons
 
-  - ON : affiche REFLET_VOUS / REFLET_JE / REFLET_ACQ,
-  - OFF : agrège en REFLET.
+**Acceptation :**
 
-- (Option) Exclure REFLET des critères décisifs H1 (gardé en exploratoire).
-
-  **Acceptation.**
-
-- Le tableau et les stats se re-computent correctement dans les deux modes.
+- Bandeau d'alerte visible si N insuffisant
+- Statut automatiquement dégradé
 
 ---
 
-### 6) Garde-fous sur la taille d’échantillon
+### 4) Run history & reproductibilité (traçabilité)
 
-**But.** Éviter des conclusions “VALIDÉE” sur petits N.
+**Status : NON COMMENCÉ**
 
-**Actions.**
+**Architecture à créer :**
 
-- Introduire des **seuils N** :
+```
+components/RunHistory/
+├── RunList.tsx           # Liste des runs précédents
+├── RunComparison.tsx     # Comparaison entre runs
+└── types.ts             # Types pour run history
+```
 
-  - `minNPerGroup` (ex. 30) et `minNTotal` (ex. 150) paramétrables.
+**Actions :**
 
-- Si seuils non atteints :
+- Créer table Supabase `algorithmlab_runs`
+- Composant `RunList` avec historique des validations
+- Boutons "Relancer" et "Comparer"
+- Signature de dataset pour détecter les changements
 
-  - afficher **Warning** ,
-  - forcer le statut **PARTIALLY_VALIDATED** ou **NOT_VALIDATED** .
+**Acceptation :**
 
-    **Acceptation.**
-
-- Le bandeau de conclusion change selon N, avec message explicite.
-
----
-
-### 7) Reproductibilité & “Run history” (intégration RunPanel)
-
-**But.** Permettre de **sélectionner un échantillon** (filtres d’origine, dates, corpus) et de **rejouer/Comparer** des runs.
-
-**Actions.**
-
-- Créer `components/RunHistory/RunList.tsx` (carte simple) listant les derniers runs : algo, date/heure, échantillon, N, verdict H1, χ², V.
-- Enregistrer chaque run dans Supabase (`algorithmlab_runs`) avec :
-
-  - `params` (filtres, seuils, versions),
-  - `stats` (résultats clé),
-  - `dataset_signature` (hash ids paires),
-  - `created_at`, `user`.
-
-- Dans `RunPanel`, ajouter :
-
-  - bouton **“Relancer avec mêmes paramètres”** ,
-  - bouton **“Comparer à…”** (affiche diff des métriques).
-
-    **Acceptation.**
-
-- On peut **reprendre un run** depuis la liste et retrouver **exactement** les mêmes chiffres.
-- Le composant affiche au moins **5 derniers runs** avec résumé.
+- Reproductibilité exacte des résultats précédents
+- Comparaisons visuelles entre runs
 
 ---
 
-### 8) Export & traçabilité
+### 5) Export & auditabilité (facilitation)
 
-**But.** Faciliter les revues et annexes.
+**Status : NON COMMENCÉ**
 
-**Actions.**
+**Actions :**
 
-- Ajouter `Export` (CSV/JSON) des :
+- Fonctions d'export CSV/JSON dans `shared/export.ts`
+- Boutons d'export dans chaque onglet
+- Métadonnées complètes (timestamp, version, signature)
 
-  - paires filtrées,
-  - tableaux agrégés,
-  - résultats stats.
+**Acceptation :**
 
-    **Acceptation.**
-
-- Un clic “Exporter CSV/JSON” génère un fichier téléchargeable.
-
----
-
-### 9) Performance & robustesse
-
-**But.** Garder l’UI fluide sur gros volumes.
-
-**Actions.**
-
-- Extraire les calculs lourds dans un **Web Worker** (ex. `stats.worker.ts`) si `N` > seuil.
-- Systématiser `useMemo` avec dépendances **minimales** .
-- Ajouter des **guard clauses** (évite divisions par 0, NaN, etc.).
-
-  **Acceptation.**
-
-- Pas de freeze UI sur un corpus ×3 ; le spinner n’apparaît que brièvement.
+- Export des données brutes, agrégats et résultats stats
+- Fichiers prêts pour annexes de thèse
 
 ---
 
-### 10) Paramétrage & Typescript strict
+### 6) Performance & robustesse (optimisation)
 
-**But.** Rendre tout **configurable** et **typé** .
+**Status : PARTIELLEMENT FAIT**
 
-**Actions.**
+- ✅ Mémoïsation basique avec `useMemo`
+- ❌ Web Workers pour gros volumes
+- ❌ Guard clauses systématiques
 
-- Fichier `config/hypotheses.ts` :
+**Actions restantes :**
 
-  - seuils H1 (positif, négatif, différences, N mini),
-  - options REFLET,
-  - activer/désactiver certains tests.
-
-- Types dédiés : `H1Criteria`, `H1Stats`, `ChiSquareResult`, `FisherResult`, `ConfidenceInterval`.
-
-  **Acceptation.**
-
-- Aucune “magic number” dans les composants UI ; tout vient de `config`.
+- Web Worker `stats.worker.ts` si N > 1000
+- Protection divisions par zéro dans tous les calculs
+- Optimisation des re-renders
 
 ---
 
-### 11) Documentation développeur (ce README)
+### 7) Configuration centralisée (maintenabilité)
 
-**But.** Rendre le module transmissible et auditable.
+**Status : NON COMMENCÉ**
 
-**Actions.**
+**Structure à créer :**
 
-- Décrire le **pipeline** (Filtrage → Agrégation → Stats → Synthèse).
-- Ajouter une **Data Dictionary** minimale (champs utilisés : `tag`, `next_turn_tag`, etc.).
-- Exemple d’**API Supabase** pour `algorithmlab_runs`.
+```
+config/
+├── hypotheses.ts        # Seuils H1 paramétrables
+├── validation.ts        # Critères de validation
+└── display.ts          # Options d'affichage
+```
 
-  **Acceptation.**
+**Actions :**
 
-- Un dev “neuf” peut rejouer un run en 15 min.
-
----
-
-## Découpage en PRs (proposé)
-
-1. **PR1 – Filtrage & normalisation**
-2. **PR2 – Critères H1 (incl. négatifs) + config**
-3. **PR3 – Moteur stats + tests unitaires**
-4. **PR4 – Wiring StatisticalSummary → résultats réels**
-5. **PR5 – REFLET (toggle & agrégation)**
-6. **PR6 – Garde-fous N & messages UX**
-7. **PR7 – Run history (modèle Supabase + UI basique)**
-8. **PR8 – Export CSV/JSON**
-9. **PR9 – Perf (worker) & polish UX**
-10. **PR10 – Docs & nettoyage final**
+- Externaliser toutes les "magic numbers"
+- Types TypeScript stricts (`H1Criteria`, `ValidationThresholds`)
+- Interface d'admin pour ajuster les seuils
 
 ---
 
-## Checklist rapide
+## Découpage en PRs actualisé
 
-- [ ] Normalisation unique des tags conseiller & client.
-- [ ] Filtrage strict des paires adjacentes + dédup.
-- [ ] Seuils H1 paramétrés (positif, négatif, écart).
-- [ ] Moteur **χ² + V** , **Fisher** (réel 2×2), **IC 95% (Wilson)** .
-- [ ] `StatisticalSummary` branché sur résultats **dynamiques** .
-- [ ] Toggle **REFLET détaillé/agrégé** .
-- [ ] **Garde-fous N** et messages.
-- [ ] **Run history** (création table, enregistrement, liste).
-- [ ] **Export** des données & résultats.
-- [ ] **Perf** (memo/worker) & **tests** .
-- [ ] **Docs** (pipeline + data dictionary).
+### PR restantes prioritaires
+
+1. **PR1 – Critères H1 complets** (négatifs + config)
+   - Seuils négatifs dans `summarizeH1`
+   - Fichier `config/hypotheses.ts`
+   - Score de validation étendu
+2. **PR2 – Garde-fous N + REFLET toggle**
+   - Messages d'avertissement taille échantillon
+   - Mode exploration REFLET détaillé
+   - UX améliorée
+3. **PR3 – Run history (modèle + UI basique)**
+   - Table Supabase `algorithmlab_runs`
+   - Composant `RunList` minimal
+   - Reproductibilité des résultats
+4. **PR4 – Export + performance**
+   - Fonctions d'export CSV/JSON
+   - Web Worker pour gros volumes
+   - Guard clauses robustes
+5. **PR5 – Configuration + nettoyage final**
+   - Config centralisée
+   - Types TypeScript stricts
+   - Documentation développeur
 
 ---
 
-## Notes d’implémentation (pistes rapides)
+## Checklist mise à jour
 
-- **Wilson CI** (proportion) :
+### Réalisé ✅
 
-  `p̂ = x/n ; z = 1.96 ; denom = 1 + z²/n ; center = (p̂ + z²/(2n))/denom ; half = z*sqrt((p̂(1-p̂)/n) + z²/(4n²))/denom ; IC = [center - half, center + half]`.
+- [x] Normalisation robuste des tags
+- [x] Filtrage strict des paires adjacentes
+- [x] Moteur χ² + V + Fisher (calculs réels)
+- [x] `StatisticalSummary` branché sur résultats dynamiques
+- [x] Architecture de composants factorisés
+- [x] Interface onglets avec codes couleurs
+- [x] Logging et traçabilité de base
 
-- **Cramér’s V** : `sqrt(χ² / (N * (min(r-1, c-1))))` avec `r = nb stratégies`, `c = 3`.
-- **Fisher 2×2** : si besoin d’un exact, soit petite implémentation combinatoire (hypergéométrique), soit bascule sur un mini util interne.
+### À réaliser ❌
 
-# Addendum — Stratégie = Famille & gestion de REFLET
+- [ ] Seuils H1 complets (positif + négatif + écart)
+- [ ] Toggle REFLET détaillé/agrégé
+- [ ] Garde-fous N et messages UX
+- [ ] Run history (table + enregistrement + liste)
+- [ ] Export des données & résultats
+- [ ] Web Worker pour performance
+- [ ] Configuration centralisée
+- [ ] Types TypeScript complets
+- [ ] Documentation pipeline
 
-## Décision de conception (actuelle)
+---
 
-- **Stratégie (H1) = Famille** issue du référentiel `tags.family` pour les tours **conseiller** :
+## Notes d'implémentation spécifiques
 
-  **ENGAGEMENT** , **OUVERTURE** , **EXPLICATION** , **REFLET** .
+### Architecture des composants validée
 
-- **Aucune normalisation “libellé → stratégie”** nécessaire côté conseiller si `family` est disponible.
+```typescript
+Level2Interface (orchestrateur)
+├── shared/stats.ts (moteur de calculs)
+├── validation/StatisticalSummary.tsx (rapport académique)
+├── validation/StatisticalTestsPanel.tsx (détails techniques)
+└── [futurs] RunHistory/RunList.tsx (historique)
+```
 
-  (On évite les heuristiques du style `startsWith("REFLET")`.)
+### Calculs statistiques opérationnels
 
-- Côté **client** , on continue à **normaliser** les réactions vers
+- **Chi-carré** : implémentation Abramowitz-Stegun pour p-values
+- **Fisher exact** : approximation Wald pour 2×2 pairwise
+- **V de Cramér** : `sqrt(χ² / (N * min(r-1, c-1)))`
+- **Intervalles de confiance** : Wilson recommandé (à implémenter)
 
-  **CLIENT_POSITIF / CLIENT_NEGATIF / CLIENT_NEUTRE** (tolérance espaces/underscores/casse).
+### Données exploitées (confirmé)
 
-## Impact sur le pipeline H1
+- **Conseiller** : extraction via `t.tag` ou `t.agent_tags[0]` → famille
+- **Client** : normalisation `t.next_turn_tag` ou `t.client_tags[0]` → POSITIF/NEGATIF/NEUTRE
+- **Paires adjacentes** : `verbatim` + `next_turn_verbatim` obligatoires
 
-1. **Filtrage/Normalisation (PR1)**
-   - Conseiller : filtrer sur `tags.family ∈ {ENGAGEMENT, OUVERTURE, EXPLICATION, REFLET}` → **la famille _est_ la stratégie** .
-   - Client : normaliser la réaction (espaces/underscores, casse) avant validation.
-   - Supprimer tout fallback “à plat” (ex. `startsWith("REFLET")`) **si** `family` est présent.
-2. **Agrégation (H1Analysis)**
-   - Grouper par **famille** (les 4 stratégies ci-dessus).
-   - Calculer `positive% / negative% / neutral% / effectiveness` par **famille** (stratégie).
-3. **Validation H1 (PR2)**
-   - Comparer **Actions = moyenne(ENGAGEMENT, OUVERTURE)** vs **EXPLICATION** .
-   - Critères actuels conservés (Actions > 50%, Explications < 5%, Écart > 30 pts).
-   - (Ajout futur recommandé : critères “négatifs” Actions < 25%, Explication > 80%.)
+---
 
-## Gestion de REFLET (présent vs. futur)
+## Impact de la refactorisation
 
-- **Présent (H1)** : REFLET reste **une seule stratégie** (famille “REFLET”).
+### Bénéfices obtenus
 
-  → On **n’éclate pas** REFLET_VOUS / REFLET_JE / REFLET_ACQ.
+- **Maintenabilité** : logique séparée en modules cohérents
+- **Testabilité** : fonctions pures dans `shared/stats.ts`
+- **Réutilisabilité** : composants `StatisticalSummary` et `StatisticalTestsPanel`
+- **Évolutivité** : architecture prête pour extensions (run history, export)
 
-- **Futur (PR5)** : ajouter **un toggle “Détailler REFLET”** pour exploration :
+### Points d'attention
 
-  - OFF (défaut) : REFLET agrégé (pour H1).
-  - ON : ventilation en sous-formes pour analyses fines (hors critères H1).
+- **Cohérence des résultats** : vérifier que les refactorisations n'ont pas introduit de régressions
+- **Performance** : surveiller les recalculs avec gros corpus
+- **UX** : maintenir la fluidité malgré la complexité croissante
 
-## Acceptation (mise à jour)
+---
 
-- Le **panneau Debug** doit afficher le même **N** après filtrage et à l’analyse **par familles** .
-- Les **tableaux** et **résumés** mentionnent **ENGAGEMENT / OUVERTURE / EXPLICATION / REFLET** (pas de sous-libellés).
-- Aucun fallback heuristique **libellé → REFLET** n’est utilisé quand `family` est disponible.
-- Les **critères H1** sont calculés sur ces **4 stratégies** uniquement.
+## Priorités développement
 
-## Non-objectifs (pour H1)
+1. **Court terme** (1-2 semaines) : critères H1 complets + garde-fous N
+2. **Moyen terme** (3-4 semaines) : run history + export de base
+3. **Long terme** (1-2 mois) : configuration avancée + optimisations
 
-- Pas d’analyse séparée des formes de REFLET à ce stade.
-- Pas d’agrégation “libellé → stratégie” basée sur des préfixes si `family` est présent.
-- “libellé → stratégie” basée sur des préfixes si `family` est présent.
-
-## Rôle des composants de validation (Level 2)
-
-### `StatisticalSummary` — **Synthèse académique**
-
-- **But** : raconter les résultats pour la thèse/rapport.
-- **Produit** : statut global (VALIDATED / PARTIALLY / NOT), écart empirique Actions vs Explication, χ², V de Cramér, IC 95%, conclusions textuelles, implications pratiques, limites, bloc “données standardisées” (copiable en LaTeX/Word).
-- **Public** : lecteur scientifique / encadrants.
-
-### `StatisticalTestPanel` — **Détails techniques**
-
-- **But** : exposer chiffres et tableaux pour audit/revue.
-- **Produit** : χ² (valeur, ddl, p, V), Fisher exact pairwise (OR, p), ANOVA proportions / tests de proportions, tableau de contingence observé, accordéons/onglets d’inspection.
-- **Public** : analyste/développeur qui vérifie la significativité.
-
-> Les deux composants consomment les **mêmes agrégats** (“h1Analysis” / “StrategyStats”) mais servent **deux usages complémentaires** :
->
-> **interprétation & communication** (Summary) vs **vérification & transparence** (TestPanel).
+Cette roadmap actualisée reflète l'état mature du code existant tout en maintenant une trajectoire claire vers une solution complète et robuste pour la validation académique de l'hypothèse H1.
