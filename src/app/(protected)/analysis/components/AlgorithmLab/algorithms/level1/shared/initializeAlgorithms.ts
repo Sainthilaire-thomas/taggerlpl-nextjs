@@ -13,6 +13,10 @@ import { RegexYClassifier } from "../YAlgorithms/RegexYClassifier";
 
 // --- M1 (Compteurs / métriques)
 import { M1ActionVerbCounter } from "../M1Algorithms/M1ActionVerbCounter";
+// -- M2s :
+import M2LexicalAlignmentCalculator from "../M2Algorithms/M2LexicalAlignmentCalculator";
+import M2SemanticAlignmentCalculator from "../M2Algorithms/M2SemanticAlignmentCalculator";
+import M2CompositeAlignmentCalculator from "../M2Algorithms/M2CompositeAlignmentCalculator";
 
 // Utilitaire: vérifie la présence d’une méthode optionnelle
 const has = <T extends object>(obj: T | undefined, method: keyof T) =>
@@ -48,7 +52,6 @@ export function initializeAlgorithms(): void {
       algorithmRegistry.register(
         "OpenAIXClassifier",
         new OpenAIXClassifier({
-          apiKey: process.env.OPENAI_API_KEY, // server-side uniquement
           model: "gpt-4o-mini",
           temperature: 0,
           maxTokens: 6,
@@ -60,7 +63,6 @@ export function initializeAlgorithms(): void {
       algorithmRegistry.register(
         "OpenAI3TXClassifier",
         new OpenAI3TXClassifier({
-          apiKey: process.env.OPENAI_API_KEY,
           model: "gpt-4o-mini",
           temperature: 0,
           maxTokens: 6,
@@ -78,6 +80,112 @@ export function initializeAlgorithms(): void {
         "M1ActionVerbCounter",
         new M1ActionVerbCounter()
       );
+
+      // ===== M2 (alignement) =====
+      // petit adaptateur pour exposer classify()/describe() de façon homogène
+      type GenericResult = {
+        prediction: string;
+        confidence: number;
+        processingTime?: number;
+        metadata?: Record<string, unknown>;
+      };
+
+      function wrapM2(calc: {
+        getMetadata: () => any; // << tolérant : on accepte n'importe quel shape
+        validateConfig: () => boolean;
+        calculate: (input: any) => Promise<GenericResult>;
+      }) {
+        return {
+          // Toujours conforme à ce que la UI attend, mais construit de manière robuste
+          describe() {
+            const md =
+              (typeof calc.getMetadata === "function"
+                ? calc.getMetadata()
+                : {}) ?? {};
+            // récup souple + fallbacks
+            const displayName: string =
+              md.displayName ?? md.name ?? md.id ?? "M2 Calculator";
+            const id: string =
+              md.id ?? md.name ?? displayName.replace(/\s+/g, "");
+            const version: string = md.version ?? "1.0.0";
+            const batchSupported: boolean = !!(
+              md.supportsBatch ?? md.batchSupported
+            );
+            const description: string | undefined = md.description ?? undefined;
+
+            return {
+              name: id,
+              displayName,
+              type: "algorithm" as any, // cast pour matcher l'enum interne du registry
+              target: "M2" as any, // idem
+              version,
+              batchSupported,
+              description,
+            };
+          },
+
+          validateConfig: () => calc.validateConfig(),
+
+          async classify(verbatim: string): Promise<GenericResult> {
+            return {
+              prediction: "M2_REQUIRES_PAIR",
+              confidence: 0,
+              metadata: {
+                warning: "M2 attend {turnVerbatim,nextTurnVerbatim}.",
+                sample: verbatim,
+              },
+            };
+          },
+
+          async run(input: any): Promise<GenericResult> {
+            if (
+              input &&
+              typeof input === "object" &&
+              "turnVerbatim" in input &&
+              "nextTurnVerbatim" in input
+            ) {
+              return calc.calculate(input);
+            }
+            return {
+              prediction: "M2_INPUT_INVALID",
+              confidence: 0,
+              metadata: {
+                error: "M2 attend {turnVerbatim,nextTurnVerbatim}.",
+                receivedKeys: Object.keys(input ?? {}),
+              },
+            };
+          },
+        };
+      }
+
+      // 1) Lexical
+      {
+        const impl = new M2LexicalAlignmentCalculator({
+          thresholdAligned: 0.5,
+          thresholdPartial: 0.3,
+        });
+        algorithmRegistry.register("M2LexicalAlignment", wrapM2(impl));
+      }
+
+      // 2) Sémantique
+      {
+        const impl = new M2SemanticAlignmentCalculator({
+          confidenceThreshold: 0.6,
+          strictMode: false,
+        });
+        algorithmRegistry.register("M2SemanticAlignment", wrapM2(impl));
+      }
+
+      // 3) Composite
+      {
+        const impl = new M2CompositeAlignmentCalculator({
+          lexicalWeight: 0.4,
+          semanticWeight: 0.6,
+          threshold: 0.5,
+          partialThreshold: 0.3,
+        });
+        algorithmRegistry.register("M2CompositeAlignment", wrapM2(impl));
+      }
 
       logAlgorithmStatus();
     } catch (error) {

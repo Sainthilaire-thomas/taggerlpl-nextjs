@@ -1,45 +1,46 @@
-// components/AlgorithmLab/algorithms/M2Calculators/M2ValidationInterface.tsx
+// components/Level1/algorithms/M2/M2ValidationInterface.tsx
 "use client";
-import React from "react";
-import {
-  Card,
-  CardContent,
-  Stack,
-  Typography,
-  Button,
-  LinearProgress,
-  Box,
-} from "@mui/material";
-// import { useM2AlgorithmTesting } from "@/app/(protected)/analysis/components/AlgorithmLab/hooks/level1/useM2AlgorithmTesting";
+import { useState } from "react";
+import { Stack } from "@mui/material";
+import { RunPanel } from "../../../../components/Level1/shared/results/base/RunPanel"; // ajuste chemins
+import { ResultsPanel } from "../../../../components/Level1/shared/results/base/ResultsSample/ResultsPanel";
+import AlgorithmSelector from "../../../shared/ClassifierSelector";
+import useM2AlgorithmTesting from "../../../../hooks/level1/useM2AlgorithmTesting";
 
 export default function M2ValidationInterface() {
-  // const { isRunning, run, avgScore, results, metadata } = useM2AlgorithmTesting();
-  const isRunning = false;
-  const avgScore: number | null = null;
+  const m2 = useM2AlgorithmTesting();
+  const [sampleSize, setSampleSize] = useState(50);
 
   return (
     <Stack gap={2}>
-      <Card>
-        <CardContent>
-          <Typography variant="h6">Calculateur M2 (Alignement)</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Score d’alignement lexical/semantic (T0 ↔ T+1)
-          </Typography>
-          <Box mt={2}>
-            <Button variant="contained" disabled>
-              Lancer un test M2 (à brancher)
-            </Button>
-          </Box>
-          {isRunning && <LinearProgress sx={{ mt: 2 }} />}
-        </CardContent>
-      </Card>
+      <RunPanel
+        isRunning={m2.isRunning}
+        isConfigValid={true}
+        goldStandardCount={m2.goldStandardCount}
+        sampleSize={sampleSize}
+        onSampleSizeChange={setSampleSize}
+        onRun={() => m2.runTest(sampleSize)}
+        domainLabel="Alignement M2"
+        supportsBatch={true}
+      />
 
-      {typeof avgScore === "number" && (
-        <Card>
-          <CardContent>
-            <Typography>Score moyen M2 : {avgScore.toFixed(3)}</Typography>
-          </CardContent>
-        </Card>
+      <AlgorithmSelector
+        algorithms={m2.availableAlgorithms.map((a) => ({
+          id: a.id,
+          name: a.name,
+        }))}
+        selectedAlgorithm={m2.selectedAlgorithm}
+        onAlgorithmChange={m2.setSelectedAlgorithm}
+        target="M2"
+      />
+
+      {m2.results.length > 0 && (
+        <ResultsPanel
+          results={m2.results}
+          targetKind="M2"
+          classifierLabel={m2.selectedAlgorithm}
+          initialPageSize={25}
+        />
       )}
     </Stack>
   );

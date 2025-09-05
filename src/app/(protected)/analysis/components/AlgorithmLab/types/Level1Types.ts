@@ -28,3 +28,38 @@ export interface CalculatorMetadata {
   description?: string;
   type: "rule-based" | "ml" | "llm" | "hybrid";
 }
+
+// types/level1/m2.ts
+export interface M2Input {
+  turnVerbatim: string; // T0 – tour conseiller
+  nextTurnVerbatim: string; // T+1 – réaction client
+  context?: {
+    prevTurn?: string;
+    speaker?: string; // locuteur T0
+    nextSpeaker?: string; // locuteur T+1
+  };
+  metadata?: {
+    turnId?: number;
+    callId?: string;
+    timestamp?: number;
+  };
+}
+
+export type M2AlignmentType = "aligné" | "partiellement_aligné" | "non_aligné";
+
+export interface M2Details {
+  alignmentType: M2AlignmentType;
+  lexicalScore: number; // [0..1]
+  semanticScore?: number; // [0..1]
+  sharedTokens?: string[];
+  patterns?: string[];
+  justification: string;
+  confidence: number; // [0..1]
+  processingTime?: number; // ms
+}
+
+export interface TVMetadataM2 {
+  value?: M2AlignmentType; // pour ResultsPanel
+  scale?: "nominal" | "ordinal";
+  details?: M2Details;
+}
