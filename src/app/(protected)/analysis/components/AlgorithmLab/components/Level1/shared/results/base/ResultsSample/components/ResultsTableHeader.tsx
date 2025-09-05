@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import { TVValidationResult } from "../types";
+import type { ExtraColumn } from "../../extraColumns";
 
 export interface ResultsTableHeaderProps {
   totalResults: number;
@@ -22,6 +23,8 @@ export interface ResultsTableHeaderProps {
   onOnlyDisagreementsChange: (value: boolean) => void;
   isExtracting?: boolean;
   onExtractFineTuning?: () => void;
+  /** ← FIX: optionnel, pas d’affectation par défaut dans une interface */
+  extraColumns?: ExtraColumn[];
 }
 
 export const ResultsTableHeader: React.FC<ResultsTableHeaderProps> = ({
@@ -32,6 +35,8 @@ export const ResultsTableHeader: React.FC<ResultsTableHeaderProps> = ({
   onOnlyDisagreementsChange,
   isExtracting = false,
   onExtractFineTuning,
+  /** on accepte la prop pour éviter les erreurs TS même si on ne l’utilise pas ici */
+  extraColumns = [],
 }) => {
   const theme = useTheme();
 
@@ -129,9 +134,7 @@ export const ResultsTableHeader: React.FC<ResultsTableHeaderProps> = ({
           size="small"
           color={totalErrors > 0 ? "error" : "success"}
           variant="filled"
-          sx={{
-            fontWeight: "bold",
-          }}
+          sx={{ fontWeight: "bold" }}
         />
 
         <Chip
@@ -165,10 +168,7 @@ export const ResultsTableHeader: React.FC<ResultsTableHeaderProps> = ({
             size="small"
             color="default"
             variant="outlined"
-            sx={{
-              fontStyle: "italic",
-              opacity: 0.7,
-            }}
+            sx={{ fontStyle: "italic", opacity: 0.7 }}
           />
         )}
       </Stack>

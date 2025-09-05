@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Dump AlgorithmLab Tree",
+      "type": "shell",
+      "options": { "cwd": "${workspaceFolder}" },
+      "command": "tree /F /A 'src\\app\\(protected)\\analysis\\components\\AlgorithmLab' > algorithmlab_tree.txt; code algorithmlab_tree.txt",
+      "problemMatcher": []
+    }
+  ]
+}

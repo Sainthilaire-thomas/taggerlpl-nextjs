@@ -22,7 +22,8 @@ import { NavigationTabs } from "./NavigationTabs";
 import { InterAnnotatorAgreement } from "../Level0/InterAnnotatorAgreement";
 import { Level1Interface } from "../Level1/Level1Interface";
 import { Level2Interface } from "../Level2/Level2Interface";
-// Props pour l'intégration dans la page analysis
+// import { initializeAlgorithms } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms";
+// import { algorithmRegistry } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry"; // Props pour l'intégration dans la page analysis
 interface AlgorithmLabInterfaceProps {
   selectedOrigin?: string | null;
   availableDomains?: string[];
@@ -109,6 +110,13 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
         return <InterAnnotatorAgreement />;
     }
   };
+
+  // React.useEffect(() => {
+  //   // Peupler le registre côté client si vide
+  //   if (algorithmRegistry.list().length === 0) {
+  //     initializeAlgorithms();
+  //   }
+  // }, []);
 
   return (
     <Box sx={styles.mainContainer}>

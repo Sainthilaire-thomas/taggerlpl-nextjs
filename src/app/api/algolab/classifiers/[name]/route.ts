@@ -1,5 +1,6 @@
+// app/api/algolab/classifiers/[name]/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { ClassifierRegistry } from "@/algorithms/level1/shared/ClassifierRegistry";
+import { algorithmRegistry } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry";
 
 export async function PUT(
   request: NextRequest,
@@ -7,30 +8,29 @@ export async function PUT(
 ) {
   try {
     const config = await request.json();
-    const classifier = ClassifierRegistry.getClassifier(params.name);
+    const key = decodeURIComponent(params.name);
+    const algo = algorithmRegistry.get<any, any>(key);
 
-    if (!classifier) {
+    if (!algo) {
       return NextResponse.json(
-        { error: "Classificateur non trouvé" },
+        { error: "Algorithme non trouvé" },
         { status: 404 }
       );
     }
 
-    // Vérification que le classificateur supporte updateConfig
-    if (typeof classifier.updateConfig !== "function") {
+    // updateConfig optionnelle
+    if (typeof (algo as any).updateConfig !== "function") {
       return NextResponse.json(
-        {
-          error: "Ce classificateur ne supporte pas la configuration dynamique",
-        },
+        { error: "Cet algorithme ne supporte pas la configuration dynamique" },
         { status: 400 }
       );
     }
 
-    // Mise à jour de la config
-    classifier.updateConfig(config);
-
-    // Validation de la nouvelle config
-    const isValid = classifier.validateConfig();
+    (algo as any).updateConfig(config);
+    const isValid =
+      typeof (algo as any).validateConfig === "function"
+        ? !!(algo as any).validateConfig()
+        : true;
 
     return NextResponse.json({
       success: true,
@@ -48,25 +48,23 @@ export async function PUT(
   }
 }
 
-// Optionnel : GET pour récupérer la config actuelle
 export async function GET(
-  request: NextRequest,
+  _req: NextRequest,
   { params }: { params: { name: string } }
 ) {
   try {
-    const classifier = ClassifierRegistry.getClassifier(params.name);
+    const key = decodeURIComponent(params.name);
+    const algo = algorithmRegistry.get<any, any>(key);
 
-    if (!classifier) {
+    if (!algo) {
       return NextResponse.json(
-        { error: "Classificateur non trouvé" },
+        { error: "Algorithme non trouvé" },
         { status: 404 }
       );
     }
 
-    // Si le classificateur a une méthode getConfig
-    if (typeof classifier.getConfig === "function") {
-      const config = classifier.getConfig();
-      return NextResponse.json({ config });
+    if (typeof (algo as any).getConfig === "function") {
+      return NextResponse.json({ config: (algo as any).getConfig() });
     }
 
     return NextResponse.json(

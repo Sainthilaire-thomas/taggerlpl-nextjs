@@ -174,3 +174,5 @@ export const RunPanel: React.FC<RunPanelProps> = ({
     </Card>
   );
 };
+
+export default RunPanel;

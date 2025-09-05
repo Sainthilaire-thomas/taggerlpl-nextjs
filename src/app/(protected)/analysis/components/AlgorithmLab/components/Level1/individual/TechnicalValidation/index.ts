@@ -1,8 +1,8 @@
 "use client";
 
 export { TechnicalValidation } from "./TechnicalValidation";
-export { RunPanel } from "./RunPanel";
-export { MetricsPanel } from "./MetricsPanel";
-export type { SimpleMetrics } from "./MetricsPanel";
-export { ResultsSample } from "./ResultsSample";
-export type { TVValidationResult } from "./ResultsSample";
+export { RunPanel } from "../../shared/results/base/RunPanel";
+export { MetricsPanel } from "../../shared/results/base/MetricsPanel";
+export type { SimpleMetrics } from "../../shared/results/base/MetricsPanel";
+export { ResultsSample } from "../../shared/results/base/ResultsSample";
+export type { TVValidationResult } from "../../shared/results/base/ResultsSample";

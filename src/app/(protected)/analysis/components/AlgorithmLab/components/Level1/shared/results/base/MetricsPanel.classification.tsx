@@ -18,9 +18,9 @@ import {
   Divider,
 } from "@mui/material";
 import AssessmentIcon from "@mui/icons-material/Assessment";
+import type { TVValidationResult } from "./ResultsSample/types";
 
-// Types locaux pour éviter la dépendance au hook externe
-export type SimpleMetrics = {
+type SimpleMetrics = {
   accuracy: number;
   correct: number;
   total: number;
@@ -29,41 +29,25 @@ export type SimpleMetrics = {
   kappa?: number;
 };
 
-export interface TVValidationResult {
-  verbatim: string;
-  goldStandard: string;
-  predicted: string;
-  confidence: number;
-  correct: boolean;
-  processingTime?: number;
-  metadata?: Record<string, any>;
-}
-
-type MetricsPanelProps = {
-  classifierLabel?: string;
-  results: TVValidationResult[];
-};
-
-export const MetricsPanel: React.FC<MetricsPanelProps> = ({
+export default function MetricsPanelClassification({
   classifierLabel,
   results,
-}) => {
+}: {
+  classifierLabel?: string;
+  results: TVValidationResult[];
+}) {
   const theme = useTheme();
 
-  // ✅ SOLUTION : TOUS les hooks d'abord, sans conditions
   const metrics = useMemo(() => {
-    // Guard à l'intérieur du useMemo
     if (!results.length) return null;
 
     const total = results.length;
     const correct = results.filter((r) => r.correct).length;
     const accuracy = (correct / total) * 100;
-
     const avgProcessingTime =
       results.reduce((s, r) => s + (r.processingTime || 0), 0) / total;
     const avgConfidence = results.reduce((s, r) => s + r.confidence, 0) / total;
 
-    // Calcul des métriques par classe
     const classes = Array.from(
       new Set([
         ...results.map((r) => r.goldStandard),
@@ -94,7 +78,6 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
           : 0;
     });
 
-    // Calcul Kappa de Cohen simplifié
     const expectedAccuracy = classes.reduce((sum, cls) => {
       const actualCount = results.filter((r) => r.goldStandard === cls).length;
       const predictedCount = results.filter((r) => r.predicted === cls).length;
@@ -115,33 +98,16 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
       kappa: Number(kappa.toFixed(3)),
     };
 
-    return {
-      summary,
-      precision,
-      recall,
-      f1Score,
-      classes: classes.sort(),
-    };
+    return { summary, precision, recall, f1Score, classes: classes.sort() };
   }, [results]);
 
-  // ✅ Guard APRÈS tous les hooks
   if (!results.length || !metrics) {
-    return (
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" color="text.secondary">
-            Aucune donnée de métrique disponible
-          </Typography>
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   const { summary, precision, recall, f1Score, classes } = metrics;
-
   const getF1Color = (f1: number) =>
     f1 > 0.8 ? "success.main" : f1 > 0.6 ? "warning.main" : "error.main";
-
   const getKappaInterpretation = (kappa: number) => {
     if (kappa > 0.7)
       return { severity: "success" as const, text: "Accord substantiel" };
@@ -163,7 +129,6 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
           {classifierLabel && ` - ${classifierLabel}`}
         </Typography>
 
-        {/* Tuiles synthèse */}
         <Box
           sx={{
             display: "grid",
@@ -172,105 +137,31 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
             mb: 3,
           }}
         >
-          <Box
-            sx={{
-              textAlign: "center",
-              p: 2,
-              border: 1,
-              borderColor: "divider",
-              borderRadius: 1,
-            }}
-          >
-            <Typography variant="h4" color="primary" sx={{ fontWeight: 700 }}>
-              {summary.accuracy}%
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Accuracy
-            </Typography>
-          </Box>
-
-          <Box
-            sx={{
-              textAlign: "center",
-              p: 2,
-              border: 1,
-              borderColor: "divider",
-              borderRadius: 1,
-            }}
-          >
-            <Typography variant="h4" sx={{ fontWeight: 700 }}>
-              {summary.correct}/{summary.total}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Classifications Correctes
-            </Typography>
-          </Box>
-
-          <Box
-            sx={{
-              textAlign: "center",
-              p: 2,
-              border: 1,
-              borderColor: "divider",
-              borderRadius: 1,
-            }}
-          >
-            <Typography variant="h4" sx={{ fontWeight: 700 }}>
-              {summary.avgProcessingTime}ms
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Temps Moyen
-            </Typography>
-          </Box>
-
-          <Box
-            sx={{
-              textAlign: "center",
-              p: 2,
-              border: 1,
-              borderColor: "divider",
-              borderRadius: 1,
-            }}
-          >
-            <Typography variant="h4" sx={{ fontWeight: 700 }}>
-              {summary.avgConfidence}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Confiance Moyenne
-            </Typography>
-          </Box>
-
-          {typeof summary.kappa === "number" && (
-            <Box
-              sx={{
-                textAlign: "center",
-                p: 2,
-                border: 1,
-                borderColor: "divider",
-                borderRadius: 1,
-              }}
-            >
-              <Typography
-                variant="h4"
-                color="success.main"
-                sx={{ fontWeight: 700 }}
-              >
-                {summary.kappa.toFixed(3)}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Kappa (Cohen)
-              </Typography>
-            </Box>
-          )}
+          <StatTile title="Accuracy" value={`${summary.accuracy}%`} />
+          <StatTile
+            title="Classifications Correctes"
+            value={`${summary.correct}/${summary.total}`}
+          />
+          <StatTile
+            title="Temps Moyen"
+            value={`${summary.avgProcessingTime}ms`}
+          />
+          <StatTile
+            title="Confiance Moyenne"
+            value={`${summary.avgConfidence}`}
+          />
+          <StatTile
+            title="Kappa (Cohen)"
+            value={summary.kappa?.toFixed(3) ?? "—"}
+            color="success.main"
+          />
         </Box>
 
         <Divider sx={{ my: 2 }} />
 
-        {/* Tableau par tag */}
         <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 700 }}>
           Métriques par Tag
         </Typography>
-
         <TableContainer>
           <Table size="small">
             <TableHead>
@@ -328,7 +219,6 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
           </Table>
         </TableContainer>
 
-        {/* Interprétation kappa */}
         {typeof summary.kappa === "number" && (
           <Alert
             severity={getKappaInterpretation(summary.kappa).severity}
@@ -337,16 +227,40 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
             <Typography variant="body2">
               <strong>Interprétation:</strong>{" "}
               {getKappaInterpretation(summary.kappa).text} (κ=
-              {summary.kappa.toFixed(3)}) -
-              {summary.kappa > 0.7
-                ? " Performance validée"
-                : summary.kappa > 0.4
-                ? " Optimisation requise"
-                : " Révision algorithmique nécessaire"}
+              {summary.kappa.toFixed(3)})
             </Typography>
           </Alert>
         )}
       </CardContent>
     </Card>
   );
-};
+}
+
+function StatTile({
+  title,
+  value,
+  color,
+}: {
+  title: string;
+  value: React.ReactNode;
+  color?: string;
+}) {
+  return (
+    <Box
+      sx={{
+        textAlign: "center",
+        p: 2,
+        border: 1,
+        borderColor: "divider",
+        borderRadius: 1,
+      }}
+    >
+      <Typography variant="h4" sx={{ fontWeight: 700 }} color={color}>
+        {value}
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        {title}
+      </Typography>
+    </Box>
+  );
+}

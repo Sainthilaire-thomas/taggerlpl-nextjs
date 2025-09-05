@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -18,23 +18,34 @@ import { useResultsFiltering } from "./hooks/useResultsFiltering";
 import { useResultsPagination } from "./hooks/useResultsPagination";
 import { useFineTuningExtractor } from "./components/FineTuningDialog/hooks/useFineTuningExtractor";
 
+import MetricsPanel from "../MetricsPanel";
+import {
+  buildExtraColumnsForTarget,
+  type ExtraColumn,
+  type TargetKind,
+} from "../extraColumns";
+
 export interface ResultsPanelProps {
   results: TVValidationResult[];
   initialPageSize?: number;
+  extraColumns?: ExtraColumn[]; // optionnel: override
+  targetKind: TargetKind; // "X" | "Y" | "M1" | "M2" | "M3"
+  classifierLabel?: string; // affichage dans MetricsPanel
 }
 
 export const ResultsPanel: React.FC<ResultsPanelProps> = ({
   results,
   initialPageSize = 25,
+  extraColumns,
+  targetKind,
+  classifierLabel,
 }) => {
-  // 🚀 État pour contrôler l'affichage
+  // 1) Hooks d'état
   const [showAllResults, setShowAllResults] = useState(false);
-
-  // États pour le fine-tuning
   const [showFineTuningDialog, setShowFineTuningDialog] = useState(false);
   const [fineTuningData, setFineTuningData] = useState("");
 
-  // Hooks de gestion des données
+  // 2) Hooks de data/compute
   const { filteredResults, filters, updateFilters, totalErrors } =
     useResultsFiltering(results);
 
@@ -49,7 +60,13 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
     error: extractionError,
   } = useFineTuningExtractor();
 
-  // Handler pour l'extraction de fine-tuning
+  // 🚩 3) IMPORTANT : ce useMemo DOIT être avant tout return conditionnel
+  const dynamicExtraColumns = useMemo(
+    () => extraColumns ?? buildExtraColumnsForTarget(targetKind),
+    [extraColumns, targetKind]
+  );
+
+  // 4) Handlers (pas des hooks)
   const handleExtractFineTuning = async () => {
     try {
       const data = await extractFineTuningData(filteredResults);
@@ -61,7 +78,7 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
     }
   };
 
-  // Guard clause pour les résultats vides
+  // 5) Guard clause APRÈS les hooks
   if (!results.length) {
     return (
       <Card>
@@ -74,7 +91,7 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
     );
   }
 
-  // Données à utiliser selon le mode
+  // 6) Dérivés d’affichage (pas de hooks)
   const displayData = showAllResults
     ? {
         pageItems: filteredResults,
@@ -89,7 +106,13 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
     <>
       <Card>
         <CardContent>
-          {/* En-tête avec métriques */}
+          {/* Métriques (sur résultats FILTRÉS) */}
+          <MetricsPanel
+            results={filteredResults}
+            targetKind={targetKind}
+            classifierLabel={classifierLabel}
+          />
+
           <ResultsTableHeader
             totalResults={filteredResults.length}
             totalErrors={totalErrors}
@@ -98,9 +121,10 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
             onOnlyDisagreementsChange={updateFilters.setOnlyDisagreements}
             isExtracting={isExtracting}
             onExtractFineTuning={handleExtractFineTuning}
+            extraColumns={dynamicExtraColumns}
           />
 
-          {/* 🚀 Contrôle d'affichage */}
+          {/* Contrôle d’affichage */}
           <Box
             sx={{
               display: "flex",
@@ -122,7 +146,6 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
               }
               label="Afficher tous les résultats"
             />
-
             <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
               <Chip
                 label={`${filteredResults.length} résultats`}
@@ -141,14 +164,14 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
             </Box>
           </Box>
 
-          {/* Filtres de recherche */}
+          {/* Filtres */}
           <ResultsFilters
             results={results}
             filters={filters}
             onFiltersChange={updateFilters}
           />
 
-          {/* Corps du tableau */}
+          {/* Tableau */}
           <ResultsTableBody
             pageItems={displayData.pageItems}
             page={displayData.page}
@@ -157,9 +180,10 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
             onPageChange={displayData.handlePageChange}
             onRowsPerPageChange={displayData.handleRowsPerPageChange}
             showPagination={!showAllResults}
+            extraColumns={dynamicExtraColumns}
           />
 
-          {/* Message d'erreur d'extraction si présent */}
+          {/* Erreur extraction (affichage simple) */}
           {extractionError && (
             <Typography
               variant="body2"
@@ -172,7 +196,7 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
         </CardContent>
       </Card>
 
-      {/* Dialog de fine-tuning */}
+      {/* Dialog FT */}
       <FineTuningDialog
         open={showFineTuningDialog}
         onClose={() => setShowFineTuningDialog(false)}

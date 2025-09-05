@@ -2,13 +2,14 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useTaggingData } from "@/context/TaggingDataContext";
-import { ClassifierRegistry } from "../algorithms/level1/shared/ClassifierRegistry";
 import {
   BaseClassifier,
   ClassificationResult,
 } from "../algorithms/level1/shared/BaseClassifier";
-import { initializeClassifiers } from "../algorithms/level1/shared/initializeClassifiers";
+import { algorithmRegistry } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry";
+import { initializeAlgorithms } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms";
 
+import type { XTag, YTag, XDetails, YDetails } from "../types/ThesisVariables";
 // ----------------- Types -----------------
 
 interface GoldStandardSample {
@@ -51,6 +52,65 @@ interface ClassificationMetrics {
 
 const normalizeLabel = (label: string) =>
   label.replace(/\s+/g, "_").toUpperCase();
+
+const normalizeXLabelStrict = (raw: string): XTag => {
+  const v = raw.trim().toUpperCase().replace(/\s+/g, "_");
+  const map: Record<string, XTag> = {
+    ENGAGEMENT: "ENGAGEMENT",
+    OUVERTURE: "OUVERTURE",
+    REFLET_VOUS: "REFLET_VOUS",
+    REFLET_JE: "REFLET_JE",
+    REFLET_ACQ: "REFLET_ACQ",
+    EXPLICATION: "EXPLICATION",
+  };
+  return map[v] ?? "EXPLICATION";
+};
+
+const normalizeYLabelStrict = (raw: string): YTag => {
+  const v = raw.trim().toUpperCase().replace(/\s+/g, "_");
+  const map: Record<string, YTag> = {
+    CLIENT_POSITIF: "CLIENT_POSITIF",
+    CLIENT_NEGATIF: "CLIENT_NEGATIF",
+    CLIENT_NEUTRE: "CLIENT_NEUTRE",
+  };
+  return map[v] ?? "CLIENT_NEUTRE";
+};
+
+const familyFromX = (
+  label: XTag
+): "ENGAGEMENT" | "OUVERTURE" | "REFLET" | "EXPLICATION" => {
+  if (label.startsWith("REFLET")) return "REFLET";
+  if (label === "ENGAGEMENT") return "ENGAGEMENT";
+  if (label === "OUVERTURE") return "OUVERTURE";
+  return "EXPLICATION";
+};
+
+// Adaptateurs → détails typés (injectables dans metadata)
+const toXDetails = (out: ClassificationResult): XDetails => {
+  const label = normalizeXLabelStrict(out.prediction);
+  const md = out.metadata || {};
+  return {
+    label,
+    confidence: out.confidence ?? 0,
+    family: familyFromX(label),
+    matchedPatterns: md.matchedRules ?? md.patterns ?? [],
+    rationale: md.explanation,
+    probabilities: md.probs,
+    spans: md.spans,
+  };
+};
+
+const toYDetails = (out: ClassificationResult): YDetails => {
+  const label = normalizeYLabelStrict(out.prediction);
+  const md = out.metadata || {};
+  return {
+    label,
+    confidence: out.confidence ?? 0,
+    cues: md.cues ?? md.patterns ?? [],
+    sentimentProxy: md.sentiment,
+    spans: md.spans,
+  };
+};
 
 // construit la liste des labels CONSEILLER autorisés (familles cibles)
 const useAllowedConseillerLabels = (tags: any[]) => {
@@ -210,16 +270,22 @@ const mapTurnsToGoldStandard = (
 
 const getClassificationTarget = (
   classifierName: string
-): "conseiller" | "client" => {
-  const c = ClassifierRegistry.getClassifier(classifierName);
-  if (c) {
-    const md = c.getMetadata();
-    const txt = (md.name + " " + (md.description || "")).toLowerCase();
-    if (txt.includes("client")) return "client";
-  } else if (classifierName.toLowerCase().includes("client")) {
-    return "client";
-  }
-  return "conseiller";
+): "conseiller" | "client" | "M1" | "M2" | "M3" => {
+  const algo: any = algorithmRegistry.get<any, any>(classifierName);
+  const md = algo?.describe?.();
+  const t = (md?.target ?? "").toString().toUpperCase();
+
+  if (t === "M1" || t === "M2" || t === "M3") return t as any;
+  if (t === "Y" || t === "CLIENT") return "client";
+  if (t === "X" || t === "CONSEILLER") return "conseiller";
+
+  const txt = `${md?.name ?? ""} ${
+    md?.description ?? ""
+  } ${classifierName}`.toLowerCase();
+  if (txt.includes("m1")) return "M1";
+  if (txt.includes("m2")) return "M2";
+  if (txt.includes("m3")) return "M3";
+  return txt.includes("client") ? "client" : "conseiller";
 };
 
 const randomSample = <T>(arr: T[], n?: number): T[] => {
@@ -271,7 +337,7 @@ export const useLevel1Testing = () => {
   // Initialise les classificateurs une seule fois
   useEffect(() => {
     try {
-      initializeClassifiers();
+      initializeAlgorithms();
     } catch {
       /* noop */
     }
@@ -297,20 +363,73 @@ export const useLevel1Testing = () => {
       classifierName: string,
       sampleSize?: number
     ): Promise<ValidationResult[]> => {
-      const classifier = ClassifierRegistry.getClassifier(classifierName);
-      if (!classifier) {
+      const classifier = algorithmRegistry.get<any, any>(classifierName);
+      if (!classifier)
         throw new Error(`Classificateur '${classifierName}' non trouvé`);
-      }
 
       const target = getClassificationTarget(classifierName);
+      if (target === "M1") {
+        // Échantillons = tours CONSEILLER uniquement (T0)
+        const base = goldStandardData.filter(
+          (s) => s.metadata?.target === "conseiller"
+        );
+        if (base.length === 0)
+          throw new Error("Aucune donnée disponible pour M1.");
+
+        const samples = randomSample(base, sampleSize);
+        const inputs = samples.map((s) => s.verbatim || "");
+
+        // On passe par la route serveur (bon réflexe standard)
+        const r = await fetch("/api/algolab/classifiers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: classifierName, verbatims: inputs }),
+        });
+        const j = await r.json();
+        if (!j.ok || !Array.isArray(j.results)) {
+          throw new Error(
+            j.error || "Route /api/algolab/classifiers en erreur (M1)"
+          );
+        }
+
+        const outs: ClassificationResult[] = j.results;
+
+        // Pour M1, il n’y a pas de "gold label" catégoriel : on renvoie la valeur mesurée
+        // On met 'goldStandard' = "—" pour ne pas alimenter la matrice.
+        return outs.map((out, i) => {
+          const sample = samples[i];
+          const dens = Number.parseFloat(String(out.prediction)) || 0; // valeur M1
+
+          return {
+            verbatim: sample.verbatim,
+            goldStandard: "M1", // const : évite une pseudo-matrice inutile
+            predicted: "M1", // idem ; la valeur est mise en metadata
+            confidence: out.confidence ?? 0,
+            correct: true, // M1 = mesure, pas une classe
+            processingTime: out.processingTime ?? 0,
+            metadata: {
+              ...sample.metadata,
+              classifier: classifierName,
+              // expose proprement M1 pour l’UI :
+              m1: {
+                value: dens,
+                densityPer: out.metadata?.densityPer ?? 100,
+                actionVerbCount: out.metadata?.actionVerbCount ?? 0,
+                totalTokens: out.metadata?.totalTokens ?? 0,
+                verbsFound: out.metadata?.verbsFound ?? [],
+              },
+            },
+          };
+        });
+      }
+
       const base = goldStandardData.filter(
         (s) => !s.metadata?.target || s.metadata?.target === target
       );
-      if (base.length === 0) {
+      if (base.length === 0)
         throw new Error(
           "Aucune donnée gold standard disponible pour ce target"
         );
-      }
 
       const samples = randomSample(base, sampleSize);
       const inputs = samples.map((s) => {
@@ -322,94 +441,133 @@ export const useLevel1Testing = () => {
           : s.verbatim;
       });
 
-      // 1) Si le classifieur propose un batch natif → on l’utilise
-      if (typeof (classifier as any).batchClassify === "function") {
-        try {
-          const outs = await (classifier as any).batchClassify(inputs);
-          return outs.map((out: ClassificationResult, i: number) => ({
-            verbatim: samples[i].verbatim,
-            goldStandard: samples[i].expectedTag,
-            predicted: out.prediction,
-            confidence: out.confidence ?? 0,
-            correct: out.prediction === samples[i].expectedTag,
-            processingTime: out.processingTime ?? 0,
-            metadata: {
-              ...samples[i].metadata,
-              classifier: classifierName,
-              ...(out.metadata || {}),
-            },
-          }));
-        } catch (e) {
-          console.warn("batchClassify a échoué, fallback route/classify :", e);
-          // on continue vers 2)
-        }
-      }
-
-      // 2) Si LLM côté client (OpenAI/GPT) ou config invalide → route serveur
-      const md = classifier.getMetadata?.();
+      const md = (classifier as any).describe?.();
       const isClient = typeof window !== "undefined";
       const isLLM =
         md?.type === "llm" ||
         /openai|gpt/i.test(md?.name || "") ||
         /openai|gpt/i.test(md?.description || "");
-      const configOK = classifier.validateConfig?.() ?? true;
 
-      if (isClient && (isLLM || !configOK)) {
-        try {
-          const r = await fetch("/api/algolab/classify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ verbatims: inputs }),
-          });
-          const j = await r.json();
-          if (!j.ok || !Array.isArray(j.results)) {
-            throw new Error(j.error || "Route /api/algolab/classify en erreur");
-          }
-          const outs: ClassificationResult[] = j.results;
-          return outs.map((out, i) => ({
-            verbatim: samples[i].verbatim,
-            goldStandard: samples[i].expectedTag,
-            predicted: out.prediction,
+      // --- 🔴 CHANGEMENT CRUCIAL : on force la route serveur en client + LLM
+      const mustUseServer = isClient && isLLM;
+
+      const normalizePredictedForSample = (
+        out: ClassificationResult,
+        sampleTarget: "conseiller" | "client"
+      ) =>
+        sampleTarget === "client"
+          ? normalizeYLabelStrict(out.prediction)
+          : normalizeXLabelStrict(out.prediction);
+
+      const detailsForSample = (
+        out: ClassificationResult,
+        sampleTarget: "conseiller" | "client"
+      ) => (sampleTarget === "client" ? toYDetails(out) : toXDetails(out));
+
+      // 1) Client + LLM -> route serveur EN PREMIER
+      if (mustUseServer) {
+        const r = await fetch("/api/algolab/classifiers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: classifierName, verbatims: inputs }),
+        });
+        const j = await r.json();
+        if (!j.ok || !Array.isArray(j.results)) {
+          throw new Error(
+            j.error || "Route /api/algolab/classifiers en erreur"
+          );
+        }
+        const outs: ClassificationResult[] = j.results;
+
+        return outs.map((out, i) => {
+          const sample = samples[i];
+          const sampleTarget =
+            sample.metadata?.target === "client" ? "client" : "conseiller";
+          const predictedNorm = normalizePredictedForSample(out, sampleTarget);
+          const details = detailsForSample(out, sampleTarget);
+          return {
+            verbatim: sample.verbatim,
+            goldStandard: sample.expectedTag,
+            predicted: predictedNorm,
             confidence: out.confidence ?? 0,
-            correct: out.prediction === samples[i].expectedTag,
+            correct: predictedNorm === sample.expectedTag,
             processingTime: out.processingTime ?? 0,
             metadata: {
-              ...samples[i].metadata,
+              ...sample.metadata,
               classifier: classifierName,
+              rawPrediction: out.prediction,
               ...(out.metadata || {}),
+              x_details: sampleTarget === "conseiller" ? details : undefined,
+              y_details: sampleTarget === "client" ? details : undefined,
             },
-          }));
-        } catch (e: any) {
-          console.warn(
-            "Appel route /api/algolab/classify échoué :",
-            e?.message || e
-          );
-          // on continue vers 3)
+          };
+        });
+      }
+
+      // 2) Sinon, on peut essayer le batch local s’il existe (runtimes non-LLM)
+      if (typeof (classifier as any).runBatch === "function") {
+        try {
+          const outs = await (classifier as any).runBatch(inputs);
+          return outs.map((out: ClassificationResult, i: number) => {
+            const sample = samples[i];
+            const sampleTarget =
+              sample.metadata?.target === "client" ? "client" : "conseiller";
+            const predictedNorm = normalizePredictedForSample(
+              out,
+              sampleTarget
+            );
+            const details = detailsForSample(out, sampleTarget);
+            return {
+              verbatim: sample.verbatim,
+              goldStandard: sample.expectedTag,
+              predicted: predictedNorm,
+              confidence: out.confidence ?? 0,
+              correct: predictedNorm === sample.expectedTag,
+              processingTime: out.processingTime ?? 0,
+              metadata: {
+                ...sample.metadata,
+                classifier: classifierName,
+                rawPrediction: out.prediction,
+                ...(out.metadata || {}),
+                x_details: sampleTarget === "conseiller" ? details : undefined,
+                y_details: sampleTarget === "client" ? details : undefined,
+              },
+            };
+          });
+        } catch (e) {
+          console.warn("runBatch local a échoué, on passera item-by-item :", e);
         }
       }
 
-      // 3) Fallback : boucle item par item
+      // 3) Fallback item-by-item local (algos non LLM)
       const results: ValidationResult[] = [];
       for (let i = 0; i < samples.length; i++) {
         const sample = samples[i];
-        const input = inputs[i]; // ← IMPORTANT : T-2/T-1/T0 pour 3T, sinon verbatim
-
+        const input = inputs[i];
+        const sampleTarget =
+          sample.metadata?.target === "client" ? "client" : "conseiller";
         try {
           const start = Date.now();
-          const prediction = await classifier.classify(input);
-
-          const expected = sample.expectedTag;
+          const prediction = await (classifier as any).run(input);
+          const predictedNorm = normalizePredictedForSample(
+            prediction,
+            sampleTarget
+          );
+          const details = detailsForSample(prediction, sampleTarget);
           results.push({
-            verbatim: sample.verbatim, // on garde l’affichage du T0
-            goldStandard: expected,
-            predicted: prediction.prediction,
+            verbatim: sample.verbatim,
+            goldStandard: sample.expectedTag,
+            predicted: predictedNorm,
             confidence: prediction.confidence ?? 0,
-            correct: prediction.prediction === expected,
+            correct: predictedNorm === sample.expectedTag,
             processingTime: prediction.processingTime ?? Date.now() - start,
             metadata: {
-              ...sample.metadata, // contient prev2/prev1/next1 pour l’UI
+              ...sample.metadata,
               classifier: classifierName,
+              rawPrediction: prediction.prediction,
               ...(prediction.metadata || {}),
+              x_details: sampleTarget === "conseiller" ? details : undefined,
+              y_details: sampleTarget === "client" ? details : undefined,
             },
           });
         } catch (e) {
@@ -426,7 +584,6 @@ export const useLevel1Testing = () => {
           });
         }
       }
-
       return results;
     },
     [goldStandardData]
@@ -624,7 +781,7 @@ export const useLevel1Testing = () => {
       classifierName: string,
       testSamples?: string[]
     ): Promise<ClassificationResult[]> => {
-      const classifier = ClassifierRegistry.getClassifier(classifierName);
+      const classifier = algorithmRegistry.get<any, any>(classifierName);
       if (!classifier)
         throw new Error(`Classificateur '${classifierName}' non trouvé`);
       const samples = testSamples || [
@@ -636,7 +793,7 @@ export const useLevel1Testing = () => {
       const out: ClassificationResult[] = [];
       for (const s of samples) {
         try {
-          out.push(await classifier.classify(s));
+          out.push(await (classifier as any).run(s));
         } catch (e) {
           out.push({
             prediction: "ERREUR",
@@ -689,9 +846,9 @@ export const useLevel1Testing = () => {
     analyzeErrors,
 
     // registry helpers
-    getAvailableClassifiers: () => ClassifierRegistry.listRegistered(),
+    getAvailableClassifiers: () => algorithmRegistry.list().map((e) => e.key),
     getClassifierInfo: (name: string) =>
-      ClassifierRegistry.getClassifier(name)?.getMetadata(),
+      algorithmRegistry.list().find((e) => e.key === name)?.meta,
 
     // pratique pour l’UI
     isDataReady: !isLoading && !error && goldStandardData.length > 0,

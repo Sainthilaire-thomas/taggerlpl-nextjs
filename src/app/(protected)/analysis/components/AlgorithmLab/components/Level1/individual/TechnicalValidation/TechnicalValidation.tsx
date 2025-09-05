@@ -16,9 +16,9 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import { ClassifierSelector } from "../../../shared/ClassifierSelector";
 import { useLevel1Testing } from "../../../../hooks/useLevel1Testing";
-import { RunPanel } from "./RunPanel";
-import { MetricsPanel } from "./MetricsPanel";
-import { ResultsPanel } from "./ResultsSample/ResultsPanel";
+import { RunPanel } from "../../shared/results/base/RunPanel";
+import { MetricsPanel } from "../../shared/results/base/MetricsPanel";
+import { ResultsPanel } from "../../shared/results/base/ResultsSample/ResultsPanel";
 import { useClassifierStatus } from "../../../../hooks/useClassifierStatus";
 
 interface ValidationResult {

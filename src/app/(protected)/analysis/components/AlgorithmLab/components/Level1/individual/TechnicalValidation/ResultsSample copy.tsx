@@ -38,7 +38,7 @@ import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import DownloadIcon from "@mui/icons-material/Download";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import AnnotationList from "./ResultsSample/components/AnnotationList";
+import AnnotationList from "../../shared/results/base/ResultsSample/components/AnnotationList";
 
 export interface TVValidationResult {
   verbatim: string;

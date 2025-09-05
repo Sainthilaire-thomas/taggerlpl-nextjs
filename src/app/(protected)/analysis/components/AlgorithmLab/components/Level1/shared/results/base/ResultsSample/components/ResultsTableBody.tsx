@@ -12,7 +12,6 @@ import {
   TablePagination,
   Chip,
   Tooltip,
-  IconButton,
   Collapse,
   Box,
   TextField,
@@ -21,13 +20,12 @@ import {
   alpha,
   useTheme,
 } from "@mui/material";
-import ModeCommentOutlinedIcon from "@mui/icons-material/ModeCommentOutlined";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import { TVValidationResult } from "../types";
 import AnnotationList from "./AnnotationList";
+import type { ExtraColumn } from "../../extraColumns";
 
-// Réutilisation du composant ToneLine de l'original
 const ToneLine: React.FC<{
   text?: string | null;
   prefix?: string;
@@ -133,7 +131,8 @@ export interface ResultsTableBodyProps {
   totalCount: number;
   onPageChange: (event: unknown, newPage: number) => void;
   onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  showPagination?: boolean; // 🚀 Nouvelle prop
+  showPagination?: boolean;
+  extraColumns?: ExtraColumn[];
 }
 
 export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
@@ -144,6 +143,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
   onPageChange,
   onRowsPerPageChange,
   showPagination = true,
+  extraColumns = [],
 }) => {
   const theme = useTheme();
   const [openCommentFor, setOpenCommentFor] = useState<string | number | null>(
@@ -151,21 +151,19 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
   );
   const [draftComment, setDraftComment] = useState("");
 
-  // Largeurs fixes
+  // Largeurs
   const COL_WIDTHS = {
-    context: { minWidth: 520, maxWidth: 980 },
-    tag: 120,
+    context: { minWidth: 420 }, // la colonne Contexte prendra le restant
+    tag: 160,
     conf: 110,
     time: 90,
     annot: 64,
   };
 
-  // Handler pour sauvegarder un commentaire
   const saveComment = async (row: TVValidationResult) => {
-    const turnId = row.metadata?.turnId ?? row.metadata?.id;
+    const m = (row.metadata || {}) as Record<string, any>;
+    const turnId = m.turnId ?? m.id;
     if (!turnId) return;
-
-    const m = row.metadata || {};
 
     const payload = {
       note: draftComment,
@@ -227,22 +225,32 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
         variant="outlined"
         sx={{ overflowX: "auto" }}
       >
-        <Table size="small" stickyHeader sx={{ tableLayout: "fixed" }}>
+        {/* tableLayout AUTO pour laisser respirer le header Contexte */}
+        <Table
+          size="small"
+          stickyHeader
+          sx={{ tableLayout: "auto", minWidth: 960 }}
+        >
           <TableHead>
             <TableRow>
+              {/* Contexte — sticky à gauche, court libellé, fond fixé */}
               <TableCell
                 sx={{
-                  minWidth: { xs: 420, md: COL_WIDTHS.context.minWidth },
-                  maxWidth: COL_WIDTHS.context.maxWidth,
+                  minWidth: COL_WIDTHS.context.minWidth,
+                  position: "sticky",
+                  left: 0,
+                  zIndex: 3, // au-dessus des autres headers
+                  bgcolor: "background.default",
                 }}
               >
-                Contexte (−2 & 0 = ton A) / (−1 & +1 = ton B)
+                Contexte
+              </TableCell>
+
+              <TableCell align="center" sx={{ width: COL_WIDTHS.tag }}>
+                Sortie modèle (brut)
               </TableCell>
               <TableCell align="center" sx={{ width: COL_WIDTHS.tag }}>
-                Prédit
-              </TableCell>
-              <TableCell align="center" sx={{ width: COL_WIDTHS.tag }}>
-                Réel
+                Référence (gold)
               </TableCell>
               <TableCell align="center" sx={{ width: COL_WIDTHS.conf }}>
                 Confiance
@@ -253,12 +261,22 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
               <TableCell align="center" sx={{ width: COL_WIDTHS.annot }}>
                 Annot.
               </TableCell>
+
+              {extraColumns.map((col) => (
+                <TableCell
+                  key={col.id}
+                  align={col.align ?? "left"}
+                  sx={{ width: col.width }}
+                >
+                  {col.header}
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
 
           <TableBody>
             {pageItems.map((r, idx) => {
-              const m = r.metadata || {};
+              const m = (r.metadata || {}) as Record<string, any>;
               const prev2 = m.prev2_turn_verbatim as string | undefined;
               const prev1 = m.prev1_turn_verbatim as string | undefined;
               const next1 = m.next_turn_verbatim as string | undefined;
@@ -276,20 +294,17 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
               const groupBg = alpha(base, BG_ALPHA);
               const groupEdge = alpha(base, EDGE_ALPHA);
 
-              const rowOpen = openCommentFor === (m.turnId ?? idx);
-
               return (
                 <React.Fragment key={idx}>
                   {idx > 0 && (
                     <TableRow>
                       <TableCell
-                        colSpan={6}
+                        colSpan={6 + extraColumns.length}
                         sx={{ p: 0, border: 0, height: 8 }}
                       />
                     </TableRow>
                   )}
 
-                  {/* LIGNE PRINCIPALE DU PASSAGE */}
                   <TableRow
                     hover
                     sx={{
@@ -305,10 +320,15 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                       },
                     }}
                   >
+                    {/* Cellule Contexte — sticky à gauche, fond aligné au groupe */}
                     <TableCell
                       sx={{
                         py: 0.75,
-                        maxWidth: COL_WIDTHS.context.maxWidth,
+                        minWidth: COL_WIDTHS.context.minWidth,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 2,
+                        backgroundColor: groupBg,
                       }}
                     >
                       <Box sx={{ display: "grid", gap: 0.5 }}>
@@ -343,13 +363,14 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                       </Box>
                     </TableCell>
 
+                    {/* Sortie modèle (brut) */}
                     <TableCell align="center" sx={{ py: 0.5 }}>
                       <Tooltip
                         title={
-                          r.metadata?.rawResponse
-                            ? `LLM: ${r.metadata.rawResponse}`
-                            : r.metadata?.error
-                            ? `Erreur: ${r.metadata.error}`
+                          (r.metadata as any)?.rawResponse
+                            ? `LLM: ${(r.metadata as any).rawResponse}`
+                            : (r.metadata as any)?.error
+                            ? `Erreur: ${(r.metadata as any).error}`
                             : ""
                         }
                         arrow
@@ -359,7 +380,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                           size="small"
                           color={r.correct ? "default" : "error"}
                           sx={{
-                            maxWidth: 110,
+                            maxWidth: 160,
                             "& .MuiChip-label": {
                               overflow: "hidden",
                               textOverflow: "ellipsis",
@@ -369,13 +390,14 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                       </Tooltip>
                     </TableCell>
 
+                    {/* Référence (gold) */}
                     <TableCell align="center" sx={{ py: 0.5 }}>
                       <Chip
                         label={r.goldStandard}
                         size="small"
                         color="success"
                         sx={{
-                          maxWidth: 110,
+                          maxWidth: 160,
                           "& .MuiChip-label": {
                             overflow: "hidden",
                             textOverflow: "ellipsis",
@@ -436,6 +458,17 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                         }}
                       />
                     </TableCell>
+
+                    {/* Colonnes dynamiques */}
+                    {extraColumns.map((col, i) => (
+                      <TableCell
+                        key={`${col.id}-${idx}`}
+                        align={col.align ?? "left"}
+                        sx={{ py: 0.5 }}
+                      >
+                        {col.render(r, idx)}
+                      </TableCell>
+                    ))}
                   </TableRow>
 
                   {/* Ligne commentaire */}
@@ -453,8 +486,15 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                       },
                     }}
                   >
-                    <TableCell colSpan={6} sx={{ p: 0, borderBottom: 0 }}>
-                      <Collapse in={rowOpen} timeout="auto" unmountOnExit>
+                    <TableCell
+                      colSpan={6 + extraColumns.length}
+                      sx={{ p: 0, borderBottom: 0 }}
+                    >
+                      <Collapse
+                        in={openCommentFor === (m.turnId ?? idx)}
+                        timeout="auto"
+                        unmountOnExit
+                      >
                         <Box
                           sx={{
                             p: 1.5,
@@ -516,6 +556,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
           </TableBody>
         </Table>
       </TableContainer>
+
       {showPagination ? (
         <TablePagination
           component="div"
