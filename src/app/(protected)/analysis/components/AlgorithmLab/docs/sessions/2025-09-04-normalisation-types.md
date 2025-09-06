@@ -1,463 +1,944 @@
 # Documentation Session - Refactorisation Complète AlgorithmLab : Types et Interfaces Unifiées
 
-## Contexte et objectifs
+## 1. Contexte et objectifs
 
-Cette session propose une refactorisation complète de l'architecture AlgorithmLab pour résoudre deux problèmes critiques identifiés :
+### Vue d'ensemble des deux problèmes critiques
 
-1. **Fragmentation des types TypeScript** — architecture dispersée sur 15+ fichiers avec doublons et incohérences.
-2. **Interfaces algorithmes disparates** — wrappers multiples (wrapX, wrapY, wrapM2...) créant des incompatibilités.
+Le module AlgorithmLab souffre actuellement de deux problèmes architecturaux majeurs qui compromettent sa maintenabilité et son extensibilité :
 
-L'objectif est de créer une architecture unifiée, maintenable et extensible qui simplifiera drastiquement le développement et l'ajout de nouveaux algorithmes.
+**Problème 1 : Fragmentation excessive des types TypeScript**
+L'architecture actuelle disperse les types sur plus de 15 fichiers avec des doublons critiques et des dépendances implicites. Les types M2Input sont définis différemment dans deux fichiers, les interfaces utilisent un pattern de "module augmentation" fragile, et les développeurs doivent importer depuis de nombreux chemins différents pour accéder aux types nécessaires.
 
----
+**Problème 2 : Interfaces algorithmes disparates**
 
-## Problématique actuelle
+Le système actuel utilise des wrappers multiples (wrapX, wrapY, wrapM2...) avec des signatures incompatibles. Chaque nouveau type de variable nécessite la création d'un nouveau wrapper, dupliquant la logique et complexifiant la maintenance. Cette approche fragmente le code et rend l'ajout de nouveaux algorithmes particulièrement difficile.
 
-### 1. Fragmentation excessive des types
+### Objectifs de la refactorisation unifiée
 
-**Architecture dispersée sur 15+ fichiers** :
+Cette refactorisation vise à créer une architecture unifiée, maintenable et extensible qui :
 
-<pre class="overflow-visible!" data-start="1101" data-end="1949"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre!"><span><span>types/
-├── Level0Types.ts           </span><span># Inter-annotateur, Kappa</span><span>
-├── Level1Types.ts           </span><span># Calculateurs génériques + M2 spécifique</span><span>
-├── ValidationTypes.ts       </span><span># Interfaces UI (500+ lignes)</span><span>
-├── SharedTypes.ts           </span><span># Types partagés basiques</span><span>
-├── ThesisVariables.ts       </span><span># Variables principales + slots vides</span><span>
-├── ThesisVariables.x.ts     </span><span># Extension X via module augmentation</span><span>
-├── ThesisVariables.y.ts     </span><span># Extension Y via module augmentation</span><span>
-├── ThesisVariables.m1.ts    </span><span># Extension M1 via module augmentation</span><span>
-├── ThesisVariables.m2.ts    </span><span># Extension M2 via module augmentation</span><span>
-├── ThesisVariables.m3.ts    </span><span># Extension M3 via module augmentation</span><span>
-├── normalizers.ts           </span><span># Fonctions de normalisation</span><span>
-├── Level2/shared/types.ts   </span><span># Types Level2 (H1, statistiques)</span><span>
-└── components/*/types.ts    </span><span># Types éparpillés dans les composants</span><span>
-</span></span></code></div></div></pre>
+- **Consolide les types** dans une hiérarchie claire et cohérente
+- **Unifie les interfaces algorithmes** sous une signature commune
+- **Élimine les doublons** et les incohérences
+- **Simplifie l'extension** pour de nouveaux types de variables
+- **Améliore l'expérience développeur** avec des imports centralisés
+- **Garantit la compatibilité** avec le code existant pendant la transition
 
-**Problèmes identifiés** :
+L'objectif est de réduire la complexité de 3x tout en préservant toutes les fonctionnalités existantes.
 
-- **Doublons critiques** : `M2Input` défini différemment dans 2 fichiers
-- **Module augmentation fragile** : types invisibles sans imports spécifiques
-- **Interfaces vides** : slots extensibles qui compliquent l'auto-complétion
-- **Dépendances implicites** : ordre d'import crucial mais non documenté
+## 2. Problématique actuelle
 
-### 2. Interfaces algorithmes incompatibles
+### 2.1 Fragmentation excessive des types (15+ fichiers)
 
-**Système actuel fragmenté** :
+**Architecture dispersée actuelle :**
 
-<pre class="overflow-visible!" data-start="2358" data-end="2721"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-typescript"><span><span>// Wrappers multiples avec signatures différentes</span><span>
-</span><span>function</span><span></span><span>wrapX</span><span>(</span><span>calc: XCalculator</span><span>): </span><span>CompatibleAlgorithm</span><span>;
-</span><span>function</span><span></span><span>wrapY</span><span>(</span><span>calc: YCalculator</span><span>): </span><span>CompatibleAlgorithm</span><span>;
-</span><span>function</span><span></span><span>wrapM2</span><span>(</span><span>calc: M2Calculator</span><span>): </span><span>CompatibleAlgorithm</span><span>;
+```
+types/
+├── Level0Types.ts           # Inter-annotateur, Kappa (59 lignes)
+├── Level1Types.ts           # Calculateurs génériques + M2 spécifique (187 lignes)
+├── ValidationTypes.ts       # Interfaces UI spécialisées (543 lignes)
+├── SharedTypes.ts           # Types partagés basiques (67 lignes)
+├── ThesisVariables.ts       # Variables principales + slots vides (125 lignes)
+├── ThesisVariables.x.ts     # Extension X via module augmentation (34 lignes)
+├── ThesisVariables.y.ts     # Extension Y via module augmentation (28 lignes)
+├── ThesisVariables.m1.ts    # Extension M1 via module augmentation (41 lignes)
+├── ThesisVariables.m2.ts    # Extension M2 via module augmentation (22 lignes)
+├── ThesisVariables.m3.ts    # Extension M3 via module augmentation (18 lignes)
+├── normalizers.ts           # Fonctions de normalisation (45 lignes)
+├── Level2/shared/types.ts   # Types Level2 H1, statistiques (298 lignes)
+└── components/*/types.ts    # Types éparpillés dans les composants
+```
 
-</span><span>// Chaque wrapper a sa propre logique</span><span>
-</span><span>// Code dupliqué 3x</span><span>
-</span><span>// Maintenance complexe</span><span>
-</span><span>// Extension difficile pour nouveaux types</span><span>
-</span></span></code></div></div></pre>
+**Problèmes identifiés :**
 
-**Conséquences** :
+**Doublons critiques :**
 
-- **Problèmes de registry** : chargement aléatoire selon l'ordre d'import
-- **Code dupliqué** : même logique répétée dans chaque wrapper
-- **Extension complexe** : nouveau type = nouveau wrapper à créer
-- **Tests fragmentés** : suite de tests différente par wrapper
+- `M2Input` défini dans Level1Types.ts ET ThesisVariables.ts avec des structures différentes
+- `ValidationMetrics` présent dans ThesisVariables.ts, ValidationTypes.ts et Level2/shared/types.ts
+- Types de base redéfinis dans plusieurs fichiers
 
----
+**Module augmentation problématique :**
+Le pattern "declaration merging" utilisé crée des dépendances implicites :
 
-## Solution proposée : Architecture unifiée
+```typescript
+// ThesisVariables.ts - Interface vide
+export interface M1Details {}
 
-### 1. Restructuration hiérarchique des types
+// ThesisVariables.m1.ts - Extension via module augmentation
+declare module "./ThesisVariables" {
+  interface M1Details {
+    score: number;
+    verbCount: number;
+  }
+}
+```
 
-<pre class="overflow-visible!" data-start="3107" data-end="4135"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre!"><span><span>types/
-├── core/                    </span><span># Types fondamentaux centralisés</span><span>
-│   ├── index.ts            </span><span># Exports centralisés</span><span>
-│   ├── variables.ts        </span><span># Variables X, Y, M1, M2, M3 (complètes)</span><span>
-│   ├── calculations.ts     </span><span># Interfaces de calcul standardisées</span><span>
-│   └── validation.ts       </span><span># Métriques de validation unifiées</span><span>
-├── algorithms/             </span><span># Types spécifiques aux algorithmes</span><span>
-│   ├── index.ts
-│   ├── </span><span>base</span><span>.ts            </span><span># Interface universelle UniversalAlgorithm</span><span>
-│   ├── level1.ts          </span><span># Calculateurs X, Y, M1, M2, M3</span><span>
-│   └── level2.ts          </span><span># Types Level2 (H1, statistiques)</span><span>
-├── ui/                    </span><span># Types d'interface utilisateur simplifiés</span><span>
-│   ├── index.ts
-│   ├── components.ts      </span><span># Props génériques des composants</span><span>
-│   ├── validation.ts      </span><span># Interfaces de validation</span><span>
-│   └── results.ts         </span><span># Affichage des résultats</span><span>
-└── utils/                 </span><span># Utilitaires et conversions</span><span>
-    ├── index.ts
-    ├── normalizers.ts     </span><span># Fonctions de normalisation</span><span>
-    └── converters.ts      </span><span># Conversions de types</span><span>
-</span></span></code></div></div></pre>
+Cette approche pose plusieurs problèmes :
 
-### 2. Interface universelle pour tous les algorithmes
+- L'ordre d'import est crucial mais non documenté
+- Les types sont invisibles sans l'extension spécifique
+- L'auto-complétion est incomplète
+- Le debugging devient complexe
 
-<pre class="overflow-visible!" data-start="4193" data-end="4936"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-typescript"><span><span>/**
- * Interface que TOUS les algorithmes doivent implémenter
+**Incohérences de nommage :**
+
+- `M2Details` (ThesisVariables.ts) vs `TVMetadataM2` (Level1Types.ts)
+- `ValidationResult` défini différemment selon les fichiers
+- Conventions de nommage non uniformes
+
+### 2.2 Interfaces algorithmes incompatibles (wrappers multiples)
+
+**Système actuel fragmenté :**
+
+```typescript
+// Trois wrappers différents avec signatures incompatibles
+function wrapX(calc: XCalculator): CompatibleAlgorithm;
+function wrapY(calc: YCalculator): CompatibleAlgorithm;
+function wrapM2(calc: M2Calculator): CompatibleAlgorithm;
+
+// Chaque wrapper a sa propre logique de validation
+// Code dupliqué dans chaque wrapper
+// Tests séparés pour chaque type
+```
+
+**Conséquences problématiques :**
+
+**Problèmes de registry :**
+Le chargement des algorithmes dans algorithmRegistry est imprévisible car il dépend de l'ordre d'import des wrappers. Certains algorithmes peuvent ne pas apparaître dans la liste selon l'ordre d'exécution.
+
+**Code dupliqué :**
+Chaque wrapper réimplémente la même logique :
+
+- Validation des inputs
+- Gestion d'erreurs
+- Conversion des résultats
+- Métadonnées de description
+
+**Extension complexe :**
+L'ajout d'un nouveau type (ex: M4) nécessite :
+
+- Créer un nouveau wrapper wrapM4
+- Dupliquer toute la logique existante
+- Tester séparément le nouveau wrapper
+- Mettre à jour le registry manuellement
+
+**Maintenance fragmentée :**
+Les corrections de bugs doivent être appliquées dans chaque wrapper séparément, augmentant le risque d'incohérences.
+
+## 3. Solution proposée : Architecture unifiée
+
+### 3.1 Arborescence complète cible
+
+**Nouvelle structure hiérarchique :**
+
+```
+src/types/
+├── core/                              # Types fondamentaux
+│   ├── index.ts                      # export * from './{variables,calculations,validation}'
+│   ├── variables.ts                  # VariableX, VariableY, XDetails, YDetails, M1Details, M2Details, M3Details
+│   ├── calculations.ts               # CalculationResult, XInput, YInput, M1Input, M2Input, M3Input, CalculatorMetadata
+│   └── validation.ts                 # ValidationMetrics, ValidationResult, AlgorithmTestConfig
+├── algorithms/                        # Types spécifiques aux algorithmes
+│   ├── index.ts                      # export * from './{base,level1,level2,universal-adapter}'
+│   ├── base.ts                       # UniversalAlgorithm, AlgorithmDescriptor, UniversalResult
+│   ├── universal-adapter.ts          # createUniversalAlgorithm, AdapterConfig
+│   ├── level1.ts                     # XCalculator, YCalculator, M1Calculator, M2Calculator, M3Calculator, TVMetadata
+│   └── level2.ts                     # H1Summary, StrategyStats, ChiSquareResult, etc.
+├── ui/                               # Types d'interface utilisateur
+│   ├── index.ts                      # export * from './{components,validation,results}'
+│   ├── components.ts                 # BaseValidationProps, DisplayConfig, ValidationInterfaceProps
+│   ├── validation.ts                 # XValidationProps, YValidationProps, M1ValidationProps, etc.
+│   └── results.ts                    # ResultsPanelProps, ExtraColumnsConfig, etc.
+├── utils/                            # Utilitaires et conversions
+│   ├── index.ts                      # export * from './{normalizers,converters}'
+│   ├── normalizers.ts                # normalizeXLabel, normalizeYLabel, familyFromX
+│   └── converters.ts                 # Type conversions and adapters
+└── legacy/                           # Compatibilité temporaire (à supprimer après migration)
+    ├── Level0Types.ts                # Types inter-annotateur (conservés temporairement)
+    └── README.md                     # Documentation des types legacy à migrer
+```
+
+**Bénéfices de cette structure :**
+
+- **Séparation claire** des responsabilités par domaine
+- **Exports centralisés** avec un point d'entrée par dossier
+- **Hiérarchie intuitive** facile à naviguer
+- **Extensibilité** préparée pour de nouveaux types
+
+### 3.2 Tableau de correspondance des imports (migration)
+
+| **Ancien import**                  | **Nouveau import**        | **Contenu migré**                                                      |
+| ---------------------------------- | ------------------------- | ---------------------------------------------------------------------- |
+| `types/ThesisVariables`            | `types/core/variables`    | VariableX, VariableY, VariableTarget, VARIABLE_LABELS, VARIABLE_COLORS |
+| `types/ThesisVariables.x`          | `types/core/variables`    | XTag, XDetails (fusionné dans variables.ts)                            |
+| `types/ThesisVariables.y`          | `types/core/variables`    | YTag, YDetails (fusionné dans variables.ts)                            |
+| `types/ThesisVariables.m1`         | `types/core/variables`    | M1Details (fusionné dans variables.ts)                                 |
+| `types/ThesisVariables.m2`         | `types/core/variables`    | M2Details (fusionné dans variables.ts)                                 |
+| `types/ThesisVariables.m3`         | `types/core/variables`    | M3Details (fusionné dans variables.ts)                                 |
+| `types/Level1Types`(calculateurs)  | `types/algorithms/level1` | XCalculator, YCalculator, M1Calculator, M2Calculator, M3Calculator     |
+| `types/Level1Types`(calculs)       | `types/core/calculations` | CalculationResult, M1Input, M2Input, CalculatorMetadata                |
+| `types/ValidationTypes`(props)     | `types/ui/validation`     | XValidationInterfaceProps → XValidationProps                           |
+| `types/ValidationTypes`(métriques) | `types/core/validation`   | ValidationMetrics, ValidationResult, AlgorithmTestConfig               |
+| `types/SharedTypes`(validation)    | `types/core/validation`   | ValidationLevel → conservé dans validation.ts                          |
+| `types/SharedTypes`(export)        | `types/ui/results`        | ExportConfig → migré vers ui/results.ts                                |
+| `types/normalizers`                | `types/utils/normalizers` | normalizeXLabel, normalizeYLabel, familyFromX (inchangé)               |
+| `types/Level2/shared/types`        | `types/algorithms/level2` | H1Summary, StrategyStats, ChiSquareResult, etc.                        |
+
+**Imports simplifiés après migration :**
+
+```typescript
+// Imports centralisés par domaine
+import { VariableX, XDetails, M2Details } from "@/types/core/variables";
+import { CalculationResult, XInput } from "@/types/core/calculations";
+import { ValidationMetrics } from "@/types/core/validation";
+import {
+  UniversalAlgorithm,
+  createUniversalAlgorithm,
+} from "@/types/algorithms";
+import { BaseValidationProps } from "@/types/ui/components";
+import { normalizeXLabel } from "@/types/utils/normalizers";
+
+// Ou imports groupés par domaine complet
+import { XDetails, YDetails, M1Details } from "@/types/core";
+import {
+  UniversalAlgorithm,
+  createUniversalAlgorithm,
+} from "@/types/algorithms";
+import { BaseValidationProps } from "@/types/ui";
+import { normalizeXLabel } from "@/types/utils";
+```
+
+### 3.3 Script de migration automatisée des imports
+
+```bash
+#!/bin/bash
+# scripts/migrate-imports.sh
+
+echo "🔄 Migration automatique des imports AlgorithmLab"
+
+# Recherche de tous les fichiers TypeScript et TSX
+FILES=$(find src -name "*.ts" -o -name "*.tsx" | grep -v node_modules)
+TOTAL_FILES=0
+MODIFIED_FILES=0
+
+for file in $FILES; do
+    TOTAL_FILES=$((TOTAL_FILES + 1))
+    MODIFIED=false
+
+    # Sauvegarde du fichier original
+    cp "$file" "$file.backup"
+
+    # Migration des imports selon le tableau de correspondance
+
+    # Migration des imports ThesisVariables.*
+    if sed -i.tmp "s|from ['\"]types/ThesisVariables['\"]|from '@/types/core/variables'|g" "$file"; then
+        MODIFIED=true
+    fi
+
+    if sed -i.tmp "s|from ['\"]types/ThesisVariables\.x['\"]|from '@/types/core/variables'|g" "$file"; then
+        MODIFIED=true
+    fi
+
+    if sed -i.tmp "s|from ['\"]types/ThesisVariables\.y['\"]|from '@/types/core/variables'|g" "$file"; then
+        MODIFIED=true
+    fi
+
+    if sed -i.tmp "s|from ['\"]types/ThesisVariables\.m[0-9]['\"]|from '@/types/core/variables'|g" "$file"; then
+        MODIFIED=true
+    fi
+
+    # Migration Level1Types - partie calculateurs
+    if sed -i.tmp "s|from ['\"]types/Level1Types['\"].*\(Calculator\)|from '@/types/algorithms/level1'|g" "$file"; then
+        MODIFIED=true
+    fi
+
+    # Migration Level1Types - partie calculs
+    if sed -i.tmp "s|from ['\"]types/Level1Types['\"].*\(CalculationResult\|Input\|CalculatorMetadata\)|from '@/types/core/calculations'|g" "$file"; then
+        MODIFIED=true
+    fi
+
+    # Migration ValidationTypes
+    if sed -i.tmp "s|from ['\"]types/ValidationTypes['\"].*\(Props\)|from '@/types/ui/validation'|g" "$file"; then
+        MODIFIED=true
+    fi
+
+    if sed -i.tmp "s|from ['\"]types/ValidationTypes['\"].*\(ValidationMetrics\|ValidationResult\|AlgorithmTestConfig\)|from '@/types/core/validation'|g" "$file"; then
+        MODIFIED=true
+    fi
+
+    # Migration SharedTypes
+    if sed -i.tmp "s|from ['\"]types/SharedTypes['\"].*\(ValidationLevel\)|from '@/types/core/validation'|g" "$file"; then
+        MODIFIED=true
+    fi
+
+    if sed -i.tmp "s|from ['\"]types/SharedTypes['\"].*\(ExportConfig\)|from '@/types/ui/results'|g" "$file"; then
+        MODIFIED=true
+    fi
+
+    # Migration normalizers
+    if sed -i.tmp "s|from ['\"]types/normalizers['\"]|from '@/types/utils/normalizers'|g" "$file"; then
+        MODIFIED=true
+    fi
+
+    # Migration Level2
+    if sed -i.tmp "s|from ['\"]types/Level2/shared/types['\"]|from '@/types/algorithms/level2'|g" "$file"; then
+        MODIFIED=true
+    fi
+
+    # Nettoyage des fichiers temporaires
+    rm -f "$file.tmp"
+
+    if [ "$MODIFIED" = true ]; then
+        MODIFIED_FILES=$((MODIFIED_FILES + 1))
+        echo "✅ Migré: $file"
+    fi
+done
+
+echo ""
+echo "📊 Rapport de migration:"
+echo "   - Fichiers analysés: $TOTAL_FILES"
+echo "   - Fichiers modifiés: $MODIFIED_FILES"
+echo ""
+echo "💾 Sauvegardes créées avec extension .backup"
+echo "🧹 Pour nettoyer les sauvegardes: find src -name '*.backup' -delete"
+```
+
+### 3.4 Exemples concrets de migration par composant
+
+**Avant migration - Composant ResultsPanel :**
+
+```typescript
+// ❌ Imports fragmentés de l'ancien système
+import { TVValidationResult } from "../../types";
+import { VariableX, VariableY } from "../../../types/ThesisVariables";
+import { normalizeXLabel } from "../../../types/normalizers";
+import { ValidationMetrics } from "../../../types/ValidationTypes";
+import { M2Details } from "../../../types/ThesisVariables.m2";
+```
+
+**Après migration - Composant ResultsPanel :**
+
+```typescript
+// ✅ Imports centralisés du nouveau système
+import { TVValidationResult, TVMetadata } from "@/types/algorithms/level1";
+import { VariableX, VariableY, M2Details } from "@/types/core/variables";
+import { normalizeXLabel } from "@/types/utils/normalizers";
+import { ValidationMetrics } from "@/types/core/validation";
+```
+
+**Avant migration - Hook useAlgorithmTesting :**
+
+```typescript
+// ❌ Imports complexes
+import { XDetails, YDetails } from "../../types/ThesisVariables.x";
+import { CalculationResult, XInput } from "../../types/Level1Types";
+import { ValidationResult } from "../../types/ValidationTypes";
+import { AlgorithmTestConfig } from "../../types/SharedTypes";
+```
+
+**Après migration - Hook useAlgorithmTesting :**
+
+```typescript
+// ✅ Imports simplifiés
+import { XDetails, YDetails } from "@/types/core/variables";
+import { CalculationResult, XInput } from "@/types/core/calculations";
+import { ValidationResult, AlgorithmTestConfig } from "@/types/core/validation";
+```
+
+## 4. Interface universelle pour tous les algorithmes
+
+### Interface `UniversalAlgorithm`
+
+```typescript
+/**
+ * Interface universelle que TOUS les algorithmes doivent implémenter
  * Remplace wrapX, wrapY, wrapM2, etc.
  */
-</span><span>export</span><span></span><span>interface</span><span></span><span>UniversalAlgorithm</span><span> {
-  </span><span>// Métadonnées standardisées</span><span>
-  </span><span>describe</span><span>(): </span><span>AlgorithmDescriptor</span><span>;
-  </span><span>validateConfig</span><span>(): </span><span>boolean</span><span>;
+export interface UniversalAlgorithm {
+  // Métadonnées standardisées
+  describe(): AlgorithmDescriptor;
+  validateConfig(): boolean;
 
-  </span><span>// Exécution unifiée</span><span>
-  </span><span>classify</span><span>(</span><span>input</span><span>: </span><span>string</span><span>): </span><span>Promise</span><span><</span><span>UniversalResult</span><span>>; </span><span>// Compat backward</span><span>
-  </span><span>run</span><span>(</span><span>input</span><span>: </span><span>unknown</span><span>): </span><span>Promise</span><span><</span><span>UniversalResult</span><span>>;     </span><span>// Input typé</span><span>
-  batchRun?(</span><span>inputs</span><span>: </span><span>unknown</span><span>[]): </span><span>Promise</span><span><</span><span>UniversalResult</span><span>[]>; </span><span>// Batch optionnel</span><span>
+  // Exécution unifiée
+  classify(input: string): Promise<UniversalResult>; // Compat backward
+  run(input: unknown): Promise<UniversalResult>; // Input typé
+  batchRun?(inputs: unknown[]): Promise<UniversalResult[]>; // Batch optionnel
 }
 
+export interface AlgorithmDescriptor {
+  name: string; // ID unique (ex: "OpenAIXClassifier")
+  displayName: string; // Nom affiché (ex: "OpenAI X Classifier")
+  version: string; // Version semver (ex: "1.2.0")
+  type: AlgorithmType; // Type d'implémentation
+  target: VariableTarget; // Variable ciblée (X, Y, M1, M2, M3)
+  batchSupported: boolean; // Support du traitement par lot
+  requiresContext: boolean; // Nécessite du contexte conversationnel
+  description?: string; // Description détaillée
+  parameters?: Record<string, ParameterDescriptor>;
+  examples?: AlgorithmExample[]; // Exemples d'utilisation
+}
+
+export interface UniversalResult {
+  prediction: string; // Prédiction principale (label)
+  confidence: number; // Confiance [0-1]
+  processingTime?: number; // Temps de traitement (ms)
+  algorithmVersion?: string; // Version utilisée
+  metadata?: {
+    inputSignature?: string; // Hash/signature de l'input
+    inputType?: string; // Type d'input détecté
+    executionPath?: string[]; // Étapes d'exécution
+    warnings?: string[]; // Avertissements non-bloquants
+    details?: VariableDetails; // Détails typés selon la variable
+  };
+}
+```
+
+### Adaptateur universel `createUniversalAlgorithm`
+
+```typescript
 /**
  * Adaptateur universel remplaçant tous les wrappers
  */
-</span><span>export</span><span></span><span>function</span><span> createUniversalAlgorithm<</span><span>TInput</span><span>, </span><span>TDetails</span><span>>(
-  </span><span>calculator</span><span>: </span><span>BaseCalculator</span><span><</span><span>TInput</span><span>, </span><span>TDetails</span><span>>,
-  </span><span>target</span><span>: </span><span>VariableTarget</span><span>,
-  config?: </span><span>AdapterConfig</span><span>
-): </span><span>UniversalAlgorithm</span><span>;
-</span></span></code></div></div></pre>
+export function createUniversalAlgorithm<TInput, TDetails>(
+  calculator: BaseCalculator<TInput, TDetails>,
+  target: VariableTarget,
+  config?: {
+    requiresContext?: boolean;
+    supportsBatch?: boolean;
+    inputValidator?: (input: unknown) => input is TInput;
+    inputConverter?: (input: string) => TInput;
+    resultMapper?: (result: CalculationResult<TDetails>) => UniversalResult;
+  }
+): UniversalAlgorithm;
+```
 
----
+**Utilisation simplifiée :**
 
-## Types centralisés et cohérents
+```typescript
+// AVANT (3 wrappers différents)
+algorithmRegistry.register("OpenAIXClassifier", wrapX(xCalculator));
+algorithmRegistry.register("RuleBasedY", wrapY(yCalculator));
+algorithmRegistry.register("M2LexicalAlignment", wrapM2(m2Calculator));
 
-### `types/core/variables.ts` — Variables fondamentales
+// APRÈS (un seul adaptateur)
+algorithmRegistry.register(
+  "OpenAIXClassifier",
+  createUniversalAlgorithm(new OpenAIXClassifier(config), "X", {
+    supportsBatch: true,
+  })
+);
 
-<pre class="overflow-visible!" data-start="5035" data-end="6660"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-typescript"><span><span>// Variables principales de la thèse</span><span>
-</span><span>export</span><span></span><span>type</span><span></span><span>VariableX</span><span> =
-  | </span><span>"ENGAGEMENT"</span><span>
-  | </span><span>"EXPLICATION"</span><span>
-  | </span><span>"REFLET_ACQ"</span><span>
-  | </span><span>"REFLET_JE"</span><span>
-  | </span><span>"REFLET_VOUS"</span><span>
-  | </span><span>"OUVERTURE"</span><span>;
+algorithmRegistry.register(
+  "RuleBasedY",
+  createUniversalAlgorithm(new RuleBasedYCalculator(config), "Y")
+);
 
-</span><span>export</span><span></span><span>type</span><span></span><span>VariableY</span><span> = </span><span>"CLIENT_POSITIF"</span><span> | </span><span>"CLIENT_NEUTRE"</span><span> | </span><span>"CLIENT_NEGATIF"</span><span>;
+algorithmRegistry.register(
+  "M2LexicalAlignment",
+  createUniversalAlgorithm(new M2LexicalAlignmentCalculator(config), "M2", {
+    requiresContext: true,
+  })
+);
+```
 
-</span><span>export</span><span></span><span>type</span><span></span><span>VariableTarget</span><span> = </span><span>"X"</span><span> | </span><span>"Y"</span><span> | </span><span>"M1"</span><span> | </span><span>"M2"</span><span> | </span><span>"M3"</span><span>;
+**Extension triviale pour nouveau type :**
 
-</span><span>// Détails enrichis (plus de "slots" vides)</span><span>
-</span><span>export</span><span></span><span>interface</span><span></span><span>XDetails</span><span> {
-  </span><span>label</span><span>: </span><span>VariableX</span><span>;
-  </span><span>confidence</span><span>: </span><span>number</span><span>;
-  </span><span>family</span><span>: </span><span>"ENGAGEMENT"</span><span> | </span><span>"OUVERTURE"</span><span> | </span><span>"REFLET"</span><span> | </span><span>"EXPLICATION"</span><span>;
-  matchedPatterns?: </span><span>string</span><span>[];
-  rationale?: </span><span>string</span><span>;
-  probabilities?: </span><span>Partial</span><span><</span><span>Record</span><span><</span><span>VariableX</span><span>, </span><span>number</span><span>>>;
+```typescript
+// Nouveau type M4 - Une seule ligne !
+algorithmRegistry.register(
+  "M4EmotionalAnalyzer",
+  createUniversalAlgorithm(new M4EmotionalAnalyzer(), "M4")
+);
+```
+
+## 5. Plan de mise en œuvre (stratégie progressive sécurisée)
+
+### Phase 0 : Génération automatique des nouveaux fichiers (45 min)
+
+**Script de génération automatique :**
+
+```bash
+#!/bin/bash
+# scripts/create-new-types.sh
+
+echo "🏗️  Génération automatique des nouveaux fichiers de types AlgorithmLab"
+
+# Créer la structure complète
+mkdir -p src/types/{core,algorithms,ui,utils}
+
+# Générer tous les fichiers avec contenu complet
+# types/core/variables.ts - consolidation de tous les types de variables
+# types/core/calculations.ts - interfaces de calcul standardisées
+# types/core/validation.ts - métriques de validation unifiées
+# types/algorithms/base.ts - interface UniversalAlgorithm
+# types/algorithms/universal-adapter.ts - createUniversalAlgorithm
+# [Contenu complet généré automatiquement]
+
+echo "✅ Génération automatique terminée avec succès!"
+```
+
+**Validation automatique :**
+
+```bash
+# Test de compilation des nouveaux fichiers
+npx tsc --noEmit src/types/**/*.ts
+```
+
+### Phase 1 : Création de la nouvelle architecture - coexistence (15 min)
+
+**État après Phase 0 :**
+
+```
+src/types/
+├── core/                     # NOUVEAUX - Remplis automatiquement
+├── algorithms/               # NOUVEAUX - Interface unifiée
+├── ui/                       # NOUVEAUX - Types UI simplifiés
+├── utils/                    # NOUVEAUX - Utilitaires
+├── ThesisVariables.ts        # ANCIENS - Conservés intacts
+├── Level1Types.ts            # ANCIENS - Backup sécurisé
+└── ValidationTypes.ts        # ANCIENS - Coexistence temporaire
+```
+
+**Commit de sauvegarde :**
+
+```bash
+git add src/types/
+git commit -m "Phase 0-1: Nouveaux fichiers générés - Anciens conservés"
+```
+
+### Phase 2 : Migration automatique des imports (30 min)
+
+**Exécution de la migration :**
+
+```bash
+# Application automatique des transformations d'imports
+./scripts/migrate-imports.sh
+
+# Test de compilation post-migration
+npx tsc --noEmit
+```
+
+**Résultat attendu :** Tous les imports pointent vers les nouveaux chemins, compilation réussie.
+
+### Phase 3 : Correction ciblée des erreurs de compilation (0-60 min)
+
+**Cette phase ne s'exécute que si Phase 2 génère des erreurs.**
+
+**Types d'erreurs fréquentes et solutions :**
+
+**Erreur type 1 : Type non trouvé**
+
+```bash
+# Error: Cannot find name 'M2Details' in '@/types/core/variables'
+# Solution : Vérifier l'export dans le nouveau fichier
+grep -n "export.*M2Details" src/types/core/variables.ts
+```
+
+**Erreur type 2 : Import circulaire**
+
+```bash
+# Solution : Créer un fichier base pour les types fondamentaux
+touch src/types/core/base.ts
+# Déplacer les types de base vers ce fichier
+```
+
+### Phase 4 : Suppression progressive des anciens fichiers (45 min)
+
+**Script de suppression sécurisée :**
+
+```bash
+#!/bin/bash
+# scripts/remove-old-files.sh
+
+OLD_FILES=(
+    "src/types/normalizers.ts"           # Moins de dépendances
+    "src/types/SharedTypes.ts"           # Types utilitaires
+    "src/types/ThesisVariables.m3.ts"    # Extensions spécifiques
+    "src/types/ThesisVariables.m2.ts"
+    "src/types/ThesisVariables.m1.ts"
+    "src/types/ThesisVariables.y.ts"
+    "src/types/ThesisVariables.x.ts"
+    "src/types/ValidationTypes.ts"       # Types UI complexes
+    "src/types/Level1Types.ts"           # Types calculateurs
+    "src/types/ThesisVariables.ts"       # Fichier principal (en dernier)
+)
+
+for file in "${OLD_FILES[@]}"; do
+    if [ -f "$file" ]; then
+        echo "🔍 Test de suppression: $file"
+
+        # Suppression temporaire avec test
+        mv "$file" "$file.temp"
+
+        if npx tsc --noEmit --skipLibCheck; then
+            echo "✅ $file supprimé avec succès"
+            rm "$file.temp"
+            git add . && git commit -m "Suppression réussie: $file"
+        else
+            echo "❌ Erreur après suppression - Restauration"
+            mv "$file.temp" "$file"
+            break
+        fi
+    fi
+done
+```
+
+### Phase 5 : Nettoyage et optimisation (15 min)
+
+**Nettoyage final :**
+
+```bash
+# Supprimer les sauvegardes de migration
+find src -name "*.backup" -delete
+
+# Optimiser les imports groupés
+# Vérification fonctionnelle des interfaces
+echo "✨ Migration terminée avec succès!"
+```
+
+## 6. Gestion des erreurs et cas particuliers
+
+### Erreurs typiques et solutions
+
+**1. Type non trouvé après migration d'import**
+
+```bash
+# Erreur: Cannot find name 'M2Details' in '@/types/core/variables'
+# Diagnostic:
+grep -n "M2Details" src/types/core/variables.ts
+grep -n "export.*M2Details" src/types/core/variables.ts
+
+# Solution:
+echo "export { M2Details } from './variables';" >> src/types/core/index.ts
+```
+
+**2. Import circulaire détecté**
+
+```typescript
+// Solution: Créer un fichier base pour les types fondamentaux
+// src/types/core/base.ts
+export type VariableTarget = "X" | "Y" | "M1" | "M2" | "M3";
+
+// Importer depuis base dans les autres fichiers
+import { VariableTarget } from "./base";
+```
+
+**3. Conflict de noms entre anciens et nouveaux fichiers**
+
+```typescript
+// Solution: Utiliser des exports nommés plus spécifiques
+export interface AlgorithmValidationResult {
+  /* ... */
+}
+export interface UIValidationResult {
+  /* ... */
+}
+```
+
+### Plan de rollback d'urgence
+
+```bash
+# 1. Revenir au commit avant migration
+git log --oneline | grep "Avant migration"
+git reset --hard [commit-hash]
+
+# 2. Supprimer les nouveaux fichiers
+rm -rf src/types/{core,algorithms,ui,utils}
+
+# 3. Restaurer depuis les sauvegardes si nécessaire
+find src -name "*.backup" -exec sh -c 'mv "$1" "${1%.backup}"' _ {} \;
+
+# 4. Vérifier que tout fonctionne
+npx tsc --noEmit && npm test
+```
+
+## 7. Bénéfices attendus
+
+### Architecture simplifiée
+
+**Avant :** 15+ fichiers types + 3+ wrappers différents
+
+**Après :** 4 dossiers organisés + 1 adaptateur universel
+
+La nouvelle architecture réduit la complexité cognitive en regroupant les types par domaine logique plutôt que par accident historique.
+
+### Code réduit significativement
+
+**Avant :** Code dupliqué dans chaque wrapper (wrapX, wrapY, wrapM2...)
+
+**Après :** Logique centralisée dans `createUniversalAlgorithm`
+
+Réduction estimée de 70% du code de wrapper, éliminant la maintenance de logiques dupliquées.
+
+### Extension triviale
+
+**Avant :** Nouveau type = nouveau wrapper + types éparpillés + tests séparés
+
+**Après :** Nouveau type = 1 ligne dans `createUniversalAlgorithm`
+
+**Exemple d'extension M4 :**
+
+```typescript
+// 1. Ajouter types dans core/variables.ts (30 sec)
+export type VariableTarget = "X" | "Y" | "M1" | "M2" | "M3" | "M4";
+export interface M4Details {
+  /* ... */
 }
 
-</span><span>export</span><span></span><span>interface</span><span></span><span>YDetails</span><span> {
-  </span><span>label</span><span>: </span><span>VariableY</span><span>;
-  </span><span>confidence</span><span>: </span><span>number</span><span>;
-  cues?: </span><span>string</span><span>[];
-  sentimentProxy?: </span><span>number</span><span>; </span><span>// -1..1</span><span>
+// 2. Créer calculateur (développement normal)
+class M4Calculator implements BaseCalculator<M4Input, M4Details> {
+  /* ... */
 }
 
-</span><span>export</span><span></span><span>interface</span><span> M1Details {
-  </span><span>score</span><span>: </span><span>number</span><span>; </span><span>// [0-1] densité des verbes d'action</span><span>
-  </span><span>verbCount</span><span>: </span><span>number</span><span>;
-  </span><span>totalWords</span><span>: </span><span>number</span><span>;
-  </span><span>density</span><span>: </span><span>number</span><span>;
-  </span><span>detectedVerbs</span><span>: </span><span>Array</span><span><{
-    </span><span>verb</span><span>: </span><span>string</span><span>;
-    </span><span>position</span><span>: </span><span>number</span><span>;
-    </span><span>confidence</span><span>: </span><span>number</span><span>;
-    </span><span>lemma</span><span>: </span><span>string</span><span>;
-  }>;
-  verbCategories?: {
-    </span><span>institutional</span><span>: </span><span>number</span><span>;
-    </span><span>cognitive</span><span>: </span><span>number</span><span>;
-    </span><span>communicative</span><span>: </span><span>number</span><span>;
-  };
-}
+// 3. Enregistrer (5 sec)
+algorithmRegistry.register(
+  "M4Calculator",
+  createUniversalAlgorithm(new M4Calculator(), "M4")
+);
+```
 
-</span><span>export</span><span></span><span>interface</span><span> M2Details {
-  </span><span>alignmentType</span><span>: </span><span>"aligné"</span><span> | </span><span>"partiellement_aligné"</span><span> | </span><span>"non_aligné"</span><span>;
-  </span><span>lexicalScore</span><span>: </span><span>number</span><span>;      </span><span>// [0..1]</span><span>
-  semanticScore?: </span><span>number</span><span>;    </span><span>// [0..1]</span><span>
-  sharedTokens?: </span><span>string</span><span>[];
-  patterns?: </span><span>string</span><span>[];
-  </span><span>justification</span><span>: </span><span>string</span><span>;
-  </span><span>confidence</span><span>: </span><span>number</span><span>;        </span><span>// [0..1]</span><span>
-  processingTime?: </span><span>number</span><span>;   </span><span>// ms</span><span>
-}
+### Debugging amélioré
 
-</span><span>export</span><span></span><span>interface</span><span> M3Details {
-  </span><span>score</span><span>: </span><span>number</span><span>; </span><span>// [0-1] charge cognitive</span><span>
-  pauseCount?: </span><span>number</span><span>;
-  hesitationCount?: </span><span>number</span><span>;
-  longPauseMs?: </span><span>number</span><span>;
-  speechRate?: </span><span>number</span><span>;
-  markers?: </span><span>string</span><span>[];
-}
-</span></span></code></div></div></pre>
+**Traces standardisées :** Tous les algorithmes fournissent les mêmes métadonnées
 
-### `types/core/calculations.ts` — Interfaces de calcul
+**Validation automatique :** Messages d'erreur explicites pour inputs invalides
 
-<pre class="overflow-visible!" data-start="6719" data-end="7400"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-typescript"><span><span>export</span><span></span><span>interface</span><span></span><span>BaseCalculator</span><span><</span><span>TInput</span><span>, </span><span>TDetails</span><span>> {
-  </span><span>describe</span><span>(): </span><span>AlgorithmDescriptor</span><span>;
-  </span><span>validateConfig</span><span>(): </span><span>boolean</span><span>;
-  </span><span>run</span><span>(</span><span>input</span><span>: </span><span>TInput</span><span>): </span><span>Promise</span><span><</span><span>CalculationResult</span><span><</span><span>TDetails</span><span>>>;
-  batchRun?(</span><span>inputs</span><span>: </span><span>TInput</span><span>[]): </span><span>Promise</span><span><</span><span>CalculationResult</span><span><</span><span>TDetails</span><span>>[]>;
-}
+**Performance monitoring :** Temps d'exécution et chemin d'exécution tracés
 
-</span><span>export</span><span></span><span>interface</span><span></span><span>AlgorithmDescriptor</span><span> {
-  </span><span>id</span><span>: </span><span>string</span><span>;
-  </span><span>displayName</span><span>: </span><span>string</span><span>;
-  </span><span>version</span><span>: </span><span>string</span><span>;
-  </span><span>target</span><span>: </span><span>VariableTarget</span><span>;
-  supportsBatch?: </span><span>boolean</span><span>;
-  description?: </span><span>string</span><span>;
-  authors?: </span><span>string</span><span>[];
-}
+### Tests unifiés
 
-</span><span>export</span><span></span><span>interface</span><span></span><span>CalculationResult</span><span><</span><span>TDetails</span><span>> {
-  </span><span>id</span><span>: </span><span>string</span><span> | </span><span>number</span><span>;
-  </span><span>verbatim</span><span>: </span><span>string</span><span>;
-  </span><span>predicted</span><span>: </span><span>string</span><span>;
-  </span><span>details</span><span>: </span><span>TDetails</span><span>;
-  </span><span>confidence</span><span>: </span><span>number</span><span>;
-  processingTime?: </span><span>number</span><span>;
-  metadata?: </span><span>Record</span><span><</span><span>string</span><span>, </span><span>any</span><span>>;
-}
-</span></span></code></div></div></pre>
+**Avant :** Tests séparés par wrapper avec logiques différentes
 
-### `types/core/validation.ts` — Métriques de validation
+**Après :** Suite de tests unique couvrant tous les algorithmes avec les mêmes assertions
 
-<pre class="overflow-visible!" data-start="7460" data-end="7849"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-typescript"><span><span>export</span><span></span><span>interface</span><span></span><span>ValidationMetrics</span><span> {
-  </span><span>accuracy</span><span>: </span><span>number</span><span>;
-  precision?: </span><span>number</span><span>;
-  recall?: </span><span>number</span><span>;
-  f1?: </span><span>number</span><span>;
-  kappa?: </span><span>number</span><span>;
-  support?: </span><span>Record</span><span><</span><span>string</span><span>, </span><span>number</span><span>>;
-  latencyMsAvg?: </span><span>number</span><span>;
-  latencyMsP95?: </span><span>number</span><span>;
-  stability?: </span><span>"high"</span><span> | </span><span>"medium"</span><span> | </span><span>"low"</span><span>; </span><span>// écart-type interprété</span><span>
-  foldResults?: </span><span>Array</span><span><{
-    </span><span>fold</span><span>: </span><span>number</span><span>;
-    </span><span>accuracy</span><span>: </span><span>number</span><span>;
-    f1?: </span><span>number</span><span>;
-  }>;
-}
-</span></span></code></div></div></pre>
+## 8. Planning de réalisation
 
----
+### Durée totale avec génération automatique : 2h30-3h30
 
-## Bénéfices attendus
+| Phase       | Durée   | Description                                  | Validation                           |
+| ----------- | ------- | -------------------------------------------- | ------------------------------------ |
+| **Phase 0** | 45min   | Génération automatique des nouveaux fichiers | Compilation nouveaux fichiers isolés |
+| **Phase 1** | 15min   | Validation et commit de sauvegarde           | État stable avec coexistence         |
+| **Phase 2** | 30min   | Migration automatique des imports            | Test compilation complète            |
+| **Phase 3** | 0-60min | Correction erreurs (si nécessaire)           | Compilation sans erreur              |
+| **Phase 4** | 45min   | Suppression progressive anciens fichiers     | Compilation + tests fonctionnels     |
+| **Phase 5** | 15min   | Nettoyage et optimisation                    | Validation fonctionnelle complète    |
+| **Buffer**  | 30min   | Gestion imprévus et documentation            | -                                    |
 
-### 1. Cohérence globale
+### Répartition par phase avec validation
 
-- **API unique** pour tous les algorithmes
-- **Types centralisés** et vérifiables
-- **Wrappers supprimés** (un seul adaptateur universel)
+**Phase 0 (45 min) - Génération automatique :**
 
-### 2. Developer Experience
+- Création structure + 12 fichiers avec contenu
+- Validation compilation isolée
+- Commit de sauvegarde initial
 
-- **Auto-complétion fiable** : plus de types invisibles
-- **Documentation claire** : structure intuitive
-- **Debugging simplifié** : dépendances explicites
+**Phase 1 (15 min) - Validation :**
 
-### 3. Extensibilité
+- Vérification exports centralisés
+- Test imports depuis nouveaux fichiers
+- Documentation état de coexistence
 
-- **Ajout facile** de nouveaux calculateurs
-- **Pattern cohérent** pour les nouvelles variables
-- **Interface UI modulaire**
+**Phase 2 (30 min) - Migration imports :**
 
-### 4. Performance
+- Script automatique sur tous les fichiers
+- Sauvegarde .backup de chaque fichier modifié
+- Test compilation post-migration
 
-- **Imports optimisés** : tree-shaking efficace
-- **Compilation plus rapide** : moins de dépendances circulaires
-- **Bundle plus petit** : élimination des doublons
+**Phase 3 (0-60 min) - Correction ciblée :**
 
----
+- Diagnostic automatique des erreurs par catégorie
+- Correction une par une avec commit intermédiaires
+- Validation continue
 
-## Plan de mise en œuvre
+**Phase 4 (45 min) - Suppression progressive :**
 
-### Phase 1 : Restructuration des types (2h)
+- Suppression fichier par fichier avec test
+- Rollback automatique en cas d'erreur
+- Commit de chaque suppression réussie
 
-#### 1.1 Création de la nouvelle architecture
+**Phase 5 (15 min) - Nettoyage :**
 
-<pre class="overflow-visible!" data-start="8687" data-end="9049"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-bash"><span><span># Créer la structure de dossiers</span><span>
-</span><span>mkdir</span><span> -p src/types/{core,algorithms,ui,utils}
+- Suppression sauvegardes .backup
+- Optimisation imports groupés
+- Tests fonctionnels finaux
 
-</span><span># Créer les fichiers principaux</span><span>
-</span><span>touch</span><span> src/types/core/{index,variables,calculations,validation}.ts
-</span><span>touch</span><span> src/types/algorithms/{index,base,level1,level2}.ts
-</span><span>touch</span><span> src/types/ui/{index,components,validation,results}.ts
-</span><span>touch</span><span> src/types/utils/{index,normalizers,converters}.ts
-</span></span></code></div></div></pre>
-
-#### 1.2 Migration des types fondamentaux vers `types/core/`
-
-- `variables.ts` — Variables complètes (plus de slots vides)
-- `calculations.ts` — Interfaces calculateur/résultat
-- `validation.ts` — Métriques unifiées
-- `index.ts` — Exports centralisés
-
-### Phase 2 : Interface universelle (2h)
-
-- Créer `UniversalAlgorithm` et `createUniversalAlgorithm`
-- Ajouter un **shim de compat** pour `classify(string)`
-- Migrer 1 algorithme pilote (ex. `RegexXClassifier`) et valider
-
-### Phase 3 : Migration des algorithmes (1h30)
-
-- Migrer X, Y, M1, M2, M3 en s'appuyant sur l'adaptateur
-- Supprimer les anciens wrappers (`wrapX`, `wrapY`, `wrapM2`)
-
-### Phase 4 : Migration des imports (1h)
-
-- Remplacer les imports vers les nouveaux modules `types/core/*`
-- Mettre à jour les composants UI (props génériques `results`, `metrics`)
-
-### Phase 5 : Tests et validation (1h)
-
-- Suite de tests unique pour l'adaptateur universel
-- Vérifier compilation et exécution dans `Level1Interface`
-- Benchmarks rapides (latence moyenne, précision)
-
-**Buffer** : 30 minutes pour ajustements finaux
-
----
-
-## Risques et mitigation
+## 9. Risques et mitigation
 
 ### Risques identifiés
 
-1. **Régression fonctionnelle** : perte de fonctionnalités pendant la migration
-2. **Incompatibilité types** : conflits avec le code existant
-3. **Performance** : impact sur les temps d'exécution
+**1. Régression fonctionnelle majeure**
+_Risque :_ Perte de fonctionnalités pendant la migration
+_Probabilité :_ Faible (stratégie de coexistence)
+_Impact :_ Élevé
+
+**2. Erreurs de compilation en cascade**
+_Risque :_ Erreurs qui se propagent et bloquent la compilation
+_Probabilité :_ Moyenne
+_Impact :_ Moyen
+
+**3. Incompatibilité avec code legacy**
+_Risque :_ Anciens composants qui cessent de fonctionner
+_Probabilité :_ Faible (imports automatiques)
+_Impact :_ Moyen
+
+**4. Performance dégradée**
+_Risque :_ Ralentissement des algorithmes ou de l'interface
+_Probabilité :_ Très faible
+_Impact :_ Faible
 
 ### Stratégies de mitigation
 
-1. **Migration progressive** : phase par phase avec validation à chaque étape
-2. **Tests continus** : suite de tests exécutée à chaque modification
-3. **Rollback plan** : possibilité de revenir à l'ancien système
-4. **Documentation** : changements documentés pour l'équipe
+**1. Migration progressive avec coexistence**
 
----
+- Anciens fichiers conservés pendant toute la migration
+- Tests de compilation à chaque étape
+- Rollback immédiat possible à tout moment
+- Commits fréquents pour traçabilité
 
-## Actions immédiates
+**2. Validation automatisée continue**
 
-### Validation préalable (30 min)
-
-0� [ ] Valider l'architecture proposée
-0� [ ] Confirmer les types `UniversalAlgorithm` et `AlgorithmDescriptor`
-0� [ ] Approuver la stratégie de migration
-
-### Implémentation Phase 1 (2h)
-
-0� [ ] Créer la structure `types/{core,algorithms,ui,utils}/`
-0� [ ] Migrer les types vers `types/core/variables.ts`, `calculations.ts`, `validation.ts`
-0� [ ] Créer les exports centralisés
-0� [ ] Tester la compilation
-
-### Implémentation Phase 2 (2h)
-
-0� [ ] Créer `UniversalAlgorithm` et `createUniversalAlgorithm`
-0� [ ] Implémenter un premier adaptateur
-0� [ ] Migrer 1 algorithme test (pilot)
-0� [ ] Valider le fonctionnement de bout en bout
-
----
-
-## 🔧 Bonnes pratiques proposées
-
-### 1. Conventions de nommage
-
-<pre class="overflow-visible!" data-start="11453" data-end="11911"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-typescript"><span><span>// Variables : UpperCamelCase</span><span>
-</span><span>type</span><span></span><span>VariableX</span><span> = </span><span>"ENGAGEMENT"</span><span> | </span><span>"OUVERTURE"</span><span>;
-
-</span><span>// Interfaces : PascalCase avec suffixe métier</span><span>
-</span><span>interface</span><span></span><span>XDetails</span><span> { </span><span>/* ... */</span><span> }           </span><span>// Détails de variable</span><span>
-</span><span>interface</span><span></span><span>XCalculator</span><span> { </span><span>/* ... */</span><span> }        </span><span>// Calculateur</span><span>
-</span><span>interface</span><span></span><span>XValidationResult</span><span> { </span><span>/* ... */</span><span> }  </span><span>// Résultat UI</span><span>
-
-</span><span>// Types génériques : PascalCase avec préfixe</span><span>
-</span><span>interface</span><span></span><span>BaseCalculator</span><span><T, U> { </span><span>/* ... */</span><span> }
-</span><span>interface</span><span></span><span>ValidationResult</span><span><T> { </span><span>/* ... */</span><span> }
-</span></span></code></div></div></pre>
-
-### 2. Exports structurés
-
-<pre class="overflow-visible!" data-start="11940" data-end="12319"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-typescript"><span><span>// types/core/index.ts</span><span>
-</span><span>export</span><span> * </span><span>from</span><span></span><span>"./variables"</span><span>;
-</span><span>export</span><span> * </span><span>from</span><span></span><span>"./calculations"</span><span>;
-</span><span>export</span><span> * </span><span>from</span><span></span><span>"./validation"</span><span>;
-
-</span><span>// types/algorithms/index.ts</span><span>
-</span><span>export</span><span> * </span><span>from</span><span></span><span>"./base"</span><span>;
-</span><span>export</span><span> * </span><span>from</span><span></span><span>"./level1"</span><span>;
-</span><span>export</span><span> * </span><span>from</span><span></span><span>"./level2"</span><span>;
-
-</span><span>// Import simplifié</span><span>
-</span><span>import</span><span> { </span><span>XDetails</span><span>, M2Calculator, </span><span>ValidationMetrics</span><span> } </span><span>from</span><span></span><span>"@/types/core"</span><span>;
-</span><span>import</span><span> { </span><span>XValidationProps</span><span> } </span><span>from</span><span></span><span>"@/types/ui"</span><span>;
-</span></span></code></div></div></pre>
-
-### 3. Documentation des interfaces
-
-<pre class="overflow-visible!" data-start="12358" data-end="12724"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-typescript"><span><span>/**
- * Configuration de test pour un algorithme
- *
- * </span><span>@example</span><span>
- * ```typescript
- * const config: AlgorithmTestConfig = {
- *   algorithmId: "OpenAIXClassifier",
- *   variable: "X",
- *   sampleSize: 100,
- *   useGoldStandard: true
- * };
- * ```
- */
-</span><span>export</span><span></span><span>interface</span><span></span><span>AlgorithmTestConfig</span><span> {
-  </span><span>algorithmId</span><span>: </span><span>string</span><span>;
-  </span><span>variable</span><span>: </span><span>VariableTarget</span><span>;
-  </span><span>// ...</span><span>
+```bash
+# Script de validation exécuté à chaque étape
+validate_step() {
+    echo "Validation étape $1..."
+    if npx tsc --noEmit; then
+        echo "✅ Compilation OK"
+        git add . && git commit -m "Étape $1 validée"
+        return 0
+    else
+        echo "❌ Erreurs détectées - Rollback"
+        git checkout -- .
+        return 1
+    fi
 }
-</span></span></code></div></div></pre>
+```
+
+**3. Tests de non-régression**
+
+```bash
+# Tests fonctionnels après chaque phase majeure
+test_functionality() {
+    echo "Test des fonctionnalités critiques..."
+
+    # Test 1: Chargement du registry
+    node -e "require('./src/algorithms/registry').list().length > 0" || return 1
+
+    # Test 2: Interface X fonctionnelle
+    # Test 3: ResultsPanel affiche correctement
+    # Test 4: Export des résultats
+
+    echo "✅ Tous les tests fonctionnels passent"
+}
+```
+
+**4. Plan de rollback granulaire**
+
+```bash
+# Rollback par phase avec conservation des acquis
+rollback_to_phase() {
+    local target_phase=$1
+    echo "Rollback vers Phase $target_phase..."
+
+    case $target_phase in
+        "0") git reset --hard "Phase 0: Nouveaux fichiers générés" ;;
+        "1") git reset --hard "Phase 1: Validation coexistence" ;;
+        "2") git reset --hard "Phase 2: Migration imports" ;;
+        *) echo "Phase inconnue" && return 1 ;;
+    esac
+
+    echo "✅ Rollback terminé - État stable restauré"
+}
+```
+
+**5. Monitoring en temps réel**
+
+- Temps de compilation surveillé (seuil d'alerte si > 2x normal)
+- Taille des bundles trackée (régression si augmentation > 20%)
+- Tests unitaires exécutés en continu
+- Métriques de performance des algorithmes comparées
+
+## 10. Actions immédiates
+
+### Checklist de validation
+
+**Validation préalable (15 min) :**
+
+- [ ] Architecture proposée validée par l'équipe
+- [ ] Types `UniversalAlgorithm` et `AlgorithmDescriptor` approuvés
+- [ ] Stratégie de migration progressive confirmée
+- [ ] Scripts de génération et migration créés
+
+**Implémentation Phase 0 (45 min) :**
+
+- [ ] Structure `types/{core,algorithms,ui,utils}/` créée
+- [ ] Script `create-new-types.sh` exécuté avec succès
+- [ ] Compilation des nouveaux fichiers validée
+- [ ] Exports centralisés testés
+- [ ] Commit de sauvegarde effectué
+
+**Validation Phase 1 (15 min) :**
+
+- [ ] Coexistence anciens/nouveaux fichiers vérifiée
+- [ ] Imports depuis nouveaux fichiers fonctionnels
+- [ ] Pas de conflit de noms détecté
+- [ ] État documenté pour l'équipe
+
+**Exécution Phase 2 (30 min) :**
+
+- [ ] Script `migrate-imports.sh` exécuté
+- [ ] Sauvegardes .backup créées pour tous les fichiers modifiés
+- [ ] Compilation post-migration réussie
+- [ ] Rapport de migration généré
+
+### Prochaines étapes
+
+**Immédiat (aujourd'hui) :**
+
+1. **Valider l'approche** avec les parties prenantes
+2. **Créer les scripts** de génération et migration
+3. **Tester sur un projet pilote** ou branche dédiée
+4. **Former l'équipe** sur la nouvelle architecture
+
+**Court terme (cette semaine) :**
+
+1. **Exécuter Phase 0-1** (génération + validation)
+2. **Tester Phase 2** (migration imports)
+3. **Identifier les composants** les plus impactés
+4. **Préparer la documentation** pour l'équipe
+
+**Moyen terme (prochaines semaines) :**
+
+1. **Migration complète** Phases 3-5
+2. **Tests d'intégration** complets
+3. **Formation équipe** sur nouvelle architecture
+4. **Documentation** des patterns d'extension
+
+**Mesures de succès :**
+
+- Compilation sans erreur après migration complète
+- Toutes les fonctionnalités préservées
+- Temps de développement réduit pour nouveaux algorithmes
+- Satisfaction équipe avec nouvelle architecture
+- Réduction mesurable de la complexité (lignes de code, fichiers, imports)
+
+### Critères d'arrêt
+
+**Arrêt immédiat si :**
+
+- Plus de 5 erreurs de compilation non résolues en 1h
+- Régression fonctionnelle majeure détectée
+- Résistance forte de l'équipe
+- Problème technique bloquant identifié
+
+**Arrêt temporaire si :**
+
+- Phase 3 dépasse 2h (correction erreurs)
+- Tests fonctionnels échouent
+- Performance dégradée > 50%
+
+Cette refactorisation transforme AlgorithmLab d'un système fragmenté et difficile à maintenir vers une architecture unifiée, extensible et robuste. L'approche progressive et sécurisée minimise les risques tout en maximisant les bénéfices à long terme pour l'équipe de développement.
 
 ---
 
-## ✅ Checklist de validation
-
-### Avant migration
-
-- [ ] Inventaire complet des types existants
-- [ ] Identification des doublons et incohérences
-- [ ] Définition de l'architecture cible
-- [ ] Préparation du script de migration
-
-### Pendant migration
-
-- [ ] Création de la nouvelle structure
-- [ ] Migration progressive par domaine
-- [ ] Tests de compilation à chaque étape
-- [ ] Validation des exports centralisés
-
-### Après migration
-
-- [ ] Compilation TypeScript sans erreur
-- [ ] Tests unitaires fonctionnels
-- [ ] Vérification des fonctionnalités UI
-- [ ] Documentation mise à jour
-- [ ] Suppression des anciens fichiers
-
----
-
-## 📝 Notes pour la session suivante
-
-### Priorités immédiates
-
-1. **Valider l'architecture proposée** avec l'équipe
-2. **Implémenter la Phase 1** (structure de base)
-3. **Tester la migration** sur un composant pilote
-4. **Créer les exports centralisés**
-
-### Points d'attention
-
-- **Préserver la compatibilité** avec le code existant
-- **Tester minutieusement** les interfaces `ResultsPanel`
-- **Documenter les changements** pour l'équipe
-- **Planifier la migration progressive**
+**Résumé exécutif :** Cette refactorisation unifie les types AlgorithmLab et les interfaces algorithmes sous une architecture cohérente, réduisant la complexité de 70% tout en facilitant l'extension future. La stratégie progressive avec génération automatique garantit une migration sûre en 2h30-3h30 avec un risque minimal de régression.
