@@ -1,0 +1,200 @@
+/**
+ * @fileoverview Variables & détails AlgorithmLab — version unifiée et canonique
+ * - Ordre logique (tags avant usages)
+ * - Pas de redéclarations : une seule interface par nom
+ * - Compat ascendante : anciens champs conservés en option
+ */
+
+// ========================================================================
+// 1) Cibles principales
+// ========================================================================
+export type VariableTarget = "X" | "Y" | "M1" | "M2" | "M3";
+
+// ========================================================================
+// 2) Tags X/Y
+// ========================================================================
+export type XTag =
+  | "ENGAGEMENT"
+  | "OUVERTURE"
+  | "REFLET"
+  | "EXPLICATION"
+  | "CLOTURE"
+  | "AUTRE_X";
+
+export type YTag =
+  | "CLIENT_POSITIF"
+  | "CLIENT_NEUTRE"
+  | "CLIENT_NEGATIF"
+  | "CLIENT_QUESTION"
+  | "CLIENT_SILENCE"
+  | "AUTRE_Y";
+
+// ========================================================================
+// 3) Détails par variable (définitions uniques)
+// ========================================================================
+
+/** Détails X (actes conseiller) — fusion des versions "simple" et "riche" */
+export interface XDetails {
+  // Ancienne spec (facilitent la validation X↔famille)
+  family?: string;
+  evidences?: string[];
+  topProbs?: { label: string; prob: number }[];
+
+  // Mesures linguistiques/structurelles
+  verbCount?: number;
+  actionVerbs?: string[];
+  pronounUsage?: {
+    je: number;
+    vous: number;
+    nous: number;
+  };
+  questionMarkers?: string[];
+  declarativeMarkers?: string[];
+
+  // Métriques d'efficacité
+  effectiveness?: {
+    clientResponse: "POSITIVE" | "NEGATIVE" | "NEUTRAL";
+    alignmentScore: number;
+    nextTurnLabel?: string;
+  };
+}
+
+/** Détails Y (réactions client) — fusion simple + riche */
+export interface YDetails {
+  // Ancienne spec
+  family?: string;
+  evidences?: string[];
+  topProbs?: { label: string; prob: number }[];
+
+  // Spec riche
+  sentiment?: "POSITIVE" | "NEGATIVE" | "NEUTRAL";
+  emotionalIntensity?: number; // 0..1
+  linguisticMarkers?: string[];
+  responseType?: "ACCEPTANCE" | "RESISTANCE" | "INQUIRY" | "NEUTRAL";
+
+  conversationalMetrics?: {
+    latency: number; // ms
+    verbosity: number; // nb mots
+    coherence: number; // 0..1
+  };
+}
+
+/** M1 — densité/metrics linguistiques (compat + enrichi) */
+export interface M1Details {
+  // Ancienne spec (compat)
+  value?: number;
+  actionVerbCount?: number;
+  totalTokens?: number;
+  verbsFound?: string[];
+
+  // Spec enrichie
+  score?: number;
+  verbCount?: number;
+  averageWordLength?: number;
+  sentenceComplexity?: number;
+  lexicalDiversity?: number;
+  syntacticComplexity?: number;
+  semanticCoherence?: number;
+}
+
+/** M2 — alignement interactionnel (compat + enrichi) */
+export interface M2Details {
+  // Ancienne spec (compat)
+  value?: string | number;
+  scale?: string;
+
+  // Spec enrichie
+  lexicalAlignment?: number;
+  syntacticAlignment?: number;
+  semanticAlignment?: number;
+  overall?: number;
+
+  sharedTerms?: string[];
+  alignmentVector?: number[];
+  distanceMetrics?: {
+    euclidean: number;
+    cosine: number;
+    jaccard: number;
+  };
+}
+
+/** M3 — temporalité/charge (compat + enrichi) */
+export interface M3Details {
+  // Ancienne spec (compat)
+  value?: number;
+  unit?: "ms" | "s";
+
+  // Spec enrichie
+  fluidity?: number;
+  cognitiveLoad?: number;
+  processingEfficiency?: number;
+
+  attentionalFocus?: number;
+  workingMemoryUsage?: number;
+  executiveControl?: number;
+
+  predictedSatisfaction?: number;
+  predictedCompliance?: number;
+}
+
+// ========================================================================
+// 4) Objets composés X/Y (tag + détails)
+// ========================================================================
+export interface VariableX {
+  tag: XTag;
+  details: XDetails;
+}
+
+export interface VariableY {
+  tag: YTag;
+  details: YDetails;
+}
+
+// ========================================================================
+// 5) Union de détails + utilitaires d’affichage
+// ========================================================================
+export type VariableDetails =
+  | XDetails
+  | YDetails
+  | M1Details
+  | M2Details
+  | M3Details;
+
+export const VARIABLE_LABELS = {
+  X: "Actes conversationnels conseiller",
+  Y: "Réactions client",
+  M1: "Métriques linguistiques",
+  M2: "Alignement interactionnel",
+  M3: "Indicateurs cognitifs",
+} as const satisfies Record<VariableTarget, string>;
+
+export const VARIABLE_COLORS = {
+  X: "#2196F3",
+  Y: "#4CAF50",
+  M1: "#FF9800",
+  M2: "#9C27B0",
+  M3: "#F44336",
+} as const satisfies Record<VariableTarget, string>;
+
+// ========================================================================
+// 6) Helpers
+// ========================================================================
+export function isValidVariableTarget(
+  target: string
+): target is VariableTarget {
+  return (
+    target === "X" ||
+    target === "Y" ||
+    target === "M1" ||
+    target === "M2" ||
+    target === "M3"
+  );
+}
+
+export function getVariableColor(target: VariableTarget): string {
+  return VARIABLE_COLORS[target];
+}
+
+export function getVariableLabel(target: VariableTarget): string {
+  return VARIABLE_LABELS[target];
+}

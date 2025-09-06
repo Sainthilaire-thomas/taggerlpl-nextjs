@@ -23,6 +23,9 @@
       "@/*": ["./src/*"],
       "@/algorithms/*": [
         "./src/app/(protected)/analysis/components/AlgorithmLab/algorithms/*"
+      ],
+      "AlgorithmLab/types/*": [
+        "./src/app/(protected)/analysis/components/AlgorithmLab/types/*"
       ]
     }
   },

@@ -3,10 +3,57 @@
   "tasks": [
     {
       "label": "Dump AlgorithmLab Tree",
-      "type": "shell",
+      "type": "process",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "tree",
+        "/F",
+        "/A",
+        "src\\app\\(protected)\\analysis\\components\\AlgorithmLab",
+        ">",
+        "algorithmlab_tree.txt",
+        "&&",
+        "code",
+        "algorithmlab_tree.txt"
+      ],
       "options": { "cwd": "${workspaceFolder}" },
-      "command": "tree /F /A 'src\\app\\(protected)\\analysis\\components\\AlgorithmLab' > algorithmlab_tree.txt; code algorithmlab_tree.txt",
       "problemMatcher": []
+    },
+    {
+      "label": "AlgorithmLab: Update Types Doc",
+      "type": "process",
+      "command": "node",
+      "args": [
+        "scripts/gen-types-doc.mjs",
+        "--root=src/app/(protected)/analysis/components/AlgorithmLab/types",
+        "--out=src/app/(protected)/analysis/components/AlgorithmLab/types/referencetypes.md"
+      ],
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "AlgorithmLab: Update Types Doc (FULL)",
+      "type": "process",
+      "command": "node",
+      "args": [
+        "scripts/gen-types-doc.mjs",
+        "--root=src/app/(protected)/analysis/components/AlgorithmLab/types",
+        "--out=src/app/(protected)/analysis/components/AlgorithmLab/types/referencetypes.md",
+        "--full"
+      ],
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
     }
   ]
 }

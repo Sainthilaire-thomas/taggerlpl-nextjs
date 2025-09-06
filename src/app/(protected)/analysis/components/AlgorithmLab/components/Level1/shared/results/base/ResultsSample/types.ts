@@ -1,42 +1,58 @@
-// Étendre TVValidationResult.metadata
+// types.tsx — pont de compatibilité ResultsPanel ⇄ AlgorithmLab/types
+// ✅ Recommandé : alias TS "AlgorithmLab/types/*" (voir referencetypes.md)
+// ⛳️ Si tu n'as pas d'alias, remplace la ligne d'import par un chemin relatif vers /types/core
+
+import type {
+  TVValidationResultCore as CoreTVValidationResult,
+  TVMetadataCore as CoreTVMetadata,
+} from "AlgorithmLab/types/core"; // <-- sinon ex: "../../../../types/core"
+
+// =========================
+//   Auxiliaires UI locaux
+// =========================
+
 export interface TVTopProb {
   label: string;
   prob: number;
 }
+
 export interface TVMMetric {
   value?: number;
   actionVerbCount?: number;
   totalTokens?: number;
   verbsFound?: string[];
 }
+
 export interface TVDetails {
   family?: string;
 }
 
-export interface TVMetadata {
-  // identifiants tour
-  turnId?: number | string;
-  id?: number | string;
+// =========================
+//   Métadonnées unifiées
+// =========================
+// On ÉTEND la définition canonique (CoreTVMetadata)
+// pour conserver des champs UI additionnels.
 
-  // contexte
+export interface TVMetadata extends CoreTVMetadata {
+  // --- Contexte conversationnel (UI) ---
   prev2_turn_verbatim?: string;
   prev1_turn_verbatim?: string;
   next_turn_verbatim?: string;
   prev2_speaker?: string;
   prev1_speaker?: string;
 
-  // infos algo/LLM
-  classifier?: string;
-  type?: string;
+  // --- Infos algo / LLM (affichage/debug) ---
+  classifier?: string; // nom du classificateur
+  type?: string; // rule-based | ml | llm | hybrid
   model?: string;
   temperature?: number;
   maxTokens?: number;
 
-  // trace / erreur LLM
+  // --- Traces / erreurs LLM ---
   rawResponse?: string;
   error?: string;
 
-  // Variables X / Y
+  // --- Détails X / Y (UI) ---
   x_details?: TVDetails;
   y_details?: TVDetails;
   x_evidences?: string[];
@@ -46,8 +62,7 @@ export interface TVMetadata {
   evidences?: string[];
   rationales?: string[];
 
-  // M1 / M2 / M3
-
+  // --- M1 / M2 / M3 (affinage métriques) ---
   m1?: {
     value?: number; // densité calculée
     actionVerbCount?: number;
@@ -66,15 +81,20 @@ export interface TVMetadata {
   };
 }
 
-export interface TVValidationResult {
-  verbatim: string;
-  goldStandard: string;
-  predicted: string;
-  confidence: number;
-  correct: boolean;
-  processingTime?: number;
-  metadata?: TVMetadata; // << ici (au lieu de Record<string, any>)
+// =========================
+//   Résultat unifié
+// =========================
+// On reprend le résultat "core" et on remplace le type
+// de metadata par la version étendue locale.
+
+export interface TVValidationResult
+  extends Omit<CoreTVValidationResult, "metadata"> {
+  metadata?: TVMetadata;
 }
+
+// =========================
+//   Types utilitaires
+// =========================
 
 export interface FineTuningData {
   messages: Array<{
@@ -107,3 +127,14 @@ export interface ContextData {
 }
 
 export type Tone = "A" | "B" | "CURRENT";
+
+// =========================
+//   Helper d’adaptation
+// =========================
+// Permet de convertir un résultat "core" en résultat UI
+// sans friction côté typage (optionnel).
+
+export const asUIResult = (r: CoreTVValidationResult): TVValidationResult => ({
+  ...r,
+  metadata: r.metadata ?? {},
+});
