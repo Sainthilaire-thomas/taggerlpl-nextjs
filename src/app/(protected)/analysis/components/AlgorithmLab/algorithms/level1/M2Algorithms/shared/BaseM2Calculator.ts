@@ -1,4 +1,4 @@
-// algorithms/level1/shared/BaseM2Calculator.ts
+// algorithms/level1/M2Algorithms/shared/BaseM2Calculator.ts
 import type {
   M2Input,
   M2Details,
@@ -38,3 +38,6 @@ export abstract class BaseM2Calculator {
     return Promise.all(inputs.map((i) => this.calculate(i)));
   }
 }
+
+// Type pour compatibilité avec le registry
+export type ClassificationResultM2 = CalculationResult<M2Details>;

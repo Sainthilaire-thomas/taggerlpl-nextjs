@@ -1,15 +1,50 @@
-// components/Level1/algorithms/M2/M2ValidationInterface.tsx
 "use client";
-import { useState } from "react";
+
+import { useMemo, useState } from "react";
 import { Stack } from "@mui/material";
-import { RunPanel } from "../../../../components/Level1/shared/results/base/RunPanel"; // ajuste chemins
-import { ResultsPanel } from "../../../../components/Level1/shared/results/base/ResultsSample/ResultsPanel";
-import AlgorithmSelector from "../../../shared/ClassifierSelector";
+
+// ✅ bons chemins d’après ton arbo
+import { RunPanel } from "../../shared/results/base/RunPanel";
+import { ResultsPanel } from "../../shared/results/base/ResultsSample/ResultsPanel";
+import ClassifierSelector from "../../../shared/../shared/ClassifierSelector";
+// ^^^ ClassifierSelector.tsx est dans: components/shared/ClassifierSelector.tsx
+
 import useM2AlgorithmTesting from "../../../../hooks/level1/useM2AlgorithmTesting";
 
 export default function M2ValidationInterface() {
   const m2 = useM2AlgorithmTesting();
   const [sampleSize, setSampleSize] = useState(50);
+
+  // L’UI de ton sélecteur (ClassifierSelector) attend généralement {id,name} + selected + onSelectClassifier.
+  // Mais pour éviter les erreurs TS, on prépare un shape étendu si jamais il affiche d’autres colonnes.
+  const selectorAlgorithms = useMemo(
+    () =>
+      m2.availableAlgorithms.map((a) => ({
+        id: a.id,
+        name: a.desc?.displayName ?? a.id,
+        description: a.desc?.description ?? "—",
+        differential: a.metrics?.differential ?? 0,
+        time: a.metrics?.avgMs ?? 0,
+        accuracy: a.metrics?.accuracy ?? 0,
+      })),
+    [m2.availableAlgorithms]
+  );
+
+  // ResultsPanel réclame souvent 'confidence' (ta capture montrait l’erreur).
+  // On le déduit de 'score' si non fourni.
+  const adaptedResults = useMemo(
+    () =>
+      m2.results.map((r) => ({
+        ...r,
+        confidence:
+          typeof r.confidence === "number"
+            ? r.confidence
+            : typeof (r as any).score === "number"
+            ? (r as any).score
+            : 0,
+      })),
+    [m2.results]
+  );
 
   return (
     <Stack gap={2}>
@@ -24,20 +59,17 @@ export default function M2ValidationInterface() {
         supportsBatch={true}
       />
 
-      <AlgorithmSelector
-        algorithms={m2.availableAlgorithms.map((a) => ({
-          id: a.id,
-          name: a.name,
-        }))}
-        selectedAlgorithm={m2.selectedAlgorithm}
-        onAlgorithmChange={m2.setSelectedAlgorithm}
+      <ClassifierSelector
+        algorithms={selectorAlgorithms}
+        selected={m2.selectedAlgorithm} // ✅ prop attendue par ClassifierSelector
+        onSelectClassifier={(id: string) => m2.setSelectedAlgorithm(id)} // ✅ idem
         target="M2"
       />
 
-      {m2.results.length > 0 && (
+      {adaptedResults.length > 0 && (
         <ResultsPanel
-          results={m2.results}
-          targetKind="M2"
+          results={adaptedResults}
+          targetKind="M2" // ✅ ta capture montrait un 'target' erroné → c’est 'targetKind'
           classifierLabel={m2.selectedAlgorithm}
           initialPageSize={25}
         />

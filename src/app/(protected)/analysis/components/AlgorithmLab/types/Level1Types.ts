@@ -23,10 +23,15 @@ export interface M3Input {
 }
 
 export interface CalculatorMetadata {
-  name: string;
   version?: string;
   description?: string;
   type: "rule-based" | "ml" | "llm" | "hybrid";
+  id?: string;
+  name?: string;
+  displayName?: string;
+  target?: "M2";
+  batchSupported?: boolean;
+  supportsBatch?: boolean;
 }
 
 // types/level1/m2.ts

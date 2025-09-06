@@ -14,6 +14,11 @@ import { RegexYClassifier } from "../YAlgorithms/RegexYClassifier";
 // --- M1 (Compteurs / métriques)
 import { M1ActionVerbCounter } from "../M1Algorithms/M1ActionVerbCounter";
 
+// --- M2 (Alignement interactionnel)
+import M2LexicalAlignmentCalculator from "../M2Algorithms/M2LexicalAlignmentCalculator";
+import M2SemanticAlignmentCalculator from "../M2Algorithms/M2SemanticAlignmentCalculator";
+import M2CompositeAlignmentCalculator from "../M2Algorithms/M2CompositeAlignmentCalculator";
+
 // -----------------------------------------------------------------------------
 // Helpers top-level
 // -----------------------------------------------------------------------------
@@ -21,6 +26,88 @@ import { M1ActionVerbCounter } from "../M1Algorithms/M1ActionVerbCounter";
 // utilitaire: vérifie la présence d’une méthode optionnelle
 const has = <T extends object>(obj: T | undefined, method: keyof T) =>
   !!obj && typeof (obj as any)[method] === "function";
+
+// Mapper tolérant: convertit divers schémas M2 -> résultat générique UI
+type GenericResult = {
+  prediction: string;
+  confidence: number;
+  processingTime?: number;
+  metadata?: Record<string, unknown>;
+};
+
+const toGeneric = (r: any): GenericResult => {
+  const prediction =
+    r?.prediction ?? r?.label ?? r?.status ?? r?.classification ?? "M2_UNKNOWN";
+  const confidence = r?.confidence ?? r?.score ?? r?.probability ?? 0;
+  const processingTime = r?.processingTime ?? r?.timeMs ?? r?.durationMs;
+  const details = r?.details ?? r;
+
+  return {
+    prediction,
+    confidence,
+    processingTime,
+    metadata: { details },
+  };
+};
+
+// Adaptateur: expose describe()/classify()/run() comme X/Y/M1
+function wrapM2(calc: any): any {
+  return {
+    describe() {
+      const md = (calc?.getMetadata?.() ?? {}) as any;
+      const displayName = md.displayName ?? md.name ?? md.id ?? "M2 Calculator";
+      const id = md.id ?? md.name ?? displayName.replace(/\s+/g, "");
+      const version = md.version ?? "1.0.0";
+      const batchSupported = !!(md.supportsBatch ?? md.batchSupported);
+      const description = md.description ?? undefined;
+
+      // IMPORTANT: le type doit matcher ce que ton UI attend (souvent "classifier")
+      return {
+        name: id,
+        displayName,
+        type: "classifier",
+        target: "M2",
+        version,
+        batchSupported,
+        description,
+      };
+    },
+
+    validateConfig() {
+      return calc?.validateConfig?.() ?? true;
+    },
+
+    // placeholder si l'UI appelle classify(string)
+    async classify(_text: string): Promise<GenericResult> {
+      return {
+        prediction: "M2_REQUIRES_PAIR",
+        confidence: 0,
+        metadata: { warning: "M2 attend {turnA, turnB}." },
+      };
+    },
+
+    // exécution pairée attend { turnA, turnB }
+    async run(input: any): Promise<GenericResult> {
+      if (
+        input &&
+        typeof input === "object" &&
+        "turnA" in input &&
+        "turnB" in input
+      ) {
+        const r = await calc.calculate(input);
+        return toGeneric(r);
+      }
+      return {
+        prediction: "M2_INPUT_INVALID",
+        confidence: 0,
+        metadata: {
+          error: "M2 attend {turnA, turnB}.",
+          receivedKeys: Object.keys(input ?? {}),
+        },
+      };
+    },
+  };
+}
 
 // Flag d'initialisation (évite de se baser sur la longueur du registre)
 let initialized = false;
@@ -38,13 +125,16 @@ export function initializeAlgorithms(): void {
     // ===== X (classifieurs conseiller) =====
     algorithmRegistry.register("RegexXClassifier", new RegexXClassifier());
 
-    const spacyX = new SpacyXClassifier({
-      apiUrl: process.env.SPACY_API_URL || "http://localhost:8000/classify",
-      model: "fr_core_news_md",
-      timeout: 5000,
-      confidenceThreshold: 0.6,
-    });
-    algorithmRegistry.register("SpacyXClassifier", spacyX);
+    // spaCy optionnel (pas de serveur => ne pas enregistrer)
+    if (process.env.SPACY_API_URL) {
+      const spacyX = new SpacyXClassifier({
+        apiUrl: process.env.SPACY_API_URL || "http://localhost:8000/classify",
+        model: "fr_core_news_md",
+        timeout: 5000,
+        confidenceThreshold: 0.6,
+      });
+      algorithmRegistry.register("SpacyXClassifier", spacyX);
+    }
 
     algorithmRegistry.register(
       "OpenAIXClassifier",
@@ -76,6 +166,33 @@ export function initializeAlgorithms(): void {
     algorithmRegistry.register(
       "M1ActionVerbCounter",
       new M1ActionVerbCounter()
+    );
+
+    // ===== M2 (alignement) — via wrapper =====
+    const m2Lexical = new M2LexicalAlignmentCalculator({
+      thresholdAligned: 0.5,
+      thresholdPartial: 0.3,
+    });
+    const m2Semantic = new M2SemanticAlignmentCalculator({
+      confidenceThreshold: 0.6,
+      strictMode: false,
+    });
+    const m2Composite = new M2CompositeAlignmentCalculator({
+      lexicalWeight: 0.4,
+      semanticWeight: 0.6,
+      threshold: 0.5,
+      partialThreshold: 0.3,
+    });
+
+    // On enregistre UNIQUEMENT les versions wrappées
+    algorithmRegistry.register("M2LexicalAlignment", wrapM2(m2Lexical) as any);
+    algorithmRegistry.register(
+      "M2SemanticAlignment",
+      wrapM2(m2Semantic) as any
+    );
+    algorithmRegistry.register(
+      "M2CompositeAlignment",
+      wrapM2(m2Composite) as any
     );
 
     // Log (optionnel)
