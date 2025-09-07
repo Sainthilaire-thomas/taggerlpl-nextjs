@@ -18,7 +18,6 @@ import {
   Tab,
   Card,
   CardContent,
-  Grid,
 } from "@mui/material";
 import {
   Science,
@@ -84,8 +83,16 @@ const StatisticalTestsPanel: React.FC<Props> = ({ data }) => {
             </Typography>
           </Alert>
 
-          <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid item xs={12} md={4}>
+          {/* Remplace Grid container par Box avec flexbox */}
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 3,
+              mb: 3,
+            }}
+          >
+            <Box sx={{ flex: "1 1 300px", minWidth: "200px" }}>
               <Card>
                 <CardContent sx={{ textAlign: "center" }}>
                   <Typography variant="h4" color="primary">
@@ -94,8 +101,8 @@ const StatisticalTestsPanel: React.FC<Props> = ({ data }) => {
                   <Typography variant="body2">Statistique χ²</Typography>
                 </CardContent>
               </Card>
-            </Grid>
-            <Grid item xs={12} md={4}>
+            </Box>
+            <Box sx={{ flex: "1 1 300px", minWidth: "200px" }}>
               <Card>
                 <CardContent sx={{ textAlign: "center" }}>
                   <Typography variant="h4" color="secondary">
@@ -104,8 +111,8 @@ const StatisticalTestsPanel: React.FC<Props> = ({ data }) => {
                   <Typography variant="body2">Cramér's V</Typography>
                 </CardContent>
               </Card>
-            </Grid>
-            <Grid item xs={12} md={4}>
+            </Box>
+            <Box sx={{ flex: "1 1 300px", minWidth: "200px" }}>
               <Card>
                 <CardContent sx={{ textAlign: "center" }}>
                   <Typography variant="h4" color="info.main">
@@ -114,8 +121,8 @@ const StatisticalTestsPanel: React.FC<Props> = ({ data }) => {
                   <Typography variant="body2">Degrés de liberté</Typography>
                 </CardContent>
               </Card>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           <Typography variant="h6" gutterBottom>
             Tableau de Contingence Observé
@@ -214,8 +221,15 @@ const StatisticalTestsPanel: React.FC<Props> = ({ data }) => {
             </Typography>
           </Alert>
 
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+          {/* Remplace Grid container par Box avec flexbox */}
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 3,
+            }}
+          >
+            <Box sx={{ flex: "1 1 300px", minWidth: "200px" }}>
               <Card>
                 <CardContent sx={{ textAlign: "center" }}>
                   <Typography variant="h4" color="primary">
@@ -224,8 +238,8 @@ const StatisticalTestsPanel: React.FC<Props> = ({ data }) => {
                   <Typography variant="body2">Statistique F</Typography>
                 </CardContent>
               </Card>
-            </Grid>
-            <Grid item xs={12} md={6}>
+            </Box>
+            <Box sx={{ flex: "1 1 300px", minWidth: "200px" }}>
               <Card>
                 <CardContent sx={{ textAlign: "center" }}>
                   <Typography variant="h4" color="secondary">
@@ -234,8 +248,8 @@ const StatisticalTestsPanel: React.FC<Props> = ({ data }) => {
                   <Typography variant="body2">p-value</Typography>
                 </CardContent>
               </Card>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
             Moyennes par Groupe

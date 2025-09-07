@@ -1,8 +1,8 @@
 # Reference — Types normalisés AlgorithmLab
 
-> Généré automatiquement le 2025-09-06T10:47:40.946Z à partir de `C:/Users/thoma/OneDrive/SONEAR 2025/taggerlpl-nextjs/src/app/(protected)/analysis/components/AlgorithmLab/types`
-> Doc-Version: 2025-09-06T10:47:40.945Z-040
-> Code-Version: 2.0.0
+> Généré automatiquement le 2025-09-07T14:21:22.544Z à partir de `C:/Users/thoma/OneDrive/SONEAR 2025/taggerlpl-nextjs/src/app/(protected)/analysis/components/AlgorithmLab/types`
+> Doc-Version: 2025-09-07T14:21:22.542Z-149
+> Code-Version: unknown
 
 ## Contenu
 - [index.ts](#indexts)
@@ -15,143 +15,22 @@
 ## index.ts
 
 ### Exports détectés
-- **Déclarations**: ALGORITHM_LAB_VERSION, SUPPORTED_VARIABLES, DEFAULT_CONFIGS, TVTarget, TVResultX, TVResultY, TVResultM2, TVValidationMetrics
-- **Nommés**: createUniversalAlgorithm
 - **Re-exports `*`** depuis: ./core, ./algorithms, ./ui, ./utils
 
 ### Contenu
 ```ts
-/**
- * @fileoverview Point d'entrée principal des types AlgorithmLab
- * Export centralisé unifié pour le module AlgorithmLab
- */
+// exports par domaine
+export * from "./core";
+export * from "./algorithms";
+export * from "./ui";
+export * from "./utils";
 
-// ========================================================================
-// EXPORTS PAR DOMAINE ALGORITHMLAB
-// ========================================================================
-
-// Types fondamentaux
-export * from './core';
-
-// Types d'algorithmes  
-export * from './algorithms';
-
-// Types d'interface utilisateur
-export * from './ui';
-
-// Types utilitaires
-export * from './utils';
-
-// ========================================================================
-// EXPORTS GROUPÉS POUR SIMPLICITÉ D'USAGE ALGORITHMLAB
-// ========================================================================
-
-// Variables et calculs - imports les plus fréquents
+// 👇 Ajoute/garantis ces exports (ils existent déjà côté core)
 export type {
-  VariableTarget,
-  VariableDetails,
-  XDetails,
-  YDetails,
-  M1Details,
-  M2Details, 
-  M3Details,
-  CalculationInput,
-  CalculationResult,
-  XInput,
-  YInput,
-  M1Input,
-  M2Input,
-  M3Input
-} from './core';
-
-// Algorithmes - interface universelle
-export type {
-  UniversalAlgorithm,
-  AlgorithmDescriptor,
-  UniversalResult,
-  BaseCalculator
-} from './algorithms';
-
-// Export de la fonction principale
-export { createUniversalAlgorithm } from './algorithms';
-
-// Validation - types essentiels
-export type {
-  ValidationMetrics,
-  ValidationResult,
-  AlgorithmTestConfig
-} from './core';
-
-// UI - props de validation les plus utilisées
-export type {
-  BaseValidationProps,
-  XValidationProps,
-  YValidationProps,
-  M2ValidationProps
-} from './ui';
-
-// Utilitaires - fonctions de normalisation
-export type {
-  normalizeXLabel,
-  normalizeYLabel,
-  familyFromX,
-  NormalizationConfig
-} from './utils';
-
-// ========================================================================
-// CONSTANTES ALGORITHMLAB
-// ========================================================================
-
-export const ALGORITHM_LAB_VERSION = "2.0.0";
-
-export const SUPPORTED_VARIABLES = ["X", "Y", "M1", "M2", "M3"] as const;
-
-export const DEFAULT_CONFIGS = {
-  VALIDATION: {
-    minConfidence: 0.8,
-    timeout: 30000,
-    retries: 3
-  },
-  NORMALIZATION: {
-    level: "STANDARD" as const,
-    preserveCase: false,
-    removePunctuation: true
-  }
-} as const;
-
-// ========================================================================
-// TYPES DE COMPATIBILITÉ TEMPORAIRE
-// ========================================================================
-
-/**
- * @deprecated Use VariableTarget from './core' instead
- * Compatibilité temporaire pendant la migration
- */
-export type TVTarget = VariableTarget;
-
-/**
- * @deprecated Use XCalculationResult from './core' instead  
- * Compatibilité temporaire pendant la migration
- */
-export type TVResultX = import('./core').XCalculationResult;
-
-/**
- * @deprecated Use YCalculationResult from './core' instead
- * Compatibilité temporaire pendant la migration
- */
-export type TVResultY = import('./core').YCalculationResult;
-
-/**
- * @deprecated Use M2CalculationResult from './core' instead
- * Compatibilité temporaire pendant la migration
- */
-export type TVResultM2 = import('./core').M2CalculationResult;
-
-/**
- * @deprecated Use ValidationMetrics from './core' instead
- * Compatibilité temporaire pendant la migration
- */
-export type TVValidationMetrics = ValidationMetrics;
+  InterAnnotatorData,
+  KappaMetrics,
+  DisagreementCase,
+} from "./core";
 
 ```
 
@@ -169,7 +48,7 @@ algorithms/
 
 **Exports**
 
-- **Déclarations**: UniversalAlgorithm, AlgorithmType, ParameterDescriptor, AlgorithmDescriptor, UniversalResult, isValidAlgorithmResult, createErrorResult, createSuccessResult
+- **Déclarations**: AlgorithmParameters, UniversalAlgorithm, AlgorithmType, ParameterDescriptor, AlgorithmDescriptor, AlgorithmMetadata, AlgorithmConfig, XClassification, XClassifier, BaseAlgorithm, AlgorithmResult, AlgorithmTestState, UniversalResult, isValidAlgorithmResult, createErrorResult, createSuccessResult
 
 **Contenu**
 
@@ -180,6 +59,16 @@ algorithms/
  */
 
 import type { VariableTarget, VariableDetails } from "../core/variables";
+
+// ========================================================================
+// TYPES COMPLÉMENTAIRES (MINIMAUX)
+// ========================================================================
+
+/**
+ * Paramètres passés aux algorithmes (clé → valeur primitive).
+ * Volontairement simple pour ne pas sur-spécifier.
+ */
+export type AlgorithmParameters = Record<string, boolean | number | string>;
 
 // ========================================================================
 // INTERFACE UNIVERSELLE ALGORITHMLAB
@@ -230,6 +119,55 @@ export interface AlgorithmDescriptor {
   examples?: Array<{ input: unknown; output?: unknown; note?: string }>; // Exemples d'utilisation
 }
 
+export interface AlgorithmMetadata {
+  key: string; // identifiant interne (ex: "m2-lexical")
+  label?: string; // libellé humain
+  version?: string; // semver, ex: "1.0.0"
+  description?: string;
+  target?: VariableTarget; // X|Y|M1|M2|M3 (si utile ici)
+  tags?: string[];
+}
+
+export interface AlgorithmConfig {
+  [param: string]: unknown;
+}
+
+/** Résultat d'une classification X (structure légère) */
+export interface XClassification {
+  target: string; // étiquette prédite
+  confidence?: number; // 0..1
+  details?: Record<string, any>; // infos spécifiques
+}
+
+/** Contrat minimal d'un classifieur X */
+export interface XClassifier {
+  name: string;
+  classify(
+    input: string | Record<string, any>
+  ): Promise<XClassification> | XClassification;
+}
+
+/** Contrat minimal commun des algorithmes */
+export interface BaseAlgorithm<I = unknown, R = unknown> {
+  key: string;
+  meta?: AlgorithmMetadata;
+  run(input: I, config?: AlgorithmConfig): Promise<R> | R;
+}
+
+export interface AlgorithmResult {
+  ok: boolean;
+  message?: string;
+  metrics?: Record<string, unknown>;
+  details?: Record<string, unknown>;
+}
+
+export interface AlgorithmTestState {
+  startedAt: string; // ISO
+  finishedAt?: string; // ISO
+  status: "idle" | "running" | "done" | "error";
+  note?: string;
+}
+
 // ========================================================================
 // RÉSULTAT UNIVERSEL ALGORITHMLAB
 // ========================================================================
@@ -245,6 +183,7 @@ export interface UniversalResult {
     executionPath?: string[]; // Étapes d'exécution
     warnings?: string[]; // Avertissements non-bloquants
     details?: VariableDetails; // Détails typés selon la variable (X/Y/M1/M2/M3)
+    [k: string]: unknown; // ouverture optionnelle pour champs additionnels
   };
 }
 
@@ -744,6 +683,7 @@ export function createM2Algorithm(
 core/
 - calculations.ts
 - index.ts
+- level0.ts
 - validation.ts
 - variables.ts
 ```
@@ -943,24 +883,24 @@ export function createEmptyResult<T extends VariableDetails>(target: VariableTar
  */
 
 // Variables et détails
-export * from './variables';
+export * from "./variables";
 
 // Calculs et résultats
-export * from './calculations';
+export * from "./calculations";
 
 // Validation et métriques
-export * from './validation';
+export * from "./validation";
 
 // Types combinés pour faciliter l'import dans AlgorithmLab
 export type {
   VariableTarget,
   VariableDetails,
   XDetails,
-  YDetails, 
+  YDetails,
   M1Details,
   M2Details,
-  M3Details
-} from './variables';
+  M3Details,
+} from "./variables";
 
 export type {
   CalculationInput,
@@ -970,14 +910,54 @@ export type {
   YInput,
   M1Input,
   M2Input,
-  M3Input
-} from './calculations';
+  M3Input,
+} from "./calculations";
 
 export type {
   ValidationMetrics,
   ValidationResult,
-  AlgorithmTestConfig
-} from './validation';
+  AlgorithmTestConfig,
+} from "./validation";
+
+```
+
+#### `AlgorithmLab/types/core/level0.ts`
+
+**Exports**
+
+- **Déclarations**: InterAnnotatorData, KappaMetrics, DisagreementCase
+
+**Contenu**
+
+```ts
+// src/app/(protected)/analysis/components/AlgorithmLab/types/core/level0.ts
+
+export interface InterAnnotatorData {
+  annotators: string[];
+  items: Array<{
+    id: string;
+    labels: Record<string, string>; // annotator -> label
+  }>;
+}
+
+export interface KappaMetrics {
+  kappa: number; // -1..1
+  observedAgreement: number; // 0..1
+  expectedAgreement: number; // 0..1
+  interpretation?:
+    | "poor"
+    | "slight"
+    | "fair"
+    | "moderate"
+    | "substantial"
+    | "almost perfect";
+}
+
+export interface DisagreementCase {
+  itemId: string;
+  labels: Record<string, string>; // annotator -> label
+  notes?: string;
+}
 
 ```
 
@@ -985,7 +965,7 @@ export type {
 
 **Exports**
 
-- **Déclarations**: TVMetadataCore, TVValidationResultCore, ValidationMetrics, ValidationResult, AlgorithmTestConfig, calculateMetrics, createValidationConfig
+- **Déclarations**: TVMetadataCore, TVValidationResultCore, ValidationRow, ValidationMetrics, ValidationResult, TVValidationResultCore, TVMetadataCore, XGoldStandardItem, XValidationResult, TVMetadataM2, TVValidationResult, CoreTVValidationResult, CoreTVMetadata, AlgorithmTestConfig, DisagreementCase, KappaMetrics, InterAnnotatorData, ValidationLevel, calculateMetrics, createValidationConfig
 
 **Contenu**
 
@@ -995,8 +975,8 @@ export type {
  * Interfaces pour validation, tests et métriques de performance AlgorithmLab
  */
 
-import { VariableTarget } from "./variables";
-import { CalculationResult } from "./calculations";
+import type { VariableTarget, VariableX, Xtag } from "./variables";
+import type { CalculationResult } from "./calculations";
 
 // ========================================================================
 // MÉTRIQUES DE VALIDATION ALGORITHMLAB
@@ -1019,11 +999,15 @@ export interface TVValidationResultCore {
   metadata?: TVMetadataCore | Record<string, unknown>;
 }
 
+export type ValidationRow = TVValidationResultCore;
+
 export interface ValidationMetrics {
+  // 👉 valeurs globales, numériques
   accuracy: number;
   precision: number;
   recall: number;
   f1Score: number;
+  kappa?: number; // 👉 ajouté (optionnel)
 
   // Métriques détaillées
   confusionMatrix: Record<string, Record<string, number>>;
@@ -1072,6 +1056,56 @@ export interface ValidationResult {
   notes?: string;
 }
 
+export interface TVValidationResultCore {
+  items: Array<{ label: string; score: number }>;
+  summary?: Record<string, unknown>;
+}
+
+export interface TVMetadataCore {
+  source?: string;
+  createdAt?: string; // ISO
+  notes?: string;
+}
+
+export interface XGoldStandardItem {
+  id: string;
+  verbatim?: string;
+  goldStandard?: VariableX; // compat ancien
+  annotatorConfidence?: number; // compat ancien
+  callId?: string; // compat ancien
+  meta?: Record<string, unknown>;
+}
+export interface XValidationResult {
+  id?: string;
+  verbatim?: string;
+  callId?: string;
+
+  predicted?: VariableX;
+  goldStandard?: VariableX;
+
+  confidence?: number;
+  processingTime?: number;
+
+  correct: boolean; // ⚠️ boolean (l’UI compare === true/false)
+}
+export interface TVMetadataM2 {
+  source?: string;
+  createdAt?: string; // ISO
+  notes?: string;
+  alignmentMethod?: "lexical" | "semantic" | "composite";
+  weights?: Record<string, number>;
+
+  // Ajouts pour la compat AL
+  value?: "ALIGNEMENT_FORT" | "ALIGNEMENT_FAIBLE" | "DESALIGNEMENT";
+  alignmentType?: TVMetadataM2["value"];
+}
+// Alias public simple attendu par l'UI
+export type TVValidationResult = TVValidationResultCore;
+
+// Aliases "Core*" utilisés par certains modules (ex: ResultsSample/types.ts)
+export type CoreTVValidationResult = TVValidationResultCore;
+export type CoreTVMetadata = TVMetadataCore;
+
 // ========================================================================
 // CONFIGURATION DES TESTS ALGORITHMLAB
 // ========================================================================
@@ -1086,6 +1120,8 @@ export interface AlgorithmTestConfig {
     size?: number;
     stratified?: boolean;
     randomSeed?: number;
+    algorithmId?: string; // compat
+    sampleSize?: number; // compat
   };
 
   // Métriques à calculer
@@ -1111,6 +1147,67 @@ export interface AlgorithmTestConfig {
     retries?: number;
     saveResults?: boolean;
   };
+}
+
+// ========================================================================
+// INTER-ANNOTATOR AGREEMENT (IAA) — types nécessaires au Level 0
+// ========================================================================
+
+/** Un cas de désaccord / comparaison entre deux annotations. */
+export interface DisagreementCase {
+  id?: string | number;
+  verbatim?: string;
+
+  // Scindé OU encapsulé : le hook lit parfois annotation.expert1/expert2
+  annotatorA?: string;
+  annotatorB?: string;
+  labelA?: string;
+  labelB?: string;
+
+  // Compat : certains chemins accèdent via `annotation.expert1`
+  annotation?: { expert1: string; expert2: string };
+
+  confusionType?: string;
+  finalTag?: string;
+  notes?: string;
+}
+
+/** Métriques de Kappa + dérivées pour l’IAA. */
+export interface KappaMetrics {
+  kappa: number;
+  observedAgreement: number;
+  expectedAgreement: number;
+  confusionMatrix?: Record<string, Record<string, number>>;
+  byLabel?: Record<
+    string,
+    { observed: number; expected: number; kappa: number; support: number }
+  >;
+  // fourni par useLevel0Validation.getInterpretation
+  interpretation?:
+    | "POOR"
+    | "FAIR"
+    | "MODERATE"
+    | "SUBSTANTIAL"
+    | "ALMOST_PERFECT";
+}
+
+/** Données complètes pour l’interface d’accord inter-annotateurs. */
+export interface InterAnnotatorData {
+  id?: string | number;
+  verbatim?: string;
+  agreed: boolean;
+  annotation?: { expert1: string; expert2: string };
+  // champs libres tolerés par l’UI
+  [k: string]: unknown;
+}
+
+export interface ValidationLevel {
+  id: number;
+  name: string;
+  description: string;
+  status: "locked" | "in_progress" | "validated";
+  progress: number; // 0..100
+  prerequisites: number[]; // ids requis
 }
 
 // ========================================================================
@@ -1186,7 +1283,7 @@ export function createValidationConfig(
 
 **Exports**
 
-- **Déclarations**: VariableTarget, XTag, YTag, XDetails, YDetails, M1Details, M2Details, M3Details, VariableX, VariableY, VariableDetails, VARIABLE_LABELS, VARIABLE_COLORS, isValidVariableTarget, getVariableColor, getVariableLabel
+- **Déclarations**: VariableTarget, ValidationLevel, VariableX, XTag, YTag, XDetails, YDetails, M1Details, M2Details, M3Details, XValue, YValue, VariableM1Score, VariableM2Score, VariableM3Score, VariableDetails, VARIABLE_LABELS, VARIABLE_COLORS, isValidVariableTarget, getVariableColor, getVariableLabel
 
 **Contenu**
 
@@ -1203,16 +1300,25 @@ export function createValidationConfig(
 // ========================================================================
 export type VariableTarget = "X" | "Y" | "M1" | "M2" | "M3";
 
+// (utilisé par useWorkflowManagement)
+export type ValidationLevel = "LEVEL0" | "LEVEL1" | "LEVEL2";
+
 // ========================================================================
-// 2) Tags X/Y
+// 2) Tags X/Y (catégories canoniques)
 // ========================================================================
-export type XTag =
+
+// ⚠️ Partout ailleurs, VariableX est utilisée comme union de libellés.
+// On la définit donc ici comme telle.
+export type VariableX =
   | "ENGAGEMENT"
-  | "OUVERTURE"
-  | "REFLET"
   | "EXPLICATION"
-  | "CLOTURE"
-  | "AUTRE_X";
+  | "REFLET_ACQ"
+  | "REFLET_JE"
+  | "REFLET_VOUS"
+  | "OUVERTURE";
+
+// XTag = VariableX (et on garde la compat en ajoutant d’éventuels extras)
+export type XTag = VariableX | "CLOTURE" | "AUTRE_X";
 
 export type YTag =
   | "CLIENT_POSITIF"
@@ -1332,15 +1438,32 @@ export interface M3Details {
 
 // ========================================================================
 // 4) Objets composés X/Y (tag + détails)
+//    ⟶ renommés pour ne pas entrer en conflit avec `VariableX` (union)
 // ========================================================================
-export interface VariableX {
+export interface XValue {
   tag: XTag;
   details: XDetails;
 }
 
-export interface VariableY {
+export interface YValue {
   tag: YTag;
   details: YDetails;
+}
+
+export interface VariableM1Score {
+  value: number;
+  components?: Record<string, number>;
+}
+
+export interface VariableM2Score {
+  value: number;
+  alignment?: "low" | "medium" | "high";
+  components?: Record<string, number>;
+}
+
+export interface VariableM3Score {
+  value: number;
+  components?: Record<string, number>;
 }
 
 // ========================================================================
@@ -1415,7 +1538,7 @@ ui/
 
 **Exports**
 
-- **Déclarations**: BaseValidationProps, DisplayConfig, ConfigFormProps, ResultDisplayProps, ResultsPanelProps, TVResultDisplayProps, ModalProps, createDefaultDisplayConfig, withDisplayDefaults, validateConfigSchema
+- **Déclarations**: BaseValidationProps, DisplayConfig, ConfigFormProps, ResultDisplayProps, ResultsPanelProps, TVResultDisplayProps, TargetKind, ExtraColumn, ModalProps, createDefaultDisplayConfig, withDisplayDefaults, validateConfigSchema
 
 **Contenu**
 
@@ -1579,6 +1702,13 @@ export interface TVResultDisplayProps {
   onRowSelect?: (index: number) => void;
 }
 
+export type TargetKind = "X" | "Y" | "M1" | "M2" | "M3";
+
+export type ExtraColumn<Row = any> = {
+  id: string;
+  header: string;
+  render: (row: Row) => unknown; // opaque; UI gère le rendu
+};
 // ========================================================================
 // MODALES ET DIALOGUES ALGORITHMLAB
 // ========================================================================

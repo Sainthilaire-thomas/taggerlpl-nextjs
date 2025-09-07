@@ -13,7 +13,7 @@ import {
   Switch,
 } from "@mui/material";
 import { Tune, PlayArrow, RestartAlt } from "@mui/icons-material";
-import { AlgorithmConfig } from "../../../types/Level1Types";
+import { AlgorithmConfig } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 interface ParameterOptimizationProps {
   algorithm: AlgorithmConfig;

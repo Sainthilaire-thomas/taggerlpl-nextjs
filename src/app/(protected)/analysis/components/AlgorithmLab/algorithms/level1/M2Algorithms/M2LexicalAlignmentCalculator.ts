@@ -4,7 +4,7 @@ import {
   ClassificationResultM2,
 } from "./shared/BaseM2Calculator";
 import { AlgorithmRegistry } from "../shared/AlgorithmRegistry"; // ajuste le chemin si besoin
-import { M2Input } from "../../../types/Level1Types";
+import { M2Input } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 import { tokenize, jaccard, shared } from "./shared/m2-utils";
 
 interface LexicalConfig {

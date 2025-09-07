@@ -1,4 +1,4 @@
-import type { VariableTarget } from "../../../types/ThesisVariables";
+import type { VariableTarget } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 /** Typologie des algorithmes */
 export type AlgorithmType = "rule-based" | "ml" | "llm" | "composite";

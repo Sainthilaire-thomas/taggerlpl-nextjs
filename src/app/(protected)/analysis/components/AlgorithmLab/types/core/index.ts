@@ -1,3 +1,7 @@
+// ===================================================================
+// 4. CORRECTION: src/app/(protected)/analysis/components/AlgorithmLab/types/core/index.ts
+// ===================================================================
+
 /**
  * @fileoverview Export centralisé des types core AlgorithmLab
  * Point d'entrée principal pour tous les types fondamentaux AlgorithmLab
@@ -9,7 +13,7 @@ export * from "./variables";
 // Calculs et résultats
 export * from "./calculations";
 
-// Validation et métriques
+// Validation et métriques (inclut maintenant tout de SharedTypes et Level0Types)
 export * from "./validation";
 
 // Types combinés pour faciliter l'import dans AlgorithmLab
@@ -21,6 +25,9 @@ export type {
   M1Details,
   M2Details,
   M3Details,
+  VariableX,
+  XTag,
+  YTag,
 } from "./variables";
 
 export type {
@@ -38,4 +45,11 @@ export type {
   ValidationMetrics,
   ValidationResult,
   AlgorithmTestConfig,
+  ValidationLevel,
+  TVMetadata,
+  TVValidationResult,
+  XValidationResult,
+  DisagreementCase,
+  KappaMetrics,
+  InterAnnotatorData,
 } from "./validation";

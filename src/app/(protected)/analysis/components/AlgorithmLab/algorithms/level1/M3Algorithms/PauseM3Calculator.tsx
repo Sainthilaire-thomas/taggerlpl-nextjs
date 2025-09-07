@@ -3,8 +3,8 @@ import type {
   M3Input,
   CalculationResult,
   CalculatorMetadata,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types/Level1Types";
-import type { M3Details } from "@/app/(protected)/analysis/components/AlgorithmLab/types/ThesisVariables";
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import type { M3Details } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 /**
  * Calculateur M3 "pauvres mais sûrs" :

@@ -1,7 +1,7 @@
 // hooks/level1/useM2AlgorithmTesting.ts
 import { useCallback, useMemo, useRef, useState } from "react";
 import { AlgorithmRegistry } from "../../algorithms/level1/shared/AlgorithmRegistry";
-import { M2Input, TVMetadataM2 } from "../../types/Level1Types";
+import { M2Input, TVMetadataM2 } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 export interface TVValidationResult {
   id: string | number;

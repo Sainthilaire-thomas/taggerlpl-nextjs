@@ -1,21 +1,37 @@
+// ===================================================================
+// 1. CORRECTION: src/app/(protected)/analysis/components/AlgorithmLab/types/core/validation.ts
+// ===================================================================
+
 /**
  * @fileoverview Types de validation AlgorithmLab
  * Interfaces pour validation, tests et métriques de performance AlgorithmLab
  */
 
-import { VariableTarget } from "./variables";
-import { CalculationResult } from "./calculations";
+import type { VariableTarget, VariableX } from "./variables";
+import type { CalculationResult } from "./calculations";
 
 // ========================================================================
 // MÉTRIQUES DE VALIDATION ALGORITHMLAB
 // ========================================================================
 
-// --- Nouveaux contrats centraux pour la validation technique ---
 export interface TVMetadataCore {
   // identifiants tour (optionnels)
   turnId?: number | string;
   id?: number | string;
+
+  // Propriétés manquantes ajoutées pour corriger les erreurs TypeScript
+  annotations?: any[];
+  provider?: string;
+  scale?: "nominal" | "ordinal";
+
+  // Autres propriétés optionnelles
+  source?: string;
+  createdAt?: string;
+  notes?: string;
 }
+
+// Alias pour TVMetadata (utilisé dans plusieurs composants)
+export type TVMetadata = TVMetadataCore;
 
 export interface TVValidationResultCore {
   verbatim: string;
@@ -27,11 +43,22 @@ export interface TVValidationResultCore {
   metadata?: TVMetadataCore | Record<string, unknown>;
 }
 
+export type ValidationRow = TVValidationResultCore;
+
 export interface ValidationMetrics {
+  // Valeurs globales, numériques
   accuracy: number;
   precision: number;
   recall: number;
   f1Score: number;
+
+  // Propriété manquante ajoutée pour TechnicalBenchmark
+  kappa?: number;
+
+  // Propriétés supplémentaires pour compatibility complète
+  errorRate?: number;
+  sampleSize?: number;
+  processingSpeed?: number;
 
   // Métriques détaillées
   confusionMatrix: Record<string, Record<string, number>>;
@@ -44,6 +71,17 @@ export interface ValidationMetrics {
       recall: number;
       f1Score: number;
       support: number;
+    }
+  >;
+
+  // Support pour les deux formats perClass
+  perClass?: Record<
+    string,
+    {
+      precision: number;
+      recall: number;
+      f1: number;
+      support?: number;
     }
   >;
 
@@ -80,41 +118,38 @@ export interface ValidationResult {
   notes?: string;
 }
 
-export interface TVValidationResultCore {
-  items: Array<{ label: string; score: number }>;
-  summary?: Record<string, unknown>;
-}
-
-export interface TVMetadataCore {
-  source?: string;
-  createdAt?: string; // ISO
-  notes?: string;
-}
-
 export interface XGoldStandardItem {
   id: string;
-  label: string;
   verbatim?: string;
+  goldStandard?: VariableX;
+  annotatorConfidence?: number;
+  callId?: string;
   meta?: Record<string, unknown>;
 }
 
 export interface XValidationResult {
-  total: number;
-  correct: number;
-  accuracy: number; // 0..1
-  breakdown?: Record<string, unknown>;
+  id?: string;
+  verbatim?: string;
+  callId?: string;
+  predicted?: VariableX;
+  goldStandard?: VariableX;
+  confidence?: number;
+  processingTime?: number;
+  correct: boolean;
+
+  // Propriété manquante ajoutée
+  evidence?: string[];
 }
-export interface TVMetadataM2 {
-  source?: string;
-  createdAt?: string; // ISO
-  notes?: string;
+
+export interface TVMetadataM2 extends TVMetadataCore {
+  value?: "ALIGNEMENT_FORT" | "ALIGNEMENT_FAIBLE" | "DESALIGNEMENT";
+  alignmentType?: TVMetadataM2["value"];
   alignmentMethod?: "lexical" | "semantic" | "composite";
   weights?: Record<string, number>;
 }
-// Alias public simple attendu par l'UI
-export type TVValidationResult = TVValidationResultCore;
 
-// Aliases "Core*" utilisés par certains modules (ex: ResultsSample/types.ts)
+// Alias publics simples attendus par l'UI
+export type TVValidationResult = TVValidationResultCore;
 export type CoreTVValidationResult = TVValidationResultCore;
 export type CoreTVMetadata = TVMetadataCore;
 
@@ -126,6 +161,14 @@ export interface AlgorithmTestConfig {
   target: VariableTarget;
   algorithmName: string;
 
+  // Propriétés manquantes ajoutées
+  algorithmId?: string;
+  variable?: VariableTarget;
+  sampleSize?: number;
+  randomSeed?: number;
+  useGoldStandard?: boolean;
+  options?: Record<string, unknown>;
+
   // Configuration du test
   testSet: {
     source: "MANUAL_ANNOTATIONS" | "SYNTHETIC" | "HISTORICAL";
@@ -136,10 +179,10 @@ export interface AlgorithmTestConfig {
 
   // Métriques à calculer
   metrics: {
-    basic: boolean; // accuracy, precision, recall, f1
-    detailed: boolean; // confusion matrix, per-class metrics
-    temporal?: boolean; // performance over time
-    crossValidation?: boolean; // k-fold validation
+    basic: boolean;
+    detailed: boolean;
+    temporal?: boolean;
+    crossValidation?: boolean;
   };
 
   // Seuils de performance
@@ -153,10 +196,71 @@ export interface AlgorithmTestConfig {
   // Options d'exécution
   execution: {
     parallel?: boolean;
-    timeout?: number; // ms
+    timeout?: number;
     retries?: number;
     saveResults?: boolean;
   };
+
+  // Support pour validation croisée
+  crossValidation?: {
+    folds: number;
+    stratified: boolean;
+  };
+}
+
+// ========================================================================
+// INTER-ANNOTATOR AGREEMENT (IAA) - Remplace Level0Types
+// ========================================================================
+
+export interface DisagreementCase {
+  id?: string | number;
+  verbatim?: string;
+  annotatorA?: string;
+  annotatorB?: string;
+  labelA?: string;
+  labelB?: string;
+  annotation?: { expert1: string; expert2: string };
+  confusionType?: string;
+  finalTag?: string;
+  notes?: string;
+}
+
+export interface KappaMetrics {
+  kappa: number;
+  observedAgreement: number;
+  expectedAgreement: number;
+  confusionMatrix?: Record<string, Record<string, number>>;
+  byLabel?: Record<
+    string,
+    { observed: number; expected: number; kappa: number; support: number }
+  >;
+  interpretation?:
+    | "POOR"
+    | "FAIR"
+    | "MODERATE"
+    | "SUBSTANTIAL"
+    | "ALMOST_PERFECT";
+}
+
+export interface InterAnnotatorData {
+  id?: string | number;
+  verbatim?: string;
+  agreed: boolean;
+  annotation?: { expert1: string; expert2: string };
+  [k: string]: unknown;
+}
+
+// ========================================================================
+// VALIDATION LEVEL - Remplace SharedTypes.ValidationLevel
+// ========================================================================
+
+export interface ValidationLevel {
+  id: number;
+  name: string;
+  description: string;
+  status: "pending" | "in-progress" | "validated" | "failed";
+  progress: number;
+  prerequisites: number[];
 }
 
 // ========================================================================
@@ -174,12 +278,11 @@ export function calculateMetrics(
   const correct = predictions.filter((p) => p.expected === p.predicted).length;
   const accuracy = correct / total;
 
-  // Calcul simplifié pour l'exemple
   return {
     accuracy,
-    precision: accuracy, // Simplifié
-    recall: accuracy, // Simplifié
-    f1Score: accuracy, // Simplifié
+    precision: accuracy,
+    recall: accuracy,
+    f1Score: accuracy,
     confusionMatrix: {},
     classMetrics: {},
     totalSamples: total,

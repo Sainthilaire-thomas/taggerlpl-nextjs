@@ -1,9 +1,9 @@
-import type { M3Details } from "@/app/(protected)/analysis/components/AlgorithmLab/types/ThesisVariables";
+import type { M3Details } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 import type {
   M3Input,
   CalculationResult,
   CalculatorMetadata,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types/Level1Types";
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 export abstract class BaseM3Calculator {
   abstract calculate(input: M3Input): Promise<CalculationResult<M3Details>>;

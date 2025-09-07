@@ -12,11 +12,11 @@ import {
 } from "@mui/material";
 
 import ResultsTableBase from "../base/ResultsTableBase";
-import type { XValidationResult } from "@/app/(protected)/analysis/components/AlgorithmLab/types/ValidationTypes";
+import type { XValidationResult } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 import {
   VARIABLE_LABELS,
   VARIABLE_COLORS,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types/ThesisVariables";
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 export interface ResultsTableXProps {
   items: XValidationResult[];

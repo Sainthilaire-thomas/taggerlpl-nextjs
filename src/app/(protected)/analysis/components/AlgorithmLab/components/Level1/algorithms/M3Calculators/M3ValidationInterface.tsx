@@ -36,8 +36,8 @@ import {
 
 import { useTaggingData } from "@/context/TaggingDataContext";
 import { useM3AlgorithmTesting } from "../../../../hooks/level1/useM3AlgorithmTesting";
-import type { M3Details } from "@/app/(protected)/analysis/components/AlgorithmLab/types/ThesisVariables";
-import type { CalculationResult } from "@/app/(protected)/analysis/components/AlgorithmLab/types/Level1Types";
+import type { M3Details } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import type { CalculationResult } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 type Row = {
   id: string | number;

@@ -4,7 +4,7 @@ import {
   InterAnnotatorData,
   KappaMetrics,
   DisagreementCase,
-} from "../types/Level0Types";
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 export const useLevel0Validation = () => {
   const [annotations, setAnnotations] = useState<InterAnnotatorData[]>([]);
@@ -27,14 +27,13 @@ export const useLevel0Validation = () => {
     const kappa = (observed - expected) / (1 - expected);
 
     const getInterpretation = (k: number): KappaMetrics["interpretation"] => {
-      if (k < 0) return "poor";
-      if (k < 0.21) return "slight";
-      if (k < 0.41) return "fair";
-      if (k < 0.61) return "moderate";
-      if (k < 0.81) return "substantial";
-      return "almost_perfect";
+      if (k < 0) return "POOR";
+      if (k < 0.21) return "FAIR";
+      if (k < 0.41) return "FAIR";
+      if (k < 0.61) return "MODERATE";
+      if (k < 0.81) return "SUBSTANTIAL";
+      return "ALMOST_PERFECT";
     };
-
     const metrics: KappaMetrics = {
       observed,
       expected,

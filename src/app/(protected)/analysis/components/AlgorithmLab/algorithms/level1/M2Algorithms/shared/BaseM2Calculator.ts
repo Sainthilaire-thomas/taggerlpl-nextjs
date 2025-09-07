@@ -4,7 +4,7 @@ import type {
   M2Details,
   CalculationResult,
   CalculatorMetadata,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types/Level1Types";
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 export abstract class BaseM2Calculator {
   abstract calculate(input: M2Input): Promise<CalculationResult<M2Details>>;

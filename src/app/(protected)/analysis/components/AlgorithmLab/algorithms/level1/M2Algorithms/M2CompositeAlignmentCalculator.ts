@@ -5,7 +5,7 @@ import type {
   M2Details,
   CalculationResult,
   CalculatorMetadata,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types/Level1Types";
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 import M2LexicalAlignmentCalculator from "./M2LexicalAlignmentCalculator";
 import M2SemanticAlignmentCalculator from "./M2SemanticAlignmentCalculator";

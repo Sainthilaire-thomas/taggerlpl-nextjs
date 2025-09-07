@@ -1,6 +1,6 @@
 // Hook de gestion workflow - useWorkflowManagement.ts
 import { useState, useCallback, useMemo } from "react";
-import { ValidationLevel } from "../types/SharedTypes";
+import { ValidationLevel } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 export const useWorkflowManagement = () => {
   const [currentLevel, setCurrentLevel] = useState(0);

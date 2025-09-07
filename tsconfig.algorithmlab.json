@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/app/(protected)/analysis/components/AlgorithmLab/**/*"],
+  "exclude": []
+}

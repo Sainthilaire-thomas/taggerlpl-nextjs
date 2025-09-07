@@ -1,3 +1,7 @@
+// ===================================================================
+// 3. CORRECTION: src/app/(protected)/analysis/components/AlgorithmLab/types/core/variables.ts
+// ===================================================================
+
 /**
  * @fileoverview Variables & détails AlgorithmLab — version unifiée et canonique
  * - Ordre logique (tags avant usages)
@@ -10,16 +14,24 @@
 // ========================================================================
 export type VariableTarget = "X" | "Y" | "M1" | "M2" | "M3";
 
+// Suppression de ValidationLevel (maintenant dans validation.ts)
+// export type ValidationLevel = "LEVEL0" | "LEVEL1" | "LEVEL2";
+
 // ========================================================================
-// 2) Tags X/Y
+// 2) Tags X/Y (catégories canoniques)
 // ========================================================================
-export type XTag =
+
+// VariableX est utilisée comme union de libellés
+export type VariableX =
   | "ENGAGEMENT"
-  | "OUVERTURE"
-  | "REFLET"
   | "EXPLICATION"
-  | "CLOTURE"
-  | "AUTRE_X";
+  | "REFLET_ACQ"
+  | "REFLET_JE"
+  | "REFLET_VOUS"
+  | "OUVERTURE";
+
+// XTag = VariableX avec extensions
+export type XTag = VariableX | "REFLET" | "CLOTURE" | "AUTRE_X";
 
 export type YTag =
   | "CLIENT_POSITIF"
@@ -33,7 +45,6 @@ export type YTag =
 // 3) Détails par variable (définitions uniques)
 // ========================================================================
 
-/** Détails X (actes conseiller) — fusion des versions "simple" et "riche" */
 export interface XDetails {
   // Ancienne spec (facilitent la validation X↔famille)
   family?: string;
@@ -59,7 +70,6 @@ export interface XDetails {
   };
 }
 
-/** Détails Y (réactions client) — fusion simple + riche */
 export interface YDetails {
   // Ancienne spec
   family?: string;
@@ -79,7 +89,6 @@ export interface YDetails {
   };
 }
 
-/** M1 — densité/metrics linguistiques (compat + enrichi) */
 export interface M1Details {
   // Ancienne spec (compat)
   value?: number;
@@ -97,7 +106,6 @@ export interface M1Details {
   semanticCoherence?: number;
 }
 
-/** M2 — alignement interactionnel (compat + enrichi) */
 export interface M2Details {
   // Ancienne spec (compat)
   value?: string | number;
@@ -118,7 +126,6 @@ export interface M2Details {
   };
 }
 
-/** M3 — temporalité/charge (compat + enrichi) */
 export interface M3Details {
   // Ancienne spec (compat)
   value?: number;
@@ -140,12 +147,12 @@ export interface M3Details {
 // ========================================================================
 // 4) Objets composés X/Y (tag + détails)
 // ========================================================================
-export interface VariableX {
+export interface XValue {
   tag: XTag;
   details: XDetails;
 }
 
-export interface VariableY {
+export interface YValue {
   tag: YTag;
   details: YDetails;
 }
@@ -167,7 +174,7 @@ export interface VariableM3Score {
 }
 
 // ========================================================================
-// 5) Union de détails + utilitaires d’affichage
+// 5) Union de détails + utilitaires d'affichage
 // ========================================================================
 export type VariableDetails =
   | XDetails

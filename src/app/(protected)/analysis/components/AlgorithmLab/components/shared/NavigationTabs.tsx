@@ -16,7 +16,7 @@ import {
   Lock,
 } from "@mui/icons-material";
 
-import { ValidationLevel } from "../../types/SharedTypes";
+import { ValidationLevel } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 interface NavigationTabsProps {
   levels: ValidationLevel[];

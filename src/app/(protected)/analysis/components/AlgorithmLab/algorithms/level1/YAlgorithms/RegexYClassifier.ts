@@ -1,6 +1,6 @@
 // algorithms/level1/YAlgorithms/RegexYClassifier.ts
 import type { BaseAlgorithm, AlgorithmMetadata } from "../shared/BaseAlgorithm";
-import type { VariableY } from "../../../types/ThesisVariables";
+import type { VariableY } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 export interface YClassification {
   prediction: VariableY | "ERREUR";

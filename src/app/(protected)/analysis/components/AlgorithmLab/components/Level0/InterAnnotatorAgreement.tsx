@@ -34,7 +34,7 @@ import {
   Cancel as XCircle,
 } from "@mui/icons-material";
 import { useLevel0Validation } from "../../hooks/useLevel0Validation";
-import { InterAnnotatorData } from "../../types/Level0Types";
+import { InterAnnotatorData } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 export const InterAnnotatorAgreement: React.FC = () => {
   const theme = useTheme();

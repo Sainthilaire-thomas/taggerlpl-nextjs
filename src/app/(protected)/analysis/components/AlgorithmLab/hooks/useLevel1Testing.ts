@@ -9,7 +9,7 @@ import {
 import { algorithmRegistry } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry";
 import { initializeAlgorithms } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms";
 
-import type { XTag, YTag, XDetails, YDetails } from "../types/ThesisVariables";
+import type { XTag, YTag, XDetails, YDetails } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 // ----------------- Types -----------------
 
 interface GoldStandardSample {

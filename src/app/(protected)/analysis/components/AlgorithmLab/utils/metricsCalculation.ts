@@ -1,113 +1,138 @@
-// utils/metricsCalculation.ts
-import { AlgorithmResult, ValidationMetrics } from "../types/Level1Types";
+import type {
+  ValidationRow, // alias de TVValidationResultCore
+  ValidationMetrics,
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
-export function calculateValidationMetrics(
-  results: AlgorithmResult[]
-): ValidationMetrics {
-  const totalSamples = results.length;
-  const correctPredictions = results.filter((r) => r.correct).length;
-  const accuracy = totalSamples > 0 ? correctPredictions / totalSamples : 0;
+/**
+ * Calcule les métriques globales de validation à partir des lignes de validation.
+ * Chaque ligne doit contenir: predicted, goldStandard, correct (boolean), confidence? etc.
+ */
 
-  // Obtenir toutes les classes uniques
-  const allClasses = Array.from(
-    new Set([
-      ...results.map((r) => r.predicted),
-      ...results.map((r) => r.goldStandard),
-    ])
+function computeKappa(
+  confusionMatrix: Record<string, Record<string, number>>
+): number {
+  const labels = Object.keys(confusionMatrix);
+  const n = labels.reduce(
+    (sum, p) =>
+      sum + labels.reduce((s, g) => s + (confusionMatrix[p][g] || 0), 0),
+    0
   );
 
-  // Calculer précision, rappel et F1 pour chaque classe
-  const precision: Record<string, number> = {};
-  const recall: Record<string, number> = {};
-  const f1Score: Record<string, number> = {};
+  if (n === 0) return 0;
+
+  // Observed agreement (Po)
+  const diag = labels.reduce((s, c) => s + (confusionMatrix[c][c] || 0), 0);
+  const Po = diag / n;
+
+  // Expected agreement (Pe)
+  const rowTotals: Record<string, number> = {};
+  const colTotals: Record<string, number> = {};
+  for (const p of labels) {
+    rowTotals[p] = labels.reduce((s, g) => s + (confusionMatrix[p][g] || 0), 0);
+  }
+  for (const g of labels) {
+    colTotals[g] = labels.reduce((s, p) => s + (confusionMatrix[p][g] || 0), 0);
+  }
+  const Pe = labels.reduce(
+    (s, c) => s + (rowTotals[c] * colTotals[c]) / (n * n),
+    0
+  );
+
+  const denom = 1 - Pe;
+  if (denom <= 0) return 0;
+  return (Po - Pe) / denom;
+}
+export function calculateValidationMetrics(
+  results: ValidationRow[]
+): ValidationMetrics {
+  const n = results.length;
+  const correct = results.filter((r) => !!r.correct).length;
+  const accuracy = n > 0 ? correct / n : 0;
+
+  const labelsSet = new Set<string>();
+  for (const r of results) {
+    if (r.predicted) labelsSet.add(r.predicted);
+    if (r.goldStandard) labelsSet.add(r.goldStandard);
+  }
+  const labels = Array.from(labelsSet);
+
   const confusionMatrix: Record<string, Record<string, number>> = {};
+  for (const p of labels) {
+    confusionMatrix[p] = {};
+    for (const g of labels) {
+      confusionMatrix[p][g] = 0;
+    }
+  }
+  for (const r of results) {
+    if (!r.predicted || !r.goldStandard) continue;
+    confusionMatrix[r.predicted][r.goldStandard] += 1;
+  }
 
-  // Initialiser la matrice de confusion
-  allClasses.forEach((predicted) => {
-    confusionMatrix[predicted] = {};
-    allClasses.forEach((actual) => {
-      confusionMatrix[predicted][actual] = 0;
-    });
-  });
+  const classMetrics: Record<
+    string,
+    { precision: number; recall: number; f1Score: number; support: number }
+  > = {};
+  let sumTP = 0,
+    sumFP = 0,
+    sumFN = 0;
 
-  // Remplir la matrice de confusion
-  results.forEach((result) => {
-    confusionMatrix[result.predicted][result.goldStandard]++;
-  });
+  for (const c of labels) {
+    const tp = confusionMatrix[c][c];
+    let fp = 0,
+      fn = 0;
 
-  // Calculer les métriques pour chaque classe
-  allClasses.forEach((cls) => {
-    // True Positives, False Positives, False Negatives
-    const tp = confusionMatrix[cls][cls] || 0;
-    const fp = Object.keys(confusionMatrix[cls])
-      .filter((k) => k !== cls)
-      .reduce((sum, k) => sum + (confusionMatrix[cls][k] || 0), 0);
-    const fn = Object.keys(confusionMatrix)
-      .filter((k) => k !== cls)
-      .reduce((sum, k) => sum + (confusionMatrix[k][cls] || 0), 0);
+    for (const g of labels) if (g !== c) fp += confusionMatrix[c][g];
+    for (const p of labels) if (p !== c) fn += confusionMatrix[p][c];
 
-    // Calculer précision et rappel
-    precision[cls] = tp + fp > 0 ? tp / (tp + fp) : 0;
-    recall[cls] = tp + fn > 0 ? tp / (tp + fn) : 0;
-    f1Score[cls] =
-      precision[cls] + recall[cls] > 0
-        ? (2 * (precision[cls] * recall[cls])) / (precision[cls] + recall[cls])
+    const support = labels.reduce((acc, p) => acc + confusionMatrix[p][c], 0);
+
+    const precisionC = tp + fp > 0 ? tp / (tp + fp) : 0;
+    const recallC = tp + fn > 0 ? tp / (tp + fn) : 0;
+    const f1C =
+      precisionC + recallC > 0
+        ? (2 * precisionC * recallC) / (precisionC + recallC)
         : 0;
-  });
 
-  // Calculer le Kappa de Cohen
-  const kappa = calculateCohenKappa(results);
+    classMetrics[c] = {
+      precision: precisionC,
+      recall: recallC,
+      f1Score: f1C,
+      support,
+    };
+
+    sumTP += tp;
+    sumFP += fp;
+    sumFN += fn;
+  }
+
+  const precision = sumTP + sumFP > 0 ? sumTP / (sumTP + sumFP) : 0;
+  const recall = sumTP + sumFN > 0 ? sumTP / (sumTP + sumFN) : 0;
+  const f1Score =
+    precision + recall > 0
+      ? (2 * precision * recall) / (precision + recall)
+      : 0;
+
+  const executionTime = results.reduce(
+    (s, r) =>
+      s +
+      (typeof (r as any).processingTime === "number"
+        ? (r as any).processingTime
+        : 0),
+    0
+  );
+
+  const kappa = computeKappa(confusionMatrix); // 👈 calcule kappa
 
   return {
     accuracy,
     precision,
     recall,
     f1Score,
+    kappa, // 👈 renseigne kappa
     confusionMatrix,
-    totalSamples,
-    correctPredictions,
-    kappa,
+    classMetrics,
+    totalSamples: n,
+    correctPredictions: correct,
+    executionTime,
   };
-}
-
-function calculateCohenKappa(results: AlgorithmResult[]): number {
-  const n = results.length;
-  if (n === 0) return 0;
-
-  // Obtenir toutes les classes
-  const classes = Array.from(
-    new Set([
-      ...results.map((r) => r.predicted),
-      ...results.map((r) => r.goldStandard),
-    ])
-  );
-
-  // Matrice de confusion
-  const matrix: Record<string, Record<string, number>> = {};
-  classes.forEach((c1) => {
-    matrix[c1] = {};
-    classes.forEach((c2) => {
-      matrix[c1][c2] = 0;
-    });
-  });
-
-  results.forEach((r) => {
-    matrix[r.predicted][r.goldStandard]++;
-  });
-
-  // Po (accord observé)
-  const po = results.filter((r) => r.correct).length / n;
-
-  // Pe (accord attendu par hasard)
-  let pe = 0;
-  classes.forEach((cls) => {
-    const marginalPredicted =
-      classes.reduce((sum, c) => sum + (matrix[cls][c] || 0), 0) / n;
-    const marginalActual =
-      classes.reduce((sum, c) => sum + (matrix[c][cls] || 0), 0) / n;
-    pe += marginalPredicted * marginalActual;
-  });
-
-  // Kappa = (Po - Pe) / (1 - Pe)
-  return pe === 1 ? 0 : (po - pe) / (1 - pe);
 }

@@ -1,7 +1,7 @@
 // algorithms/level1/XAlgorithms/RegexXClassifier.ts
 import type { XClassifier, XClassification } from "./shared/BaseXClassifier";
 import type { AlgorithmMetadata } from "../shared/BaseAlgorithm";
-import type { VariableX } from "../../../types/ThesisVariables";
+import type { VariableX } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 export class RegexXClassifier implements XClassifier {
   private config: { retourRefletDetaille: boolean };

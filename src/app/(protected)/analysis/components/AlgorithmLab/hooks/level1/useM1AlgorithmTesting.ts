@@ -3,8 +3,8 @@ import { RegexM1Calculator } from "@/app/(protected)/analysis/components/Algorit
 import type {
   M1Input,
   CalculationResult,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types/Level1Types";
-import type { M1Details } from "@/app/(protected)/analysis/components/AlgorithmLab/types/ThesisVariables";
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import type { M1Details } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 export function useM1AlgorithmTesting() {
   const [isRunning, setIsRunning] = useState(false);

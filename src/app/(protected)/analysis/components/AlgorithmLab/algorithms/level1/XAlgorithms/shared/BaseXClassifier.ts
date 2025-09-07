@@ -1,5 +1,5 @@
 import type { BaseAlgorithm } from "../../shared/BaseAlgorithm";
-import type { VariableX } from "../../../../types/ThesisVariables";
+import type { VariableX } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 export interface XClassification {
   prediction: VariableX | "ERREUR";

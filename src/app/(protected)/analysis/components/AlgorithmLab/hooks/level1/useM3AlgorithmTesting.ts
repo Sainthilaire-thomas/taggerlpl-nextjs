@@ -4,8 +4,8 @@ import type {
   M3Input,
   CalculationResult,
   CalculatorMetadata,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types/Level1Types";
-import type { M3Details } from "@/app/(protected)/analysis/components/AlgorithmLab/types/ThesisVariables";
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import type { M3Details } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 // ↳ Remplace par ton calculateur M3 réel si tu en as un autre
 import { PausesM3Calculator } from "../../algorithms/level1/M3Algorithms/PauseM3Calculator";

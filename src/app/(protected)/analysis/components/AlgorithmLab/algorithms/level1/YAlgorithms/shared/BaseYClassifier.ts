@@ -1,5 +1,5 @@
 import type { BaseAlgorithm } from "../../shared/BaseAlgorithm";
-import type { VariableY } from "../../../../types/ThesisVariables";
+import type { VariableY } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 export interface YClassification {
   prediction: VariableY | "ERREUR";

@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@mui/material";
 import { TrendingUp, TrendingDown, Timeline } from "@mui/icons-material";
-import { ValidationMetrics, AlgorithmResult } from "../../types/Level1Types";
+import { ValidationMetrics, AlgorithmResult } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 interface BenchmarkData {
   algorithmName: string;
