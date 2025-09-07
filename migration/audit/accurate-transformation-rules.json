@@ -1,0 +1,212 @@
+{
+  "metadata": {
+    "generated_at": "2025-09-07T05:45:55.798Z",
+    "based_on_audit": "2025-09-07T05:19:42.815Z",
+    "strategy": "accurate_unified_architecture",
+    "target_structure": "UNIFIED_ALGORITHMLAB_WITH_LEGACY_COMPATIBILITY",
+    "total_imports_to_transform": 141
+  },
+  "source_path_mappings": {
+    "types/ThesisVariables": "@/app/(protected)/analysis/components/AlgorithmLab/types",
+    "../../../types/ThesisVariables": "@/app/(protected)/analysis/components/AlgorithmLab/types",
+    "../../../../types/ThesisVariables": "@/app/(protected)/analysis/components/AlgorithmLab/types",
+    "../types/ThesisVariables": "@/app/(protected)/analysis/components/AlgorithmLab/types",
+    "./ThesisVariables": "@/app/(protected)/analysis/components/AlgorithmLab/types",
+    "types/ThesisVariables.x": "@/app/(protected)/analysis/components/AlgorithmLab/types",
+    "types/ThesisVariables.y": "@/app/(protected)/analysis/components/AlgorithmLab/types",
+    "types/ThesisVariables.m1": "@/app/(protected)/analysis/components/AlgorithmLab/types",
+    "types/ThesisVariables.m2": "@/app/(protected)/analysis/components/AlgorithmLab/types",
+    "types/ThesisVariables.m3": "@/app/(protected)/analysis/components/AlgorithmLab/types",
+    "types/Level1Types": "@/app/(protected)/analysis/components/AlgorithmLab/types/Level1Types",
+    "../../../types/Level1Types": "@/app/(protected)/analysis/components/AlgorithmLab/types/Level1Types",
+    "../../types/Level1Types": "@/app/(protected)/analysis/components/AlgorithmLab/types/Level1Types",
+    "types/Level0Types": "@/app/(protected)/analysis/components/AlgorithmLab/types/Level0Types",
+    "../../types/Level0Types": "@/app/(protected)/analysis/components/AlgorithmLab/types/Level0Types",
+    "types/ValidationTypes": "@/app/(protected)/analysis/components/AlgorithmLab/types/ValidationTypes",
+    "../../../types/ValidationTypes": "@/app/(protected)/analysis/components/AlgorithmLab/types/ValidationTypes",
+    "types/SharedTypes": "@/app/(protected)/analysis/components/AlgorithmLab/types/SharedTypes",
+    "../../types/SharedTypes": "@/app/(protected)/analysis/components/AlgorithmLab/types/SharedTypes",
+    "types/": "@/app/(protected)/analysis/components/AlgorithmLab/types"
+  },
+  "named_imports_redistribution": {
+    "description": "Redistribution future des imports nommés vers la nouvelle architecture",
+    "note": "Ces règles seront appliquées dans une phase ultérieure de migration",
+    "core_variables": {
+      "target": "@/app/(protected)/analysis/components/AlgorithmLab/types/core/variables",
+      "exports": [
+        "VariableTarget",
+        "XTag",
+        "YTag",
+        "XDetails",
+        "YDetails",
+        "M1Details",
+        "M2Details",
+        "M3Details",
+        "VariableX",
+        "VariableY",
+        "VARIABLE_LABELS",
+        "VARIABLE_COLORS"
+      ]
+    },
+    "core_calculations": {
+      "target": "@/app/(protected)/analysis/components/AlgorithmLab/types/core/calculations",
+      "exports": [
+        "XInput",
+        "YInput",
+        "M1Input",
+        "M2Input",
+        "M3Input",
+        "CalculationResult",
+        "CalculatorMetadata"
+      ]
+    },
+    "core_validation": {
+      "target": "@/app/(protected)/analysis/components/AlgorithmLab/types/core/validation",
+      "exports": [
+        "ValidationMetrics",
+        "ValidationResult",
+        "AlgorithmTestConfig",
+        "TVMetadataCore",
+        "TVValidationResultCore"
+      ]
+    },
+    "algorithms": {
+      "target": "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms",
+      "exports": [
+        "UniversalAlgorithm",
+        "AlgorithmDescriptor",
+        "UniversalResult",
+        "createUniversalAlgorithm",
+        "BaseCalculator"
+      ]
+    },
+    "ui_components": {
+      "target": "@/app/(protected)/analysis/components/AlgorithmLab/types/ui",
+      "exports": [
+        "BaseValidationProps",
+        "XValidationProps",
+        "YValidationProps",
+        "M2ValidationProps",
+        "DisplayConfig",
+        "ResultsPanelProps"
+      ]
+    },
+    "utils": {
+      "target": "@/app/(protected)/analysis/components/AlgorithmLab/types/utils",
+      "exports": [
+        "normalizeXLabel",
+        "normalizeYLabel",
+        "familyFromX",
+        "familyFromY",
+        "NormalizationConfig",
+        "NormalizationLevel"
+      ]
+    }
+  },
+  "legacy_compatibility": {
+    "description": "Maintien de la compatibilité avec l'ancienne structure pendant la transition",
+    "temporary_aliases": {
+      "Level1Types": "@/app/(protected)/analysis/components/AlgorithmLab/types/Level1Types",
+      "Level0Types": "@/app/(protected)/analysis/components/AlgorithmLab/types/Level0Types",
+      "ValidationTypes": "@/app/(protected)/analysis/components/AlgorithmLab/types/ValidationTypes",
+      "SharedTypes": "@/app/(protected)/analysis/components/AlgorithmLab/types/SharedTypes"
+    },
+    "transition_plan": {
+      "phase1": "Rediriger tous les imports vers le nouveau point d'entrée principal",
+      "phase2": "Redistribuer progressivement vers core/algorithms/ui/utils",
+      "phase3": "Supprimer les fichiers legacy et finaliser la migration"
+    }
+  },
+  "validation_rules": {
+    "pre_transformation": [
+      {
+        "rule": "compilation_check",
+        "description": "Vérifier la compilation TypeScript",
+        "command": "npx tsc --noEmit",
+        "required": true,
+        "timeout": 60000
+      },
+      {
+        "rule": "git_status_check",
+        "description": "Vérifier l'état git propre",
+        "required": false
+      },
+      {
+        "rule": "backup_creation",
+        "description": "Créer les backups de sécurité",
+        "required": true
+      }
+    ],
+    "during_transformation": [
+      {
+        "rule": "incremental_validation",
+        "description": "Valider après chaque lot de transformations",
+        "frequency": "every_5_files"
+      }
+    ],
+    "post_transformation": [
+      {
+        "rule": "compilation_check",
+        "description": "Vérifier la compilation après transformation",
+        "command": "npx tsc --noEmit",
+        "required": true,
+        "timeout": 60000
+      },
+      {
+        "rule": "import_resolution_check",
+        "description": "Vérifier que tous les imports sont résolus",
+        "required": true
+      },
+      {
+        "rule": "app_startup_test",
+        "description": "Test de démarrage de l'application",
+        "command": "timeout 30s npm run dev",
+        "required": false
+      }
+    ]
+  },
+  "priority_batches": [
+    {
+      "batch": 1,
+      "name": "ThesisVariables - Priorité critique",
+      "description": "20 imports ThesisVariables",
+      "patterns": [
+        "ThesisVariables"
+      ],
+      "estimated_files": 10,
+      "priority": "CRITICAL"
+    },
+    {
+      "batch": 2,
+      "name": "Level1Types - Priorité haute",
+      "description": "11 imports Level1Types",
+      "patterns": [
+        "Level1Types",
+        "Level0Types"
+      ],
+      "estimated_files": 6,
+      "priority": "HIGH"
+    },
+    {
+      "batch": 3,
+      "name": "Imports directs types/ - Priorité normale",
+      "description": "110 imports directs",
+      "patterns": [
+        "types/"
+      ],
+      "estimated_files": 28,
+      "priority": "NORMAL"
+    },
+    {
+      "batch": 4,
+      "name": "ValidationTypes et SharedTypes - Priorité faible",
+      "description": "3 imports validation/shared",
+      "patterns": [
+        "ValidationTypes",
+        "SharedTypes"
+      ],
+      "estimated_files": 3,
+      "priority": "LOW"
+    }
+  ]
+}
