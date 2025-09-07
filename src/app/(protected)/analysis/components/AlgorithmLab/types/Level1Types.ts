@@ -34,6 +34,57 @@ export interface CalculatorMetadata {
   supportsBatch?: boolean;
 }
 
+export interface AlgorithmResult {
+  callId: string;
+  startTime: number;
+  endTime: number;
+  input: string;
+  speaker: string;
+  confidence: number;
+  goldStandard: string;
+  predicted: string;
+  processingTime: number;
+  correct: boolean;
+  metadata?: Record<string, unknown>;
+}
+
+export interface EnhancedAlgorithmResult extends AlgorithmResult {
+  enhanced?: boolean;
+  analysisDepth?: "basic" | "detailed" | "comprehensive";
+  errorPattern?: string;
+  suggestions?: string[];
+}
+// Types pour ValidationMetrics (pour TechnicalBenchmark)
+export interface ValidationMetrics {
+  accuracy: number;
+  kappa: number;
+  precision: Record<string, number>;
+  recall: Record<string, number>;
+  f1Score: Record<string, number>;
+  correctPredictions: number;
+  totalSamples: number;
+  confusionMatrix?: Record<string, Record<string, number>>;
+}
+
+// Types pour les algorithmes (pour M2ValidationInterface)
+export interface AlgorithmDescriptor {
+  displayName: string;
+  description: string;
+  version?: string;
+}
+
+export interface AlgorithmMetrics {
+  differential: number;
+  avgMs: number;
+  accuracy: number;
+}
+
+export interface AvailableAlgorithm {
+  id: string;
+  desc?: AlgorithmDescriptor;
+  metrics?: AlgorithmMetrics;
+}
+
 // types/level1/m2.ts
 export interface M2Input {
   turnVerbatim: string; // T0 – tour conseiller
