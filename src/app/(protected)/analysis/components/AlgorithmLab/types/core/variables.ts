@@ -150,6 +150,22 @@ export interface VariableY {
   details: YDetails;
 }
 
+export interface VariableM1Score {
+  value: number;
+  components?: Record<string, number>;
+}
+
+export interface VariableM2Score {
+  value: number;
+  alignment?: "low" | "medium" | "high";
+  components?: Record<string, number>;
+}
+
+export interface VariableM3Score {
+  value: number;
+  components?: Record<string, number>;
+}
+
 // ========================================================================
 // 5) Union de détails + utilitaires d’affichage
 // ========================================================================

@@ -6,6 +6,16 @@
 import type { VariableTarget, VariableDetails } from "../core/variables";
 
 // ========================================================================
+// TYPES COMPLÉMENTAIRES (MINIMAUX)
+// ========================================================================
+
+/**
+ * Paramètres passés aux algorithmes (clé → valeur primitive).
+ * Volontairement simple pour ne pas sur-spécifier.
+ */
+export type AlgorithmParameters = Record<string, boolean | number | string>;
+
+// ========================================================================
 // INTERFACE UNIVERSELLE ALGORITHMLAB
 // ========================================================================
 
@@ -54,6 +64,55 @@ export interface AlgorithmDescriptor {
   examples?: Array<{ input: unknown; output?: unknown; note?: string }>; // Exemples d'utilisation
 }
 
+export interface AlgorithmMetadata {
+  key: string; // identifiant interne (ex: "m2-lexical")
+  label?: string; // libellé humain
+  version?: string; // semver, ex: "1.0.0"
+  description?: string;
+  target?: VariableTarget; // X|Y|M1|M2|M3 (si utile ici)
+  tags?: string[];
+}
+
+export interface AlgorithmConfig {
+  [param: string]: unknown;
+}
+
+/** Résultat d'une classification X (structure légère) */
+export interface XClassification {
+  target: string; // étiquette prédite
+  confidence?: number; // 0..1
+  details?: Record<string, any>; // infos spécifiques
+}
+
+/** Contrat minimal d'un classifieur X */
+export interface XClassifier {
+  name: string;
+  classify(
+    input: string | Record<string, any>
+  ): Promise<XClassification> | XClassification;
+}
+
+/** Contrat minimal commun des algorithmes */
+export interface BaseAlgorithm<I = unknown, R = unknown> {
+  key: string;
+  meta?: AlgorithmMetadata;
+  run(input: I, config?: AlgorithmConfig): Promise<R> | R;
+}
+
+export interface AlgorithmResult {
+  ok: boolean;
+  message?: string;
+  metrics?: Record<string, unknown>;
+  details?: Record<string, unknown>;
+}
+
+export interface AlgorithmTestState {
+  startedAt: string; // ISO
+  finishedAt?: string; // ISO
+  status: "idle" | "running" | "done" | "error";
+  note?: string;
+}
+
 // ========================================================================
 // RÉSULTAT UNIVERSEL ALGORITHMLAB
 // ========================================================================
@@ -69,6 +128,7 @@ export interface UniversalResult {
     executionPath?: string[]; // Étapes d'exécution
     warnings?: string[]; // Avertissements non-bloquants
     details?: VariableDetails; // Détails typés selon la variable (X/Y/M1/M2/M3)
+    [k: string]: unknown; // ouverture optionnelle pour champs additionnels
   };
 }
 

@@ -80,6 +80,44 @@ export interface ValidationResult {
   notes?: string;
 }
 
+export interface TVValidationResultCore {
+  items: Array<{ label: string; score: number }>;
+  summary?: Record<string, unknown>;
+}
+
+export interface TVMetadataCore {
+  source?: string;
+  createdAt?: string; // ISO
+  notes?: string;
+}
+
+export interface XGoldStandardItem {
+  id: string;
+  label: string;
+  verbatim?: string;
+  meta?: Record<string, unknown>;
+}
+
+export interface XValidationResult {
+  total: number;
+  correct: number;
+  accuracy: number; // 0..1
+  breakdown?: Record<string, unknown>;
+}
+export interface TVMetadataM2 {
+  source?: string;
+  createdAt?: string; // ISO
+  notes?: string;
+  alignmentMethod?: "lexical" | "semantic" | "composite";
+  weights?: Record<string, number>;
+}
+// Alias public simple attendu par l'UI
+export type TVValidationResult = TVValidationResultCore;
+
+// Aliases "Core*" utilisés par certains modules (ex: ResultsSample/types.ts)
+export type CoreTVValidationResult = TVValidationResultCore;
+export type CoreTVMetadata = TVMetadataCore;
+
 // ========================================================================
 // CONFIGURATION DES TESTS ALGORITHMLAB
 // ========================================================================

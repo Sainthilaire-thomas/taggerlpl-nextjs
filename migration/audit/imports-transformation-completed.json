@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "finished_at": "2025-09-07T10:34:14.071Z",
+    "dry_run": true,
+    "target_entry_point": "@/app/(protected)/analysis/components/AlgorithmLab/types"
+  },
+  "stats": {
+    "total_files_scanned": 153,
+    "files_changed": 30,
+    "imports_rewritten": 39
+  },
+  "changed_files": [
+    "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/clientclassifiers/RegexClientClassifier.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/M1Algorithms/RegexM1Calculator.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/M1Algorithms/shared/BaseM1Calculator.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/M2Algorithms/M2CompositeAlignmentCalculator.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/M2Algorithms/M2LexicalAlignmentCalculator.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/M2Algorithms/M2SemanticAlignmentCalculator.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/M2Algorithms/shared/BaseM2Calculator.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/M3Algorithms/PauseM3Calculator.tsx",
+    "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/M3Algorithms/shared/BaseM3Calculator.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/BaseAlgorithm.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/XAlgorithms/RegexXClassifier.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/XAlgorithms/shared/BaseXClassifier.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/YAlgorithms/RegexYClassifier.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/YAlgorithms/shared/BaseYClassifier.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/components/Level0/InterAnnotatorAgreement.tsx",
+    "src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/algorithms/M3Calculators/M3ValidationInterface.tsx",
+    "src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/individual/ConfusionMatrix.tsx",
+    "src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/individual/EnhancedErrorAnalysis.tsx",
+    "src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/individual/ParameterOptimization.tsx",
+    "src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/shared/results/x/ResultsTableX.tsx",
+    "src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/TechnicalBenchmark.tsx",
+    "src/app/(protected)/analysis/components/AlgorithmLab/components/shared/NavigationTabs.tsx",
+    "src/app/(protected)/analysis/components/AlgorithmLab/hooks/level1/useM1AlgorithmTesting.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/hooks/level1/useM2AlgorithmTesting.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/hooks/level1/useM3AlgorithmTesting.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/hooks/level1/useXAlgorithmTesting.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/hooks/useLevel0Validation.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/hooks/useLevel1Testing.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/hooks/useWorkflowManagement.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/utils/metricsCalculation.ts"
+  ],
+  "validation": {
+    "typescript": {
+      "success": false
+    },
+    "quick_import_check": {
+      "success": false,
+      "issues": [
+        "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/clientclassifiers/RegexClientClassifier.ts",
+        "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/M2Algorithms/M2LexicalAlignmentCalculator.ts",
+        "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/M2Algorithms/M2SemanticAlignmentCalculator.ts",
+        "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/BaseAlgorithm.ts",
+        "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/XAlgorithms/RegexXClassifier.ts",
+        "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/XAlgorithms/shared/BaseXClassifier.ts",
+        "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/YAlgorithms/RegexYClassifier.ts",
+        "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/YAlgorithms/shared/BaseYClassifier.ts",
+        "src/app/(protected)/analysis/components/AlgorithmLab/components/Level0/InterAnnotatorAgreement.tsx"
+      ],
+      "scanned": 50
+    }
+  }
+}

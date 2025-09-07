@@ -4,24 +4,24 @@
  */
 
 // Variables et détails
-export * from './variables';
+export * from "./variables";
 
 // Calculs et résultats
-export * from './calculations';
+export * from "./calculations";
 
 // Validation et métriques
-export * from './validation';
+export * from "./validation";
 
 // Types combinés pour faciliter l'import dans AlgorithmLab
 export type {
   VariableTarget,
   VariableDetails,
   XDetails,
-  YDetails, 
+  YDetails,
   M1Details,
   M2Details,
-  M3Details
-} from './variables';
+  M3Details,
+} from "./variables";
 
 export type {
   CalculationInput,
@@ -31,11 +31,11 @@ export type {
   YInput,
   M1Input,
   M2Input,
-  M3Input
-} from './calculations';
+  M3Input,
+} from "./calculations";
 
 export type {
   ValidationMetrics,
   ValidationResult,
-  AlgorithmTestConfig
-} from './validation';
+  AlgorithmTestConfig,
+} from "./validation";

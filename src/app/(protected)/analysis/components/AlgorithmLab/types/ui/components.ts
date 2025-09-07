@@ -157,6 +157,13 @@ export interface TVResultDisplayProps {
   onRowSelect?: (index: number) => void;
 }
 
+export type TargetKind = "X" | "Y" | "M1" | "M2" | "M3";
+
+export type ExtraColumn<Row = any> = {
+  id: string;
+  header: string;
+  render: (row: Row) => unknown; // opaque; UI gère le rendu
+};
 // ========================================================================
 // MODALES ET DIALOGUES ALGORITHMLAB
 // ========================================================================
