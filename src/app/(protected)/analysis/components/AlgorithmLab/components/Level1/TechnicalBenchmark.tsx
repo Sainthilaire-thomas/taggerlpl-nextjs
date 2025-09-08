@@ -1,4 +1,4 @@
-// components/Level1/TechnicalBenchmark.tsx
+// components/Level1/TechnicalBenchmark.tsx - Corrigé
 import React from "react";
 import {
   Box,
@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@mui/material";
 import { TrendingUp, TrendingDown, Timeline } from "@mui/icons-material";
-import { ValidationMetrics, AlgorithmResult } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import { ValidationMetrics } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 interface BenchmarkData {
   algorithmName: string;
@@ -52,13 +52,17 @@ export const TechnicalBenchmark: React.FC<TechnicalBenchmarkProps> = ({
 
   const getBestPerformer = (metric: "accuracy" | "kappa") => {
     return benchmarkResults.reduce((best, current) =>
-      current.metrics[metric] > best.metrics[metric] ? current : best
+      (current.metrics?.[metric] ?? 0) > (best.metrics?.[metric] ?? 0)
+        ? current
+        : best
     );
   };
 
   const getWorstPerformer = (metric: "accuracy" | "kappa") => {
     return benchmarkResults.reduce((worst, current) =>
-      current.metrics[metric] < worst.metrics[metric] ? current : worst
+      (current.metrics?.[metric] ?? 0) < (worst.metrics?.[metric] ?? 0)
+        ? current
+        : worst
     );
   };
 
@@ -133,7 +137,7 @@ export const TechnicalBenchmark: React.FC<TechnicalBenchmarkProps> = ({
                 color="success.main"
                 sx={{ fontWeight: "bold" }}
               >
-                {data.metrics.kappa.toFixed(3)}
+                {data.metrics.kappa?.toFixed(3) || "N/A"}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Kappa Cohen
@@ -219,7 +223,7 @@ export const TechnicalBenchmark: React.FC<TechnicalBenchmarkProps> = ({
                     0
                   ) / Object.values(data.metrics.f1Score).length;
                 const isTop = index === 0;
-                const isAcceptable = data.metrics.kappa > 0.7;
+                const isAcceptable = (data.metrics.kappa ?? 0) > 0.7;
 
                 return (
                   <TableRow
@@ -268,14 +272,14 @@ export const TechnicalBenchmark: React.FC<TechnicalBenchmarkProps> = ({
                         sx={{
                           fontWeight: "bold",
                           color:
-                            data.metrics.kappa > 0.7
+                            (data.metrics.kappa ?? 0) > 0.7
                               ? "success.main"
-                              : data.metrics.kappa > 0.4
+                              : (data.metrics.kappa ?? 0) > 0.4
                               ? "warning.main"
                               : "error.main",
                         }}
                       >
-                        {data.metrics.kappa.toFixed(3)}
+                        {data.metrics.kappa?.toFixed(3) || "N/A"}
                       </Typography>
                     </TableCell>
                     <TableCell align="center">
@@ -289,7 +293,7 @@ export const TechnicalBenchmark: React.FC<TechnicalBenchmarkProps> = ({
                         label={
                           isAcceptable
                             ? "VALIDÉ"
-                            : data.metrics.kappa > 0.4
+                            : (data.metrics.kappa ?? 0) > 0.4
                             ? "ACCEPTABLE"
                             : "ÉCHEC"
                         }
@@ -297,7 +301,7 @@ export const TechnicalBenchmark: React.FC<TechnicalBenchmarkProps> = ({
                         color={
                           isAcceptable
                             ? "success"
-                            : data.metrics.kappa > 0.4
+                            : (data.metrics.kappa ?? 0) > 0.4
                             ? "warning"
                             : "error"
                         }
@@ -350,7 +354,7 @@ export const TechnicalBenchmark: React.FC<TechnicalBenchmarkProps> = ({
               Accuracy: {(bestAccuracy.metrics.accuracy * 100).toFixed(1)}%
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Kappa: {bestAccuracy.metrics.kappa.toFixed(3)}
+              Kappa: {bestAccuracy.metrics.kappa?.toFixed(3) || "N/A"}
             </Typography>
           </Box>
         </Box>
@@ -405,7 +409,7 @@ export const TechnicalBenchmark: React.FC<TechnicalBenchmarkProps> = ({
               Recommandations
             </Typography>
             <Typography variant="body2" sx={{ mb: 1 }}>
-              {bestKappa.metrics.kappa > 0.7
+              {(bestKappa.metrics.kappa ?? 0) > 0.7
                 ? "Performance technique validée pour usage scientifique"
                 : "Optimisation nécessaire avant validation"}
             </Typography>

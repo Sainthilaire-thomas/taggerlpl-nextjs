@@ -90,11 +90,13 @@ export default function M3ValidationInterface() {
     const withIndex = arr.map((r, i) => ({ r, i }));
 
     const searched = search.trim()
-      ? withIndex.filter(({ r }) =>
-          (r.metadata?.verbatim || r.metadata?.clientTurn || "")
-            .toLowerCase()
-            .includes(search.toLowerCase())
-        )
+      ? withIndex.filter(({ r }) => {
+          const metadata = r.metadata as any; // Cast temporaire
+          const verbatim = metadata?.verbatim || "";
+          const clientTurn = metadata?.clientTurn || "";
+          const searchText = (verbatim + " " + clientTurn).toLowerCase();
+          return searchText.includes(search.toLowerCase());
+        })
       : withIndex;
 
     const thresholded = searched.filter(({ r }) => (r.score ?? 0) >= minScore);
@@ -269,10 +271,11 @@ export default function M3ValidationInterface() {
                 .slice(0, 200)
                 .map((r, idx) => {
                   const d = r.details || ({} as M3Details);
-                  const fullText =
-                    (r.metadata?.verbatim as string) ||
-                    (r.metadata?.clientTurn as string) ||
-                    "";
+                  const fullText = (() => {
+                    const metadata = r.metadata as any; // Cast temporaire
+                    return metadata?.verbatim || metadata?.clientTurn || "";
+                  })();
+
                   const shortText =
                     fullText.length > 140
                       ? fullText.slice(0, 140) + "…"
@@ -311,9 +314,9 @@ export default function M3ValidationInterface() {
                           flexWrap="wrap"
                           useFlexGap
                         >
-                          {(r.markers || d.markers || [])
+                          {((r as any).markers || (d as any).markers || [])
                             .slice(0, 6)
-                            .map((m, i) => (
+                            .map((m: string, i: number) => (
                               <Chip
                                 key={i}
                                 size="small"

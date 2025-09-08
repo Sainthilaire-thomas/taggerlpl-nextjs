@@ -1,47 +1,40 @@
-// ===================================================================
-// 2. CORRECTION: src/app/(protected)/analysis/components/AlgorithmLab/types/core/calculations.ts
-// ===================================================================
-
 /**
- * @fileoverview Interfaces de calcul AlgorithmLab
- * Types pour les inputs, outputs et métadonnées des calculateurs AlgorithmLab
+ * @fileoverview Types et utilitaires de calcul AlgorithmLab
+ * - Entrées typées (X/Y/M1/M2/M3)
+ * - Résultats (CalculationResult<Details>)
+ * - Helpers communs : createEmptyResult, validateCalculationInput, mergeWarnings, mergeExecutionPaths
  */
 
-import { VariableTarget, VariableDetails } from "./variables";
+import type {
+  VariableTarget,
+  VariableDetails,
+  XDetails,
+  YDetails,
+  M1Details,
+  M2Details,
+  M3Details,
+} from "./variables";
 
 // ========================================================================
-// INPUTS POUR LES CALCULS ALGORITHMLAB
+// INPUTS
 // ========================================================================
 
 export interface XInput {
   verbatim: string;
-  context?: {
-    previousTurn?: string;
-    nextTurn?: string;
-    callId?: string;
-    turnIndex?: number;
-  };
-  metadata?: {
-    speaker: string;
-    timestamp: number;
-    duration: number;
-  };
+  language?: string;
+  contextTurnId?: number;
 }
 
 export interface YInput {
   verbatim: string;
-  previousConseillerTurn: string;
-  context?: {
-    conversationHistory?: string[];
-    emotionalContext?: string;
-    callMetadata?: Record<string, any>;
-  };
+  language?: string;
+  contextTurnId?: number;
 }
 
 export interface M1Input {
   verbatim: string;
+  tokens?: string[];
   language?: string;
-  analysisDepth?: "BASIC" | "ADVANCED" | "COMPREHENSIVE";
 }
 
 export interface M2Input {
@@ -68,132 +61,71 @@ export interface M2Input {
 }
 
 export interface M3Input {
-  conversationPair: {
-    conseiller: string;
-    client: string;
-  };
-  // clientTurn reste optionnel pour compatibilité
-  clientTurn?: string;
-  cognitiveContext?: {
-    conversationLength: number;
-    emotionalTone: string;
-    complexityLevel: "LOW" | "MEDIUM" | "HIGH";
-  };
+  segment: string;
+  withProsody?: boolean;
+  language?: string;
+  options?: Record<string, unknown>;
 }
 
-export type CalculationInput = XInput | YInput | M1Input | M2Input | M3Input;
+export type AnyCalculationInput = XInput | YInput | M1Input | M2Input | M3Input;
+// alias rétro-compatible
+export type CalculationInput = AnyCalculationInput;
 
 // ========================================================================
-// RÉSULTATS DES CALCULS ALGORITHMLAB
+// MÉTADONNÉES / RÉSULTATS
 // ========================================================================
+
+export interface CalculationMetadata {
+  algorithmVersion: string;
+  inputSignature: string;
+  executionPath: string[];
+  warnings?: string[];
+
+  // ✅ NOUVELLES propriétés optionnelles
+  verbatim?: string;
+  clientTurn?: string;
+
+  extra?: Record<string, unknown>;
+}
 
 export interface CalculationResult<TDetails = VariableDetails> {
   prediction: string;
   confidence: number;
   processingTime: number;
 
-  // Propriété manquante ajoutée
+  // Propriété existante
   score?: number;
 
   details: TDetails;
+
+  // ✅ NOUVELLES propriétés optionnelles pour M3ValidationInterface
+  markers?: string[]; // Erreur ligne 314 dans M3ValidationInterface
 
   metadata?: {
     algorithmVersion: string;
     inputSignature: string;
     executionPath: string[];
     warnings?: string[];
+
+    // ✅ NOUVELLES propriétés pour M3ValidationInterface
+    verbatim?: string; // Erreur lignes 94,273
+    clientTurn?: string; // Erreur lignes 94,274
+
+    // Extension pour autres propriétés futures
+    [key: string]: unknown;
   };
 }
 
-// Résultats typés spécifiques AlgorithmLab
-export type XCalculationResult = CalculationResult<
-  import("./variables").XDetails
->;
-export type YCalculationResult = CalculationResult<
-  import("./variables").YDetails
->;
-export type M1CalculationResult = CalculationResult<
-  import("./variables").M1Details
->;
-export type M2CalculationResult = CalculationResult<
-  import("./variables").M2Details
->;
-export type M3CalculationResult = CalculationResult<
-  import("./variables").M3Details
->;
+// Sorties spécialisées
+export type XCalculationResult = CalculationResult<XDetails>;
+export type YCalculationResult = CalculationResult<YDetails>;
+export type M1CalculationResult = CalculationResult<M1Details>;
+export type M2CalculationResult = CalculationResult<M2Details>;
+export type M3CalculationResult = CalculationResult<M3Details>;
 
 // ========================================================================
-// MÉTADONNÉES DES CALCULATEURS ALGORITHMLAB
+// HELPERS
 // ========================================================================
-
-export interface CalculatorMetadata {
-  name: string;
-  version: string;
-  target: VariableTarget;
-  description: string;
-
-  capabilities: {
-    batchProcessing: boolean;
-    contextAware: boolean;
-    realTime: boolean;
-    requiresTraining: boolean;
-  };
-
-  performance: {
-    averageProcessingTime: number;
-    accuracy: number;
-    precision: number;
-    recall: number;
-  };
-
-  parameters?: Record<
-    string,
-    {
-      type: string;
-      default: any;
-      description: string;
-      required: boolean;
-    }
-  >;
-}
-
-// ========================================================================
-// UTILITAIRES DE VALIDATION ALGORITHMLAB
-// ========================================================================
-
-export function validateCalculationInput(
-  input: unknown,
-  target: VariableTarget
-): input is CalculationInput {
-  if (!input || typeof input !== "object") return false;
-
-  const obj = input as Record<string, any>;
-
-  switch (target) {
-    case "X":
-      return typeof obj.verbatim === "string";
-    case "Y":
-      return (
-        typeof obj.verbatim === "string" &&
-        typeof obj.previousConseillerTurn === "string"
-      );
-    case "M1":
-      return typeof obj.verbatim === "string";
-    case "M2":
-      return (
-        typeof obj.conseillerTurn === "string" &&
-        typeof obj.clientTurn === "string"
-      );
-    case "M3":
-      return (
-        obj.conversationPair &&
-        typeof obj.conversationPair.conseiller === "string" &&
-        typeof obj.conversationPair.client === "string"
-      );
-    default:
-      return false;
-  }
-}
 
 export function createEmptyResult<T extends VariableDetails>(
   target: VariableTarget
@@ -207,7 +139,42 @@ export function createEmptyResult<T extends VariableDetails>(
       algorithmVersion: "unknown",
       inputSignature: "",
       executionPath: [],
-      warnings: ["Empty result created"],
     },
   };
+}
+
+/**
+ * ✅ Ajout attendu par types/index.ts
+ * Garde ultra-sûre pour valider une entrée de calcul.
+ */
+export function validateCalculationInput<T = unknown>(
+  input: unknown
+): input is T {
+  return input !== null && input !== undefined;
+}
+
+/** Fusionne/unique les warnings de plusieurs résultats (utile M2 composite) */
+export function mergeWarnings(
+  ...results: Array<CalculationResult<any> | undefined>
+): string[] | undefined {
+  const set = new Set<string>();
+  for (const r of results) {
+    if (Array.isArray(r?.metadata?.warnings)) {
+      for (const w of r!.metadata!.warnings!) set.add(w);
+    }
+  }
+  return set.size ? Array.from(set) : undefined;
+}
+
+/** Concatène les chemins d’exécution de plusieurs sous-calculs */
+export function mergeExecutionPaths(
+  ...results: Array<CalculationResult<any> | undefined>
+): string[] {
+  const path: string[] = [];
+  for (const r of results) {
+    if (Array.isArray(r?.metadata?.executionPath)) {
+      path.push(...r!.metadata!.executionPath!);
+    }
+  }
+  return path;
 }

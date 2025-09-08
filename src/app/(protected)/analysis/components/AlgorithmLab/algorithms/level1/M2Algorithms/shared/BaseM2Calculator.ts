@@ -4,6 +4,7 @@ import type {
   M2Details,
   CalculationResult,
   CalculatorMetadata,
+  AlgorithmType,
 } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 export abstract class BaseM2Calculator {
@@ -11,10 +12,11 @@ export abstract class BaseM2Calculator {
   abstract getMetadata(): CalculatorMetadata;
   abstract validateConfig(): boolean;
 
+  // ✅ CORRECTION: Utiliser AlgorithmType au lieu de "algorithm"
   describe(): {
     name: string;
     displayName?: string;
-    type: "algorithm";
+    type: AlgorithmType; // ✅ CHANGÉ: type flexible selon l'implémentation
     target: "M2";
     version?: string;
     batchSupported?: boolean;
@@ -23,13 +25,35 @@ export abstract class BaseM2Calculator {
     const md = this.getMetadata();
     return {
       name: md.id,
-      displayName: md.displayName,
-      type: "algorithm",
+      // ✅ CORRECTION: Utiliser 'label' au lieu de 'displayName' (CalculatorMetadata utilise 'label')
+      displayName: md.label,
+      // ✅ CORRECTION: Mapper algorithmKind vers un AlgorithmType valide
+      type: this.mapAlgorithmKind(md.algorithmKind),
       target: "M2",
       version: md.version,
-      batchSupported: md.supportsBatch,
-      description: md.description,
+      // ✅ CORRECTION: CalculatorMetadata n'a pas 'supportsBatch', utiliser une valeur par défaut
+      batchSupported: true,
+      description: undefined,
     };
+  }
+
+  // ✅ CORRECTION: Mapper algorithmKind vers AlgorithmType
+  private mapAlgorithmKind(algorithmKind: string): AlgorithmType {
+    switch (algorithmKind) {
+      case "rule-based":
+      case "rules":
+        return "rule-based";
+      case "ml":
+      case "machine-learning":
+        return "ml";
+      case "llm":
+      case "language-model":
+        return "llm";
+      case "hybrid":
+        return "hybrid";
+      default:
+        return "rule-based"; // Valeur par défaut sûre
+    }
   }
 
   async batchCalculate?(

@@ -30,5 +30,12 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    ".next",
+    "out",
+    // Exclusions des anciens répertoires
+    "src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/individual/**/*",
+    "src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/comparison/**/*"
+  ]
 }

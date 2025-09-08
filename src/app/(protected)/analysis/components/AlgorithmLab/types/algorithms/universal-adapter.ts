@@ -1,386 +1,283 @@
 /**
  * @fileoverview Adaptateur universel AlgorithmLab
- * Fonction createUniversalAlgorithm qui unifie wrapX, wrapY, wrapM2, etc.
+ * - Convertit un calculateur (BaseAlgorithm<.., CalculationResult<..>>) en UniversalAlgorithm homogène
+ * - Construit des descripteurs riches (AlgorithmDescriptor)
+ * - Expose des helpers pour X / Y / M1 / M2 / M3
  */
 
-import { VariableTarget, VariableDetails } from "../core/variables";
-import { CalculationInput, CalculationResult } from "../core/calculations";
-import {
+import type { VariableTarget, VariableDetails } from "../core/variables";
+import type { CalculationResult } from "../core/calculations";
+import type {
   UniversalAlgorithm,
   AlgorithmDescriptor,
   UniversalResult,
   AlgorithmType,
+  BaseAlgorithm,
+  AlgorithmMetadata,
+  AlgorithmConfig,
+  ParameterDescriptor,
 } from "./base";
 
 // ========================================================================
-// INTERFACE DE BASE POUR CALCULATEURS ALGORITHMLAB
-// ========================================================================
-
-export interface BaseCalculator<TInput = any, TDetails = VariableDetails> {
-  calculate(input: TInput): Promise<CalculationResult<TDetails>>;
-
-  // Métadonnées optionnelles
-  getName?(): string;
-  getVersion?(): string;
-  getDescription?(): string;
-  getType?(): AlgorithmType;
-}
-
-// ========================================================================
-// CONFIGURATION DE L'ADAPTATEUR ALGORITHMLAB
-// ========================================================================
-
-export interface AdapterConfig<TInput = any, TDetails = VariableDetails> {
-  // Support des fonctionnalités
-  requiresContext?: boolean;
-  supportsBatch?: boolean;
-
-  // Convertisseurs de données
-  inputValidator?: (input: unknown) => input is TInput;
-  inputConverter?: (input: string) => TInput;
-  resultMapper?: (result: CalculationResult<TDetails>) => UniversalResult;
-
-  // Métadonnées personnalisées
-  displayName?: string;
-  description?: string;
-  algorithmType?: AlgorithmType;
-
-  // Configuration avancée
-  timeout?: number; // ms
-  retries?: number;
-  batchSize?: number; // pour le traitement par lot
-}
-
-// ========================================================================
-// ADAPTATEUR UNIVERSEL ALGORITHMLAB
+// TYPES & INTERFACES
 // ========================================================================
 
 /**
- * Adaptateur universel AlgorithmLab remplaçant tous les wrappers
- * Usage: createUniversalAlgorithm(calculator, target, config)
+ * Un "calculateur" est un BaseAlgorithm qui renvoie un CalculationResult<Details>.
+ * On conserve le contrat existant : `key`, `meta`, `run(input, config?)`.
+ */
+export type BaseCalculator<
+  TInput = unknown,
+  TDetails extends VariableDetails = VariableDetails
+> = BaseAlgorithm<TInput, CalculationResult<TDetails>>;
+
+/**
+ * Options d’adaptation / overrides pour enrichir le descripteur UI.
+ */
+export interface AdapterConfig {
+  /** ID lisible (par défaut: `calculator.key`) */
+  name?: string;
+  /** Libellé affiché (par défaut: `calculator.meta?.label` ou `name`) */
+  displayName?: string;
+  /** Description longue */
+  description?: string;
+  /** Type d’implémentation (rule-based / ml / llm / hybrid) */
+  algorithmType?: AlgorithmType;
+  /** Semver (par défaut: `calculator.meta?.version` ou "1.0.0") */
+  version?: string;
+  /** Le modèle requiert-il du contexte conversationnel ? */
+  requiresContext?: boolean;
+  /** Prend en charge le batch ? */
+  batchSupported?: boolean;
+  /** Paramètres affichables en UI */
+  parameters?: Record<string, ParameterDescriptor>;
+}
+
+/** Constructeur sans argument d’un algo (utile pour registres dynamiques) */
+export interface ConstructibleAlgorithm<A = UniversalAlgorithm> {
+  new (): A;
+}
+
+// ========================================================================
+// BUILD DESCRIPTOR
+// ========================================================================
+
+function buildDescriptor(
+  calculator: { key: string; meta?: AlgorithmMetadata },
+  target: VariableTarget,
+  overrides?: AdapterConfig
+): AlgorithmDescriptor {
+  const name = overrides?.name ?? calculator.key;
+  const displayName = overrides?.displayName ?? calculator.meta?.label ?? name;
+  const version = overrides?.version ?? calculator.meta?.version ?? "1.0.0";
+  const description =
+    overrides?.description ?? calculator.meta?.description ?? "";
+
+  const type: AlgorithmType =
+    overrides?.algorithmType ??
+    // fallback "rule-based" si non renseigné
+    ("rule-based" as AlgorithmType);
+
+  return {
+    name,
+    displayName,
+    version,
+    type,
+    target,
+    batchSupported: !!overrides?.batchSupported,
+    requiresContext: !!overrides?.requiresContext,
+    description,
+    parameters: overrides?.parameters,
+    examples: calculator.meta?.tags?.map((t) => ({
+      input: { tag: t },
+      note: "Exemple basé sur tag méta",
+    })),
+  };
+}
+
+// ========================================================================
+// MAPPING: CalculationResult → UniversalResult
+// ========================================================================
+
+function toUniversalResult(
+  calc: CalculationResult<VariableDetails>,
+  algoVersion?: string
+): UniversalResult {
+  // Prediction en string robuste
+  const rawPred: unknown = (calc as any)?.prediction;
+  const prediction =
+    typeof rawPred === "string"
+      ? rawPred
+      : typeof rawPred === "number"
+      ? String(rawPred)
+      : typeof rawPred === "boolean"
+      ? rawPred
+        ? "TRUE"
+        : "FALSE"
+      : "UNKNOWN";
+
+  // Clamp confiance
+  const confidence =
+    typeof calc.confidence === "number"
+      ? Math.max(0, Math.min(1, calc.confidence))
+      : 0;
+
+  const processingTime =
+    typeof calc.processingTime === "number" ? calc.processingTime : 0;
+
+  const version = algoVersion || calc.metadata?.algorithmVersion || "unknown";
+
+  const warnings = Array.isArray(calc.metadata?.warnings)
+    ? calc.metadata?.warnings
+    : [];
+
+  return {
+    prediction,
+    confidence,
+    processingTime,
+    algorithmVersion: version,
+    metadata: {
+      inputSignature: calc.metadata?.inputSignature,
+      inputType: "unknown",
+      executionPath: calc.metadata?.executionPath ?? [],
+      warnings,
+      details: calc.details,
+    },
+  };
+}
+
+// ========================================================================
+// ADAPTATEUR GÉNÉRIQUE
+// ========================================================================
+
+/**
+ * Enveloppe un BaseCalculator en UniversalAlgorithm cohérent pour l’UI.
  */
 export function createUniversalAlgorithm<
-  TInput = any,
-  TDetails = VariableDetails
+  TInput = unknown,
+  TDetails extends VariableDetails = VariableDetails
 >(
   calculator: BaseCalculator<TInput, TDetails>,
   target: VariableTarget,
-  config: AdapterConfig<TInput, TDetails> = {}
+  overrides?: AdapterConfig
 ): UniversalAlgorithm {
-  const {
-    requiresContext = false,
-    supportsBatch = false,
-    inputValidator,
-    inputConverter,
-    resultMapper = defaultResultMapper,
-    displayName,
-    description,
-    algorithmType = "rule-based",
-    timeout = 30000,
-    retries = 3,
-    batchSize = 10,
-  } = config;
+  const descriptor = buildDescriptor(
+    { key: calculator.key, meta: calculator.meta },
+    target,
+    overrides
+  );
 
-  // Implémentation de l'interface universelle AlgorithmLab
-  const universalAlgorithm: UniversalAlgorithm = {
+  return {
     describe(): AlgorithmDescriptor {
-      const name = calculator.getName?.() || `${target}Calculator`;
-      return {
-        name,
-        displayName: displayName || name,
-        version: calculator.getVersion?.() || "1.0.0",
-        type: calculator.getType?.() || algorithmType,
-        target,
-        batchSupported: supportsBatch,
-        requiresContext,
-        description:
-          description ||
-          calculator.getDescription?.() ||
-          `Calculateur AlgorithmLab pour variable ${target}`,
-        examples: generateExamples(target),
-      };
+      return descriptor;
     },
 
     validateConfig(): boolean {
-      try {
-        // Validation basique du calculateur
-        if (!calculator || typeof calculator.calculate !== "function") {
-          return false;
-        }
-
-        // Test de calcul basique
-        const testInput = createTestInput(target);
-        if (inputValidator && !inputValidator(testInput)) {
-          return false;
-        }
-
-        return true;
-      } catch (error) {
-        console.warn(`Validation failed for ${target} calculator:`, error);
-        return false;
-      }
+      // À étendre si nécessaire : vérification de `overrides.parameters` etc.
+      return true;
     },
 
+    // Rétro-compat : certains panneaux utilisent encore `classify(string)`
     async classify(input: string): Promise<UniversalResult> {
-      return this.run(input);
+      const out = await Promise.resolve(
+        calculator.run(input as unknown as TInput)
+      );
+      return toUniversalResult(
+        out as CalculationResult<VariableDetails>,
+        descriptor.version
+      );
     },
 
+    // Exécution typée
     async run(input: unknown): Promise<UniversalResult> {
-      const startTime = Date.now();
-
-      try {
-        // 1. Validation et conversion de l'input
-        let typedInput: TInput;
-
-        if (inputValidator) {
-          if (!inputValidator(input)) {
-            throw new Error(`Invalid input type for ${target} calculator`);
-          }
-          typedInput = input;
-        } else if (inputConverter && typeof input === "string") {
-          typedInput = inputConverter(input);
-        } else if (typeof input === "string") {
-          typedInput = createDefaultInput(input, target) as TInput;
-        } else {
-          typedInput = input as TInput;
-        }
-
-        // 2. Exécution avec timeout et retry
-        const result = await executeWithRetry(
-          () => calculator.calculate(typedInput),
-          retries,
-          timeout
-        );
-
-        // 3. Mapping vers format universel
-        const universalResult = resultMapper(result);
-        universalResult.processingTime = Date.now() - startTime;
-
-        return universalResult;
-      } catch (error) {
-        return {
-          prediction: "ERROR",
-          confidence: 0,
-          processingTime: Date.now() - startTime,
-          metadata: {
-            warnings: [
-              `Execution failed: ${
-                error instanceof Error ? error.message : "Unknown error"
-              }`,
-            ],
-            executionPath: ["error"],
-            inputType: typeof input,
-          },
-        };
-      }
+      const out = await Promise.resolve(calculator.run(input as TInput));
+      return toUniversalResult(
+        out as CalculationResult<VariableDetails>,
+        descriptor.version
+      );
     },
 
+    // Batch optionnel
     async batchRun(inputs: unknown[]): Promise<UniversalResult[]> {
-      if (!supportsBatch) {
-        // Fallback: exécution séquentielle
-        const results: UniversalResult[] = [];
-        for (const input of inputs) {
-          results.push(await this.run(input));
-        }
-        return results;
-      }
-
-      // Traitement par batch optimisé
       const results: UniversalResult[] = [];
-
-      for (let i = 0; i < inputs.length; i += batchSize) {
-        const batch = inputs.slice(i, i + batchSize);
-        const batchPromises = batch.map((input) => this.run(input));
-        const batchResults = await Promise.all(batchPromises);
-        results.push(...batchResults);
+      for (const item of inputs) {
+        const out = await Promise.resolve(calculator.run(item as TInput));
+        results.push(
+          toUniversalResult(
+            out as CalculationResult<VariableDetails>,
+            descriptor.version
+          )
+        );
       }
-
       return results;
     },
   };
-
-  return universalAlgorithm;
 }
 
 // ========================================================================
-// FONCTIONS UTILITAIRES ALGORITHMLAB
-// ========================================================================
-
-function defaultResultMapper<TDetails>(
-  result: CalculationResult<TDetails>
-): UniversalResult {
-  return {
-    prediction: result.prediction,
-    confidence: result.confidence,
-    processingTime: result.processingTime,
-    algorithmVersion: result.metadata?.algorithmVersion,
-    metadata: {
-      inputSignature: result.metadata?.inputSignature,
-      executionPath: result.metadata?.executionPath || ["calculate"],
-      warnings: result.metadata?.warnings,
-      details: result.details as VariableDetails,
-    },
-  };
-}
-
-async function executeWithRetry<T>(
-  fn: () => Promise<T>,
-  retries: number,
-  timeout: number
-): Promise<T> {
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      return await Promise.race([
-        fn(),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Timeout")), timeout)
-        ),
-      ]);
-    } catch (error) {
-      if (attempt === retries) {
-        throw error;
-      }
-      // Délai exponentiel entre les tentatives
-      await new Promise((resolve) =>
-        setTimeout(resolve, Math.pow(2, attempt) * 1000)
-      );
-    }
-  }
-  throw new Error("Max retries exceeded");
-}
-
-function createTestInput(target: VariableTarget): unknown {
-  switch (target) {
-    case "X":
-      return { verbatim: "Bonjour, comment puis-je vous aider ?" };
-    case "Y":
-      return {
-        verbatim: "Oui, merci beaucoup",
-        previousConseillerTurn: "Je vais vérifier votre dossier",
-      };
-    case "M1":
-      return {
-        verbatim: "C'est une phrase de test pour l'analyse linguistique.",
-      };
-    case "M2":
-      return {
-        conseillerTurn: "Je comprends votre situation",
-        clientTurn: "Merci de votre compréhension",
-      };
-    case "M3":
-      return {
-        conversationPair: {
-          conseiller: "Avez-vous d'autres questions ?",
-          client: "Non, c'est parfait",
-        },
-      };
-    default:
-      return { verbatim: "Test input" };
-  }
-}
-
-function createDefaultInput(
-  verbatim: string,
-  target: VariableTarget
-): CalculationInput {
-  switch (target) {
-    case "X":
-      return { verbatim };
-    case "Y":
-      return { verbatim, previousConseillerTurn: "" };
-    case "M1":
-      return { verbatim };
-    case "M2":
-      return { conseillerTurn: verbatim, clientTurn: "" };
-    case "M3":
-      return {
-        conversationPair: { conseiller: verbatim, client: "" },
-      };
-    default:
-      return { verbatim } as any;
-  }
-}
-
-function generateExamples(
-  target: VariableTarget
-): Array<{ input: string; expectedOutput: string }> {
-  switch (target) {
-    case "X":
-      return [
-        {
-          input: "D'accord, je vais vérifier votre dossier",
-          expectedOutput: "ENGAGEMENT",
-        },
-        {
-          input: "Avez-vous d'autres questions ?",
-          expectedOutput: "OUVERTURE",
-        },
-        { input: "Je comprends votre frustration", expectedOutput: "REFLET" },
-      ];
-    case "Y":
-      return [
-        {
-          input: "Merci beaucoup pour votre aide",
-          expectedOutput: "CLIENT_POSITIF",
-        },
-        { input: "Ce n'est pas possible !", expectedOutput: "CLIENT_NEGATIF" },
-        { input: "D'accord", expectedOutput: "CLIENT_NEUTRE" },
-      ];
-    case "M1":
-      return [
-        { input: "Phrase simple", expectedOutput: "LOW_COMPLEXITY" },
-        {
-          input: "Construction syntaxique complexe",
-          expectedOutput: "HIGH_COMPLEXITY",
-        },
-      ];
-    case "M2":
-      return [
-        {
-          input: "Conseiller: 'Je comprends' | Client: 'Merci'",
-          expectedOutput: "HIGH_ALIGNMENT",
-        },
-      ];
-    case "M3":
-      return [
-        { input: "Conversation fluide", expectedOutput: "HIGH_FLUIDITY" },
-      ];
-    default:
-      return [];
-  }
-}
-
-// ========================================================================
-// FACTORY FUNCTIONS POUR USAGE SIMPLIFIÉ ALGORITHMLAB
+// HELPERS PAR VARIABLE
 // ========================================================================
 
 export function createXAlgorithm(
-  calculator: BaseCalculator
+  calculator: BaseCalculator,
+  overrides?: AdapterConfig
 ): UniversalAlgorithm {
   return createUniversalAlgorithm(calculator, "X", {
-    displayName: "X Classifier AlgorithmLab",
-    description: "Classification des actes conversationnels conseiller",
-    algorithmType: "rule-based", // was "RULE_BASED"
+    displayName: "X Classifier (AlgorithmLab)",
+    description:
+      "Classification X (Reflet / Ouverture / Engagement / Explication)",
+    algorithmType: "ml",
+    requiresContext: false,
+    ...overrides,
   });
 }
 
 export function createYAlgorithm(
-  calculator: BaseCalculator
+  calculator: BaseCalculator,
+  overrides?: AdapterConfig
 ): UniversalAlgorithm {
   return createUniversalAlgorithm(calculator, "Y", {
-    displayName: "Y Classifier AlgorithmLab",
-    description: "Classification des réactions client",
-    algorithmType: "rule-based", // was "RULE_BASED"
+    displayName: "Y Classifier (AlgorithmLab)",
+    description: "Polarité client (Positif / Négatif / Neutre)",
+    algorithmType: "ml",
+    requiresContext: false,
+    ...overrides,
+  });
+}
+
+export function createM1Algorithm(
+  calculator: BaseCalculator,
+  overrides?: AdapterConfig
+): UniversalAlgorithm {
+  return createUniversalAlgorithm(calculator, "M1", {
+    displayName: "M1 Action Verb Density",
+    description: "Densité de verbes d’action (M1)",
+    algorithmType: "rule-based",
+    ...overrides,
   });
 }
 
 export function createM2Algorithm(
-  calculator: BaseCalculator
+  calculator: BaseCalculator,
+  overrides?: AdapterConfig
 ): UniversalAlgorithm {
   return createUniversalAlgorithm(calculator, "M2", {
-    displayName: "M2 Alignment Calculator AlgorithmLab",
-    description: "Calcul de l'alignement interactionnel",
-    algorithmType: "ml", // was "MACHINE_LEARNING"
+    displayName: "M2 Alignment (Lexical/Semantic)",
+    description: "Alignement lexical+semantique T0 ↔ T+1 (M2)",
+    algorithmType: "hybrid",
     requiresContext: true,
+    ...overrides,
+  });
+}
+
+export function createM3Algorithm(
+  calculator: BaseCalculator,
+  overrides?: AdapterConfig
+): UniversalAlgorithm {
+  return createUniversalAlgorithm(calculator, "M3", {
+    displayName: "M3 Temporal/Cognitive Metrics",
+    description: "Indicateurs temporels et charge cognitive (M3)",
+    algorithmType: "rule-based",
+    ...overrides,
   });
 }

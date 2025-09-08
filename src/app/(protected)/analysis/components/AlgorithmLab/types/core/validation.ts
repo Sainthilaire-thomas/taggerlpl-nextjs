@@ -5,6 +5,7 @@
 /**
  * @fileoverview Types de validation AlgorithmLab
  * Interfaces pour validation, tests et métriques de performance AlgorithmLab
+ * ✅ CORRECTION: Ajout propriétés metadata manquantes (verbatim, clientTurn, etc.)
  */
 
 import type { VariableTarget, VariableX } from "./variables";
@@ -19,10 +20,21 @@ export interface TVMetadataCore {
   turnId?: number | string;
   id?: number | string;
 
-  // Propriétés manquantes ajoutées pour corriger les erreurs TypeScript
+  // Propriétés existantes
   annotations?: any[];
   provider?: string;
   scale?: "nominal" | "ordinal";
+
+  // ✅ NOUVELLES propriétés optionnelles pour M2ValidationInterface
+  clientTurn?: string;
+  verbatim?: string;
+  m2?: {
+    value?: string | number;
+    scale?: string;
+    alignmentType?: "ALIGNEMENT_FORT" | "ALIGNEMENT_FAIBLE" | "DESALIGNEMENT";
+    alignmentMethod?: "lexical" | "semantic" | "composite";
+    weights?: Record<string, number>;
+  };
 
   // Autres propriétés optionnelles
   source?: string;
@@ -37,9 +49,13 @@ export interface TVValidationResultCore {
   verbatim: string;
   goldStandard: string;
   predicted: string;
-  confidence: number;
   correct: boolean;
+
+  // ✅ NOUVELLES propriétés optionnelles pour M2ValidationInterface
+  confidence?: number;
   processingTime?: number;
+  id?: string | number;
+
   metadata?: TVMetadataCore | Record<string, unknown>;
 }
 
@@ -74,14 +90,14 @@ export interface ValidationMetrics {
     }
   >;
 
-  // Support pour les deux formats perClass
+  // Support pour les deux formats perClass (correction conflit ThesisVariables.ts:163)
   perClass?: Record<
     string,
     {
       precision: number;
       recall: number;
       f1: number;
-      support?: number;
+      support?: number; // ✅ CORRECTION: support optionnel pour résoudre l'erreur
     }
   >;
 
@@ -125,20 +141,26 @@ export interface XGoldStandardItem {
   annotatorConfidence?: number;
   callId?: string;
   meta?: Record<string, unknown>;
+
+  // ✅ AJOUT: Propriété annotatorId manquante dans useXAlgorithmTesting.ts:222,231,240
+  annotatorId?: string;
 }
 
 export interface XValidationResult {
   id?: string;
   verbatim?: string;
   callId?: string;
-  predicted?: VariableX;
-  goldStandard?: VariableX;
+  predicted?: VariableX; // ✅ CORRECTION: Résolution conflit types/core/validation.ts:187
+  goldStandard?: VariableX; // ✅ CORRECTION: Résolution conflit types/core/validation.ts:188
   confidence?: number;
   processingTime?: number;
   correct: boolean;
 
   // Propriété manquante ajoutée
   evidence?: string[];
+
+  // ✅ AJOUT: Support pour autres propriétés manquantes
+  timestamp?: number; // Propriété manquante dans useXAlgorithmTesting.ts:402,627
 }
 
 export interface TVMetadataM2 extends TVMetadataCore {
@@ -146,6 +168,9 @@ export interface TVMetadataM2 extends TVMetadataCore {
   alignmentType?: TVMetadataM2["value"];
   alignmentMethod?: "lexical" | "semantic" | "composite";
   weights?: Record<string, number>;
+
+  // ✅ AJOUT: Support pour propriétés étendues M2
+  details?: Record<string, any>; // Propriété manquante dans useM2AlgorithmTesting.ts:71
 }
 
 // Alias publics simples attendus par l'UI
@@ -161,7 +186,7 @@ export interface AlgorithmTestConfig {
   target: VariableTarget;
   algorithmName: string;
 
-  // Propriétés manquantes ajoutées
+  // ✅ NOUVELLES propriétés optionnelles pour corriger les erreurs
   algorithmId?: string;
   variable?: VariableTarget;
   sampleSize?: number;
@@ -169,7 +194,7 @@ export interface AlgorithmTestConfig {
   useGoldStandard?: boolean;
   options?: Record<string, unknown>;
 
-  // Configuration du test
+  // Configuration du test (existant)
   testSet: {
     source: "MANUAL_ANNOTATIONS" | "SYNTHETIC" | "HISTORICAL";
     size?: number;
@@ -177,7 +202,7 @@ export interface AlgorithmTestConfig {
     randomSeed?: number;
   };
 
-  // Métriques à calculer
+  // Métriques à calculer (existant)
   metrics: {
     basic: boolean;
     detailed: boolean;
@@ -185,7 +210,7 @@ export interface AlgorithmTestConfig {
     crossValidation?: boolean;
   };
 
-  // Seuils de performance
+  // Seuils de performance (existant)
   thresholds: {
     minimumAccuracy: number;
     minimumPrecision?: number;
@@ -193,7 +218,7 @@ export interface AlgorithmTestConfig {
     minimumF1?: number;
   };
 
-  // Options d'exécution
+  // Options d'exécution (existant)
   execution: {
     parallel?: boolean;
     timeout?: number;
@@ -201,7 +226,7 @@ export interface AlgorithmTestConfig {
     saveResults?: boolean;
   };
 
-  // Support pour validation croisée
+  // Support pour validation croisée (existant)
   crossValidation?: {
     folds: number;
     stratified: boolean;
@@ -227,6 +252,8 @@ export interface DisagreementCase {
 
 export interface KappaMetrics {
   kappa: number;
+  // ✅ CORRECTION: Ajout propriété observed manquante dans useLevel0Validation.ts:38
+  observed?: number; // Alias pour observedAgreement
   observedAgreement: number;
   expectedAgreement: number;
   confusionMatrix?: Record<string, Record<string, number>>;
@@ -247,6 +274,12 @@ export interface InterAnnotatorData {
   verbatim?: string;
   agreed: boolean;
   annotation?: { expert1: string; expert2: string };
+
+  // ✅ CORRECTION: Support pour propriétés étendues dans useLevel0Validation.ts:57,61
+  expert1?: string;
+  expert2?: string;
+  finalTag?: string; // Propriété manquante dans useLevel0Validation.ts:61
+
   [k: string]: unknown;
 }
 

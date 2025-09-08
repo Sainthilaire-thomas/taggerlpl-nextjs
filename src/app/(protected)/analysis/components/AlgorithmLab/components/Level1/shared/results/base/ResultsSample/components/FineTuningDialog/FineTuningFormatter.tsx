@@ -150,3 +150,22 @@ const generateMetadata = (stats: ExtractionStats) => {
     error_rate: `${stats.errorRate.toFixed(1)}%`,
   };
 };
+
+export function formatJSONL(data: any[]): string {
+  return data.map((item) => JSON.stringify(item)).join("\n");
+}
+
+export function formatMarkdown(data: any[]): string {
+  if (!data.length) return "";
+
+  const headers = Object.keys(data[0]);
+  let markdown = `| ${headers.join(" | ")} |\n`;
+  markdown += `| ${headers.map(() => "---").join(" | ")} |\n`;
+
+  data.forEach((item) => {
+    const row = headers.map((header) => String(item[header] || "")).join(" | ");
+    markdown += `| ${row} |\n`;
+  });
+
+  return markdown;
+}

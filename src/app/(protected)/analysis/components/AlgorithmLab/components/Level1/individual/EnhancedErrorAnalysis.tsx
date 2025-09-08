@@ -29,7 +29,7 @@ import {
   Assignment,
   Warning,
 } from "@mui/icons-material";
-import { AlgorithmResult } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import { BaseAlgorithmResult } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 import { useTaggingData } from "@/context/TaggingDataContext";
 import { supabase } from "@/lib/supabaseClient";
 import { generateSignedUrl } from "@/components/utils/signedUrls";

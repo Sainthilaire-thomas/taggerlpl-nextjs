@@ -7,6 +7,7 @@
  * - Ordre logique (tags avant usages)
  * - Pas de redéclarations : une seule interface par nom
  * - Compat ascendante : anciens champs conservés en option
+ * ✅ CORRECTION: Ajout des propriétés M3Details manquantes (pauseCount, hesitationCount, speechRate, markers)
  */
 
 // ========================================================================
@@ -14,8 +15,8 @@
 // ========================================================================
 export type VariableTarget = "X" | "Y" | "M1" | "M2" | "M3";
 
-// Suppression de ValidationLevel (maintenant dans validation.ts)
-// export type ValidationLevel = "LEVEL0" | "LEVEL1" | "LEVEL2";
+// (utilisé par useWorkflowManagement)
+export type ValidationLevel = "LEVEL0" | "LEVEL1" | "LEVEL2";
 
 // ========================================================================
 // 2) Tags X/Y (catégories canoniques)
@@ -41,17 +42,17 @@ export type YTag =
   | "CLIENT_SILENCE"
   | "AUTRE_Y";
 
+export type VariableY = YTag;
+
 // ========================================================================
 // 3) Détails par variable (définitions uniques)
 // ========================================================================
 
 export interface XDetails {
-  // Ancienne spec (facilitent la validation X↔famille)
+  // Propriétés existantes
   family?: string;
   evidences?: string[];
   topProbs?: { label: string; prob: number }[];
-
-  // Mesures linguistiques/structurelles
   verbCount?: number;
   actionVerbs?: string[];
   pronounUsage?: {
@@ -61,32 +62,42 @@ export interface XDetails {
   };
   questionMarkers?: string[];
   declarativeMarkers?: string[];
-
-  // Métriques d'efficacité
   effectiveness?: {
     clientResponse: "POSITIVE" | "NEGATIVE" | "NEUTRAL";
     alignmentScore: number;
     nextTurnLabel?: string;
   };
+  label?: string;
+
+  // ✅ NOUVELLES propriétés optionnelles pour useLevel1Testing
+  confidence?: number; // Erreur ligne 94
+  matchedPatterns?: string[]; // Utilisé ligne 96
+  rationale?: string; // Utilisé ligne 97
+  probabilities?: any; // Utilisé ligne 98
+  spans?: any; // Utilisé ligne 99
 }
 
 export interface YDetails {
-  // Ancienne spec
+  // Propriétés existantes
   family?: string;
   evidences?: string[];
   topProbs?: { label: string; prob: number }[];
-
-  // Spec riche
   sentiment?: "POSITIVE" | "NEGATIVE" | "NEUTRAL";
-  emotionalIntensity?: number; // 0..1
+  emotionalIntensity?: number;
   linguisticMarkers?: string[];
   responseType?: "ACCEPTANCE" | "RESISTANCE" | "INQUIRY" | "NEUTRAL";
-
   conversationalMetrics?: {
-    latency: number; // ms
-    verbosity: number; // nb mots
-    coherence: number; // 0..1
+    latency: number;
+    verbosity: number;
+    coherence: number;
   };
+  label?: string;
+
+  // ✅ NOUVELLES propriétés optionnelles pour useLevel1Testing
+  confidence?: number; // Erreur ligne 108
+  cues?: string[]; // Utilisé ligne 110
+  sentimentProxy?: any; // Utilisé ligne 111
+  spans?: any; // Utilisé ligne 112
 }
 
 export interface M1Details {
@@ -142,6 +153,17 @@ export interface M3Details {
 
   predictedSatisfaction?: number;
   predictedCompliance?: number;
+
+  // ✅ CORRECTION MAJEURE: Ajout des propriétés manquantes signalées dans les erreurs
+  pauseCount?: number; // Erreur dans M3ValidationInterface.tsx:107,300
+  hesitationCount?: number; // Erreur dans M3ValidationInterface.tsx:109,302
+  speechRate?: number; // Erreur dans M3ValidationInterface.tsx:111,305
+  markers?: Array<{
+    type: string;
+    timestamp: number;
+    confidence: number;
+    value?: string | number;
+  }>; // Erreur dans M3ValidationInterface.tsx:314
 }
 
 // ========================================================================

@@ -6,11 +6,11 @@ import type {
   VariableX,
   ValidationMetrics,
   AlgorithmTestConfig,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+} from "../../types/ThesisVariables";
 import type {
   XValidationResult,
   XGoldStandardItem,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+} from "../../types/ValidationTypes";
 
 // ---- Interface locale XAlgorithm (ne pas l'importer de ThesisVariables) ----
 export interface XAlgorithm {

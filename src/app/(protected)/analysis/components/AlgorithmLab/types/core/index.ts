@@ -1,23 +1,16 @@
-// ===================================================================
-// 4. CORRECTION: src/app/(protected)/analysis/components/AlgorithmLab/types/core/index.ts
-// ===================================================================
-
 /**
- * @fileoverview Export centralisé des types core AlgorithmLab
- * Point d'entrée principal pour tous les types fondamentaux AlgorithmLab
+ * @fileoverview Barrel des types "core" d'AlgorithmLab.
+ * On évite les collisions et on respecte 'isolatedModules'
+ * en distinguant les ré-exports de types vs de valeurs.
  */
 
-// Variables et détails
-export * from "./variables";
+// -------------------------
+// Exports depuis ./variables
+// -------------------------
 
-// Calculs et résultats
-export * from "./calculations";
-
-// Validation et métriques (inclut maintenant tout de SharedTypes et Level0Types)
-export * from "./validation";
-
-// Types combinés pour faciliter l'import dans AlgorithmLab
+// ✅ Tous ces symboles sont des TYPES -> `export type { ... }`
 export type {
+  // Types de variables
   VariableTarget,
   VariableDetails,
   XDetails,
@@ -30,26 +23,19 @@ export type {
   YTag,
 } from "./variables";
 
-export type {
-  CalculationInput,
-  CalculationResult,
-  CalculatorMetadata,
-  XInput,
-  YInput,
-  M1Input,
-  M2Input,
-  M3Input,
-} from "./calculations";
+// ✅ Ces symboles sont des VALEURS (fonctions) -> `export { ... }`
+export {
+  isValidVariableTarget,
+  getVariableColor,
+  getVariableLabel,
+} from "./variables";
 
-export type {
-  ValidationMetrics,
-  ValidationResult,
-  AlgorithmTestConfig,
-  ValidationLevel,
-  TVMetadata,
-  TVValidationResult,
-  XValidationResult,
-  DisagreementCase,
-  KappaMetrics,
-  InterAnnotatorData,
-} from "./validation";
+// -------------------------
+// Exports depuis ./validation
+// -------------------------
+// Ici on peut garder un export global. S'il y avait un conflit de nom,
+// on le résoudrait explicitement comme ci-dessus.
+export * from "./validation";
+
+// Alias de compat pour l'UI qui attend ce nom précis
+export type { TVValidationResult as TVValidationResultCore } from "./validation";

@@ -35,13 +35,11 @@ export default class M2CompositeAlignmentCalculator extends BaseM2Calculator {
 
   getMetadata(): CalculatorMetadata {
     return {
-      id: "M2CompositeAlignment",
-      displayName: "M2 — Alignement composite (lexical + sémantique)",
+      id: "m2-composite-alignment",
+      label: "M2 Composite Alignment Calculator",
       target: "M2",
+      algorithmKind: "hybrid",
       version: "1.0.0",
-      description:
-        "Fusion pondérée des scores lexical (Jaccard) et sémantique (patterns).",
-      supportsBatch: true,
     };
   }
 
@@ -70,44 +68,47 @@ export default class M2CompositeAlignmentCalculator extends BaseM2Calculator {
       this.semantic.calculate(input),
     ]);
 
-    const lexicalScore = Number(
-      lx.metadata?.["lexicalScore"] ?? lx.confidence ?? 0
-    );
-    const semanticScore = Number(
-      se.metadata?.["semanticScore"] ?? se.confidence ?? 0
-    );
+    // Extract scores from results using safe property access
+    const lexicalScore = Number(lx.confidence ?? 0);
+    const semanticScore = Number(se.confidence ?? 0);
 
-    const final = this.fuse(lexicalScore, semanticScore);
-    const alignmentType =
+    // Try to get additional scores from metadata if available
+    const lexicalMetadataScore = (lx.metadata as any)?.lexicalScore;
+    const semanticMetadataScore = (se.metadata as any)?.semanticScore;
+
+    const finalLexicalScore = lexicalMetadataScore ?? lexicalScore;
+    const finalSemanticScore = semanticMetadataScore ?? semanticScore;
+
+    const final = this.fuse(finalLexicalScore, finalSemanticScore);
+
+    const alignmentValue =
       final >= this.config.threshold
-        ? "aligné"
+        ? "ALIGNEMENT_FORT"
         : final >= this.config.partialThreshold
-        ? "partiellement_aligné"
-        : "non_aligné";
+        ? "ALIGNEMENT_FAIBLE"
+        : "DESALIGNEMENT";
 
     const processingTime = performance.now() - t0;
 
     const details: M2Details = {
-      alignmentType,
-      lexicalScore,
-      semanticScore,
-      sharedTokens: (lx.metadata?.["sharedTokens"] as string[]) ?? [],
-      patterns: (se.metadata?.["patterns"] as string[]) ?? [],
-      justification: "Fusion pondérée lexical/sémantique",
-      confidence: Math.min(1, Math.max(0, final)),
-      processingTime,
+      value: alignmentValue,
+      scale: "composite",
+      lexicalAlignment: finalLexicalScore,
+      semanticAlignment: finalSemanticScore,
+      overall: final,
+      sharedTerms: (lx.metadata as any)?.sharedTokens || [],
     };
 
     return {
-      prediction: alignmentType,
-      confidence: details.confidence,
+      prediction: alignmentValue,
+      confidence: Math.min(1, Math.max(0, final)),
       processingTime,
+      details,
       metadata: {
-        details,
-        lexicalScore,
-        semanticScore,
-        finalScore: final,
-        thresholds: this.config,
+        algorithmVersion: "1.0.0",
+        inputSignature: `${input.t0?.substring(0, 20) || "unknown"}...`,
+        executionPath: ["lexical", "semantic", "fusion"],
+        warnings: [],
       },
     };
   }

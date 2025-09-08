@@ -34,12 +34,13 @@ export const useLevel0Validation = () => {
       if (k < 0.81) return "SUBSTANTIAL";
       return "ALMOST_PERFECT";
     };
+
+    // ✅ CORRECTION - utiliser les bonnes propriétés de KappaMetrics
     const metrics: KappaMetrics = {
-      observed,
-      expected,
       kappa: Math.max(0, kappa),
+      observedAgreement: observed,
+      expectedAgreement: expected,
       interpretation: getInterpretation(Math.max(0, kappa)),
-      confidenceInterval: [Math.max(0, kappa - 0.1), Math.min(1, kappa + 0.1)],
     };
 
     setKappaMetrics(metrics);
@@ -54,11 +55,17 @@ export const useLevel0Validation = () => {
       .map(
         (annotation, index): DisagreementCase => ({
           id: `disagreement_${index}`,
-          annotation,
-          confusionType: `${annotation.expert1}_vs_${annotation.expert2}`,
-          discussionNotes: [],
-          resolution: "consensus",
-          finalTag: annotation.expert1,
+          // ✅ CORRECTION - créer l'objet annotation correct pour DisagreementCase
+          annotation: {
+            expert1: (annotation as any).expert1 || "unknown",
+            expert2: (annotation as any).expert2 || "unknown",
+          },
+          confusionType: `${(annotation as any).expert1 || "unknown"}_vs_${
+            (annotation as any).expert2 || "unknown"
+          }`,
+          finalTag: (annotation as any).expert1,
+          // Ajouter d'autres propriétés optionnelles de DisagreementCase si nécessaire
+          verbatim: annotation.verbatim,
         })
       );
 

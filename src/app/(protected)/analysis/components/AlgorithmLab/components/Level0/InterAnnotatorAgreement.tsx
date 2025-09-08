@@ -56,26 +56,20 @@ export const InterAnnotatorAgreement: React.FC = () => {
     {
       id: "ann_001",
       verbatim: "Je vais vérifier cela pour vous immédiatement",
-      expert1: "ENGAGEMENT",
-      expert2: "ENGAGEMENT",
       agreed: true,
-      callId: "CALL_001",
-      speaker: "conseiller",
-      turnIndex: 5,
-      context: "Demande de vérification client",
-      annotationTimestamp: new Date(),
+      annotation: {
+        expert1: "ENGAGEMENT",
+        expert2: "ENGAGEMENT",
+      },
     },
     {
       id: "ann_002",
       verbatim: "D'accord, mais il faut comprendre que...",
-      expert1: "CLIENT_POSITIF",
-      expert2: "CLIENT_NEUTRE",
       agreed: false,
-      callId: "CALL_001",
-      speaker: "client",
-      turnIndex: 6,
-      context: "Réaction à proposition conseiller",
-      annotationTimestamp: new Date(),
+      annotation: {
+        expert1: "CLIENT_POSITIF",
+        expert2: "CLIENT_NEUTRE",
+      },
     },
   ];
 
@@ -232,11 +226,8 @@ export const InterAnnotatorAgreement: React.FC = () => {
 
                 <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                   <Typography variant="caption" color="text.secondary">
-                    Interprétation: {kappaMetrics.interpretation}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    IC 95%: [{kappaMetrics.confidenceInterval[0].toFixed(3)},{" "}
-                    {kappaMetrics.confidenceInterval[1].toFixed(3)}]
+                    Interprétation:{" "}
+                    {kappaMetrics.interpretation || "Non calculée"}
                   </Typography>
                 </Box>
               </Box>
@@ -247,7 +238,7 @@ export const InterAnnotatorAgreement: React.FC = () => {
                     Accord observé:
                   </Typography>
                   <Typography variant="body2" fontWeight="medium">
-                    {(kappaMetrics.observed * 100).toFixed(1)}%
+                    {(kappaMetrics.observedAgreement * 100).toFixed(1)}%
                   </Typography>
                 </Box>
                 <Box sx={{ flex: 1 }}>
@@ -255,7 +246,7 @@ export const InterAnnotatorAgreement: React.FC = () => {
                     Accord attendu:
                   </Typography>
                   <Typography variant="body2" fontWeight="medium">
-                    {(kappaMetrics.expected * 100).toFixed(1)}%
+                    {(kappaMetrics.expectedAgreement * 100).toFixed(1)}%
                   </Typography>
                 </Box>
               </Box>
@@ -338,14 +329,14 @@ export const InterAnnotatorAgreement: React.FC = () => {
                       <Typography
                         variant="body2"
                         noWrap
-                        title={annotation.verbatim}
+                        title={String(annotation.verbatim || "")}
                       >
-                        {annotation.verbatim}
+                        {String(annotation.verbatim || "")}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={annotation.expert1}
+                        label={annotation.annotation?.expert1 || "N/A"}
                         size="small"
                         color="primary"
                         variant="outlined"
@@ -353,7 +344,7 @@ export const InterAnnotatorAgreement: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={annotation.expert2}
+                        label={annotation.annotation?.expert2 || "N/A"}
                         size="small"
                         color="secondary"
                         variant="outlined"
@@ -375,7 +366,10 @@ export const InterAnnotatorAgreement: React.FC = () => {
                         noWrap
                         sx={{ maxWidth: 200 }}
                       >
-                        {annotation.context}
+                        {String(
+                          (annotation as any).context ||
+                            "Contexte non disponible"
+                        )}
                       </Typography>
                     </TableCell>
                   </TableRow>

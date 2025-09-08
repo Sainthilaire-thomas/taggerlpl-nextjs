@@ -34,10 +34,15 @@ export function useM3AlgorithmTesting() {
 
       setIsRunning(true);
       try {
-        // Normalisation des inputs vers M3Input
+        // ✅ CORRECTION: Normalisation des inputs vers M3Input avec 'segment' requis
         const normalized: M3Input[] = inputs.map((x) => ({
-          id: x.id,
-          clientTurn: x.clientTurn ?? "",
+          segment: x.clientTurn ?? "", // ✅ 'segment' est requis par M3Input
+          withProsody: false,
+          language: "fr",
+          options: {
+            id: x.id,
+            clientTurn: x.clientTurn,
+          },
         }));
 
         // Exécution (batch si dispo, sinon item par item)
@@ -46,7 +51,7 @@ export function useM3AlgorithmTesting() {
             ? await (calculator as any).batchCalculate(normalized)
             : await Promise.all(normalized.map((v) => calculator.calculate(v)));
 
-        // Injection d’un minimum de contexte verbeux (facilite l’UI)
+        // Injection d'un minimum de contexte verbeux (facilite l'UI)
         const withContext = outs.map(
           (r: CalculationResult<M3Details>, idx: number) => ({
             ...r,
@@ -59,11 +64,17 @@ export function useM3AlgorithmTesting() {
           })
         );
 
+        setResults(withContext);
+
+        // ✅ CORRECTION: Utiliser une propriété qui existe dans M3Details ou confidence
         const mean =
           withContext.length > 0
             ? withContext.reduce(
-                (s: number, r: CalculationResult<M3Details>) =>
-                  s + (r.score ?? 0),
+                (s: number, r: CalculationResult<M3Details>) => {
+                  // Pour M3, utiliser une propriété appropriée des détails ou confidence
+                  const score = r.details?.value ?? r.confidence ?? 0;
+                  return s + (typeof score === "number" ? score : 0);
+                },
                 0
               ) / withContext.length
             : 0;

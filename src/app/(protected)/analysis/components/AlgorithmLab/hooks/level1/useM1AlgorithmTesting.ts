@@ -21,8 +21,14 @@ export function useM1AlgorithmTesting() {
           ? calculator.batchCalculate(inputs)
           : Promise.all(inputs.map((i) => calculator.calculate(i))));
         setResults(out);
+
+        // Corriger l'accès au score : utiliser details.score ou confidence
         const mean = out.length
-          ? out.reduce((s, r) => s + (r.score ?? 0), 0) / out.length
+          ? out.reduce((s, r) => {
+              // Essayer d'abord details.score, puis confidence comme fallback
+              const score = r.details?.score ?? r.confidence ?? 0;
+              return s + score;
+            }, 0) / out.length
           : 0;
         setAvgScore(mean);
       } finally {

@@ -1,6 +1,7 @@
 /**
  * @fileoverview Types de composants UI AlgorithmLab
  * Interfaces spécifiques aux composants d'interface AlgorithmLab
+ * ✅ CORRECTION: Ajout des props manquantes pour ResultsPanel, ConfusionMatrix, etc.
  */
 
 import type { ReactNode, CSSProperties } from "react";
@@ -148,9 +149,20 @@ export interface ResultDisplayProps {
 export interface ResultsPanelProps {
   results: TVValidationResultCore[];
   display?: DisplayConfig;
+
+  // Propriétés existantes (déjà présentes)
+  limit?: number;
+  showPagination?: boolean;
+  onResultSelect?: (result: any) => void;
+  displayMode?: "table" | "cards" | "list";
+
+  // ✅ AJOUTER ces nouvelles propriétés optionnelles pour M2ValidationInterface
+  targetKind?: "X" | "Y" | "M1" | "M2" | "M3";
+  classifierLabel?: string;
+  initialPageSize?: number;
 }
 
-// Optionnel : variante stricte TV pour d’autres composants UI
+// Optionnel : variante stricte TV pour d'autres composants UI
 export interface TVResultDisplayProps {
   results: TVValidationResultCore[];
   display?: DisplayConfig;
@@ -164,6 +176,63 @@ export type ExtraColumn<Row = any> = {
   header: string;
   render: (row: Row) => unknown; // opaque; UI gère le rendu
 };
+
+// ========================================================================
+// TYPES POUR COMPOSANTS MANQUANTS
+// ========================================================================
+
+// ✅ AJOUT: Interface pour MetricsPanel (TechnicalValidation/index.ts:5)
+export interface MetricsPanelProps {
+  metrics: ValidationMetrics | SimpleMetrics;
+  title?: string;
+  compact?: boolean;
+  showDetails?: boolean;
+}
+
+export interface SimpleMetrics {
+  accuracy: number;
+  precision: number;
+  recall: number;
+  f1Score: number;
+  sampleSize: number;
+}
+
+// ✅ AJOUT: Interface pour ClassifierSelector (TechnicalValidation.tsx:17)
+export interface ClassifierSelectorProps {
+  // Propriétés existantes (déjà présentes)
+  selectedClassifier?: string;
+  onClassifierChange?: (classifier: string) => void; // Rendre optionnelle
+  availableClassifiers?: Array<{
+    // Rendre optionnelle
+    id: string;
+    name: string;
+    description?: string;
+  }>;
+  disabled?: boolean;
+
+  // ✅ AJOUTER ces nouvelles propriétés pour M2ValidationInterface
+  algorithms?: ClassifierSelectorAlgorithm[];
+  selected?: string;
+  onSelectClassifier?: (id: string) => void;
+  target?: "X" | "Y" | "M1" | "M2" | "M3";
+}
+
+export interface ClassifierSelectorAlgorithm {
+  id: string;
+  name: string;
+  description: string;
+  differential: number;
+  time: number;
+  accuracy: number;
+}
+// ✅ AJOUT: Interface pour ConfusionMatrix (Level1Interface.tsx:93)
+export interface ConfusionMatrixProps {
+  metrics: ValidationMetrics | null; // Propriété metrics manquante corrigée
+  target?: VariableTarget;
+  showLabels?: boolean;
+  compact?: boolean;
+}
+
 // ========================================================================
 // MODALES ET DIALOGUES ALGORITHMLAB
 // ========================================================================
@@ -226,7 +295,7 @@ export function withDisplayDefaults(
   return { ...d, ...(cfg ?? {}) };
 }
 
-/** Validation simple d’un schema de config de formulaire */
+/** Validation simple d'un schema de config de formulaire */
 export function validateConfigSchema(
   config: Record<string, any>,
   schema: ConfigFormProps["schema"]

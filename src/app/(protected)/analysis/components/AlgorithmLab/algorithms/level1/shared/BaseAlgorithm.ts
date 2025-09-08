@@ -1,7 +1,7 @@
 import type { VariableTarget } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 /** Typologie des algorithmes */
-export type AlgorithmType = "rule-based" | "ml" | "llm" | "composite";
+export type AlgorithmType = "rule-based" | "ml" | "llm" | "hybrid";
 
 /** Métadonnées unifiées (affichées dans l’UI + logs) */
 export interface AlgorithmMetadata {

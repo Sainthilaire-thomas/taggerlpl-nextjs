@@ -18,16 +18,22 @@ export class PausesM3Calculator {
   getMetadata(): CalculatorMetadata {
     return {
       id: "m3-pauses-basic",
-      name: "M3 Pauses (Heuristique)",
+      // ✅ CORRECTION: Utiliser 'label' au lieu de 'name' (CalculatorMetadata utilise 'label')
+      label: "M3 Pauses (Heuristique)",
+      // ✅ CORRECTION: Ajouter les propriétés requises par CalculatorMetadata
+      target: "M3",
+      algorithmKind: "rule-based",
       version: "0.1.0",
-      variable: "M3",
-      description:
-        "Heuristique simple basée sur ellipses, tags de pause et hésitations lexicales.",
+      // ✅ CORRECTION: 'variable' n'existe pas dans CalculatorMetadata, 'description' non plus
+      tags: ["pauses", "hesitations", "cognitive-load"],
     };
   }
 
   async calculate(input: M3Input): Promise<CalculationResult<M3Details>> {
-    const textRaw = input.clientTurn ?? "";
+    const start = performance.now();
+
+    // ✅ CORRECTION: M3Input utilise 'segment' au lieu de 'clientTurn'
+    const textRaw = input.segment ?? "";
     const text = textRaw.toLowerCase();
 
     // Comptages simples
@@ -55,35 +61,84 @@ export class PausesM3Calculator {
     const denom = Math.max(1, tokens * 0.05); // 0.05 = 1/20
     const score = Math.min(1, raw / denom);
 
-    // Détails minimalistes (M3Details est vide pour l’instant → on caste)
-    const details = {
-      counts: {
-        ellipses,
-        pauseTags,
-        hesitations,
-        dashBreaks,
-        doubleSpaces,
-        tokens,
-      },
-      weights: {
-        ellipses: 0.5,
-        pauseTags: 1.0,
-        hesitations: 0.4,
-        dashBreaks: 0.5,
-        doubleSpaces: 0.25,
-      },
-      raw,
-      normDenominator: denom,
-    } as unknown as M3Details;
+    const processingTime = performance.now() - start;
 
-    return Promise.resolve({
-      score,
+    // ✅ CORRECTION: Enrichir M3Details avec les propriétés définies dans votre système
+    const details: M3Details = {
+      // Propriétés de base
+      value: score,
+      unit: "s",
+
+      // Propriétés enrichies existantes
+      fluidity: 1 - score, // Plus de pauses = moins de fluidité
+      cognitiveLoad: score,
+      processingEfficiency: 1 - score,
+
+      // Nouvelles propriétés ajoutées dans variables.ts
+      pauseCount: ellipses + pauseTags + dashBreaks,
+      hesitationCount: hesitations,
+      speechRate: tokens / Math.max(1, ellipses + pauseTags + hesitations + 1), // approximation
+
+      // Marqueurs détaillés
+      markers: [
+        {
+          type: "ellipses",
+          timestamp: 0,
+          confidence: ellipses > 0 ? 0.9 : 0,
+          value: ellipses,
+        },
+        {
+          type: "pauseTags",
+          timestamp: 0,
+          confidence: pauseTags > 0 ? 0.95 : 0,
+          value: pauseTags,
+        },
+        {
+          type: "hesitations",
+          timestamp: 0,
+          confidence: hesitations > 0 ? 0.8 : 0,
+          value: hesitations,
+        },
+      ].filter((m) => m.confidence > 0), // Garder seulement les marqueurs détectés
+    };
+
+    // ✅ CORRECTION: Retourner CalculationResult complet avec toutes les propriétés requises
+    return {
+      prediction:
+        score > 0.7
+          ? "HIGH_COGNITIVE_LOAD"
+          : score > 0.3
+          ? "MEDIUM_COGNITIVE_LOAD"
+          : "LOW_COGNITIVE_LOAD",
+      confidence: Math.min(0.95, 0.5 + score * 0.4), // Confiance basée sur le score
+      processingTime,
       details,
       metadata: {
-        id: input.id,
-        clientTurn: input.clientTurn,
+        algorithmVersion: "0.1.0",
+        inputSignature: textRaw.slice(0, 20),
+        executionPath: ["tokenize", "count_markers", "normalize"],
+        warnings: tokens === 0 ? ["Input vide"] : undefined,
+        extra: {
+          counts: {
+            ellipses,
+            pauseTags,
+            hesitations,
+            dashBreaks,
+            doubleSpaces,
+            tokens,
+          },
+          weights: {
+            ellipses: 0.5,
+            pauseTags: 1.0,
+            hesitations: 0.4,
+            dashBreaks: 0.5,
+            doubleSpaces: 0.25,
+          },
+          raw,
+          normDenominator: denom,
+        },
       },
-    });
+    };
   }
 
   async batchCalculate(

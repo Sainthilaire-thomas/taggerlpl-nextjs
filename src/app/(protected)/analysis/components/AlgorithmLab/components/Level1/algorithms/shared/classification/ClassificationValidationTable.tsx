@@ -542,34 +542,35 @@ export default function ClassificationValidationTable<TTag extends string>({
                             </Paper>
                           </Box>
 
-                          {showEvidence && r.evidence?.length > 0 && (
-                            <Box>
-                              <Typography
-                                variant="body2"
-                                fontWeight="bold"
-                                gutterBottom
-                              >
-                                Preuves linguistiques :
-                              </Typography>
-                              <Stack
-                                direction="row"
-                                spacing={1}
-                                flexWrap="wrap"
-                                gap={1}
-                              >
-                                {r.evidence.map((e, i) => (
-                                  <Chip
-                                    key={i}
-                                    label={e}
-                                    size="small"
-                                    variant="outlined"
-                                    color="primary"
-                                  />
-                                ))}
-                              </Stack>
-                            </Box>
-                          )}
-
+                          {showEvidence &&
+                            r.evidence &&
+                            r.evidence.length > 0 && (
+                              <Box>
+                                <Typography
+                                  variant="body2"
+                                  fontWeight="bold"
+                                  gutterBottom
+                                >
+                                  Preuves linguistiques :
+                                </Typography>
+                                <Stack
+                                  direction="row"
+                                  spacing={1}
+                                  flexWrap="wrap"
+                                  gap={1}
+                                >
+                                  {(r.evidence || []).map((e, i) => (
+                                    <Chip
+                                      key={i}
+                                      label={e}
+                                      size="small"
+                                      variant="outlined"
+                                      color="primary"
+                                    />
+                                  ))}
+                                </Stack>
+                              </Box>
+                            )}
                           {/* Debug optionnel */}
                           {r.algorithmDetails && (
                             <Box>

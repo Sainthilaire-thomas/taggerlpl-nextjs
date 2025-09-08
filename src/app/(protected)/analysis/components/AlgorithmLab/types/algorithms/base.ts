@@ -1,48 +1,40 @@
 /**
- * @fileoverview Interface universelle AlgorithmLab
- * Remplace les wrappers multiples (wrapX, wrapY, wrapM2) par une interface unifiée
+ * @fileoverview Types de base des algorithmes AlgorithmLab
+ * - UniversalAlgorithm (contrat UI)
+ * - BaseAlgorithm (contrat bas niveau)
+ * - Descripteurs riches, métadonnées, paramètres
+ * - Helpers de résultat (isValid, createErrorResult, createSuccessResult)
  */
 
-import type { VariableTarget, VariableDetails } from "../core/variables";
+import type {
+  VariableTarget,
+  VariableDetails,
+  VariableX,
+} from "../core/variables";
 
 // ========================================================================
-// TYPES COMPLÉMENTAIRES (MINIMAUX)
+// CONTRAT UNIVERSEL (UI)
 // ========================================================================
 
-/**
- * Paramètres passés aux algorithmes (clé → valeur primitive).
- * Volontairement simple pour ne pas sur-spécifier.
- */
-export type AlgorithmParameters = Record<string, boolean | number | string>;
-
-// ========================================================================
-// INTERFACE UNIVERSELLE ALGORITHMLAB
-// ========================================================================
-
-/**
- * Interface universelle que TOUS les algorithmes AlgorithmLab doivent implémenter
- * Remplace wrapX, wrapY, wrapM2, etc.
- */
 export interface UniversalAlgorithm {
   // Métadonnées standardisées
   describe(): AlgorithmDescriptor;
   validateConfig(): boolean;
 
   // Exécution unifiée
-  classify?(input: string): Promise<UniversalResult>; // Rétrocompatibilité (optionnelle)
-  run(input: unknown): Promise<UniversalResult>; // Input typé
-  batchRun?(inputs: unknown[]): Promise<UniversalResult[]>; // Batch optionnel
+  classify?(input: string): Promise<UniversalResult>; // rétro-compat
+  run(input: unknown): Promise<UniversalResult>; // canal principal
+  batchRun?(inputs: unknown[]): Promise<UniversalResult[]>; // optionnel
 }
 
 // ========================================================================
-// DESCRIPTEUR D'ALGORITHME ALGORITHMLAB
+// PARAMÈTRES & TYPES D’ALGO
 // ========================================================================
 
-export type AlgorithmType = "rule-based" | "ml" | "llm" | "hybrid";
+export type AlgorithmType = "rule-based" | "ml" | "llm" | "hybrid" | "metric";
 
 export interface ParameterDescriptor {
-  label: string;
-  type: "boolean" | "number" | "string" | "select";
+  type: "number" | "string" | "boolean" | "select";
   required?: boolean;
   min?: number;
   max?: number;
@@ -52,6 +44,7 @@ export interface ParameterDescriptor {
 }
 
 export interface AlgorithmDescriptor {
+  // Propriétés existantes
   name: string; // ID unique (ex: "OpenAIXClassifier")
   displayName: string; // Nom affiché (ex: "OpenAI X Classifier")
   version: string; // Version semver (ex: "1.2.0")
@@ -62,42 +55,74 @@ export interface AlgorithmDescriptor {
   description?: string; // Description détaillée
   parameters?: Record<string, ParameterDescriptor>;
   examples?: Array<{ input: unknown; output?: unknown; note?: string }>; // Exemples d'utilisation
+
+  // ✅ NOUVELLES propriétés optionnelles pour M2ValidationInterface et autres composants
+  desc?: {
+    displayName?: string;
+    description?: string;
+  };
+  metrics?: {
+    differential?: number;
+    avgMs?: number;
+    accuracy?: number;
+    precision?: number;
+    recall?: number;
+    f1Score?: number;
+  };
+
+  // ✅ Propriétés alternatives pour différents formats
+  id?: string; // Identifiant alternatif
+  callId?: string | number;
+  startTime?: number;
+  endTime?: number;
+  input?: string;
+  speaker?: string;
+  predicted?: string;
+  goldStandard?: string;
+  confidence?: number;
+  correct?: boolean;
+  processingTime?: number;
 }
 
 export interface AlgorithmMetadata {
   key: string; // identifiant interne (ex: "m2-lexical")
   label?: string; // libellé humain
-  version?: string; // semver, ex: "1.0.0"
+  version?: string; // "1.0.0"
   description?: string;
-  target?: VariableTarget; // X|Y|M1|M2|M3 (si utile ici)
+  target?: VariableTarget; // X|Y|M1|M2|M3
   tags?: string[];
+
+  // champs tolérés par certains registres
+  id?: string;
+  displayName?: string;
 }
 
 export interface AlgorithmConfig {
-  [param: string]: unknown;
+  [key: string]: unknown;
 }
 
-/** Résultat d'une classification X (structure légère) */
-export interface XClassification {
-  target: string; // étiquette prédite
-  confidence?: number; // 0..1
-  details?: Record<string, any>; // infos spécifiques
+/** ⚠️ Utilisé ailleurs avec alias dans index.ts (BaseAlgorithmParameters) */
+export interface AlgorithmParameters {
+  [key: string]: boolean | number | string;
 }
 
-/** Contrat minimal d'un classifieur X */
-export interface XClassifier {
-  name: string;
-  classify(
-    input: string | Record<string, any>
-  ): Promise<XClassification> | XClassification;
-}
+// ========================================================================
+// CONTRAT BAS NIVEAU (implémentations concrètes)
+// ========================================================================
 
-/** Contrat minimal commun des algorithmes */
+/**
+ * - `key` et `meta` existent dans beaucoup de calculateurs : on les garde
+ * - `run()` retourne un résultat typé au niveau supérieur
+ */
 export interface BaseAlgorithm<I = unknown, R = unknown> {
   key: string;
   meta?: AlgorithmMetadata;
   run(input: I, config?: AlgorithmConfig): Promise<R> | R;
 }
+
+// ========================================================================
+// RÉSULTATS (pour anciennes API bas niveau — on alias dans index.ts)
+// ========================================================================
 
 export interface AlgorithmResult {
   ok: boolean;
@@ -106,15 +131,8 @@ export interface AlgorithmResult {
   details?: Record<string, unknown>;
 }
 
-export interface AlgorithmTestState {
-  startedAt: string; // ISO
-  finishedAt?: string; // ISO
-  status: "idle" | "running" | "done" | "error";
-  note?: string;
-}
-
 // ========================================================================
-// RÉSULTAT UNIVERSEL ALGORITHMLAB
+// UNIVERSAL RESULT (contrat UI)
 // ========================================================================
 
 export interface UniversalResult {
@@ -122,18 +140,33 @@ export interface UniversalResult {
   confidence: number; // Confiance [0-1]
   processingTime?: number; // Temps de traitement (ms)
   algorithmVersion?: string; // Version utilisée
+
+  // ✅ NOUVELLES propriétés optionnelles pour M2ValidationInterface
+  id?: string | number;
+  verbatim?: string;
+  goldStandard?: string;
+  correct?: boolean;
+
   metadata?: {
     inputSignature?: string; // Hash/signature de l'input
     inputType?: string; // Type d'input détecté
     executionPath?: string[]; // Étapes d'exécution
     warnings?: string[]; // Avertissements non-bloquants
     details?: VariableDetails; // Détails typés selon la variable (X/Y/M1/M2/M3)
+
+    // ✅ NOUVELLES propriétés enrichies pour M2
+    clientTurn?: string;
+    m2?: {
+      value?: string | number;
+      scale?: string;
+    };
+
     [k: string]: unknown; // ouverture optionnelle pour champs additionnels
   };
 }
 
 // ========================================================================
-// UTILITAIRES ALGORITHMLAB
+// UTILITAIRES
 // ========================================================================
 
 export function isValidAlgorithmResult(result: any): result is UniversalResult {
@@ -172,7 +205,7 @@ export function createSuccessResult(
 ): UniversalResult {
   return {
     prediction,
-    confidence: Math.max(0, Math.min(1, confidence)), // Clamp [0-1]
+    confidence: Math.max(0, Math.min(1, confidence)),
     processingTime,
     metadata: {
       details,
@@ -180,4 +213,14 @@ export function createSuccessResult(
       inputType: "string",
     },
   };
+}
+
+// ========================================================================
+// SPÉCIFIQUES X (rétro-compat sélecteur/classifier)
+// ========================================================================
+
+export type XClassification = VariableX;
+
+export interface XClassifier {
+  classify(verbatim: string): Promise<XClassification>;
 }

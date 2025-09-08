@@ -1,5 +1,9 @@
 // algorithms/level1/M1Algorithms/M1ActionVerbCounter.ts
-import type { BaseAlgorithm, AlgorithmMetadata } from "../shared/BaseAlgorithm";
+import type {
+  BaseAlgorithm,
+  AlgorithmMetadata,
+  AlgorithmType,
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 /**
  * M1 = densité de verbes d'action dans le tour conseiller (T0).
@@ -14,6 +18,7 @@ type Config = {
 };
 
 export class M1ActionVerbCounter implements BaseAlgorithm<string, any> {
+  key = "m1-action-verb-counter";
   private currentConfig: Config = {
     perTokens: 100,
     includeFutureProche: true,
@@ -84,16 +89,13 @@ export class M1ActionVerbCounter implements BaseAlgorithm<string, any> {
 
   describe(): AlgorithmMetadata {
     return {
-      name: "M1ActionVerbCounter",
-      displayName: "M1 — Densité de verbes d’action (T0)",
+      key: this.key, // ✅ Utiliser key au lieu de name
+      label: "M1 — Densité de verbes d'action (T0)", // ✅ displayName devient label
       version: "1.0.0",
-      type: "metric",
-      target: "M1",
       description:
-        "Compte les verbes d’action dans le tour conseiller et renvoie une densité normalisée.",
-      batchSupported: true,
-      apiRequirements: [],
-      capabilities: { needsPrevTurns: false, turns: 1 } as any,
+        "Compte les verbes d'action dans le tour conseiller et renvoie une densité normalisée.",
+      target: "M1",
+      tags: ["action", "verbs", "density"],
     };
   }
 
