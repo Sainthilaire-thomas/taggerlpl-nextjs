@@ -38,7 +38,11 @@ import {
   ProcessingModal,
 } from "@/app/(protected)/supervision/components";
 import type { SupervisionTurnTagged } from "@/app/(protected)/supervision/types";
-
+import type {
+  AlgorithmResult,
+  EnhancedAlgorithmResult,
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import { normalizeAlgorithmResult } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 interface EnhancedErrorAnalysisProps {
   results: AlgorithmResult[];
   algorithmName: string;
@@ -46,17 +50,16 @@ interface EnhancedErrorAnalysisProps {
   classifierMetadata?: any; // AJOUTER
 }
 
-// Interface étendue pour inclure les données contextuelles
-interface EnhancedAlgorithmResult extends AlgorithmResult {
-  filename?: string;
-  next_turn_verbatim?: string;
-  next_turn_tag?: string;
-  hasAudio?: boolean;
-  hasTranscript?: boolean;
+interface EnhancedErrorAnalysisProps {
+  results: AlgorithmResult[];
+  algorithmName: string;
+  classifierType?: string;
+  classifierMetadata?: any;
 }
 
 // Fonction utilitaire pour le formatage du temps
-const formatTime = (seconds: number): string => {
+const formatTime = (seconds?: number): string => {
+  if (typeof seconds !== "number" || Number.isNaN(seconds)) return "--:--.--";
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   const ms = Math.floor((seconds % 1) * 100);
@@ -394,22 +397,34 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
 
   // ✅ CORRECTION : Gestionnaire de clic optimisé avec gestion d'erreurs
   const handleRowClick = useCallback(
-    async (error: EnhancedAlgorithmResult) => {
+    async (error: EnhancedAlgorithmResult): Promise<void> => {
       setIsLoading(true);
       try {
+        // Garde-fous stricts pour satisfaire TS et éviter les surprises runtime
+        if (error.callId === undefined || error.startTime === undefined) {
+          alert("Données incomplètes (callId ou startTime manquant).");
+          return;
+        }
+
+        const start = Number(error.startTime);
+        if (Number.isNaN(start)) {
+          alert("Timestamp startTime invalide.");
+          return;
+        }
+
         // ✅ Requête sécurisée avec vérification d'existence
         const { data: turnData, error: turnError } = await supabase
           .from("turntagged")
           .select(
             `
-            *,
-            lpltag:tag (color),
-            call:call_id (filename, filepath, audiourl)
-          `
+          *,
+          lpltag:tag (color),
+          call:call_id (filename, filepath, audiourl)
+        `
           )
           .eq("call_id", error.callId)
-          .gte("start_time", error.startTime - 0.1) // Tolérance pour les timestamps
-          .lte("start_time", error.startTime + 0.1)
+          .gte("start_time", start - 0.1) // Tolérance pour les timestamps
+          .lte("start_time", start + 0.1)
           .limit(1)
           .single();
 
@@ -421,19 +436,21 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
             .from("turntagged")
             .select(
               `
-              *,
-              lpltag:tag (color)
-            `
+            *,
+            lpltag:tag (color)
+          `
             )
             .eq("call_id", error.callId)
-            .gte("start_time", error.startTime - 1)
-            .lte("start_time", error.startTime + 1)
+            .gte("start_time", start - 1)
+            .lte("start_time", start + 1)
             .limit(1)
             .maybeSingle();
 
           if (fallbackError || !fallbackData) {
             throw new Error(
-              `Turn non trouvé pour call_id: ${error.callId}, start_time: ${error.startTime}`
+              `Turn non trouvé pour call_id: ${String(
+                error.callId
+              )}, start_time: ${String(error.startTime)}`
             );
           }
 
@@ -447,7 +464,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
           const supervisionRow: SupervisionTurnTagged = {
             ...fallbackData,
             color: fallbackData.lpltag?.color || "#1976d2",
-            filename: callFallback?.filename || `call_${error.callId}`,
+            filename: callFallback?.filename || `call_${String(error.callId)}`,
             hasAudio: !!(callFallback?.filepath || callFallback?.audiourl),
             hasTranscript: true,
           };
@@ -461,7 +478,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
         const supervisionRow: SupervisionTurnTagged = {
           ...turnData,
           color: turnData.lpltag?.color || "#1976d2",
-          filename: turnData.call?.filename || `call_${error.callId}`,
+          filename: turnData.call?.filename || `call_${String(error.callId)}`,
           hasAudio: !!(turnData.call?.filepath || turnData.call?.audiourl),
           hasTranscript: true,
         };
@@ -486,10 +503,10 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
             setTaggingAudioUrl(turnData.call?.audiourl || "");
           }
 
-          // Préparer pour le tagging
+          // Préparer pour le tagging (APIs qui attendent des strings)
           try {
             selectTaggingCall({
-              callid: error.callId,
+              callid: String(error.callId),
               audiourl: turnData.call?.audiourl || "",
               filename: turnData.call?.filename || "",
               is_tagging_call: true,
@@ -497,8 +514,8 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
             });
 
             await Promise.all([
-              fetchTaggingTranscription(error.callId),
-              fetchTaggedTurns(error.callId),
+              fetchTaggingTranscription(String(error.callId)),
+              fetchTaggedTurns(String(error.callId)),
             ]);
           } catch (taggingError) {
             console.error("Erreur préparation tagging:", taggingError);
@@ -600,10 +617,10 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
                   >
                     <TableCell>
                       <TagChain
-                        mainTag={error.goldStandard}
-                        nextTag={error.next_turn_tag}
-                        predicted={error.predicted}
-                        goldStandard={error.goldStandard}
+                        mainTag={error.goldStandard ?? ""} // 👈 repli string
+                        nextTag={error.next_turn_tag ?? undefined}
+                        predicted={error.predicted ?? undefined}
+                        goldStandard={error.goldStandard ?? undefined}
                       />
                     </TableCell>
 
@@ -626,11 +643,11 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
 
                     <TableCell>
                       <VerbatimDisplay
-                        verbatim={error.input}
-                        nextVerbatim={error.next_turn_verbatim}
-                        speaker={error.speaker}
+                        verbatim={error.input ?? error.verbatim ?? ""} // 👈 repli string
+                        nextVerbatim={error.next_turn_verbatim ?? undefined}
+                        speaker={error.speaker ?? ""} // 👈 repli string
                         isPredicted={true}
-                        confidence={error.confidence}
+                        confidence={error.confidence ?? 0} // 👈 repli number
                       />
                     </TableCell>
 
@@ -650,7 +667,10 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
                         color="primary"
                         display="block"
                       >
-                        {Math.round(error.endTime - error.startTime)}s
+                        {typeof error.endTime === "number" &&
+                        typeof error.startTime === "number"
+                          ? `${Math.round(error.endTime - error.startTime)}s`
+                          : "—"}
                       </Typography>
                     </TableCell>
 
@@ -681,7 +701,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
 
                     <TableCell>
                       <ConfidenceScore
-                        confidence={error.confidence}
+                        confidence={error.confidence ?? 0}
                         isCorrect={false}
                       />
                     </TableCell>

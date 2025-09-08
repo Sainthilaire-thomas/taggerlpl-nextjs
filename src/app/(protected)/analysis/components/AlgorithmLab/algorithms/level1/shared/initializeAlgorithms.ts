@@ -75,7 +75,7 @@ export function initializeAlgorithms(): void {
     // ===== M1 (compteurs / métriques) =====
     algorithmRegistry.register(
       "M1ActionVerbCounter",
-      new M1ActionVerbCounter()
+      new M1ActionVerbCounter() as any
     );
 
     // Log (optionnel)

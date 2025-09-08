@@ -89,13 +89,16 @@ export class M1ActionVerbCounter implements BaseAlgorithm<string, any> {
 
   describe(): AlgorithmMetadata {
     return {
-      key: this.key, // ✅ Utiliser key au lieu de name
-      label: "M1 — Densité de verbes d'action (T0)", // ✅ displayName devient label
+      key: this.key,
+      label: "M1 — Densité de verbes d'action (T0)",
       version: "1.0.0",
       description:
         "Compte les verbes d'action dans le tour conseiller et renvoie une densité normalisée.",
       target: "M1",
       tags: ["action", "verbs", "density"],
+      // Propriétés additionnelles pour compatibilité
+      id: this.key,
+      displayName: "M1 — Densité de verbes d'action (T0)",
     };
   }
 
@@ -131,7 +134,7 @@ export class M1ActionVerbCounter implements BaseAlgorithm<string, any> {
   }
 
   private guessLemma(token: string): string {
-    // ultra-simple: garde l’infinitif si on le voit, sinon rapprochements communs
+    // ultra-simple: garde l'infinitif si on le voit, sinon rapprochements communs
     // (on couvre beaucoup de formes 1ps/2ps/3ps/pp futur simple des -er/-ir/-re)
     const t = token;
     if (/^(?:se|s')?([a-z]+)er$/.test(t)) return t.replace(/^s'|^se/, "");

@@ -13,7 +13,7 @@
       "AlgorithmMetadata",
       "M1Input",
       "CalculationResult",
-      "CalculatorMetadata",
+      "CalculationMetadata",
       "M1Details",
       "M2Input",
       "M2Details",
@@ -184,8 +184,8 @@
               "local": "CalculationResult"
             },
             {
-              "imported": "CalculatorMetadata",
-              "local": "CalculatorMetadata"
+              "imported": "CalculationMetadata",
+              "local": "CalculationMetadata"
             }
           ]
         },
@@ -221,8 +221,8 @@
               "local": "CalculationResult"
             },
             {
-              "imported": "CalculatorMetadata",
-              "local": "CalculatorMetadata"
+              "imported": "CalculationMetadata",
+              "local": "CalculationMetadata"
             }
           ]
         }
@@ -244,8 +244,8 @@
               "local": "CalculationResult"
             },
             {
-              "imported": "CalculatorMetadata",
-              "local": "CalculatorMetadata"
+              "imported": "CalculationMetadata",
+              "local": "CalculationMetadata"
             }
           ]
         }
@@ -289,8 +289,8 @@
               "local": "CalculationResult"
             },
             {
-              "imported": "CalculatorMetadata",
-              "local": "CalculatorMetadata"
+              "imported": "CalculationMetadata",
+              "local": "CalculationMetadata"
             }
           ]
         }
@@ -308,8 +308,8 @@
               "local": "CalculationResult"
             },
             {
-              "imported": "CalculatorMetadata",
-              "local": "CalculatorMetadata"
+              "imported": "CalculationMetadata",
+              "local": "CalculationMetadata"
             }
           ]
         },
@@ -345,8 +345,8 @@
               "local": "CalculationResult"
             },
             {
-              "imported": "CalculatorMetadata",
-              "local": "CalculatorMetadata"
+              "imported": "CalculationMetadata",
+              "local": "CalculationMetadata"
             }
           ]
         }
@@ -805,8 +805,8 @@
               "local": "CalculationResult"
             },
             {
-              "imported": "CalculatorMetadata",
-              "local": "CalculatorMetadata"
+              "imported": "CalculationMetadata",
+              "local": "CalculationMetadata"
             }
           ]
         },
@@ -1078,8 +1078,8 @@
                 "local": "CalculationResult"
               },
               {
-                "imported": "CalculatorMetadata",
-                "local": "CalculatorMetadata"
+                "imported": "CalculationMetadata",
+                "local": "CalculationMetadata"
               }
             ]
           },
@@ -1118,8 +1118,8 @@
                 "local": "CalculationResult"
               },
               {
-                "imported": "CalculatorMetadata",
-                "local": "CalculatorMetadata"
+                "imported": "CalculationMetadata",
+                "local": "CalculationMetadata"
               }
             ]
           }
@@ -1144,8 +1144,8 @@
                 "local": "CalculationResult"
               },
               {
-                "imported": "CalculatorMetadata",
-                "local": "CalculatorMetadata"
+                "imported": "CalculationMetadata",
+                "local": "CalculationMetadata"
               }
             ]
           }
@@ -1170,8 +1170,8 @@
                 "local": "CalculationResult"
               },
               {
-                "imported": "CalculatorMetadata",
-                "local": "CalculatorMetadata"
+                "imported": "CalculationMetadata",
+                "local": "CalculationMetadata"
               }
             ]
           }
@@ -1192,8 +1192,8 @@
                 "local": "CalculationResult"
               },
               {
-                "imported": "CalculatorMetadata",
-                "local": "CalculatorMetadata"
+                "imported": "CalculationMetadata",
+                "local": "CalculationMetadata"
               }
             ]
           },
@@ -1232,8 +1232,8 @@
                 "local": "CalculationResult"
               },
               {
-                "imported": "CalculatorMetadata",
-                "local": "CalculatorMetadata"
+                "imported": "CalculationMetadata",
+                "local": "CalculationMetadata"
               }
             ]
           }
@@ -1331,8 +1331,8 @@
                 "local": "CalculationResult"
               },
               {
-                "imported": "CalculatorMetadata",
-                "local": "CalculatorMetadata"
+                "imported": "CalculationMetadata",
+                "local": "CalculationMetadata"
               }
             ]
           },
@@ -1381,13 +1381,7 @@
     "transform_plan": []
   },
   "target_structure_status": {
-    "directories_present": [
-      "algorithms",
-      "core",
-      "legacy",
-      "ui",
-      "utils"
-    ],
+    "directories_present": ["algorithms", "core", "legacy", "ui", "utils"],
     "files_present": [
       "index.ts",
       "Level0Types.ts",

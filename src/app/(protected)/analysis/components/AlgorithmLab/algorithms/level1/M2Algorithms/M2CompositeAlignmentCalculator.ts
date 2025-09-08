@@ -4,7 +4,7 @@ import type {
   M2Input,
   M2Details,
   CalculationResult,
-  CalculatorMetadata,
+  CalculationMetadata,
 } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 import M2LexicalAlignmentCalculator from "./M2LexicalAlignmentCalculator";
@@ -33,13 +33,32 @@ export default class M2CompositeAlignmentCalculator extends BaseM2Calculator {
     };
   }
 
-  getMetadata(): CalculatorMetadata {
+  // ✅ CORRECTION : Toutes les propriétés obligatoires de CalculationMetadata
+  getMetadata(): CalculationMetadata {
     return {
+      // Propriétés obligatoires
+      algorithmVersion: "1.0.0",
+      inputSignature: "m2-composite-input",
+      executionPath: ["lexical", "semantic", "fusion"],
+      warnings: [],
+
+      // Propriétés optionnelles existantes
       id: "m2-composite-alignment",
       label: "M2 Composite Alignment Calculator",
       target: "M2",
       algorithmKind: "hybrid",
       version: "1.0.0",
+      description:
+        "Alignement composite combinant scores lexical et sémantique",
+
+      // Configuration spécifique
+      parameters: {
+        lexicalWeight: this.config.lexicalWeight,
+        semanticWeight: this.config.semanticWeight,
+        threshold: this.config.threshold,
+        partialThreshold: this.config.partialThreshold,
+      },
+      tags: ["m2", "alignment", "composite", "fusion"],
     };
   }
 
@@ -106,9 +125,20 @@ export default class M2CompositeAlignmentCalculator extends BaseM2Calculator {
       details,
       metadata: {
         algorithmVersion: "1.0.0",
-        inputSignature: `${input.t0?.substring(0, 20) || "unknown"}...`,
+        inputSignature: `${
+          input.conseillerTurn?.substring(0, 20) ||
+          input.turnVerbatim?.substring(0, 20) ||
+          "unknown"
+        }...`,
         executionPath: ["lexical", "semantic", "fusion"],
         warnings: [],
+
+        // ✅ Métadonnées enrichies spécifiques M2
+        clientTurn: input.clientTurn,
+        m2: {
+          value: alignmentValue,
+          scale: "composite",
+        },
       },
     };
   }

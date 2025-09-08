@@ -2,7 +2,7 @@
 import type {
   M3Input,
   CalculationResult,
-  CalculatorMetadata,
+  CalculationMetadata,
 } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 import type { M3Details } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
@@ -15,16 +15,16 @@ import type { M3Details } from "@/app/(protected)/analysis/components/AlgorithmL
  * Renvoie un score [0,1] ≈ charge cognitive liée aux pauses/hésitations.
  */
 export class PausesM3Calculator {
-  getMetadata(): CalculatorMetadata {
+  getMetadata(): CalculationMetadata {
     return {
       id: "m3-pauses-basic",
-      // ✅ CORRECTION: Utiliser 'label' au lieu de 'name' (CalculatorMetadata utilise 'label')
+      // ✅ CORRECTION: Utiliser 'label' au lieu de 'name' (CalculationMetadata utilise 'label')
       label: "M3 Pauses (Heuristique)",
-      // ✅ CORRECTION: Ajouter les propriétés requises par CalculatorMetadata
+      // ✅ CORRECTION: Ajouter les propriétés requises par CalculationMetadata
       target: "M3",
       algorithmKind: "rule-based",
       version: "0.1.0",
-      // ✅ CORRECTION: 'variable' n'existe pas dans CalculatorMetadata, 'description' non plus
+      // ✅ CORRECTION: 'variable' n'existe pas dans CalculationMetadata, 'description' non plus
       tags: ["pauses", "hesitations", "cognitive-load"],
     };
   }

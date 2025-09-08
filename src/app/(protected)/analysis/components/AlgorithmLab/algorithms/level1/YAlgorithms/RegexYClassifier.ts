@@ -1,6 +1,9 @@
 // algorithms/level1/YAlgorithms/RegexYClassifier.ts
 import type { BaseAlgorithm, AlgorithmMetadata } from "../shared/BaseAlgorithm";
-import type { VariableY } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import type {
+  VariableY,
+  YTag,
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 export interface YClassification {
   prediction: VariableY | "ERREUR";
@@ -58,15 +61,15 @@ export class RegexYClassifier
     return (verbatim || "")
       .replace(/\[(?:TC|AP)\]/gi, " ")
       .replace(/\(\.\.\.\)/g, " ")
-      .replace(/[’]/g, "'")
+      .replace(/[']/g, "'")
       .replace(/\s+/g, " ")
       .trim()
       .toLowerCase();
   }
 
-  // ---------------- Dictionnaires
+  // ✅ CORRECTION : Dictionnaires complets avec tous les YTag
   private dictionnaires: Record<
-    VariableY,
+    YTag, // Utiliser YTag au lieu de VariableY
     { expressions: string[]; mots: string[] }
   > = {
     CLIENT_POSITIF: {
@@ -161,6 +164,64 @@ export class RegexYClassifier
         "besoin",
       ],
     },
+    // ✅ AJOUT : Tags manquants avec dictionnaires spécialisés
+    CLIENT_QUESTION: {
+      expressions: [
+        "comment ça",
+        "c'est quoi",
+        "qu'est-ce que",
+        "comment faire",
+        "j'aimerais savoir",
+        "pouvez-vous m'expliquer",
+        "est-ce que",
+        "comment ça marche",
+      ],
+      mots: [
+        "comment",
+        "pourquoi",
+        "quoi",
+        "qui",
+        "quand",
+        "où",
+        "combien",
+        "quel",
+        "quelle",
+        "question",
+        "demande",
+        "expliquer",
+        "préciser",
+        "savoir",
+      ],
+    },
+    CLIENT_SILENCE: {
+      expressions: [
+        "...",
+        "(silence)",
+        "[silence]",
+        "euh...",
+        "heu...",
+        "ben...",
+      ],
+      mots: ["euh", "heu", "ben", "hmm", "ah", "oh", "silence", "pause"],
+    },
+    AUTRE_Y: {
+      expressions: [
+        "je dois raccrocher",
+        "ce n'est pas le sujet",
+        "autre chose",
+        "pas de rapport",
+      ],
+      mots: [
+        "autre",
+        "différent",
+        "ailleurs",
+        "raccrocher",
+        "partir",
+        "finir",
+        "terminer",
+        "changer",
+      ],
+    },
   };
 
   // ---------------- API BaseAlgorithm
@@ -177,7 +238,8 @@ export class RegexYClassifier
         };
       }
 
-      const scores: Record<VariableY, number> = {
+      // ✅ CORRECTION : Scores pour tous les YTag
+      const scores: Record<YTag, number> = {
         CLIENT_POSITIF: this.calculateScore(
           text,
           this.dictionnaires.CLIENT_POSITIF
@@ -190,6 +252,15 @@ export class RegexYClassifier
           text,
           this.dictionnaires.CLIENT_NEUTRE
         ),
+        CLIENT_QUESTION: this.calculateScore(
+          text,
+          this.dictionnaires.CLIENT_QUESTION
+        ),
+        CLIENT_SILENCE: this.calculateScore(
+          text,
+          this.dictionnaires.CLIENT_SILENCE
+        ),
+        AUTRE_Y: this.calculateScore(text, this.dictionnaires.AUTRE_Y),
       };
 
       const { prediction, confidence, matched } = this.pickPrediction(
@@ -257,37 +328,69 @@ export class RegexYClassifier
     return totalWeight > 0 ? score / totalWeight : 0;
   }
 
+  // ✅ CORRECTION : Logique de prédiction étendue
   private pickPrediction(
     text: string,
-    scores: Record<VariableY, number>
+    scores: Record<YTag, number>
   ): {
-    prediction: VariableY;
+    prediction: YTag;
     confidence: number;
-    matched: Record<VariableY, string[]>;
+    matched: Record<YTag, string[]>;
   } {
-    // Décision par seuils (priorité NÉGATIF > POSITIF > NEUTRE)
-    let prediction: VariableY = "CLIENT_NEUTRE";
+    // Détection spéciale pour SILENCE (patterns très spécifiques)
+    if (scores.CLIENT_SILENCE > 0.5) {
+      return {
+        prediction: "CLIENT_SILENCE",
+        confidence: scores.CLIENT_SILENCE,
+        matched: this.getAllMatches(text),
+      };
+    }
+
+    // Détection spéciale pour QUESTION (patterns interrogatifs)
+    if (scores.CLIENT_QUESTION > 0.4) {
+      return {
+        prediction: "CLIENT_QUESTION",
+        confidence: scores.CLIENT_QUESTION,
+        matched: this.getAllMatches(text),
+      };
+    }
+
+    // Logique originale (priorité NÉGATIF > POSITIF > NEUTRE)
+    let prediction: YTag = "CLIENT_NEUTRE";
     if (scores.CLIENT_NEGATIF >= this.config.seuilNegatif) {
       prediction = "CLIENT_NEGATIF";
     } else if (scores.CLIENT_POSITIF >= this.config.seuilPositif) {
       prediction = "CLIENT_POSITIF";
+    } else if (scores.AUTRE_Y > 0.3) {
+      prediction = "AUTRE_Y";
     } else {
       prediction = "CLIENT_NEUTRE";
     }
 
-    const confidence = Math.max(
-      scores.CLIENT_POSITIF,
-      scores.CLIENT_NEGATIF,
-      scores.CLIENT_NEUTRE
-    );
+    const confidence = Math.max(...Object.values(scores));
 
-    const matched: Record<VariableY, string[]> = {
+    return {
+      prediction,
+      confidence,
+      matched: this.getAllMatches(text),
+    };
+  }
+
+  // ✅ CORRECTION : Matches pour tous les YTag
+  private getAllMatches(text: string): Record<YTag, string[]> {
+    const matched: Record<YTag, string[]> = {
       CLIENT_POSITIF: this.getMatches(text, this.dictionnaires.CLIENT_POSITIF),
       CLIENT_NEGATIF: this.getMatches(text, this.dictionnaires.CLIENT_NEGATIF),
       CLIENT_NEUTRE: this.getMatches(text, this.dictionnaires.CLIENT_NEUTRE),
+      CLIENT_QUESTION: this.getMatches(
+        text,
+        this.dictionnaires.CLIENT_QUESTION
+      ),
+      CLIENT_SILENCE: this.getMatches(text, this.dictionnaires.CLIENT_SILENCE),
+      AUTRE_Y: this.getMatches(text, this.dictionnaires.AUTRE_Y),
     };
 
-    return { prediction, confidence, matched };
+    return matched;
   }
 
   private getMatches(

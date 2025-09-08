@@ -15,7 +15,7 @@ import { ConfusionMatrix } from "./individual/ConfusionMatrix";
 import { EnhancedErrorAnalysis } from "./individual/EnhancedErrorAnalysis";
 import { ParameterOptimization } from "./individual/ParameterOptimization";
 import { TechnicalBenchmark } from "./TechnicalBenchmark";
-
+import type { ValidationMetrics } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 // (optionnel) métriques si tu veux réutiliser la matrice pour X/Y
 // import { useXAlgorithmTesting } from "../hooks/level1/useXAlgorithmTesting";
 
@@ -38,6 +38,14 @@ export const Level1Interface: React.FC = () => {
   const [variable, setVariable] = useState<Variable>("X"); // sélecteur de variable
 
   const showXYOnly = variable === "X" || variable === "Y";
+  const EMPTY_VALIDATION_METRICS: ValidationMetrics = {
+    // selon ton type exact, ces clés existent (le message d’erreur les cite)
+    confusionMatrix: { labels: [], matrix: [] } as any,
+    classMetrics: {}, // ex: { label: { precision, recall, f1, support } }
+    totalSamples: 0,
+    correctPredictions: 0,
+    executionTime: 0, // en ms
+  } as ValidationMetrics;
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -90,7 +98,7 @@ export const Level1Interface: React.FC = () => {
       {/* 1) Matrice Confusion (pertinent pour X/Y) */}
       <TabPanel value={mainTab} index={1}>
         {showXYOnly ? (
-          <ConfusionMatrix /* metrics={...} */ />
+          <ConfusionMatrix metrics={EMPTY_VALIDATION_METRICS} />
         ) : (
           <Typography color="text.secondary">
             La matrice de confusion n’est pas applicable aux calculateurs

@@ -2,12 +2,12 @@ import type { M3Details } from "@/app/(protected)/analysis/components/AlgorithmL
 import type {
   M3Input,
   CalculationResult,
-  CalculatorMetadata,
+  CalculationMetadata,
 } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
 export abstract class BaseM3Calculator {
   abstract calculate(input: M3Input): Promise<CalculationResult<M3Details>>;
-  abstract getMetadata(): CalculatorMetadata;
+  abstract getMetadata(): CalculationMetadata;
   abstract validateConfig(): boolean;
 
   async batchCalculate?(

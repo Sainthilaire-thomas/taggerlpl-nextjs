@@ -40,6 +40,8 @@ export interface M1Input {
 export interface M2Input {
   conseillerTurn?: string;
   clientTurn?: string;
+  t0?: string; // tour conseiller
+  t1?: string; // tour client (suivant)
 
   // Propriétés alternatives pour compatibilité
   turnVerbatim?: string;
@@ -81,11 +83,22 @@ export interface CalculationMetadata {
   executionPath: string[];
   warnings?: string[];
 
-  // ✅ NOUVELLES propriétés optionnelles
-  verbatim?: string;
-  clientTurn?: string;
+  // ✅ CORRECTION : Propriétés manquantes pour M1/M2/M3
+  id?: string;
+  label?: string;
+  target?: VariableTarget; // "M1" | "M2" | "M3"
+  algorithmKind?: string;
+  version?: string;
+  description?: string;
 
-  extra?: Record<string, unknown>;
+  // ✅ CORRECTION : Pour RegexM1Calculator et PauseM3Calculator
+  tags?: string[];
+
+  // ✅ CORRECTION : Pour M2SemanticAlignmentCalculator
+  parameters?: Record<string, any>;
+
+  // Extension pour autres propriétés futures
+  [key: string]: unknown;
 }
 
 export interface CalculationResult<TDetails = VariableDetails> {

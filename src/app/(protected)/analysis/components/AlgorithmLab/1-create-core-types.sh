@@ -291,7 +291,7 @@ export type M3CalculationResult = CalculationResult<import('./variables').M3Deta
 // MÉTADONNÉES DES CALCULATEURS ALGORITHMLAB
 // ========================================================================
 
-export interface CalculatorMetadata {
+export interface CalculationMetadata {
   name: string;
   version: string;
   target: VariableTarget;
@@ -574,7 +574,7 @@ export type {
 export type {
   CalculationInput,
   CalculationResult,
-  CalculatorMetadata,
+  CalculationMetadata,
   XInput,
   YInput,
   M1Input,

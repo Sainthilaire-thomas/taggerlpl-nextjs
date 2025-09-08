@@ -57,7 +57,7 @@
         "M2Input",
         "M3Input",
         "CalculationResult",
-        "CalculatorMetadata"
+        "CalculationMetadata"
       ]
     },
     "core_validation": {
@@ -170,9 +170,7 @@
       "batch": 1,
       "name": "ThesisVariables - Priorité critique",
       "description": "20 imports ThesisVariables",
-      "patterns": [
-        "ThesisVariables"
-      ],
+      "patterns": ["ThesisVariables"],
       "estimated_files": 10,
       "priority": "CRITICAL"
     },
@@ -180,10 +178,7 @@
       "batch": 2,
       "name": "Level1Types - Priorité haute",
       "description": "11 imports Level1Types",
-      "patterns": [
-        "Level1Types",
-        "Level0Types"
-      ],
+      "patterns": ["Level1Types", "Level0Types"],
       "estimated_files": 6,
       "priority": "HIGH"
     },
@@ -191,9 +186,7 @@
       "batch": 3,
       "name": "Imports directs types/ - Priorité normale",
       "description": "110 imports directs",
-      "patterns": [
-        "types/"
-      ],
+      "patterns": ["types/"],
       "estimated_files": 28,
       "priority": "NORMAL"
     },
@@ -201,10 +194,7 @@
       "batch": 4,
       "name": "ValidationTypes et SharedTypes - Priorité faible",
       "description": "3 imports validation/shared",
-      "patterns": [
-        "ValidationTypes",
-        "SharedTypes"
-      ],
+      "patterns": ["ValidationTypes", "SharedTypes"],
       "estimated_files": 3,
       "priority": "LOW"
     }

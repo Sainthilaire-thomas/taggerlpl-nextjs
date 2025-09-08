@@ -36,6 +36,8 @@
     "out",
     // Exclusions des anciens répertoires
     "src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/individual/**/*",
-    "src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/comparison/**/*"
+    "src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/comparison/**/*",
+    "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/clientclassifiers/RegexClientClassifier.ts",
+    "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/conseillerclassifiers/SpacyConseillerClassifier.ts"
   ]
 }

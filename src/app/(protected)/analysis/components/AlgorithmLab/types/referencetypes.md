@@ -5,6 +5,7 @@
 > Code-Version: unknown
 
 ## Contenu
+
 - [index.ts](#indexts)
 - [algorithms/](#algorithms)
 - [core/](#core)
@@ -15,9 +16,11 @@
 ## index.ts
 
 ### Exports détectés
+
 - **Re-exports `*`** depuis: ./core, ./algorithms, ./ui, ./utils
 
 ### Contenu
+
 ```ts
 // exports par domaine
 export * from "./core";
@@ -31,12 +34,12 @@ export type {
   KappaMetrics,
   DisagreementCase,
 } from "./core";
-
 ```
 
 ## algorithms
 
 ### Arborescence
+
 ```text
 algorithms/
 - base.ts
@@ -236,7 +239,6 @@ export function createSuccessResult(
     },
   };
 }
-
 ```
 
 #### `AlgorithmLab/types/algorithms/index.ts`
@@ -255,27 +257,23 @@ export function createSuccessResult(
  */
 
 // Interface universelle et types de base
-export * from './base';
+export * from "./base";
 
 // Adaptateur universel
-export * from './universal-adapter';
+export * from "./universal-adapter";
 
 // Exports groupés pour faciliter l'import dans AlgorithmLab
 export type {
   UniversalAlgorithm,
   AlgorithmDescriptor,
   UniversalResult,
-  AlgorithmType
-} from './base';
+  AlgorithmType,
+} from "./base";
 
-export type {
-  BaseCalculator,
-  AdapterConfig
-} from './universal-adapter';
+export type { BaseCalculator, AdapterConfig } from "./universal-adapter";
 
 // Export de la fonction principale
-export { createUniversalAlgorithm } from './universal-adapter';
-
+export { createUniversalAlgorithm } from "./universal-adapter";
 ```
 
 #### `AlgorithmLab/types/algorithms/universal-adapter.ts`
@@ -673,12 +671,12 @@ export function createM2Algorithm(
     requiresContext: true,
   });
 }
-
 ```
 
 ## core
 
 ### Arborescence
+
 ```text
 core/
 - calculations.ts
@@ -692,7 +690,7 @@ core/
 
 **Exports**
 
-- **Déclarations**: XInput, YInput, M1Input, M2Input, M3Input, CalculationInput, CalculationResult, XCalculationResult, YCalculationResult, M1CalculationResult, M2CalculationResult, M3CalculationResult, CalculatorMetadata, validateCalculationInput, createEmptyResult
+- **Déclarations**: XInput, YInput, M1Input, M2Input, M3Input, CalculationInput, CalculationResult, XCalculationResult, YCalculationResult, M1CalculationResult, M2CalculationResult, M3CalculationResult, CalculationMetadata, validateCalculationInput, createEmptyResult
 
 **Contenu**
 
@@ -702,7 +700,7 @@ core/
  * Types pour les inputs, outputs et métadonnées des calculateurs AlgorithmLab
  */
 
-import { VariableTarget, VariableDetails } from './variables';
+import { VariableTarget, VariableDetails } from "./variables";
 
 // ========================================================================
 // INPUTS POUR LES CALCULS ALGORITHMLAB
@@ -743,7 +741,7 @@ export interface M2Input {
   conseillerTurn: string;
   clientTurn: string;
   context?: {
-    previousTurns?: Array<{speaker: string, text: string}>;
+    previousTurns?: Array<{ speaker: string; text: string }>;
     conversationPhase?: "OPENING" | "DEVELOPMENT" | "RESOLUTION" | "CLOSING";
   };
 }
@@ -771,9 +769,9 @@ export interface CalculationResult<TDetails = VariableDetails> {
   prediction: string;
   confidence: number;
   processingTime: number;
-  
+
   details: TDetails;
-  
+
   metadata?: {
     algorithmVersion: string;
     inputSignature: string;
@@ -783,42 +781,55 @@ export interface CalculationResult<TDetails = VariableDetails> {
 }
 
 // Résultats typés spécifiques AlgorithmLab
-export type XCalculationResult = CalculationResult<import('./variables').XDetails>;
-export type YCalculationResult = CalculationResult<import('./variables').YDetails>;
-export type M1CalculationResult = CalculationResult<import('./variables').M1Details>;
-export type M2CalculationResult = CalculationResult<import('./variables').M2Details>;
-export type M3CalculationResult = CalculationResult<import('./variables').M3Details>;
+export type XCalculationResult = CalculationResult<
+  import("./variables").XDetails
+>;
+export type YCalculationResult = CalculationResult<
+  import("./variables").YDetails
+>;
+export type M1CalculationResult = CalculationResult<
+  import("./variables").M1Details
+>;
+export type M2CalculationResult = CalculationResult<
+  import("./variables").M2Details
+>;
+export type M3CalculationResult = CalculationResult<
+  import("./variables").M3Details
+>;
 
 // ========================================================================
 // MÉTADONNÉES DES CALCULATEURS ALGORITHMLAB
 // ========================================================================
 
-export interface CalculatorMetadata {
+export interface CalculationMetadata {
   name: string;
   version: string;
   target: VariableTarget;
   description: string;
-  
+
   capabilities: {
     batchProcessing: boolean;
     contextAware: boolean;
     realTime: boolean;
     requiresTraining: boolean;
   };
-  
+
   performance: {
     averageProcessingTime: number; // ms
     accuracy: number; // 0-1
     precision: number; // 0-1
     recall: number; // 0-1
   };
-  
-  parameters?: Record<string, {
-    type: string;
-    default: any;
-    description: string;
-    required: boolean;
-  }>;
+
+  parameters?: Record<
+    string,
+    {
+      type: string;
+      default: any;
+      description: string;
+      required: boolean;
+    }
+  >;
 }
 
 // ========================================================================
@@ -826,32 +837,42 @@ export interface CalculatorMetadata {
 // ========================================================================
 
 export function validateCalculationInput(
-  input: unknown, 
+  input: unknown,
   target: VariableTarget
 ): input is CalculationInput {
-  if (!input || typeof input !== 'object') return false;
-  
+  if (!input || typeof input !== "object") return false;
+
   const obj = input as Record<string, any>;
-  
+
   switch (target) {
-    case 'X':
-      return typeof obj.verbatim === 'string';
-    case 'Y':
-      return typeof obj.verbatim === 'string' && typeof obj.previousConseillerTurn === 'string';
-    case 'M1':
-      return typeof obj.verbatim === 'string';
-    case 'M2':
-      return typeof obj.conseillerTurn === 'string' && typeof obj.clientTurn === 'string';
-    case 'M3':
-      return obj.conversationPair && 
-             typeof obj.conversationPair.conseiller === 'string' &&
-             typeof obj.conversationPair.client === 'string';
+    case "X":
+      return typeof obj.verbatim === "string";
+    case "Y":
+      return (
+        typeof obj.verbatim === "string" &&
+        typeof obj.previousConseillerTurn === "string"
+      );
+    case "M1":
+      return typeof obj.verbatim === "string";
+    case "M2":
+      return (
+        typeof obj.conseillerTurn === "string" &&
+        typeof obj.clientTurn === "string"
+      );
+    case "M3":
+      return (
+        obj.conversationPair &&
+        typeof obj.conversationPair.conseiller === "string" &&
+        typeof obj.conversationPair.client === "string"
+      );
     default:
       return false;
   }
 }
 
-export function createEmptyResult<T extends VariableDetails>(target: VariableTarget): CalculationResult<T> {
+export function createEmptyResult<T extends VariableDetails>(
+  target: VariableTarget
+): CalculationResult<T> {
   return {
     prediction: "UNKNOWN",
     confidence: 0,
@@ -861,11 +882,10 @@ export function createEmptyResult<T extends VariableDetails>(target: VariableTar
       algorithmVersion: "unknown",
       inputSignature: "",
       executionPath: [],
-      warnings: ["Empty result created"]
-    }
+      warnings: ["Empty result created"],
+    },
   };
 }
-
 ```
 
 #### `AlgorithmLab/types/core/index.ts`
@@ -905,7 +925,7 @@ export type {
 export type {
   CalculationInput,
   CalculationResult,
-  CalculatorMetadata,
+  CalculationMetadata,
   XInput,
   YInput,
   M1Input,
@@ -918,7 +938,6 @@ export type {
   ValidationResult,
   AlgorithmTestConfig,
 } from "./validation";
-
 ```
 
 #### `AlgorithmLab/types/core/level0.ts`
@@ -958,7 +977,6 @@ export interface DisagreementCase {
   labels: Record<string, string>; // annotator -> label
   notes?: string;
 }
-
 ```
 
 #### `AlgorithmLab/types/core/validation.ts`
@@ -1276,7 +1294,6 @@ export function createValidationConfig(
     },
   };
 }
-
 ```
 
 #### `AlgorithmLab/types/core/variables.ts`
@@ -1514,12 +1531,12 @@ export function getVariableColor(target: VariableTarget): string {
 export function getVariableLabel(target: VariableTarget): string {
   return VARIABLE_LABELS[target];
 }
-
 ```
 
 ## legacy
 
 ### Arborescence
+
 ```text
 legacy/
 ```
@@ -1527,6 +1544,7 @@ legacy/
 ## ui
 
 ### Arborescence
+
 ```text
 ui/
 - components.ts
@@ -1842,7 +1860,6 @@ export function validateConfigSchema(
 
   return errors;
 }
-
 ```
 
 #### `AlgorithmLab/types/ui/index.ts`
@@ -1860,10 +1877,10 @@ export function validateConfigSchema(
  */
 
 // Composants génériques
-export * from './components';
+export * from "./components";
 
 // Validation spécialisée
-export * from './validation';
+export * from "./validation";
 
 // Exports groupés pour faciliter l'import dans AlgorithmLab
 export type {
@@ -1871,8 +1888,8 @@ export type {
   DisplayConfig,
   ConfigFormProps,
   ResultDisplayProps,
-  ModalProps
-} from './components';
+  ModalProps,
+} from "./components";
 
 export type {
   XValidationProps,
@@ -1880,9 +1897,8 @@ export type {
   M1ValidationProps,
   M2ValidationProps,
   M3ValidationProps,
-  AllValidationProps
-} from './validation';
-
+  AllValidationProps,
+} from "./validation";
 ```
 
 #### `AlgorithmLab/types/ui/validation.ts`
@@ -1899,9 +1915,21 @@ export type {
  * Props spécifiques pour validation des algorithmes AlgorithmLab
  */
 
-import { BaseValidationProps } from './components';
-import { XInput, YInput, M1Input, M2Input, M3Input } from '../core/calculations';
-import { XDetails, YDetails, M1Details, M2Details, M3Details } from '../core/variables';
+import { BaseValidationProps } from "./components";
+import {
+  XInput,
+  YInput,
+  M1Input,
+  M2Input,
+  M3Input,
+} from "../core/calculations";
+import {
+  XDetails,
+  YDetails,
+  M1Details,
+  M2Details,
+  M3Details,
+} from "../core/variables";
 
 // ========================================================================
 // PROPS DE VALIDATION SPÉCIALISÉES ALGORITHMLAB
@@ -1909,7 +1937,7 @@ import { XDetails, YDetails, M1Details, M2Details, M3Details } from '../core/var
 
 export interface XValidationProps extends BaseValidationProps {
   target: "X";
-  
+
   // Configuration spécifique X AlgorithmLab
   xConfig: {
     analyzeActionVerbs: boolean;
@@ -1917,23 +1945,27 @@ export interface XValidationProps extends BaseValidationProps {
     classifyQuestions: boolean;
     contextWindow: number; // tours de contexte
   };
-  
+
   // Données spécifiques X
   testInputs?: XInput[];
   expectedOutputs?: Array<{
     tag: string;
     details: Partial<XDetails>;
   }>;
-  
+
   // Callbacks spécialisés
   onActionVerbsAnalyzed?: (verbs: string[]) => void;
-  onPronounUsageDetected?: (usage: {je: number, vous: number, nous: number}) => void;
+  onPronounUsageDetected?: (usage: {
+    je: number;
+    vous: number;
+    nous: number;
+  }) => void;
   onQuestionTypeClassified?: (type: "OPEN" | "CLOSED" | "NONE") => void;
 }
 
 export interface YValidationProps extends BaseValidationProps {
   target: "Y";
-  
+
   // Configuration spécifique Y AlgorithmLab
   yConfig: {
     analyzeSentiment: boolean;
@@ -1941,23 +1973,27 @@ export interface YValidationProps extends BaseValidationProps {
     classifyResponse: boolean;
     emotionThreshold: number; // 0-1
   };
-  
+
   // Données spécifiques Y
   testInputs?: YInput[];
   expectedOutputs?: Array<{
     tag: string;
     details: Partial<YDetails>;
   }>;
-  
+
   // Callbacks spécialisés
-  onSentimentAnalyzed?: (sentiment: "POSITIVE" | "NEGATIVE" | "NEUTRAL") => void;
+  onSentimentAnalyzed?: (
+    sentiment: "POSITIVE" | "NEGATIVE" | "NEUTRAL"
+  ) => void;
   onEmotionDetected?: (intensity: number) => void;
-  onResponseClassified?: (type: "ACCEPTANCE" | "RESISTANCE" | "INQUIRY" | "NEUTRAL") => void;
+  onResponseClassified?: (
+    type: "ACCEPTANCE" | "RESISTANCE" | "INQUIRY" | "NEUTRAL"
+  ) => void;
 }
 
 export interface M1ValidationProps extends BaseValidationProps {
   target: "M1";
-  
+
   // Configuration spécifique M1 AlgorithmLab
   m1Config: {
     calculateLexicalDiversity: boolean;
@@ -1965,14 +2001,14 @@ export interface M1ValidationProps extends BaseValidationProps {
     measureSemanticCoherence: boolean;
     linguisticDepth: "BASIC" | "ADVANCED" | "COMPREHENSIVE";
   };
-  
+
   // Données spécifiques M1
   testInputs?: M1Input[];
   expectedOutputs?: Array<{
     score: number;
     details: Partial<M1Details>;
   }>;
-  
+
   // Callbacks spécialisés
   onLexicalDiversityCalculated?: (diversity: number) => void;
   onSyntacticComplexityAnalyzed?: (complexity: number) => void;
@@ -1981,7 +2017,7 @@ export interface M1ValidationProps extends BaseValidationProps {
 
 export interface M2ValidationProps extends BaseValidationProps {
   target: "M2";
-  
+
   // Configuration spécifique M2 AlgorithmLab
   m2Config: {
     calculateLexicalAlignment: boolean;
@@ -1990,14 +2026,14 @@ export interface M2ValidationProps extends BaseValidationProps {
     extractSharedTerms: boolean;
     distanceMetrics: Array<"euclidean" | "cosine" | "jaccard">;
   };
-  
+
   // Données spécifiques M2
   testInputs?: M2Input[];
   expectedOutputs?: Array<{
     alignment: number;
     details: Partial<M2Details>;
   }>;
-  
+
   // Callbacks spécialisés
   onAlignmentCalculated?: (
     lexical: number,
@@ -2006,28 +2042,37 @@ export interface M2ValidationProps extends BaseValidationProps {
     overall: number
   ) => void;
   onSharedTermsExtracted?: (terms: string[]) => void;
-  onDistanceMetricsCalculated?: (metrics: {euclidean: number, cosine: number, jaccard: number}) => void;
+  onDistanceMetricsCalculated?: (metrics: {
+    euclidean: number;
+    cosine: number;
+    jaccard: number;
+  }) => void;
 }
 
 export interface M3ValidationProps extends BaseValidationProps {
   target: "M3";
-  
+
   // Configuration spécifique M3 AlgorithmLab
   m3Config: {
     assessCognitiveLoad: boolean;
     measureProcessingEfficiency: boolean;
     predictSatisfaction: boolean;
     predictCompliance: boolean;
-    cognitiveMetrics: Array<"fluidity" | "attentionalFocus" | "workingMemoryUsage" | "executiveControl">;
+    cognitiveMetrics: Array<
+      | "fluidity"
+      | "attentionalFocus"
+      | "workingMemoryUsage"
+      | "executiveControl"
+    >;
   };
-  
+
   // Données spécifiques M3
   testInputs?: M3Input[];
   expectedOutputs?: Array<{
     cognitiveScore: number;
     details: Partial<M3Details>;
   }>;
-  
+
   // Callbacks spécialisés
   onCognitiveLoadAssessed?: (load: number) => void;
   onProcessingEfficiencyMeasured?: (efficiency: number) => void;
@@ -2053,11 +2098,11 @@ export function createXValidationConfig(
       detectPronouns: true,
       classifyQuestions: true,
       contextWindow: 3,
-      ...overrides.xConfig
+      ...overrides.xConfig,
     },
     autoValidate: false,
     showMetrics: true,
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -2075,11 +2120,11 @@ export function createYValidationConfig(
       detectEmotion: true,
       classifyResponse: true,
       emotionThreshold: 0.5,
-      ...overrides.yConfig
+      ...overrides.yConfig,
     },
     autoValidate: false,
     showMetrics: true,
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -2098,11 +2143,11 @@ export function createM2ValidationConfig(
       calculateSemanticAlignment: true,
       extractSharedTerms: true,
       distanceMetrics: ["euclidean", "cosine", "jaccard"],
-      ...overrides.m2Config
+      ...overrides.m2Config,
     },
     autoValidate: false,
     showMetrics: true,
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -2110,29 +2155,29 @@ export function createM2ValidationConfig(
 // UTILITAIRES DE VALIDATION UI ALGORITHMLAB
 // ========================================================================
 
-export type AllValidationProps = 
-  | XValidationProps 
-  | YValidationProps 
-  | M1ValidationProps 
-  | M2ValidationProps 
+export type AllValidationProps =
+  | XValidationProps
+  | YValidationProps
+  | M1ValidationProps
+  | M2ValidationProps
   | M3ValidationProps;
 
 export function validateValidationProps(props: AllValidationProps): string[] {
   const errors: string[] = [];
-  
+
   // Validation commune
   if (!props.callId) {
     errors.push("callId est requis");
   }
-  
+
   if (!props.algorithmName) {
     errors.push("algorithmName est requis");
   }
-  
+
   if (!props.target) {
     errors.push("target est requis");
   }
-  
+
   // Validation spécifique par type
   switch (props.target) {
     case "X":
@@ -2141,14 +2186,17 @@ export function validateValidationProps(props: AllValidationProps): string[] {
         errors.push("contextWindow doit être positif");
       }
       break;
-      
+
     case "Y":
       const yProps = props as YValidationProps;
-      if (yProps.yConfig.emotionThreshold < 0 || yProps.yConfig.emotionThreshold > 1) {
+      if (
+        yProps.yConfig.emotionThreshold < 0 ||
+        yProps.yConfig.emotionThreshold > 1
+      ) {
         errors.push("emotionThreshold doit être entre 0 et 1");
       }
       break;
-      
+
     case "M2":
       const m2Props = props as M2ValidationProps;
       if (m2Props.m2Config.distanceMetrics.length === 0) {
@@ -2156,7 +2204,7 @@ export function validateValidationProps(props: AllValidationProps): string[] {
       }
       break;
   }
-  
+
   return errors;
 }
 
@@ -2167,53 +2215,58 @@ export function getValidationConfigDefaults(target: string): any {
         analyzeActionVerbs: true,
         detectPronouns: true,
         classifyQuestions: true,
-        contextWindow: 3
+        contextWindow: 3,
       };
-      
+
     case "Y":
       return {
         analyzeSentiment: true,
         detectEmotion: true,
         classifyResponse: true,
-        emotionThreshold: 0.5
+        emotionThreshold: 0.5,
       };
-      
+
     case "M1":
       return {
         calculateLexicalDiversity: true,
         analyzeSyntacticComplexity: true,
         measureSemanticCoherence: true,
-        linguisticDepth: "ADVANCED"
+        linguisticDepth: "ADVANCED",
       };
-      
+
     case "M2":
       return {
         calculateLexicalAlignment: true,
         calculateSyntacticAlignment: true,
         calculateSemanticAlignment: true,
         extractSharedTerms: true,
-        distanceMetrics: ["euclidean", "cosine", "jaccard"]
+        distanceMetrics: ["euclidean", "cosine", "jaccard"],
       };
-      
+
     case "M3":
       return {
         assessCognitiveLoad: true,
         measureProcessingEfficiency: true,
         predictSatisfaction: true,
         predictCompliance: true,
-        cognitiveMetrics: ["fluidity", "attentionalFocus", "workingMemoryUsage", "executiveControl"]
+        cognitiveMetrics: [
+          "fluidity",
+          "attentionalFocus",
+          "workingMemoryUsage",
+          "executiveControl",
+        ],
       };
-      
+
     default:
       return {};
   }
 }
-
 ```
 
 ## utils
 
 ### Arborescence
+
 ```text
 utils/
 - converters.ts
@@ -2687,7 +2740,6 @@ export function validateConversionResult<T>(
     typeof result.metadata.conversionTime === "number"
   );
 }
-
 ```
 
 #### `AlgorithmLab/types/utils/index.ts`
@@ -2705,10 +2757,10 @@ export function validateConversionResult<T>(
  */
 
 // Normalisation
-export * from './normalizers';
+export * from "./normalizers";
 
 // Conversion et adaptation
-export * from './converters';
+export * from "./converters";
 
 // Exports groupés pour faciliter l'import dans AlgorithmLab
 export type {
@@ -2719,8 +2771,8 @@ export type {
   normalizeXLabel,
   normalizeYLabel,
   familyFromX,
-  familyFromY
-} from './normalizers';
+  familyFromY,
+} from "./normalizers";
 
 export type {
   ConversionDirection,
@@ -2731,9 +2783,8 @@ export type {
   ExportAdapter,
   DataTransformation,
   ChainedTransformation,
-  LegacyMapping
-} from './converters';
-
+  LegacyMapping,
+} from "./converters";
 ```
 
 #### `AlgorithmLab/types/utils/normalizers.ts`
@@ -2750,7 +2801,7 @@ export type {
  * Fonctions de normalisation spécifiques au module AlgorithmLab
  */
 
-import { XTag, YTag } from '../core/variables';
+import { XTag, YTag } from "../core/variables";
 
 // ========================================================================
 // TYPES DE NORMALISATION ALGORITHMLAB
@@ -2802,12 +2853,18 @@ export interface NormalizationResult {
 /**
  * Normalise un label X selon les règles AlgorithmLab
  */
-export declare function normalizeXLabel(label: string, config?: Partial<NormalizationConfig>): XTag;
+export declare function normalizeXLabel(
+  label: string,
+  config?: Partial<NormalizationConfig>
+): XTag;
 
 /**
  * Normalise un label Y selon les règles AlgorithmLab
  */
-export declare function normalizeYLabel(label: string, config?: Partial<NormalizationConfig>): YTag;
+export declare function normalizeYLabel(
+  label: string,
+  config?: Partial<NormalizationConfig>
+): YTag;
 
 /**
  * Détermine la famille d'un tag X AlgorithmLab
@@ -2823,7 +2880,7 @@ export declare function familyFromY(yTag: YTag): string;
  * Normalisation générique avec configuration avancée
  */
 export declare function normalizeText(
-  text: string, 
+  text: string,
   config: NormalizationConfig
 ): NormalizationResult;
 
@@ -2841,84 +2898,84 @@ export declare function applyCustomRules(
 
 export const X_LABEL_MAPPING: Record<string, XTag> = {
   // Variations d'ENGAGEMENT
-  "engagement": "ENGAGEMENT",
-  "action": "ENGAGEMENT", 
-  "je_vais": "ENGAGEMENT",
-  "verification": "ENGAGEMENT",
-  
+  engagement: "ENGAGEMENT",
+  action: "ENGAGEMENT",
+  je_vais: "ENGAGEMENT",
+  verification: "ENGAGEMENT",
+
   // Variations d'OUVERTURE
-  "ouverture": "OUVERTURE",
-  "question": "OUVERTURE",
-  "avez_vous": "OUVERTURE",
-  "souhaitez": "OUVERTURE",
-  
+  ouverture: "OUVERTURE",
+  question: "OUVERTURE",
+  avez_vous: "OUVERTURE",
+  souhaitez: "OUVERTURE",
+
   // Variations de REFLET
-  "reflet": "REFLET",
-  "comprends": "REFLET",
-  "entends": "REFLET",
-  "ressenti": "REFLET",
-  
+  reflet: "REFLET",
+  comprends: "REFLET",
+  entends: "REFLET",
+  ressenti: "REFLET",
+
   // Variations d'EXPLICATION
-  "explication": "EXPLICATION",
-  "parce_que": "EXPLICATION",
-  "raison": "EXPLICATION",
-  "procedure": "EXPLICATION",
-  
+  explication: "EXPLICATION",
+  parce_que: "EXPLICATION",
+  raison: "EXPLICATION",
+  procedure: "EXPLICATION",
+
   // Variations de CLOTURE
-  "cloture": "CLOTURE",
-  "aurevoir": "CLOTURE",
-  "bonne_journee": "CLOTURE",
-  "fin": "CLOTURE"
+  cloture: "CLOTURE",
+  aurevoir: "CLOTURE",
+  bonne_journee: "CLOTURE",
+  fin: "CLOTURE",
 };
 
 export const Y_LABEL_MAPPING: Record<string, YTag> = {
   // Variations CLIENT_POSITIF
-  "positif": "CLIENT_POSITIF",
-  "merci": "CLIENT_POSITIF",
-  "parfait": "CLIENT_POSITIF",
-  "accord": "CLIENT_POSITIF",
-  
+  positif: "CLIENT_POSITIF",
+  merci: "CLIENT_POSITIF",
+  parfait: "CLIENT_POSITIF",
+  accord: "CLIENT_POSITIF",
+
   // Variations CLIENT_NEUTRE
-  "neutre": "CLIENT_NEUTRE",
-  "ok": "CLIENT_NEUTRE",
-  "oui": "CLIENT_NEUTRE",
-  "bien": "CLIENT_NEUTRE",
-  
+  neutre: "CLIENT_NEUTRE",
+  ok: "CLIENT_NEUTRE",
+  oui: "CLIENT_NEUTRE",
+  bien: "CLIENT_NEUTRE",
+
   // Variations CLIENT_NEGATIF
-  "negatif": "CLIENT_NEGATIF",
-  "non": "CLIENT_NEGATIF",
-  "impossible": "CLIENT_NEGATIF",
-  "probleme": "CLIENT_NEGATIF",
-  
+  negatif: "CLIENT_NEGATIF",
+  non: "CLIENT_NEGATIF",
+  impossible: "CLIENT_NEGATIF",
+  probleme: "CLIENT_NEGATIF",
+
   // Variations CLIENT_QUESTION
-  "question": "CLIENT_QUESTION",
-  "comment": "CLIENT_QUESTION",
-  "pourquoi": "CLIENT_QUESTION",
-  "quand": "CLIENT_QUESTION",
-  
+  question: "CLIENT_QUESTION",
+  comment: "CLIENT_QUESTION",
+  pourquoi: "CLIENT_QUESTION",
+  quand: "CLIENT_QUESTION",
+
   // Variations CLIENT_SILENCE
-  "silence": "CLIENT_SILENCE",
-  "pause": "CLIENT_SILENCE",
-  "attente": "CLIENT_SILENCE"
+  silence: "CLIENT_SILENCE",
+  pause: "CLIENT_SILENCE",
+  attente: "CLIENT_SILENCE",
 };
 
 export const FAMILY_MAPPING = {
   X: {
-    "ENGAGEMENT": "ACTION",
-    "OUVERTURE": "EXPLORATION", 
-    "REFLET": "EMPATHIE",
-    "EXPLICATION": "INFORMATION",
-    "CLOTURE": "CONCLUSION",
-    "AUTRE_X": "AUTRE"
+    ENGAGEMENT: "ACTION",
+    OUVERTURE: "EXPLORATION",
+    REFLET: "EMPATHIE",
+    EXPLICATION: "INFORMATION",
+    CLOTURE: "CONCLUSION",
+    AUTRE_X: "AUTRE",
   },
   Y: {
-    "CLIENT_POSITIF": "ACCEPTANCE",
-    "CLIENT_NEUTRE": "NEUTRAL", 
-    "CLIENT_NEGATIF": "RESISTANCE",
-    "CLIENT_QUESTION": "INQUIRY",
-    "CLIENT_SILENCE": "PAUSE",
-    "AUTRE_Y": "AUTRE"
-  }
+    CLIENT_POSITIF: "ACCEPTANCE",
+    CLIENT_NEUTRE: "NEUTRAL",
+    CLIENT_NEGATIF: "RESISTANCE",
+    CLIENT_QUESTION: "INQUIRY",
+    CLIENT_SILENCE: "PAUSE",
+    AUTRE_Y: "AUTRE",
+  },
 } as const;
 
 // ========================================================================
@@ -2932,26 +2989,26 @@ export const NORMALIZATION_PRESETS: Record<string, NormalizationConfig> = {
     removePunctuation: true,
     removeAccents: true,
     removeStopWords: false,
-    stemming: false
+    stemming: false,
   },
-  
+
   STANDARD: {
-    level: "STANDARD", 
+    level: "STANDARD",
     preserveCase: false,
     removePunctuation: true,
     removeAccents: true,
     removeStopWords: true,
-    stemming: false
+    stemming: false,
   },
-  
+
   AGGRESSIVE: {
     level: "AGGRESSIVE",
     preserveCase: false,
     removePunctuation: true,
     removeAccents: true,
     removeStopWords: true,
-    stemming: true
-  }
+    stemming: true,
+  },
 };
 
 // ========================================================================
@@ -2966,7 +3023,7 @@ export const DEFAULT_NORMALIZATION_RULES: NormalizationRule[] = [
     replacement: "",
     enabled: true,
     priority: 1,
-    description: "Supprime les mots de remplissage communs"
+    description: "Supprime les mots de remplissage communs",
   },
   {
     id: "normalize_contractions",
@@ -2975,7 +3032,7 @@ export const DEFAULT_NORMALIZATION_RULES: NormalizationRule[] = [
     replacement: "",
     enabled: true,
     priority: 2,
-    description: "Développe les contractions françaises courantes"
+    description: "Développe les contractions françaises courantes",
   },
   {
     id: "normalize_politeness",
@@ -2984,7 +3041,8 @@ export const DEFAULT_NORMALIZATION_RULES: NormalizationRule[] = [
     replacement: "",
     enabled: true,
     priority: 3,
-    description: "Supprime les formules de politesse pour se concentrer sur le contenu"
+    description:
+      "Supprime les formules de politesse pour se concentrer sur le contenu",
   },
   {
     id: "normalize_numbers",
@@ -2993,39 +3051,48 @@ export const DEFAULT_NORMALIZATION_RULES: NormalizationRule[] = [
     replacement: "[NOMBRE]",
     enabled: false,
     priority: 4,
-    description: "Remplace les nombres par un token générique"
-  }
+    description: "Remplace les nombres par un token générique",
+  },
 ];
 
 // ========================================================================
 // UTILITAIRES DE VALIDATION ALGORITHMLAB
 // ========================================================================
 
-export function validateNormalizationConfig(config: NormalizationConfig): string[] {
+export function validateNormalizationConfig(
+  config: NormalizationConfig
+): string[] {
   const errors: string[] = [];
-  
+
   if (!["BASIC", "STANDARD", "AGGRESSIVE"].includes(config.level)) {
     errors.push("Niveau de normalisation invalide");
   }
-  
+
   if (config.customRules) {
     config.customRules.forEach((rule, index) => {
-      if (!rule.id || !rule.name || !rule.pattern || rule.replacement === undefined) {
+      if (
+        !rule.id ||
+        !rule.name ||
+        !rule.pattern ||
+        rule.replacement === undefined
+      ) {
         errors.push(`Règle ${index + 1} incomplète`);
       }
-      
+
       if (rule.priority < 1 || rule.priority > 10) {
-        errors.push(`Priorité de la règle ${rule.name} doit être entre 1 et 10`);
+        errors.push(
+          `Priorité de la règle ${rule.name} doit être entre 1 et 10`
+        );
       }
     });
   }
-  
+
   return errors;
 }
 
 export function createNormalizationRule(
   id: string,
-  name: string, 
+  name: string,
   pattern: RegExp | string,
   replacement: string,
   options: Partial<NormalizationRule> = {}
@@ -3037,16 +3104,30 @@ export function createNormalizationRule(
     replacement,
     enabled: true,
     priority: 5,
-    ...options
+    ...options,
   };
 }
 
 export function isValidXTag(tag: string): tag is XTag {
-  return ["ENGAGEMENT", "OUVERTURE", "REFLET", "EXPLICATION", "CLOTURE", "AUTRE_X"].includes(tag);
+  return [
+    "ENGAGEMENT",
+    "OUVERTURE",
+    "REFLET",
+    "EXPLICATION",
+    "CLOTURE",
+    "AUTRE_X",
+  ].includes(tag);
 }
 
 export function isValidYTag(tag: string): tag is YTag {
-  return ["CLIENT_POSITIF", "CLIENT_NEUTRE", "CLIENT_NEGATIF", "CLIENT_QUESTION", "CLIENT_SILENCE", "AUTRE_Y"].includes(tag);
+  return [
+    "CLIENT_POSITIF",
+    "CLIENT_NEUTRE",
+    "CLIENT_NEGATIF",
+    "CLIENT_QUESTION",
+    "CLIENT_SILENCE",
+    "AUTRE_Y",
+  ].includes(tag);
 }
 
 export function getFamilyFromTag(tag: XTag | YTag): string {
@@ -3057,5 +3138,4 @@ export function getFamilyFromTag(tag: XTag | YTag): string {
   }
   return "AUTRE";
 }
-
 ```

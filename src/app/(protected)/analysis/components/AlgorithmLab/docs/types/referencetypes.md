@@ -198,7 +198,7 @@
   processingTime?: </span><span>number</span><span>;
 }
 
-</span><span>export</span><span></span><span>interface</span><span></span><span>CalculatorMetadata</span><span> {
+</span><span>export</span><span></span><span>interface</span><span></span><span>CalculationMetadata</span><span> {
   </span><span>name</span><span>: </span><span>string</span><span>;
   </span><span>version</span><span>: </span><span>string</span><span>;
   params?: </span><span>Record</span><span><</span><span>string</span><span>, </span><span>unknown</span><span>>;

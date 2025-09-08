@@ -22,7 +22,7 @@ export interface M3Input {
   id?: string | number;
 }
 
-export interface CalculatorMetadata {
+export interface CalculationMetadata {
   version?: string;
   description?: string;
   type: "rule-based" | "ml" | "llm" | "hybrid";

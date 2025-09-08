@@ -23,7 +23,7 @@ export * from "./core/variables";
 export type {
   CalculationInput,
   CalculationResult,
-  CalculatorMetadata,
+  CalculationMetadata,
   XInput,
   YInput,
   M1Input,
@@ -52,10 +52,17 @@ export type {
   AlgorithmMetadata,
   AlgorithmConfig,
   AlgorithmParameters as BaseAlgorithmParameters,
+  // on garde l'alias pour compat
   AlgorithmResult as BaseAlgorithmResult,
   BaseAlgorithm,
   XClassification,
   XClassifier,
+} from "./algorithms/base";
+
+// 👉 Expose aussi les noms canoniques attendus par les composants
+export type {
+  AlgorithmResult,
+  EnhancedAlgorithmResult,
 } from "./algorithms/base";
 
 // Adaptateur universel
@@ -135,8 +142,10 @@ export {
 
 export { calculateMetrics, createValidationConfig } from "./core/validation";
 
+// ✅ Ajoute normalizeAlgorithmResult ici (manquait avant)
 export {
   isValidAlgorithmResult,
+  normalizeAlgorithmResult,
   createErrorResult,
   createSuccessResult,
 } from "./algorithms/base";

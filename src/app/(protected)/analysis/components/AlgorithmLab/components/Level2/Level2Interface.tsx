@@ -766,7 +766,6 @@ export const Level2Interface: React.FC<Level2InterfaceProps> = ({
         <StatisticalSummary
           data={statisticalSummaryData}
           validationResults={h1Summary}
-          activeThresholds={activeThresholds}
         />
       </TabPanel>
     </Box>

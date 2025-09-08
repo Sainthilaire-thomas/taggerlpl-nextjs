@@ -135,9 +135,7 @@
         "export interface LabelMetrics {"
       ],
       "types": [],
-      "imports": [
-        "import { TVValidationResult } from \"../../types\";"
-      ]
+      "imports": ["import { TVValidationResult } from \"../../types\";"]
     },
     "src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/shared/results/base/ResultsSample/types.ts": {
       "size_bytes": 3411,
@@ -169,12 +167,8 @@
         "export interface ResultsSampleProps {",
         "export interface ContextData {"
       ],
-      "types": [
-        "export type Tone = \"A\" | \"B\" | \"CURRENT\";"
-      ],
-      "imports": [
-        "import type {"
-      ]
+      "types": ["export type Tone = \"A\" | \"B\" | \"CURRENT\";"],
+      "imports": ["import type {"]
     },
     "src/app/(protected)/analysis/components/AlgorithmLab/components/Level2/shared/types.ts": {
       "size_bytes": 5799,
@@ -287,7 +281,7 @@
         "export interface M1Input {\r",
         "export interface M2Input {\r",
         "export interface M3Input {\r",
-        "export interface CalculatorMetadata {\r",
+        "export interface CalculationMetadata {\r",
         "export interface AlgorithmResult {\r",
         "export interface EnhancedAlgorithmResult extends AlgorithmResult {\r",
         "export interface ValidationMetrics {\r",
@@ -299,7 +293,7 @@
         "export interface M1Input {\r",
         "export interface M2Input {\r",
         "export interface M3Input {\r",
-        "export interface CalculatorMetadata {\r",
+        "export interface CalculationMetadata {\r",
         "export interface AlgorithmResult {\r",
         "export interface EnhancedAlgorithmResult extends AlgorithmResult {\r",
         "export interface ValidationMetrics {\r",
@@ -343,9 +337,7 @@
       "exports": [],
       "interfaces": [],
       "types": [],
-      "imports": [
-        "import type {} from \"./ThesisVariables\";"
-      ]
+      "imports": ["import type {} from \"./ThesisVariables\";"]
     },
     "src/app/(protected)/analysis/components/AlgorithmLab/types/ThesisVariables.m2.ts": {
       "size_bytes": 434,
@@ -358,9 +350,7 @@
       "exports": [],
       "interfaces": [],
       "types": [],
-      "imports": [
-        "import type {} from \"./ThesisVariables\";"
-      ]
+      "imports": ["import type {} from \"./ThesisVariables\";"]
     },
     "src/app/(protected)/analysis/components/AlgorithmLab/types/ThesisVariables.m3.ts": {
       "size_bytes": 364,
@@ -373,9 +363,7 @@
       "exports": [],
       "interfaces": [],
       "types": [],
-      "imports": [
-        "import type {} from \"./ThesisVariables\";"
-      ]
+      "imports": ["import type {} from \"./ThesisVariables\";"]
     },
     "src/app/(protected)/analysis/components/AlgorithmLab/types/ThesisVariables.ts": {
       "size_bytes": 4444,
@@ -429,9 +417,7 @@
       "exports": [],
       "interfaces": [],
       "types": [],
-      "imports": [
-        "import type {} from \"./ThesisVariables\";"
-      ]
+      "imports": ["import type {} from \"./ThesisVariables\";"]
     },
     "src/app/(protected)/analysis/components/AlgorithmLab/types/ThesisVariables.y.ts": {
       "size_bytes": 548,
@@ -444,9 +430,7 @@
       "exports": [],
       "interfaces": [],
       "types": [],
-      "imports": [
-        "import type {} from \"./ThesisVariables\";"
-      ]
+      "imports": ["import type {} from \"./ThesisVariables\";"]
     },
     "src/app/(protected)/analysis/components/AlgorithmLab/types/ValidationTypes.ts": {
       "size_bytes": 13880,
@@ -481,9 +465,7 @@
         "export interface AlignmentElement {"
       ],
       "types": [],
-      "imports": [
-        "import type {"
-      ]
+      "imports": ["import type {"]
     },
     "src/app/(protected)/analysis/components/cognitive-metrics/types.ts": {
       "size_bytes": 2217,
@@ -514,9 +496,7 @@
         "export interface CognitiveAnalysisResult {\r",
         "export interface IndicatorDescription {\r"
       ],
-      "types": [
-        "export type IndicatorKey =\r"
-      ],
+      "types": ["export type IndicatorKey =\r"],
       "imports": []
     },
     "src/app/(protected)/analysis/components/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/AlgorithmLabTab/types.ts": {
@@ -601,9 +581,7 @@
         "export type {\r",
         "export type {\r"
       ],
-      "imports": [
-        "import {\r"
-      ]
+      "imports": ["import {\r"]
     },
     "src/app/(protected)/analysis/components/li-metrics/indicators/FeedbackAlignementIndicator/types.ts": {
       "size_bytes": 1243,

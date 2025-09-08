@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from "react";
 import type {
   M3Input,
   CalculationResult,
-  CalculatorMetadata,
+  CalculationMetadata,
 } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 import type { M3Details } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 
@@ -19,7 +19,7 @@ export function useM3AlgorithmTesting() {
 
   // Instancie une seule fois
   const calculator = useMemo(() => new PausesM3Calculator(), []);
-  const metadata: CalculatorMetadata = useMemo(
+  const metadata: CalculationMetadata = useMemo(
     () => calculator.getMetadata(),
     [calculator]
   );
@@ -90,7 +90,7 @@ export function useM3AlgorithmTesting() {
     isRunning,
     results, // CalculationResult<M3Details>[]
     avgScore, // number | null
-    metadata, // CalculatorMetadata
+    metadata, // CalculationMetadata
     run, // (inputs: {id?, clientTurn}[]) => Promise<void>
   };
 }

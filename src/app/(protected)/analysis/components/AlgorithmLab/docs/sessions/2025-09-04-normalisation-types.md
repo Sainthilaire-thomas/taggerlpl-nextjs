@@ -136,7 +136,7 @@ src/types/
 ├── core/                              # Types fondamentaux
 │   ├── index.ts                      # export * from './{variables,calculations,validation}'
 │   ├── variables.ts                  # VariableX, VariableY, XDetails, YDetails, M1Details, M2Details, M3Details
-│   ├── calculations.ts               # CalculationResult, XInput, YInput, M1Input, M2Input, M3Input, CalculatorMetadata
+│   ├── calculations.ts               # CalculationResult, XInput, YInput, M1Input, M2Input, M3Input, CalculationMetadata
 │   └── validation.ts                 # ValidationMetrics, ValidationResult, AlgorithmTestConfig
 ├── algorithms/                        # Types spécifiques aux algorithmes
 │   ├── index.ts                      # export * from './{base,level1,level2,universal-adapter}'
@@ -176,7 +176,7 @@ src/types/
 | `types/ThesisVariables.m2`         | `types/core/variables`    | M2Details (fusionné dans variables.ts)                                 |
 | `types/ThesisVariables.m3`         | `types/core/variables`    | M3Details (fusionné dans variables.ts)                                 |
 | `types/Level1Types`(calculateurs)  | `types/algorithms/level1` | XCalculator, YCalculator, M1Calculator, M2Calculator, M3Calculator     |
-| `types/Level1Types`(calculs)       | `types/core/calculations` | CalculationResult, M1Input, M2Input, CalculatorMetadata                |
+| `types/Level1Types`(calculs)       | `types/core/calculations` | CalculationResult, M1Input, M2Input, CalculationMetadata               |
 | `types/ValidationTypes`(props)     | `types/ui/validation`     | XValidationInterfaceProps → XValidationProps                           |
 | `types/ValidationTypes`(métriques) | `types/core/validation`   | ValidationMetrics, ValidationResult, AlgorithmTestConfig               |
 | `types/SharedTypes`(validation)    | `types/core/validation`   | ValidationLevel → conservé dans validation.ts                          |
@@ -253,7 +253,7 @@ for file in $FILES; do
     fi
 
     # Migration Level1Types - partie calculs
-    if sed -i.tmp "s|from ['\"]types/Level1Types['\"].*\(CalculationResult\|Input\|CalculatorMetadata\)|from '@/types/core/calculations'|g" "$file"; then
+    if sed -i.tmp "s|from ['\"]types/Level1Types['\"].*\(CalculationResult\|Input\|CalculationMetadata\)|from '@/types/core/calculations'|g" "$file"; then
         MODIFIED=true
     fi
 

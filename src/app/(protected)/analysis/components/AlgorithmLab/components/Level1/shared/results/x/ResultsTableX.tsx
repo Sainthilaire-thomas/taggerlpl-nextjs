@@ -106,16 +106,16 @@ export default function ResultsTableX({
       footerSlot={footerSlot}
       showPagination={showPagination}
       renderRow={(item) => {
-        const short =
-          item.verbatim?.length > 180
-            ? item.verbatim.slice(0, 180) + "…"
-            : item.verbatim;
+        // 👇 repli sûr : toujours une string
+        const verb = item.verbatim ?? ""; // ou item.input ?? "" si tu préfères
+        const short = verb.length > 180 ? `${verb.slice(0, 180)}…` : verb;
 
         return (
           <TableRow hover>
             {/* Verbatim */}
             <TableCell sx={{ maxWidth: 520 }}>
               <Typography variant="body2">{short || "—"}</Typography>
+
               {/* Évidence (facultatif) */}
               {item.evidence && item.evidence.length > 0 && (
                 <Stack direction="row" spacing={0.5} mt={0.5} flexWrap="wrap">

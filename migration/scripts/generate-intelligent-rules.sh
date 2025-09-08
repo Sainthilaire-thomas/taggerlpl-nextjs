@@ -289,7 +289,7 @@ generate_named_imports_mappings() {
     "M2Input": "@/types/core/calculations",
     "M3Input": "@/types/core/calculations",
     "CalculationResult": "@/types/core/calculations",
-    "CalculatorMetadata": "@/types/core/calculations",
+    "CalculationMetadata": "@/types/core/calculations",
 
     "ValidationMetrics": "@/types/core/validation",
     "ValidationResult": "@/types/core/validation",

@@ -7,7 +7,7 @@ import { AlgorithmRegistry } from "../shared/AlgorithmRegistry";
 import {
   M2Input,
   M2Details,
-  CalculatorMetadata,
+  CalculationMetadata,
 } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 import { normalize } from "./shared/m2-utils";
 
@@ -55,8 +55,8 @@ export class M2SemanticAlignmentCalculator extends BaseM2Calculator {
     };
   }
 
-  // ✅ CORRECTION: Retourner CalculatorMetadata (pas AlgorithmMetadata)
-  getMetadata(): CalculatorMetadata {
+  // ✅ CORRECTION: Retourner CalculationMetadata (pas AlgorithmMetadata)
+  getMetadata(): CalculationMetadata {
     return {
       id: M2SemanticAlignmentCalculator.ID,
       label: "M2 — Alignement sémantique (patterns FR)",

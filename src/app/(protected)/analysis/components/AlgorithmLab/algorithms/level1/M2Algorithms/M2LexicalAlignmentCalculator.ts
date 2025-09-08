@@ -6,7 +6,7 @@ import {
 import {
   M2Input,
   M2Details,
-  CalculatorMetadata,
+  CalculationMetadata,
   BaseAlgorithm,
   AlgorithmMetadata,
   CalculationResult,
@@ -47,13 +47,20 @@ export class M2LexicalAlignmentCalculator
   }
 
   // Métadonnées pour Calculator (Level 2 - validation scientifique)
-  getMetadata(): CalculatorMetadata {
+  getMetadata(): CalculationMetadata {
     return {
+      // Propriétés obligatoires
+      algorithmVersion: "1.0.0",
+      inputSignature: "m2-lexical-input",
+      executionPath: ["tokenize", "jaccard"],
+      warnings: [],
+
+      // Propriétés existantes
       id: this.key,
-      label: "M2 — Alignement lexical (Jaccard)",
+      label: "M2 Alignement Lexical (Jaccard)",
       target: "M2",
-      algorithmKind: "rule-based",
-      version: "1.0.0",
+      algorithmKind: "lexical",
+      version: "1.0",
     };
   }
 

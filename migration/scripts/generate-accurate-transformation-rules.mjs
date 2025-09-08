@@ -206,7 +206,7 @@ function generateNamedImportsRedistribution(auditData, architecture) {
         "M2Input",
         "M3Input",
         "CalculationResult",
-        "CalculatorMetadata",
+        "CalculationMetadata",
       ],
     },
 

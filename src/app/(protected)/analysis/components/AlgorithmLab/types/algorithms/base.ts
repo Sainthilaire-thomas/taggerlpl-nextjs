@@ -125,10 +125,39 @@ export interface BaseAlgorithm<I = unknown, R = unknown> {
 // ========================================================================
 
 export interface AlgorithmResult {
-  ok: boolean;
+  ok?: boolean;
   message?: string;
   metrics?: Record<string, unknown>;
   details?: Record<string, unknown>;
+
+  // Identifiants & temps (optionnels car tout le monde ne les fournit pas)
+  callId?: string | number;
+  id?: string | number;
+  startTime?: number;
+  endTime?: number;
+
+  // Contenu
+  input?: string;
+  verbatim?: string;
+  speaker?: string;
+
+  // Prédiction
+  prediction?: string;
+  predicted?: string; // alias de prediction
+  goldStandard?: string;
+  expected?: string; // alias de goldStandard
+
+  // Qualité
+  confidence?: number;
+  correct?: boolean;
+  processingTime?: number;
+
+  // Contexte (utiles pour EnhancedErrorAnalysis & supervision)
+  filename?: string;
+  next_turn_verbatim?: string;
+  next_turn_tag?: string;
+  hasAudio?: boolean;
+  hasTranscript?: boolean;
 }
 
 // ========================================================================
@@ -141,11 +170,24 @@ export interface UniversalResult {
   processingTime?: number; // Temps de traitement (ms)
   algorithmVersion?: string; // Version utilisée
 
-  // ✅ NOUVELLES propriétés optionnelles pour M2ValidationInterface
+  // ✅ ENRICHISSEMENT pour M2ValidationInterface et autres composants
   id?: string | number;
   verbatim?: string;
   goldStandard?: string;
   correct?: boolean;
+
+  // ✅ ENRICHISSEMENT pour EnhancedErrorAnalysis
+  callId?: string | number;
+  startTime?: number;
+  endTime?: number;
+  input?: string;
+  speaker?: string;
+  predicted?: string; // Alias pour prediction
+  filename?: string;
+  next_turn_verbatim?: string;
+  next_turn_tag?: string;
+  hasAudio?: boolean;
+  hasTranscript?: boolean;
 
   metadata?: {
     inputSignature?: string; // Hash/signature de l'input
@@ -180,6 +222,37 @@ export function isValidAlgorithmResult(result: any): result is UniversalResult {
   );
 }
 
+export function normalizeAlgorithmResult(
+  result: AlgorithmResult
+): AlgorithmResult {
+  return {
+    ...result,
+    // Normalisation des alias
+    predicted: result.predicted || result.prediction,
+    goldStandard: result.goldStandard || result.expected,
+    verbatim: result.verbatim || result.input,
+    id: result.id || result.callId,
+
+    // Assurer les propriétés minimales
+    confidence: result.confidence ?? 0,
+    correct: result.correct ?? false,
+  };
+}
+
+export function validateErrorAnalysisResult(result: AlgorithmResult): boolean {
+  const normalized = normalizeAlgorithmResult(result);
+  return !!(
+    normalized.callId ||
+    (normalized.id &&
+      typeof normalized.startTime === "number" &&
+      typeof normalized.endTime === "number" &&
+      (normalized.input || normalized.verbatim) &&
+      normalized.speaker &&
+      (normalized.predicted || normalized.prediction) &&
+      (normalized.goldStandard || normalized.expected))
+  );
+}
+
 export function createErrorResult(
   error: string,
   algorithmName?: string
@@ -189,6 +262,15 @@ export function createErrorResult(
     confidence: 0,
     processingTime: 0,
     algorithmVersion: algorithmName || "unknown",
+    // ✅ Propriétés enrichies avec valeurs par défaut
+    callId: "unknown",
+    startTime: 0,
+    endTime: 0,
+    input: "",
+    speaker: "unknown",
+    predicted: "ERROR",
+    goldStandard: "unknown",
+    correct: false,
     metadata: {
       warnings: [error],
       executionPath: ["error"],
@@ -201,12 +283,22 @@ export function createSuccessResult(
   prediction: string,
   confidence: number,
   processingTime: number = 0,
-  details?: VariableDetails
+  details?: VariableDetails,
+  // ✅ Paramètres optionnels enrichis
+  callId?: string | number,
+  input?: string,
+  speaker?: string
 ): UniversalResult {
   return {
     prediction,
     confidence: Math.max(0, Math.min(1, confidence)),
     processingTime,
+    // ✅ Propriétés enrichies
+    predicted: prediction,
+    callId,
+    input,
+    speaker,
+    correct: true, // Par défaut true pour un résultat de succès
     metadata: {
       details,
       executionPath: ["success"],
@@ -224,3 +316,6 @@ export type XClassification = VariableX;
 export interface XClassifier {
   classify(verbatim: string): Promise<XClassification>;
 }
+
+export type BaseAlgorithmResult = AlgorithmResult;
+export type EnhancedAlgorithmResult = AlgorithmResult;

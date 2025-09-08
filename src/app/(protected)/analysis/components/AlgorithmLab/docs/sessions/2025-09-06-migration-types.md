@@ -392,7 +392,7 @@ json
       "M2Input": "@/types/core/calculations",
       "M3Input": "@/types/core/calculations",
       "CalculationResult": "@/types/core/calculations",
-      "CalculatorMetadata": "@/types/core/calculations",
+      "CalculationMetadata": "@/types/core/calculations",
 
       "ValidationMetrics": "@/types/core/validation",
       "ValidationResult": "@/types/core/validation",
@@ -725,7 +725,7 @@ export type M1CalculationResult = CalculationResult<import('./variables').M1Deta
 export type M2CalculationResult = CalculationResult<import('./variables').M2Details>;
 export type M3CalculationResult = CalculationResult<import('./variables').M3Details>;
 
-export interface CalculatorMetadata {
+export interface CalculationMetadata {
   name: string;
   version: string;
   target: VariableTarget;
