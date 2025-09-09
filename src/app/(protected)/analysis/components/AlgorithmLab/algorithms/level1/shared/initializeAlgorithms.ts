@@ -2,6 +2,13 @@
 
 import { algorithmRegistry } from "./AlgorithmRegistry";
 
+// --- Adapters universels (legacy -> UniversalAlgorithm)
+import {
+  wrapXAlgorithm,
+  wrapYAlgorithm,
+  wrapM1Algorithm,
+} from "./legacyAdapters";
+
 // --- X (Conseiller)
 import { RegexXClassifier } from "../XAlgorithms/RegexXClassifier";
 import { SpacyXClassifier } from "../XAlgorithms/SpacyXClassifier";
@@ -13,6 +20,11 @@ import { RegexYClassifier } from "../YAlgorithms/RegexYClassifier";
 
 // --- M1 (Compteurs / métriques)
 import { M1ActionVerbCounter } from "../M1Algorithms/M1ActionVerbCounter";
+
+// --- M2 (Alignement X→Y)
+import M2LexicalAlignmentCalculator from "../M2Algorithms/M2LexicalAlignmentCalculator";
+import M2SemanticAlignmentCalculator from "../M2Algorithms/M2SemanticAlignmentCalculator";
+import M2CompositeAlignmentCalculator from "../M2Algorithms/M2CompositeAlignmentCalculator";
 
 // -----------------------------------------------------------------------------
 // Helpers top-level
@@ -36,7 +48,10 @@ export function initializeAlgorithms(): void {
 
   try {
     // ===== X (classifieurs conseiller) =====
-    algorithmRegistry.register("RegexXClassifier", new RegexXClassifier());
+    algorithmRegistry.register(
+      "RegexXClassifier",
+      wrapXAlgorithm(new RegexXClassifier())
+    );
 
     const spacyX = new SpacyXClassifier({
       apiUrl: process.env.SPACY_API_URL || "http://localhost:8000/classify",
@@ -44,42 +59,77 @@ export function initializeAlgorithms(): void {
       timeout: 5000,
       confidenceThreshold: 0.6,
     });
-    algorithmRegistry.register("SpacyXClassifier", spacyX);
+    algorithmRegistry.register("SpacyXClassifier", wrapXAlgorithm(spacyX));
 
     algorithmRegistry.register(
       "OpenAIXClassifier",
-      new OpenAIXClassifier({
-        model: "gpt-4o-mini",
-        temperature: 0,
-        maxTokens: 6,
-        timeout: 10000,
-        enableFallback: true,
-      })
+      wrapXAlgorithm(
+        new OpenAIXClassifier({
+          model: "gpt-4o-mini",
+          temperature: 0,
+          maxTokens: 6,
+          timeout: 10000,
+          enableFallback: true,
+        })
+      )
     );
 
     algorithmRegistry.register(
       "OpenAI3TXClassifier",
-      new OpenAI3TXClassifier({
-        model: "gpt-4o-mini",
-        temperature: 0,
-        maxTokens: 6,
-        timeout: 10000,
-        enableFallback: true,
-        strictPromptMode: true,
-      })
+      wrapXAlgorithm(
+        new OpenAI3TXClassifier({
+          model: "gpt-4o-mini",
+          temperature: 0,
+          maxTokens: 6,
+          timeout: 10000,
+          enableFallback: true,
+          strictPromptMode: true,
+        })
+      )
     );
 
     // ===== Y (classifieurs client) =====
-    algorithmRegistry.register("RegexYClassifier", new RegexYClassifier());
+    algorithmRegistry.register(
+      "RegexYClassifier",
+      wrapYAlgorithm(new RegexYClassifier())
+    );
 
     // ===== M1 (compteurs / métriques) =====
     algorithmRegistry.register(
       "M1ActionVerbCounter",
-      new M1ActionVerbCounter() as any
+      wrapM1Algorithm(new M1ActionVerbCounter())
+    );
+
+    // ===== M2 (calculateurs d’alignement) =====
+    algorithmRegistry.register(
+      "M2LexicalAlignment",
+      new M2LexicalAlignmentCalculator({
+        thresholdAligned: 0.5,
+        thresholdPartial: 0.3,
+      })
+    );
+
+    algorithmRegistry.register(
+      "M2SemanticAlignment",
+      new M2SemanticAlignmentCalculator({
+        confidenceThreshold: 0.6,
+        strictMode: false,
+      })
+    );
+
+    algorithmRegistry.register(
+      "M2CompositeAlignment",
+      new M2CompositeAlignmentCalculator({
+        lexicalWeight: 0.4,
+        semanticWeight: 0.6,
+        threshold: 0.5,
+        partialThreshold: 0.3,
+      })
     );
 
     // Log (optionnel)
     logAlgorithmStatus();
+    console.log("✅ Algorithmes initialisés avec adaptateurs universels");
   } catch (error) {
     console.error("❌ Erreur lors de l'initialisation des algorithmes:", error);
   }
@@ -97,7 +147,7 @@ function logAlgorithmStatus(): void {
     const _statusIcon = isValid ? "✅" : "⚠️";
 
     // Exemple de log si besoin:
-    // console.log(`${statusIcon} ${meta.displayName ?? meta.name ?? key}`);
+    // console.log(`${_statusIcon} ${meta.displayName ?? meta.name ?? key}`);
     // console.log(`   Type: ${meta.type} | Target: ${meta.target} | Version: ${meta.version ?? "1.0.0"}`);
     // console.log(`   Batch: ${meta.batchSupported ? "Oui" : "Non"} | Configuré: ${isValid ? "Oui" : "Non"}`);
   }

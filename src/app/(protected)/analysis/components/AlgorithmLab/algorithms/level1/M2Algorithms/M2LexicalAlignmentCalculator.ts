@@ -116,6 +116,17 @@ export class M2LexicalAlignmentCalculator
         inputSignature: `${input.t0?.slice(0, 10)}...${input.t1?.slice(0, 10)}`,
         executionPath: ["tokenize", "jaccard", "classify"],
         warnings: a.size === 0 && b.size === 0 ? ["Entrées vides"] : [],
+        // 🔽 new: pass context so the UI can render it
+        prev2_turn_verbatim:
+          (input as any).prev2_turn_verbatim ?? (input as any).prev2 ?? null,
+        prev1_turn_verbatim:
+          (input as any).prev1_turn_verbatim ?? (input as any).prev1 ?? null,
+        next_turn_verbatim:
+          (input as any).next_turn_verbatim ?? input.t1 ?? null,
+
+        // optional hints (used in header chips / annotations)
+        classifier: "M2LexicalAlignment",
+        type: "rule-based",
         extra: {
           lexicalScore: s,
           sharedTokens: shared(a, b),

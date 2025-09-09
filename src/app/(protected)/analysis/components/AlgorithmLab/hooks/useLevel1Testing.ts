@@ -9,7 +9,12 @@ import {
 import { algorithmRegistry } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry";
 import { initializeAlgorithms } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms";
 
-import type { XTag, YTag, XDetails, YDetails } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import type {
+  XTag,
+  YTag,
+  XDetails,
+  YDetails,
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 // ----------------- Types -----------------
 
 interface GoldStandardSample {
@@ -203,39 +208,57 @@ const mapTurnsToGoldStandard = (
       }
     }
 
-    // CLIENT (tour suivant du conseiller t)
+    // CLIENT (tour suivant du conseiller t) — garder uniquement un vrai tour client + tag Y valide
     if (t?.next_turn_verbatim && t?.next_turn_tag) {
-      const p1ForClient = t; // le -1 du client est le conseiller courant
-      const p2ForClient = prev1.get(t?.id) || null; // le -2 du client
+      // 1) Tag Y strict
+      const y = normalizeYLabelStrict(String(t.next_turn_tag));
+      const isY =
+        y === "CLIENT_POSITIF" ||
+        y === "CLIENT_NEGATIF" ||
+        y === "CLIENT_NEUTRE";
 
-      out.push({
-        verbatim: t.next_turn_verbatim,
-        expectedTag: normalizeLabel(t.next_turn_tag),
-        metadata: {
-          target: "client",
-          callId: t.call_id,
-          nextOf: t.id,
+      // 2) Orateur du tour suivant (si dispo). On reste permissif si colonne absente.
+      const looksLikeClient =
+        typeof t.next_turn_speaker === "string"
+          ? /^(tc|client)/i.test(t.next_turn_speaker)
+          : true;
 
-          // ✅ AJOUT CRUCIAL: Inclusion des annotations du tour parent
-          annotations: Array.isArray(t.annotations) ? t.annotations : [],
+      if (isY && looksLikeClient) {
+        const p1ForClient = t; // -1 du client
+        const p2ForClient = prev1.get(t?.id) || null; // -2 du client
 
-          // -1
-          prev1_turn_id: p1ForClient?.id,
-          prev1_turn_verbatim: p1ForClient?.verbatim,
-          prev1_turn_tag: p1ForClient?.tag
-            ? normalizeLabel(p1ForClient.tag)
-            : undefined,
-          prev1_speaker: p1ForClient?.speaker,
+        out.push({
+          verbatim: t.next_turn_verbatim,
+          expectedTag: y, // ✅ gold Y strict
+          metadata: {
+            target: "client",
+            callId: t.call_id,
+            nextOf: t.id,
 
-          // -2
-          prev2_turn_id: p2ForClient?.id,
-          prev2_turn_verbatim: p2ForClient?.verbatim,
-          prev2_turn_tag: p2ForClient?.tag
-            ? normalizeLabel(p2ForClient.tag)
-            : undefined,
-          prev2_speaker: p2ForClient?.speaker,
-        },
-      });
+            // on garde les annotations du tour parent (utile pour FT)
+            annotations: Array.isArray(t.annotations) ? t.annotations : [],
+
+            // -1
+            prev1_turn_id: p1ForClient?.id,
+            prev1_turn_verbatim: p1ForClient?.verbatim,
+            prev1_turn_tag: p1ForClient?.tag
+              ? normalizeLabel(p1ForClient.tag)
+              : undefined,
+            prev1_speaker: p1ForClient?.speaker,
+
+            // -2
+            prev2_turn_id: p2ForClient?.id,
+            prev2_turn_verbatim: p2ForClient?.verbatim,
+            prev2_turn_tag: p2ForClient?.tag
+              ? normalizeLabel(p2ForClient.tag)
+              : undefined,
+            prev2_speaker: p2ForClient?.speaker,
+
+            // (optionnel) exposer l’orateur du tour suivant si dispo
+            next_turn_speaker: t.next_turn_speaker ?? undefined,
+          },
+        });
+      }
     }
   }
 

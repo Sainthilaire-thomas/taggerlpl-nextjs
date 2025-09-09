@@ -50,15 +50,32 @@ export default function M2ValidationInterface() {
       (m2.results as M2Result[]).map((r) => ({
         id: r.id ?? Math.random().toString(),
         verbatim: r.verbatim ?? "",
-        predicted: r.predicted ?? "",
-        goldStandard: r.goldStandard ?? "",
-        correct: r.correct ?? false,
+        predicted: r.predicted ?? r.metadata?.m2?.value ?? "",
+        goldStandard: r.goldStandard ?? r.metadata?.m2?.gold ?? "",
+        correct:
+          typeof r.correct === "boolean"
+            ? r.correct
+            : (r.predicted ?? "") ===
+              (r.goldStandard ?? r.metadata?.m2?.gold ?? ""),
         confidence: r.confidence ?? 0,
         processingTime: r.processingTime ?? 0,
         metadata: {
-          verbatim: r.verbatim,
-          clientTurn: r.metadata?.clientTurn,
-          m2: r.metadata?.m2,
+          ...(r.metadata || {}),
+
+          // ✅ ensure the context keys the table reads are present
+          prev2_turn_verbatim:
+            r.metadata?.prev2_turn_verbatim ?? (r as any).prev2 ?? null,
+          prev1_turn_verbatim:
+            r.metadata?.prev1_turn_verbatim ?? (r as any).prev1 ?? null,
+          next_turn_verbatim:
+            r.metadata?.next_turn_verbatim ?? r.metadata?.clientTurn ?? null,
+
+          // an id for annotations
+          turnId: r.metadata?.turnId ?? r.metadata?.id ?? r.id ?? undefined,
+
+          // classifier/type hints for header chips
+          classifier: r.metadata?.classifier ?? "M2LexicalAlignment",
+          type: r.metadata?.type ?? "rule-based",
         },
       })),
     [m2.results]

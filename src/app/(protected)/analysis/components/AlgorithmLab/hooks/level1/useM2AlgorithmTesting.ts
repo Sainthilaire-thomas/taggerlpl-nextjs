@@ -41,9 +41,8 @@ export function useM2AlgorithmTesting() {
 
   const runTest = useCallback(
     async (sampleSize: number) => {
-      // TODO: remplace par fetch réel depuis turntagged avec next_turn_verbatim
-      // Utilisation des propriétés correctes : t0 et t1
-      const fakeData: M2Input[] = [
+      // 1) données de démo (à remplacer par le gold réel quand dispo)
+      const seed: M2Input[] = [
         {
           t0: "Je vais vérifier votre dossier tout de suite.",
           t1: "D'accord merci.",
@@ -58,56 +57,70 @@ export function useM2AlgorithmTesting() {
         },
       ];
 
-      const algoInstance = AlgorithmRegistry.get(selectedAlgorithm);
-      if (!algoInstance) {
+      // 2) construire un jeu de N éléments (répétition contrôlée du seed)
+      const data: M2Input[] = Array.from(
+        { length: sampleSize },
+        (_, i) => seed[i % seed.length]
+      );
+
+      const algo = AlgorithmRegistry.get(selectedAlgorithm);
+      if (!algo) {
         console.error(`Algorithme '${selectedAlgorithm}' non trouvé`);
         return;
       }
 
       setIsRunning(true);
-      progress.current = { current: 0, total: fakeData.length };
+      progress.current = { current: 0, total: data.length };
 
       const out: TVValidationResult[] = [];
-      for (let i = 0; i < fakeData.length; i++) {
-        try {
-          // Utilisation de l'interface universelle run() au lieu de calculate()
-          const r = (await algoInstance.run(fakeData[i])) as UniversalResult;
 
-          // Cast vers M2Details pour accéder aux propriétés spécifiques M2
-          const m2Details = r.metadata?.details as M2Details;
+      for (let i = 0; i < data.length; i++) {
+        try {
+          const r = (await algo.run(data[i])) as UniversalResult;
+          const m2 = r.metadata?.details as M2Details | undefined;
 
           out.push({
             id: i,
-            verbatim: fakeData[i].t0 || "", // Utilisation de t0
+            verbatim: data[i].t0 ?? "",
             predicted: r.prediction,
-            next_turn_verbatim: fakeData[i].t1, // Utilisation de t1
-            correct: undefined, // si gold dispo, calcule correct ici
+            // 👉 gold réel à brancher ici quand disponible
+            goldStandard: "", // laisser vide tant que pas de référence M2
+            correct: false, // idem (sinon calculer vs gold)
+            confidence: r.confidence,
+            processingTime: r.processingTime,
+            // 👇 le contexte doit être dans metadata.*
             metadata: {
+              next_turn_verbatim: data[i].t1,
+              // prev1/prev2 si dispo depuis vos données réelles :
+              // prev1_turn_verbatim: ...,
+              // prev2_turn_verbatim: ...,
               m2: {
-                value: r.prediction as TVMetadataM2["value"],
+                value:
+                  (r.prediction as TVMetadataM2["value"]) ?? "DESALIGNEMENT",
                 scale: "nominal",
                 details: {
-                  alignmentType: r.prediction as TVMetadataM2["value"],
-                  lexicalScore: Number(m2Details?.lexicalAlignment ?? 0),
-                  semanticScore: Number(m2Details?.semanticAlignment ?? 0),
-                  sharedTokens: (m2Details?.sharedTerms as string[]) ?? [],
-                  patterns: [], // À remplir selon votre logique
-                  justification: "Calcul M2 (prototype)",
+                  alignmentType:
+                    (r.prediction as TVMetadataM2["value"]) ?? "DESALIGNEMENT",
+                  lexicalScore: Number(m2?.lexicalAlignment ?? 0),
+                  semanticScore: Number(m2?.semanticAlignment ?? 0),
+                  sharedTokens: (m2?.sharedTerms as string[]) ?? [],
                   confidence: r.confidence,
                   processingTime: r.processingTime,
                 },
               },
             },
           });
+
           progress.current.current = i + 1;
-        } catch (error) {
-          console.error(`Erreur lors du calcul pour l'item ${i}:`, error);
+        } catch (e) {
+          console.error(`Erreur M2 item ${i}:`, e);
           out.push({
             id: i,
-            verbatim: fakeData[i].t0 || "", // Utilisation de t0
+            verbatim: data[i].t0 ?? "",
             predicted: "ERROR",
-            next_turn_verbatim: fakeData[i].t1, // Utilisation de t1
+            goldStandard: "",
             correct: false,
+            metadata: { next_turn_verbatim: data[i].t1 },
           });
         }
       }

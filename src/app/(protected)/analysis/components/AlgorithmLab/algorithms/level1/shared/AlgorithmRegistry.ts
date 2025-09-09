@@ -1,5 +1,7 @@
 // src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry.ts
 import type { BaseAlgorithm, AlgorithmMetadata } from "./BaseAlgorithm";
+// 👉 Import des types universels pour accepter aussi les nouveaux algos
+import type { UniversalAlgorithm } from "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base";
 
 function isFunc(v: unknown): v is (...args: any[]) => any {
   return typeof v === "function";
@@ -12,10 +14,10 @@ function isFunc(v: unknown): v is (...args: any[]) => any {
  */
 function synthesizeMetadata(
   name: string,
-  algorithm: BaseAlgorithm<any, any>,
+  algorithm: UniversalAlgorithm | BaseAlgorithm<any, any>,
   metaOverride?: Omit<AlgorithmMetadata, "name">
 ): AlgorithmMetadata {
-  // On essaie d'utiliser getMetadata() si dispo
+  // On essaie d'utiliser getMetadata() si dispo (legacy-like)
   const md = isFunc((algorithm as any)?.getMetadata)
     ? (algorithm as any).getMetadata() ?? {}
     : {};
@@ -39,10 +41,14 @@ function synthesizeMetadata(
   };
 
   const target = md.target ?? metaOverride?.target ?? inferTarget();
-  const type =
+
+  // ⚠️ Fallback type :
+  // - on évite "classifier" qui n'existe pas dans nos unions
+  // - on autorise "metric" (cas M1) même si le legacy ne le connaissait pas
+  const typeCandidate =
     md.type ??
     metaOverride?.type ??
-    (target === "M1" ? "metric" : "classifier"); // valeur sûre pour l'UI
+    (target === "M1" ? "metric" : "rule-based");
 
   const displayName =
     md.displayName ?? md.name ?? metaOverride?.displayName ?? name;
@@ -54,10 +60,11 @@ function synthesizeMetadata(
   );
   const description = md.description ?? metaOverride?.description;
 
+  // On cast "type" en any ici pour tolérer l'écart éventuel d'unions legacy/universel
   return {
     name,
     displayName,
-    type,
+    type: typeCandidate as any,
     target,
     version,
     batchSupported,
@@ -66,7 +73,11 @@ function synthesizeMetadata(
 }
 
 export class AlgorithmRegistry {
-  private static algorithms = new Map<string, BaseAlgorithm<any, any>>();
+  // 👉 Accepte désormais UniversalAlgorithm **ou** BaseAlgorithm
+  private static algorithms = new Map<
+    string,
+    UniversalAlgorithm | BaseAlgorithm<any, any>
+  >();
 
   /**
    * Enregistre un algorithme dans le registre.
@@ -76,7 +87,7 @@ export class AlgorithmRegistry {
    */
   static register(
     name: string,
-    algorithm: BaseAlgorithm<any, any>,
+    algorithm: UniversalAlgorithm | BaseAlgorithm<any, any>,
     meta?: Omit<AlgorithmMetadata, "name">
   ): void {
     if (!algorithm || typeof algorithm !== "object") {
@@ -124,9 +135,9 @@ export class AlgorithmRegistry {
 
   static get<TInput, TOutput>(
     name: string
-  ): BaseAlgorithm<TInput, TOutput> | undefined {
+  ): (UniversalAlgorithm | BaseAlgorithm<TInput, TOutput>) | undefined {
     const algo = this.algorithms.get(name) as
-      | BaseAlgorithm<TInput, TOutput>
+      | (UniversalAlgorithm | BaseAlgorithm<TInput, TOutput>)
       | undefined;
     if (!algo) {
       console.warn(`⚠️ Algorithme '${name}' non trouvé dans le registre`);
@@ -146,7 +157,7 @@ export class AlgorithmRegistry {
       const d = (algo as any)?.describe;
 
       if (!isFunc(d)) {
-        // Fabriquer une meta synthétique pour rester tolerant
+        // Fabriquer une meta synthétique pour rester tolérant
         const synthesized = synthesizeMetadata(key, algo);
         out.push({ key, meta: synthesized });
         console.warn(
@@ -180,7 +191,7 @@ export class AlgorithmRegistry {
     return out;
   }
 
-  static getAll(): Map<string, BaseAlgorithm<any, any>> {
+  static getAll(): Map<string, UniversalAlgorithm | BaseAlgorithm<any, any>> {
     return new Map(this.algorithms);
   }
 

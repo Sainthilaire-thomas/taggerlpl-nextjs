@@ -142,4 +142,16 @@ export default class M2CompositeAlignmentCalculator extends BaseM2Calculator {
       },
     };
   }
+
+  // 👇 AJOUT : run() attendu par les utilitaires existants
+  async run(input: M2Input): Promise<CalculationResult<M2Details>> {
+    return this.calculate(input);
+  }
+
+  // 👇 (optionnel) alias batch pour compat globale
+  async batchRun(inputs: M2Input[]): Promise<CalculationResult<M2Details>[]> {
+    return this.batchCalculate
+      ? this.batchCalculate(inputs)
+      : Promise.all(inputs.map((i) => this.calculate(i)));
+  }
 }

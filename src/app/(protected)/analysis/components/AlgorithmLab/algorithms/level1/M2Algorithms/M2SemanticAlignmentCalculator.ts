@@ -31,14 +31,6 @@ export class M2SemanticAlignmentCalculator extends BaseM2Calculator {
   static readonly ID = "M2SemanticAlignment";
   private config: SemanticConfig;
 
-  static {
-    // ✅ CORRECTION: Enregistrer une instance, pas la classe
-    AlgorithmRegistry.register(
-      M2SemanticAlignmentCalculator.ID,
-      new M2SemanticAlignmentCalculator()
-    );
-  }
-
   constructor(config?: Partial<SemanticConfig>) {
     super();
     this.config = {
@@ -135,13 +127,15 @@ export class M2SemanticAlignmentCalculator extends BaseM2Calculator {
     const start = performance.now();
     const { score, hits } = this.scorePatterns(input);
 
+    // 2) Harmoniser les labels de sortie (facultatif mais propre)
+    const PRED = {
+      STRONG: "ALIGNEMENT_FORT",
+      PARTIAL: "ALIGNEMENT_FAIBLE",
+      NONE: "DESALIGNEMENT",
+    } as const;
     // mapping heuristique
     const prediction =
-      score >= 0.5
-        ? "aligné"
-        : score >= 0.25
-        ? "partiellement_aligné"
-        : "non_aligné";
+      score >= 0.5 ? PRED.STRONG : score >= 0.25 ? PRED.PARTIAL : PRED.NONE;
 
     const duration = performance.now() - start;
 
