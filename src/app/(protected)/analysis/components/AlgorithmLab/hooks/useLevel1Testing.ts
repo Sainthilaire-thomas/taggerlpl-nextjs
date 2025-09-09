@@ -77,6 +77,16 @@ const normalizeYLabelStrict = (raw: string): YTag => {
     CLIENT_POSITIF: "CLIENT_POSITIF",
     CLIENT_NEGATIF: "CLIENT_NEGATIF",
     CLIENT_NEUTRE: "CLIENT_NEUTRE",
+
+    // ✅ AJOUT CRUCIAL : Vos données réelles avec espaces
+    "CLIENT POSITIF": "CLIENT_POSITIF", // ← VOS DONNÉES
+    "CLIENT NEGATIF": "CLIENT_NEGATIF", // ← VOS DONNÉES
+    "CLIENT NEUTRE": "CLIENT_NEUTRE", // ← VOS DONNÉES
+
+    // Variantes si nécessaire
+    POS: "CLIENT_POSITIF",
+    NEG: "CLIENT_NEGATIF",
+    NEU: "CLIENT_NEUTRE",
   };
   return map[v] ?? "CLIENT_NEUTRE";
 };
@@ -157,6 +167,24 @@ const buildPrevIndex = (rows: any[]) => {
 };
 
 // 🔹 1b) map vers le gold standard en incluant prev1/prev2 et next (+1)
+// ✅ Ajouter cette fonction utilitaire AVANT mapTurnsToGoldStandard
+const getNextTurn = (currentTurn: any, allTurns: any[]): any | null => {
+  const currentIndex = allTurns.findIndex((turn) => turn.id === currentTurn.id);
+  if (currentIndex === -1 || currentIndex >= allTurns.length - 1) return null;
+
+  // Chercher le prochain tour dans la même conversation
+  for (let i = currentIndex + 1; i < allTurns.length; i++) {
+    const candidate = allTurns[i];
+    if (
+      candidate.call_id === currentTurn.call_id &&
+      candidate.start_time > currentTurn.end_time
+    ) {
+      return candidate;
+    }
+  }
+  return null;
+};
+
 const mapTurnsToGoldStandard = (
   allTurnTagged: any[],
   allowedConseiller?: Set<string>
@@ -168,7 +196,7 @@ const mapTurnsToGoldStandard = (
     const p1 = prev1.get(t?.id) || null;
     const p2 = prev2.get(t?.id) || null;
 
-    // CONSEILLER (tour courant = t)
+    // CONSEILLER (tour courant = t) - SANS SPEAKER
     if (t?.verbatim && t?.tag) {
       const norm = normalizeLabel(t.tag);
       if (!allowedConseiller || allowedConseiller.has(norm)) {
@@ -178,102 +206,108 @@ const mapTurnsToGoldStandard = (
           metadata: {
             target: "conseiller",
             callId: t.call_id,
-            speaker: t.speaker,
+            // speaker: t.speaker, // ❌ SUPPRIMÉ
             start: t.start_time,
             end: t.end_time,
             turnId: t.id,
 
-            // ✅ AJOUT CRUCIAL: Inclusion des annotations
+            // Inclusion des annotations
             annotations: Array.isArray(t.annotations) ? t.annotations : [],
 
-            // +1
+            // Contexte pour conseiller - SANS SPEAKERS
             next_turn_verbatim: t.next_turn_verbatim || undefined,
             next_turn_tag: t.next_turn_tag
               ? normalizeLabel(t.next_turn_tag)
               : undefined,
-
-            // -1
             prev1_turn_id: p1?.id,
             prev1_turn_verbatim: p1?.verbatim,
             prev1_turn_tag: p1?.tag ? normalizeLabel(p1.tag) : undefined,
-            prev1_speaker: p1?.speaker,
-
-            // -2
+            // prev1_speaker: p1?.speaker, // ❌ SUPPRIMÉ
             prev2_turn_id: p2?.id,
             prev2_turn_verbatim: p2?.verbatim,
             prev2_turn_tag: p2?.tag ? normalizeLabel(p2.tag) : undefined,
-            prev2_speaker: p2?.speaker,
+            // prev2_speaker: p2?.speaker, // ❌ SUPPRIMÉ
+
+            // ✅ AJOUT : current_turn_verbatim pour affichage universel
+            current_turn_verbatim: t.verbatim,
           },
         });
       }
     }
 
-    // CLIENT (tour suivant du conseiller t) — garder uniquement un vrai tour client + tag Y valide
-    if (t?.next_turn_verbatim && t?.next_turn_tag) {
-      // 1) Tag Y strict
-      const y = normalizeYLabelStrict(String(t.next_turn_tag));
-      const isY =
-        y === "CLIENT_POSITIF" ||
-        y === "CLIENT_NEGATIF" ||
-        y === "CLIENT_NEUTRE";
+    // ✅ TOURS CLIENT DIRECTS - SANS SPEAKERS
+    if (t?.verbatim && t?.tag && t.tag.includes("CLIENT")) {
+      const y = normalizeYLabelStrict(String(t.tag));
+      const isValidY = [
+        "CLIENT_POSITIF",
+        "CLIENT_NEGATIF",
+        "CLIENT_NEUTRE",
+      ].includes(y);
 
-      // 2) Orateur du tour suivant (si dispo). On reste permissif si colonne absente.
-      const looksLikeClient =
-        typeof t.next_turn_speaker === "string"
-          ? /^(tc|client)/i.test(t.next_turn_speaker)
-          : true;
-
-      if (isY && looksLikeClient) {
-        const p1ForClient = t; // -1 du client
-        const p2ForClient = prev1.get(t?.id) || null; // -2 du client
+      if (isValidY) {
+        const nextTurn = getNextTurn(t, allTurnTagged);
 
         out.push({
-          verbatim: t.next_turn_verbatim,
-          expectedTag: y, // ✅ gold Y strict
+          verbatim: t.verbatim, // ✅ Tour client direct
+          expectedTag: y, // ✅ Tag client normalisé
           metadata: {
             target: "client",
             callId: t.call_id,
-            nextOf: t.id,
+            // speaker: t.speaker, // ❌ SUPPRIMÉ
+            start: t.start_time,
+            end: t.end_time,
+            turnId: t.id, // ✅ ID réel du tour client
 
-            // on garde les annotations du tour parent (utile pour FT)
+            // Inclusion des annotations
             annotations: Array.isArray(t.annotations) ? t.annotations : [],
 
-            // -1
-            prev1_turn_id: p1ForClient?.id,
-            prev1_turn_verbatim: p1ForClient?.verbatim,
-            prev1_turn_tag: p1ForClient?.tag
-              ? normalizeLabel(p1ForClient.tag)
-              : undefined,
-            prev1_speaker: p1ForClient?.speaker,
+            // ✅ Contexte NATUREL centré sur le tour client - SANS SPEAKERS
+            prev2_turn_verbatim: p2?.verbatim,
+            prev1_turn_verbatim: p1?.verbatim,
+            current_turn_verbatim: t.verbatim, // ✅ FOCUS = tour client
+            next_turn_verbatim: nextTurn?.verbatim,
 
-            // -2
-            prev2_turn_id: p2ForClient?.id,
-            prev2_turn_verbatim: p2ForClient?.verbatim,
-            prev2_turn_tag: p2ForClient?.tag
-              ? normalizeLabel(p2ForClient.tag)
-              : undefined,
-            prev2_speaker: p2ForClient?.speaker,
+            // ❌ SPEAKERS SUPPRIMÉS
+            // prev2_speaker: p2?.speaker,
+            // prev1_speaker: p1?.speaker,
+            // current_speaker: "CLIENT",
+            // next_speaker: nextTurn?.speaker,
 
-            // (optionnel) exposer l’orateur du tour suivant si dispo
-            next_turn_speaker: t.next_turn_speaker ?? undefined,
+            // IDs pour référence
+            prev2_turn_id: p2?.id,
+            prev1_turn_id: p1?.id,
+            next_turn_id: nextTurn?.id,
           },
         });
       }
     }
   }
 
-  // ✅ AJOUT: Debug pour vérifier la transmission des annotations
-  const totalAnnotations = out.reduce((total, sample) => {
-    const annotations = sample.metadata?.annotations || [];
-    return total + annotations.length;
-  }, 0);
+  // Debug pour vérifier la transmission des annotations
+  const totalAnnotations = out.reduce(
+    (total: number, sample: GoldStandardSample) => {
+      const annotations = sample.metadata?.annotations || [];
+      return total + annotations.length;
+    },
+    0
+  );
 
   console.log(`🔍 mapTurnsToGoldStandard: ${out.length} échantillons créés`);
   console.log(`📝 ${totalAnnotations} annotations transmises au total`);
 
+  // Statistiques par target
+  const conseillerCount = out.filter(
+    (s: GoldStandardSample) => s.metadata?.target === "conseiller"
+  ).length;
+  const clientCount = out.filter(
+    (s: GoldStandardSample) => s.metadata?.target === "client"
+  ).length;
+  console.log(`👨‍💼 ${conseillerCount} échantillons conseiller (X)`);
+  console.log(`👤 ${clientCount} échantillons client (Y)`);
+
   // Debug détaillé: afficher quelques exemples avec annotations
   const withAnnotations = out.filter(
-    (s) => s.metadata?.annotations?.length > 0
+    (s: GoldStandardSample) => s.metadata?.annotations?.length > 0
   );
   if (withAnnotations.length > 0) {
     console.log(
@@ -371,7 +405,6 @@ export const useLevel1Testing = () => {
   }, [errorGlobalData]);
 
   // Dataset gold standard dérivé des données réelles
-
   const goldStandardData: GoldStandardSample[] = useMemo(
     () => mapTurnsToGoldStandard(allTurnTagged, allowedConseiller),
     [allTurnTagged, allowedConseiller]
@@ -417,7 +450,7 @@ export const useLevel1Testing = () => {
 
         const outs: ClassificationResult[] = j.results;
 
-        // Pour M1, il n’y a pas de "gold label" catégoriel : on renvoie la valeur mesurée
+        // Pour M1, il n'y a pas de "gold label" catégoriel : on renvoie la valeur mesurée
         // On met 'goldStandard' = "—" pour ne pas alimenter la matrice.
         return outs.map((out, i) => {
           const sample = samples[i];
@@ -433,7 +466,7 @@ export const useLevel1Testing = () => {
             metadata: {
               ...sample.metadata,
               classifier: classifierName,
-              // expose proprement M1 pour l’UI :
+              // expose proprement M1 pour l'UI :
               m1: {
                 value: dens,
                 densityPer: out.metadata?.densityPer ?? 100,
@@ -527,7 +560,7 @@ export const useLevel1Testing = () => {
         });
       }
 
-      // 2) Sinon, on peut essayer le batch local s’il existe (runtimes non-LLM)
+      // 2) Sinon, on peut essayer le batch local s'il existe (runtimes non-LLM)
       if (typeof (classifier as any).runBatch === "function") {
         try {
           const outs = await (classifier as any).runBatch(inputs);
@@ -813,12 +846,12 @@ export const useLevel1Testing = () => {
         "notre système fonctionne ainsi",
         "d'accord je comprends",
       ];
-      const out: ClassificationResult[] = [];
+      const results: ClassificationResult[] = [];
       for (const s of samples) {
         try {
-          out.push(await (classifier as any).run(s));
+          results.push(await (classifier as any).run(s));
         } catch (e) {
-          out.push({
+          results.push({
             prediction: "ERREUR",
             confidence: 0,
             metadata: {
@@ -827,12 +860,12 @@ export const useLevel1Testing = () => {
           });
         }
       }
-      return out;
+      return results;
     },
     []
   );
 
-  /** Nombre d’échantillons pertinents selon le classificateur (corrige le "7082") */
+  /** Nombre d'échantillons pertinents selon le classificateur (corrige le "7082") */
   const getRelevantCountFor = useCallback(
     (classifierName: string): number => {
       const target = getClassificationTarget(classifierName);
@@ -842,7 +875,7 @@ export const useLevel1Testing = () => {
     [goldStandardData]
   );
 
-  /** Utile si tu veux afficher les deux compteurs dans l’UI */
+  /** Utile si tu veux afficher les deux compteurs dans l'UI */
   const getGoldStandardCountByTarget = useCallback(() => {
     const conseiller = goldStandardData.filter(
       (s) => s.metadata?.target === "conseiller"
@@ -873,10 +906,10 @@ export const useLevel1Testing = () => {
     getClassifierInfo: (name: string) =>
       algorithmRegistry.list().find((e) => e.key === name)?.meta,
 
-    // pratique pour l’UI
+    // pratique pour l'UI
     isDataReady: !isLoading && !error && goldStandardData.length > 0,
 
-    // nouveaux helpers pour l’UI (slider/compteur)
+    // nouveaux helpers pour l'UI (slider/compteur)
     getRelevantCountFor,
     getGoldStandardCountByTarget,
   };

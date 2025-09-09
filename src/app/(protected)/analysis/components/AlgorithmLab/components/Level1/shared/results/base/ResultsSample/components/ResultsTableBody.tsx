@@ -169,7 +169,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
       note: draftComment,
       gold: row.goldStandard,
       predicted: row.predicted,
-      confidence: row.confidence,
+      confidence: row.confidence ?? 0, // ✅ Fix: Handle undefined confidence
       context: {
         prev2: m.prev2_turn_verbatim || null,
         prev1: m.prev1_turn_verbatim || null,
@@ -280,10 +280,17 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
               const prev2 = m.prev2_turn_verbatim as string | undefined;
               const prev1 = m.prev1_turn_verbatim as string | undefined;
               const next1 = m.next_turn_verbatim as string | undefined;
+              // ✅ FOCUS UNIVERSEL - fonctionne pour X et Y
+              const focusVerbatim = m.current_turn_verbatim || r.verbatim;
+              const isClientTarget = m.target === "client";
+              const focusPrefix = isClientTarget
+                ? "0 [CLIENT]"
+                : "0 [CONSEILLER]";
 
-              const p2prefix = m.prev2_speaker ? `[${m.prev2_speaker}]` : "−2";
-              const p1prefix = m.prev1_speaker ? `[${m.prev1_speaker}]` : "−1";
+              const p2prefix = "−2"; // Toujours rang temporel
+              const p1prefix = "−1"; // Toujours rang temporel
 
+              const nextPrefix = "+1"; // Tour suivant
               const isOdd = idx % 2 === 1;
               const base = isOdd
                 ? theme.palette.primary.main
@@ -293,6 +300,9 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
 
               const groupBg = alpha(base, BG_ALPHA);
               const groupEdge = alpha(base, EDGE_ALPHA);
+
+              // ✅ Fix: Ensure confidence has a default value
+              const confidence = r.confidence ?? 0;
 
               return (
                 <React.Fragment key={idx}>
@@ -334,28 +344,28 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                       <Box sx={{ display: "grid", gap: 0.5 }}>
                         <ToneLine
                           text={prev2}
-                          prefix={p2prefix}
+                          prefix={p2prefix} // "−2"
                           tone="A"
                           italic
                           tooltip={prev2 || ""}
                         />
                         <ToneLine
                           text={prev1}
-                          prefix={p1prefix}
+                          prefix={p1prefix} // "−1"
                           tone="B"
                           tooltip={prev1 || ""}
                         />
                         <ToneLine
-                          text={r.verbatim}
-                          prefix="0"
+                          text={focusVerbatim}
+                          prefix={focusPrefix} // "0"
                           tone="CURRENT"
                           strong
                           lines={2}
-                          tooltip={r.verbatim}
+                          tooltip={`Tour courant: ${focusVerbatim || ""}`}
                         />
                         <ToneLine
                           text={next1}
-                          prefix="+1"
+                          prefix={nextPrefix} // "+1"
                           tone="B"
                           italic
                           tooltip={next1 || ""}
@@ -413,12 +423,12 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                           fontWeight: "bold",
                           color: r.correct
                             ? "success.main"
-                            : r.confidence > 0.7
+                            : confidence > 0.7
                             ? "error.main"
                             : "warning.main",
                         }}
                       >
-                        {(r.confidence * 100).toFixed(1)}%
+                        {(confidence * 100).toFixed(1)}%
                       </Typography>
                     </TableCell>
 

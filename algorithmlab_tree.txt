@@ -10,6 +10,7 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |   ALGORIHTMLAB_NEW_ARBO.MD
 |   algorithm-lab-imports.txt
 |   ALGORITHMLAB_FINETUNING.MD
+|   ALGORITHMLAB_FLUX_LNCER_TEST.MD
 |   ALGORITHMLAB_MIGRATION.MD
 |   ALGORITHMLAB_MIG_PHASE1.MD
 |   ALGORITHMLAB_MultiClassifiers.MD
@@ -58,17 +59,14 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |       |           BaseM3Calculator.ts
 |       |           
 |       +---shared
-|       |       AlgorithmRegistry copy 2.ts
-|       |       AlgorithmRegistry copy.ts
 |       |       AlgorithmRegistry.ts
 |       |       BaseAlgorithm.ts
 |       |       BaseClassifier.ts
 |       |       ClassifierComparator.ts
 |       |       ClassifierRegistry.ts
 |       |       index.ts
-|       |       initializeAlgorithms copy 2.ts
-|       |       initializeAlgorithms copy.ts
 |       |       initializeAlgorithms.ts
+|       |       legacyAdapters.ts
 |       |       PerformanceMetrics.ts
 |       |       
 |       +---XAlgorithms
@@ -136,7 +134,6 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |   |   |   |   
 |   |   |   \---TechnicalValidation
 |   |   |           index.ts
-|   |   |           ResultsSample copy.tsx
 |   |   |           TechnicalValidation.tsx
 |   |   |           TECHNICALVALIDATION_MIG.MD
 |   |   |           
@@ -257,6 +254,7 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |   |       2025-09-04-normalisation-types.md
 |   |       2025-09-04-setup-M2.md
 |   |       2025-09-06-migration-types.md
+|   |       2025-09-08-migration-XYM1M2M2-nouvelle interface.md
 |   |       template-session.md
 |   |       
 |   \---types
@@ -277,6 +275,7 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |           useXAlgorithmTesting.ts
 |           
 +---types
+|   |   enrichir les types.md
 |   |   index.ts
 |   |   Level0Types.ts
 |   |   Level1Types.ts
@@ -299,6 +298,7 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |   +---core
 |   |       calculations.ts
 |   |       index.ts
+|   |       level0.ts
 |   |       validation.ts
 |   |       variables.ts
 |   |       

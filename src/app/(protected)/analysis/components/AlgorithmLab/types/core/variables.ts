@@ -36,10 +36,10 @@ export type XTag = VariableX | "REFLET" | "CLOTURE" | "AUTRE_X";
 
 export type YTag =
   | "CLIENT_POSITIF"
-  | "CLIENT_NEUTRE"
   | "CLIENT_NEGATIF"
-  | "CLIENT_QUESTION"
-  | "CLIENT_SILENCE"
+  | "CLIENT_NEUTRE"
+  | "CLIENT_QUESTION" // ← Si utilisé dans RegexYClassifier
+  | "CLIENT_SILENCE" // ← Si utilisé dans RegexYClassifier
   | "AUTRE_Y";
 
 export type VariableY = YTag;
