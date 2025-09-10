@@ -1,9 +1,8 @@
 /**
- * @fileoverview Types de base des algorithmes AlgorithmLab
- * - UniversalAlgorithm (contrat UI)
- * - BaseAlgorithm (contrat bas niveau)
- * - Descripteurs riches, métadonnées, paramètres
- * - Helpers de résultat (isValid, createErrorResult, createSuccessResult)
+ * @fileoverview Types de base des algorithmes AlgorithmLab - VERSION FUSIONNÉE COMPATIBLE
+ * - Préserve votre existant
+ * - Ajoute les extensions nécessaires pour M2
+ * - Résout les conflits TypeScript
  */
 
 import type {
@@ -13,7 +12,97 @@ import type {
 } from "../core/variables";
 
 // ========================================================================
-// CONTRAT UNIVERSEL (UI)
+// PARAMÈTRES & TYPES D'ALGO
+// ========================================================================
+
+export type AlgorithmType = "rule-based" | "ml" | "llm" | "hybrid" | "metric";
+
+/** ⚠️ Utilisé ailleurs avec alias dans index.ts (BaseAlgorithmParameters) */
+export interface AlgorithmParameters {
+  [key: string]: boolean | number | string;
+}
+
+export interface ParameterDescriptor {
+  type: "number" | "string" | "boolean" | "select";
+  required?: boolean;
+  min?: number;
+  max?: number;
+  step?: number;
+  options?: Array<{ label: string; value: string }>;
+  description?: string;
+}
+
+export interface AlgorithmConfig {
+  [key: string]: unknown;
+}
+
+// ========================================================================
+// ALGORITHMDESCRIPTOR - VERSION NETTOYÉE
+// ========================================================================
+
+export interface AlgorithmDescriptor {
+  // ✅ PROPRIÉTÉS CORE D'UN ALGORITHME
+  name: string; // ID unique (ex: "OpenAIXClassifier")
+  displayName: string; // Nom affiché (ex: "OpenAI X Classifier")
+  version: string; // Version semver (ex: "1.2.0")
+  type: AlgorithmType; // Type d'implémentation
+  target: VariableTarget; // Variable ciblée (X, Y, M1, M2, M3)
+  batchSupported: boolean; // Support du traitement par lot
+  requiresContext: boolean; // Nécessite du contexte conversationnel
+  description?: string; // Description détaillée
+  parameters?: Record<string, ParameterDescriptor>;
+  examples?: Array<{ input: unknown; output?: unknown; note?: string }>; // Exemples d'utilisation
+
+  // ✅ PROPRIÉTÉS OPTIONNELLES POUR COMPATIBILITÉ UI
+  desc?: {
+    displayName?: string;
+    description?: string;
+  };
+  metrics?: {
+    differential?: number;
+    avgMs?: number;
+    accuracy?: number;
+    precision?: number;
+    recall?: number;
+    f1Score?: number;
+  };
+
+  // ✅ Identifiant alternatif pour certains composants
+  id?: string;
+}
+
+// ========================================================================
+// ALGORITHMMETADATA - VERSION ÉTENDUE COMPATIBLE
+// ========================================================================
+
+/**
+ * Interface AlgorithmMetadata ÉTENDUE pour supporter :
+ * - Votre existant (key, label, etc.)
+ * - Les nouveaux requis (name, displayName, type, etc.)
+ * - La rétrocompatibilité complète
+ */
+export interface AlgorithmMetadata {
+  key: string; // SEUL champ obligatoire
+
+  // Tous les autres champs optionnels
+  label?: string;
+  version?: string;
+  description?: string;
+  target?: VariableTarget;
+  tags?: string[];
+  id?: string;
+  displayName?: string;
+  name?: string;
+  type?: AlgorithmType;
+  batchSupported?: boolean;
+  requiresContext?: boolean;
+  family?: string;
+  evidences?: string[];
+  topProbs?: { label: string; prob: number }[];
+}
+
+// ========================================================================
+// CONTRAT UNIVERSEL (UI) - INCHANGÉ
 // ========================================================================
 
 export interface UniversalAlgorithm {
@@ -28,100 +117,17 @@ export interface UniversalAlgorithm {
 }
 
 // ========================================================================
-// PARAMÈTRES & TYPES D’ALGO
+// CONTRAT BAS NIVEAU - COMPATIBLE AVEC VOTRE EXISTANT
 // ========================================================================
 
-export type AlgorithmType = "rule-based" | "ml" | "llm" | "hybrid" | "metric";
-
-export interface ParameterDescriptor {
-  type: "number" | "string" | "boolean" | "select";
-  required?: boolean;
-  min?: number;
-  max?: number;
-  step?: number;
-  options?: Array<{ label: string; value: string }>;
-  description?: string;
-}
-
-export interface AlgorithmDescriptor {
-  // Propriétés existantes
-  name: string; // ID unique (ex: "OpenAIXClassifier")
-  displayName: string; // Nom affiché (ex: "OpenAI X Classifier")
-  version: string; // Version semver (ex: "1.2.0")
-  type: AlgorithmType; // Type d'implémentation
-  target: VariableTarget; // Variable ciblée (X, Y, M1, M2, M3)
-  batchSupported: boolean; // Support du traitement par lot
-  requiresContext: boolean; // Nécessite du contexte conversationnel
-  description?: string; // Description détaillée
-  parameters?: Record<string, ParameterDescriptor>;
-  examples?: Array<{ input: unknown; output?: unknown; note?: string }>; // Exemples d'utilisation
-
-  // ✅ NOUVELLES propriétés optionnelles pour M2ValidationInterface et autres composants
-  desc?: {
-    displayName?: string;
-    description?: string;
-  };
-  metrics?: {
-    differential?: number;
-    avgMs?: number;
-    accuracy?: number;
-    precision?: number;
-    recall?: number;
-    f1Score?: number;
-  };
-
-  // ✅ Propriétés alternatives pour différents formats
-  id?: string; // Identifiant alternatif
-  callId?: string | number;
-  startTime?: number;
-  endTime?: number;
-  input?: string;
-  speaker?: string;
-  predicted?: string;
-  goldStandard?: string;
-  confidence?: number;
-  correct?: boolean;
-  processingTime?: number;
-}
-
-export interface AlgorithmMetadata {
-  key: string; // identifiant interne (ex: "m2-lexical")
-  label?: string; // libellé humain
-  version?: string; // "1.0.0"
-  description?: string;
-  target?: VariableTarget; // X|Y|M1|M2|M3
-  tags?: string[];
-
-  // champs tolérés par certains registres
-  id?: string;
-  displayName?: string;
-}
-
-export interface AlgorithmConfig {
-  [key: string]: unknown;
-}
-
-/** ⚠️ Utilisé ailleurs avec alias dans index.ts (BaseAlgorithmParameters) */
-export interface AlgorithmParameters {
-  [key: string]: boolean | number | string;
-}
-
-// ========================================================================
-// CONTRAT BAS NIVEAU (implémentations concrètes)
-// ========================================================================
-
-/**
- * - `key` et `meta` existent dans beaucoup de calculateurs : on les garde
- * - `run()` retourne un résultat typé au niveau supérieur
- */
 export interface BaseAlgorithm<I = unknown, R = unknown> {
   key: string;
-  meta?: AlgorithmMetadata;
+  meta?: AlgorithmMetadata; // ✅ Utilise maintenant l'interface étendue
   run(input: I, config?: AlgorithmConfig): Promise<R> | R;
 }
 
 // ========================================================================
-// RÉSULTATS (pour anciennes API bas niveau — on alias dans index.ts)
+// RÉSULTATS - VOS DÉFINITIONS PRÉSERVÉES + AMÉLIORATIONS
 // ========================================================================
 
 export interface AlgorithmResult {
@@ -160,17 +166,13 @@ export interface AlgorithmResult {
   hasTranscript?: boolean;
 }
 
-// ========================================================================
-// UNIVERSAL RESULT (contrat UI)
-// ========================================================================
-
 export interface UniversalResult {
   prediction: string; // Prédiction principale (label)
   confidence: number; // Confiance [0-1]
   processingTime?: number; // Temps de traitement (ms)
   algorithmVersion?: string; // Version utilisée
 
-  // ✅ ENRICHISSEMENT pour M2ValidationInterface et autres composants
+  // ✅ VOS ENRICHISSEMENTS PRÉSERVÉS
   id?: string | number;
   verbatim?: string;
   goldStandard?: string;
@@ -190,25 +192,25 @@ export interface UniversalResult {
   hasTranscript?: boolean;
 
   metadata?: {
-    inputSignature?: string; // Hash/signature de l'input
-    inputType?: string; // Type d'input détecté
-    executionPath?: string[]; // Étapes d'exécution
-    warnings?: string[]; // Avertissements non-bloquants
-    details?: VariableDetails; // Détails typés selon la variable (X/Y/M1/M2/M3)
+    inputSignature?: string;
+    inputType?: string;
+    executionPath?: string[];
+    warnings?: string[];
+    details?: VariableDetails;
 
-    // ✅ NOUVELLES propriétés enrichies pour M2
+    // ✅ VOS PROPRIÉTÉS M2 PRÉSERVÉES
     clientTurn?: string;
     m2?: {
       value?: string | number;
       scale?: string;
     };
 
-    [k: string]: unknown; // ouverture optionnelle pour champs additionnels
+    [k: string]: unknown;
   };
 }
 
 // ========================================================================
-// UTILITAIRES
+// UTILITAIRES - VOS FONCTIONS PRÉSERVÉES + NOUVELLES
 // ========================================================================
 
 export function isValidAlgorithmResult(result: any): result is UniversalResult {
@@ -262,7 +264,7 @@ export function createErrorResult(
     confidence: 0,
     processingTime: 0,
     algorithmVersion: algorithmName || "unknown",
-    // ✅ Propriétés enrichies avec valeurs par défaut
+    // ✅ VOS PROPRIÉTÉS ENRICHIES PRÉSERVÉES
     callId: "unknown",
     startTime: 0,
     endTime: 0,
@@ -284,7 +286,7 @@ export function createSuccessResult(
   confidence: number,
   processingTime: number = 0,
   details?: VariableDetails,
-  // ✅ Paramètres optionnels enrichis
+  // ✅ VOS PARAMÈTRES OPTIONNELS ENRICHIS PRÉSERVÉS
   callId?: string | number,
   input?: string,
   speaker?: string
@@ -293,12 +295,12 @@ export function createSuccessResult(
     prediction,
     confidence: Math.max(0, Math.min(1, confidence)),
     processingTime,
-    // ✅ Propriétés enrichies
+    // ✅ PROPRIÉTÉS ENRICHIES
     predicted: prediction,
     callId,
     input,
     speaker,
-    correct: true, // Par défaut true pour un résultat de succès
+    correct: true,
     metadata: {
       details,
       executionPath: ["success"],
@@ -308,7 +310,73 @@ export function createSuccessResult(
 }
 
 // ========================================================================
-// SPÉCIFIQUES X (rétro-compat sélecteur/classifier)
+// NOUVELLES FACTORY FUNCTIONS POUR M2
+// ========================================================================
+
+/**
+ * Crée des métadonnées AlgorithmMetadata COMPATIBLES avec votre existant
+ * - Tous les champs sont optionnels sauf key
+ * - Fournit des valeurs par défaut raisonnables
+ */
+export function createAlgorithmMetadata(
+  base: {
+    key: string; // Seul champ obligatoire
+    name?: string;
+    target?: VariableTarget;
+    type?: AlgorithmType;
+    displayName?: string;
+    version?: string;
+  },
+  extensions?: Partial<AlgorithmMetadata>
+): AlgorithmMetadata {
+  return {
+    key: base.key, // Seul champ obligatoire
+    name: base.name || base.key,
+    displayName: base.displayName || base.name || base.key,
+    version: base.version || "1.0.0",
+    type: base.type || "rule-based",
+    target: base.target || "X",
+    batchSupported: false,
+    requiresContext: false,
+    ...extensions, // Permet d'overrider tout
+  };
+}
+
+/**
+ * Convertit des métadonnées legacy vers le format étendu SANS CASSER L'EXISTANT
+ */
+export function convertLegacyMetadata(
+  legacy: Record<string, unknown>,
+  fallbackKey: string
+): AlgorithmMetadata {
+  const key = (legacy.key as string) || fallbackKey;
+
+  return {
+    key, // Seul champ conservé comme obligatoire
+    name: legacy.name as string,
+    displayName: (legacy.displayName ||
+      legacy.label ||
+      legacy.name ||
+      key) as string,
+    target: legacy.target as VariableTarget,
+    type: legacy.type as AlgorithmType,
+    version: (legacy.version || "1.0.0") as string,
+    batchSupported: legacy.batchSupported as boolean,
+    requiresContext: legacy.requiresContext as boolean,
+
+    // Préserver TOUS les champs legacy existants
+    label: legacy.label as string,
+    description: legacy.description as string,
+    tags: legacy.tags as string[],
+    id: legacy.id as string,
+    family: legacy.family as string,
+    evidences: legacy.evidences as string[],
+    topProbs: legacy.topProbs as { label: string; prob: number }[],
+  };
+}
+
+// ========================================================================
+// SPÉCIFIQUES X - VOS DÉFINITIONS PRÉSERVÉES
 // ========================================================================
 
 export type XClassification = VariableX;
@@ -317,5 +385,6 @@ export interface XClassifier {
   classify(verbatim: string): Promise<XClassification>;
 }
 
+// ✅ VOS ALIAS PRÉSERVÉS
 export type BaseAlgorithmResult = AlgorithmResult;
 export type EnhancedAlgorithmResult = AlgorithmResult;

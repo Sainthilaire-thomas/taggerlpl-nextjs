@@ -1,7 +1,14 @@
 // src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry.ts
-import type { BaseAlgorithm, AlgorithmMetadata } from "./BaseAlgorithm";
-// 👉 Import des types universels pour accepter aussi les nouveaux algos
-import type { UniversalAlgorithm } from "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base";
+import type { BaseAlgorithm } from "./BaseAlgorithm";
+import type {
+  UniversalAlgorithm,
+  AlgorithmMetadata,
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base";
+// Import normal pour les fonctions (pas import type)
+import {
+  createAlgorithmMetadata,
+  convertLegacyMetadata,
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base";
 
 function isFunc(v: unknown): v is (...args: any[]) => any {
   return typeof v === "function";
@@ -15,7 +22,7 @@ function isFunc(v: unknown): v is (...args: any[]) => any {
 function synthesizeMetadata(
   name: string,
   algorithm: UniversalAlgorithm | BaseAlgorithm<any, any>,
-  metaOverride?: Omit<AlgorithmMetadata, "name">
+  metaOverride?: Partial<AlgorithmMetadata>
 ): AlgorithmMetadata {
   // On essaie d'utiliser getMetadata() si dispo (legacy-like)
   const md = isFunc((algorithm as any)?.getMetadata)
@@ -37,43 +44,40 @@ function synthesizeMetadata(
     )
       return "X";
     if (n.includes("regexy") || n.includes("y")) return "Y";
-    return "unknown";
+    return "X";
   };
 
-  const target = md.target ?? metaOverride?.target ?? inferTarget();
-
-  // ⚠️ Fallback type :
-  // - on évite "classifier" qui n'existe pas dans nos unions
-  // - on autorise "metric" (cas M1) même si le legacy ne le connaissait pas
-  const typeCandidate =
-    md.type ??
-    metaOverride?.type ??
-    (target === "M1" ? "metric" : "rule-based");
-
-  const displayName =
-    md.displayName ?? md.name ?? metaOverride?.displayName ?? name;
-  const version = md.version ?? metaOverride?.version ?? "1.0.0";
-  const batchSupported = !!(
-    md.batchSupported ??
-    md.supportsBatch ??
-    metaOverride?.batchSupported
+  // Utilisation de createAlgorithmMetadata avec champs optionnels
+  return createAlgorithmMetadata(
+    {
+      key: name,
+      name: md.name ?? metaOverride?.name ?? name,
+      displayName:
+        md.displayName ?? md.label ?? metaOverride?.displayName ?? name,
+      target: (md.target ?? metaOverride?.target ?? inferTarget()) as any,
+      type: (md.type ?? metaOverride?.type ?? "rule-based") as any,
+      version: md.version ?? metaOverride?.version ?? "1.0.0",
+    },
+    {
+      batchSupported:
+        md.batchSupported ??
+        md.supportsBatch ??
+        metaOverride?.batchSupported ??
+        false,
+      description: md.description ?? metaOverride?.description,
+      // Préservation des champs legacy
+      label: md.label,
+      family: md.family,
+      evidences: md.evidences,
+      topProbs: md.topProbs,
+      tags: md.tags,
+      id: md.id,
+      ...metaOverride,
+    }
   );
-  const description = md.description ?? metaOverride?.description;
-
-  // On cast "type" en any ici pour tolérer l'écart éventuel d'unions legacy/universel
-  return {
-    name,
-    displayName,
-    type: typeCandidate as any,
-    target,
-    version,
-    batchSupported,
-    description,
-  } as AlgorithmMetadata;
 }
 
 export class AlgorithmRegistry {
-  // 👉 Accepte désormais UniversalAlgorithm **ou** BaseAlgorithm
   private static algorithms = new Map<
     string,
     UniversalAlgorithm | BaseAlgorithm<any, any>
@@ -88,7 +92,7 @@ export class AlgorithmRegistry {
   static register(
     name: string,
     algorithm: UniversalAlgorithm | BaseAlgorithm<any, any>,
-    meta?: Omit<AlgorithmMetadata, "name">
+    meta?: Partial<AlgorithmMetadata>
   ): void {
     if (!algorithm || typeof algorithm !== "object") {
       console.warn(`[Registry] "${name}" invalide (non-objet):`, algorithm);
@@ -115,11 +119,13 @@ export class AlgorithmRegistry {
       // Fusionner des overrides fournis lors du register
       try {
         const current = (algorithm as any).describe() ?? {};
-        (algorithm as any).describe = () => ({
+        const merged = {
           ...current,
           ...meta,
-          name, // on impose toujours le name du registre
-        });
+          name: name,
+          key: name,
+        };
+        (algorithm as any).describe = () => merged;
       } catch {
         const synthesized = synthesizeMetadata(name, algorithm, meta);
         (algorithm as any).describe = () => synthesized;
@@ -127,10 +133,36 @@ export class AlgorithmRegistry {
           `[Registry] describe() de "${name}" était défaillant, overrides appliqués via fallback.`
         );
       }
+    } else {
+      // S'assurer que les algos existants ont les champs requis
+      try {
+        const current = (algorithm as any).describe() ?? {};
+        if (!current.key || !current.name) {
+          const enhanced = createAlgorithmMetadata(
+            {
+              key: current.key || name,
+              name: current.name || name,
+              target: current.target || "X",
+              displayName: current.displayName || current.label || name,
+              type: current.type || "rule-based",
+              version: current.version || "1.0.0",
+            },
+            {
+              ...current,
+            }
+          );
+          (algorithm as any).describe = () => enhanced;
+        }
+      } catch {
+        const synthesized = synthesizeMetadata(name, algorithm);
+        (algorithm as any).describe = () => synthesized;
+        console.warn(
+          `[Registry] describe() de "${name}" réparé avec métadonnées complètes.`
+        );
+      }
     }
 
     this.algorithms.set(name, algorithm);
-    // console.log(`✅ Algorithme enregistré: ${name}`);
   }
 
   static get<TInput, TOutput>(
@@ -157,7 +189,6 @@ export class AlgorithmRegistry {
       const d = (algo as any)?.describe;
 
       if (!isFunc(d)) {
-        // Fabriquer une meta synthétique pour rester tolérant
         const synthesized = synthesizeMetadata(key, algo);
         out.push({ key, meta: synthesized });
         console.warn(
@@ -167,16 +198,22 @@ export class AlgorithmRegistry {
       }
 
       try {
-        const meta = d() as AlgorithmMetadata;
+        const rawMeta = d() as any;
+
         // Sanity checks — si meta est invalide, on synthétise
-        if (!meta || typeof meta !== "object" || !meta.name) {
+        if (!rawMeta || typeof rawMeta !== "object" || !rawMeta.key) {
           const synthesized = synthesizeMetadata(key, algo);
           out.push({ key, meta: synthesized });
           console.warn(
             `[Registry] "${key}" describe() a renvoyé des métadonnées invalides → synthèse appliquée.`
           );
         } else {
-          out.push({ key, meta });
+          // Conversion vers format étendu si nécessaire
+          const extendedMeta: AlgorithmMetadata = rawMeta.key
+            ? (rawMeta as AlgorithmMetadata) // Déjà un format acceptable
+            : convertLegacyMetadata(rawMeta, key); // Conversion depuis legacy
+
+          out.push({ key, meta: extendedMeta });
         }
       } catch (e) {
         const synthesized = synthesizeMetadata(key, algo);
@@ -197,15 +234,11 @@ export class AlgorithmRegistry {
 
   static unregister(name: string): boolean {
     const deleted = this.algorithms.delete(name);
-    if (deleted) {
-      // console.log(`🗑️ Algorithme désenregistré: ${name}`);
-    }
     return deleted;
   }
 
   static clear(): void {
     this.algorithms.clear();
-    // console.log("🧹 Registre des algorithmes vidé");
   }
 }
 

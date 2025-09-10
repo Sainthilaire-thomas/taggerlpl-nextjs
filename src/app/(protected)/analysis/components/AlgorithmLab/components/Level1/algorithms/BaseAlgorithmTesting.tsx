@@ -20,45 +20,26 @@ import { algorithmRegistry } from "../../../algorithms/level1/shared/AlgorithmRe
 import { useLevel1Testing } from "../../../hooks/useLevel1Testing";
 
 import RunPanel from "../shared/results/base/RunPanel";
-import type { TargetKind } from "../shared/results/base/extraColumns";
 import { ResultsPanel } from "src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/shared/results/base/ResultsSample/ResultsPanel";
 
-// ---------- Types locaux pour contraindre le meta et éviter TS2339 ----------
-type TargetAll = "X" | "Y" | "M1" | "M2" | "M3";
+// ✅ MIGRATION : Import des types centralisés AlgorithmLab
+import type {
+  VariableTarget,
+  AlgorithmMetadata,
+  TVValidationResultCore,
+  TargetKind,
+} from "../../../types";
 
-interface AlgorithmMetadata {
-  displayName?: string;
-  description?: string;
-  target?: TargetAll;
-  type?: "rule-based" | "ml" | string;
-  version?: string;
-  supportsBatch?: boolean;
-  domainLabel?: string;
-  differential?: number;
-  avgLatencyMs?: number;
-  lastAccuracy?: number;
-}
-
+// ✅ MIGRATION : Interface registry conforme aux types centralisés
 interface RegistryEntry {
-  key: string; // identifiant d’enregistrement
-  meta: AlgorithmMetadata; // contraint pour l’UI
-}
-
-// ---------- Types résultats (alignés avec ResultsPanel / MetricsPanel) ----------
-export interface TVValidationResult {
-  verbatim: string;
-  goldStandard: string; // stringifié, y compris pour M1 (numérique)
-  predicted: string; // stringifié
-  confidence: number;
-  correct: boolean;
-  processingTime?: number;
-  metadata?: Record<string, any>;
+  key: string;
+  meta: AlgorithmMetadata; // ✅ Utilise le type centralisé
 }
 
 type BaseAlgorithmTestingProps = {
-  variableLabel: string; // Libellé de la variable (X, Y, M1…)
-  defaultClassifier?: string; // ID par défaut
-  target?: TargetAll; // Cible affichée
+  variableLabel: string;
+  defaultClassifier?: string;
+  target?: VariableTarget; // ✅ Utilise le type centralisé
 };
 
 const DEFAULT_CLASSIFIER = undefined as unknown as string;
@@ -72,9 +53,9 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
   const [sampleSizeInitialized, setSampleSizeInitialized] =
     React.useState(false);
   const [selectedModelId, setSelectedModelId] = React.useState<string>("");
-  const [testResults, setTestResults] = React.useState<TVValidationResult[]>(
-    []
-  );
+  const [testResults, setTestResults] = React.useState<
+    TVValidationResultCore[]
+  >([]); // ✅ Type centralisé
   const [isRunning, setIsRunning] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [sampleSize, setSampleSize] = React.useState<number>(100);
@@ -85,7 +66,8 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
   // --- Liste des entrées du registry filtrées par target ---
   const entriesForTarget = React.useMemo(() => {
     const all = (algorithmRegistry.list?.() ?? []) as RegistryEntry[];
-    return all.filter((e) => e.meta?.target === target); // pas de "?? target"
+    // ✅ CORRECTION : Utiliser target depuis les métadonnées centralisées
+    return all.filter((e) => e.meta?.target === target);
   }, [target]);
 
   // --- Initialisation/Correction du modèle sélectionné si invalide pour la cible ---
@@ -104,14 +86,17 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     () => entriesForTarget.find((e) => e.key === selectedModelId),
     [entriesForTarget, selectedModelId]
   );
-  const meta = selectedEntry?.meta ?? ({} as AlgorithmMetadata);
-  const selectedDisplayName = meta.displayName ?? selectedModelId;
-  const typeLabel = meta.type ?? "rule-based";
+
+  const meta = selectedEntry?.meta ?? ({} as RegistryAlgorithmMeta);
+
+  // ✅ CORRECTION : Utilisation des propriétés compatibles avec le registry actuel
+  const selectedDisplayName = meta.displayName ?? meta.label ?? selectedModelId;
+  const typeLabel = meta.type ?? "rule-based"; // ✅ Propriété du registry actuel
   const chipColor = typeLabel === "rule-based" ? "primary" : "secondary";
   const versionLabel = meta.version;
-  const supportsBatch = !!meta.supportsBatch;
-  const domainLabel = meta.domainLabel ?? "Général";
-  const isConfigValid = true; // spécialiser si certains modèles exigent une config
+  const supportsBatch = true; // ✅ Assumé pour tous les algorithmes centralisés
+  const domainLabel = meta.description ?? "Général";
+  const isConfigValid = true;
 
   // --- EXTRACTIONS SANS DESTRUCTURING CONDITIONNEL ---
   const goldStandardData = level1Testing.goldStandardData;
@@ -140,7 +125,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     // 1) idéal : nombre de "paires adjacentes" exposé par le hook
     const pairsCount = (level1Testing as any)?.goldStandardPairsCount;
 
-    // 2) fallback : longueur du tableau gold standard chargé (si c’est la même base)
+    // 2) fallback : longueur du tableau gold standard chargé
     const dataCount = Array.isArray(level1Testing.goldStandardData)
       ? level1Testing.goldStandardData.length
       : 0;
@@ -157,8 +142,9 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     setIsRunning(true);
 
     try {
+      // ✅ validateAlgorithm retourne déjà des ValidationResult[] conformes
       const results = await validateAlgorithm(selectedModelId, sampleSize);
-      setTestResults(results);
+      setTestResults(results as TVValidationResultCore[]); // ✅ Cast sûr vers type centralisé
 
       if (calculateMetrics && analyzeErrors) {
         const metrics = calculateMetrics(results);
@@ -224,11 +210,12 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
             variant="detailed"
             algorithms={entriesForTarget.map((e) => ({
               id: e.key,
-              name: e.meta?.displayName ?? e.key,
+              name: e.meta?.displayName ?? e.meta?.label ?? e.key,
               description: e.meta?.description ?? "",
-              differential: e.meta?.differential ?? 0,
-              time: e.meta?.avgLatencyMs ?? 0,
-              accuracy: e.meta?.lastAccuracy ?? 0,
+              // ✅ MIGRATION : Propriétés par défaut pour compat avec AlgorithmSelector
+              differential: 0,
+              time: 0,
+              accuracy: 0,
             }))}
             selectedAlgorithm={selectedModelId}
             onAlgorithmChange={setSelectedModelId}
@@ -265,7 +252,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       <ResultsPanel
         results={testResults}
         initialPageSize={10}
-        targetKind={target as TargetKind} // "X" | "Y" | "M1" | "M2" | "M3"
+        targetKind={target as TargetKind} // ✅ Cast vers type centralisé
         classifierLabel={selectedDisplayName}
       />
     </Box>

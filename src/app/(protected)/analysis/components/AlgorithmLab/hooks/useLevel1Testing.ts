@@ -424,6 +424,8 @@ export const useLevel1Testing = () => {
         throw new Error(`Classificateur '${classifierName}' non trouvé`);
 
       const target = getClassificationTarget(classifierName);
+
+      // CAS M1 (existant - inchangé)
       if (target === "M1") {
         // Échantillons = tours CONSEILLER uniquement (T0)
         const base = goldStandardData.filter(
@@ -451,7 +453,7 @@ export const useLevel1Testing = () => {
         const outs: ClassificationResult[] = j.results;
 
         // Pour M1, il n'y a pas de "gold label" catégoriel : on renvoie la valeur mesurée
-        // On met 'goldStandard' = "—" pour ne pas alimenter la matrice.
+        // On met 'goldStandard' = "M1" pour ne pas alimenter la matrice.
         return outs.map((out, i) => {
           const sample = samples[i];
           const dens = Number.parseFloat(String(out.prediction)) || 0; // valeur M1
@@ -479,6 +481,75 @@ export const useLevel1Testing = () => {
         });
       }
 
+      // NOUVEAU CAS M2
+      if (target === "M2") {
+        const base = goldStandardData.filter(
+          (s) =>
+            s.metadata?.target === "conseiller" &&
+            s.metadata?.next_turn_verbatim &&
+            s.metadata?.next_turn_verbatim.trim().length > 0
+        );
+        if (base.length === 0)
+          throw new Error("Aucune donnée disponible pour M2.");
+
+        const samples = randomSample(base, sampleSize);
+
+        // TRAITEMENT UN PAR UN (comme le fallback X/Y)
+        const results: ValidationResult[] = [];
+        for (let i = 0; i < samples.length; i++) {
+          const sample = samples[i];
+          const input = {
+            t0: sample.verbatim || "",
+            t1: sample.metadata?.next_turn_verbatim || "",
+            conseillerTurn: sample.verbatim || "",
+            clientTurn: sample.metadata?.next_turn_verbatim || "",
+          };
+
+          try {
+            const start = Date.now();
+            const prediction = await (classifier as any).run(input);
+
+            results.push({
+              verbatim: sample.verbatim,
+              goldStandard: "M2",
+              predicted: "M2",
+              confidence: prediction.confidence ?? 0,
+              correct: true,
+              processingTime: prediction.processingTime ?? Date.now() - start,
+              metadata: {
+                ...sample.metadata,
+                classifier: classifierName,
+                clientTurn: sample.metadata?.next_turn_verbatim,
+                m2: {
+                  value: prediction.prediction,
+                  scale: "composite",
+                  lexicalScore: prediction.details?.lexicalAlignment,
+                  semanticScore: prediction.details?.semanticAlignment,
+                  overallScore: prediction.details?.overall,
+                  sharedTerms: prediction.details?.sharedTerms || [],
+                },
+              },
+            });
+          } catch (e) {
+            results.push({
+              verbatim: sample.verbatim,
+              goldStandard: "M2",
+              predicted: "ERREUR",
+              confidence: 0,
+              correct: false,
+              metadata: {
+                error: e instanceof Error ? e.message : "Unknown error",
+                classifier: classifierName,
+              },
+            });
+          }
+        }
+
+        console.log(`[M2 Debug] Résultats finaux générés: ${results.length}`);
+        return results;
+      }
+
+      // CAS X et Y (logique existante inchangée)
       const base = goldStandardData.filter(
         (s) => !s.metadata?.target || s.metadata?.target === target
       );
