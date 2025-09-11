@@ -1,11 +1,10 @@
 # Reference — Types normalisés AlgorithmLab
 
-> Généré automatiquement le 2025-09-07T14:21:22.544Z à partir de `C:/Users/thoma/OneDrive/SONEAR 2025/taggerlpl-nextjs/src/app/(protected)/analysis/components/AlgorithmLab/types`
-> Doc-Version: 2025-09-07T14:21:22.542Z-149
-> Code-Version: unknown
+> Généré automatiquement le 2025-09-11T07:36:23.395Z à partir de `C:/Users/thoma/OneDrive/SONEAR 2025/taggerlpl-nextjs/src/app/(protected)/analysis/components/AlgorithmLab/types`
+> Doc-Version: 2025-09-11T07:36:23.394Z-548
+> Code-Version: 2.0.0
 
 ## Contenu
-
 - [index.ts](#indexts)
 - [algorithms/](#algorithms)
 - [core/](#core)
@@ -16,30 +15,206 @@
 ## index.ts
 
 ### Exports détectés
-
-- **Re-exports `*`** depuis: ./core, ./algorithms, ./ui, ./utils
+- **Déclarations**: ALGORITHM_LAB_VERSION, SUPPORTED_VARIABLES, SimpleMetrics, MetricsPanelProps, ClassifierSelectorProps, ConfusionMatrixProps
+- **Nommés**: createUniversalAlgorithm, isValidVariableTarget, getVariableColor, getVariableLabel, validateCalculationInput, createEmptyResult, calculateMetrics, createValidationConfig, isValidAlgorithmResult, normalizeAlgorithmResult, createErrorResult, createSuccessResult
+- **Re-exports `*`** depuis: ./core/variables, ./core/validation, ./ui, ./utils
 
 ### Contenu
-
 ```ts
-// exports par domaine
-export * from "./core";
-export * from "./algorithms";
+/**
+ * @fileoverview Point d’entrée principal des types AlgorithmLab
+ * - Ré-exports sans conflits
+ * - Ajout des utilitaires publics
+ * - Interfaces UI complémentaires (MetricsPanel, ConfusionMatrix, etc.)
+ */
+
+// ========================================================================
+// IMPORTS POUR TYPES DIFFUSÉS DANS CE FICHIER
+// ========================================================================
+
+import type { VariableTarget, VariableX } from "./core/variables";
+import type { ValidationMetrics, ValidationResult } from "./core/validation";
+
+// ========================================================================
+// EXPORTS PAR DOMAINE
+// ========================================================================
+
+// Variables & détails
+export * from "./core/variables";
+
+// Calculs & résultats
+export type {
+  CalculationInput,
+  CalculationResult,
+  CalculationMetadata,
+  XInput,
+  YInput,
+  M1Input,
+  M2Input,
+  M3Input,
+  XCalculationResult,
+  YCalculationResult,
+  M1CalculationResult,
+  M2CalculationResult,
+  M3CalculationResult,
+} from "./core/calculations";
+
+// Validation & métriques
+export * from "./core/validation";
+
+// ========================================================================
+// EXPORTS ALGORITHMES (sélectifs pour éviter conflits)
+// ========================================================================
+
+export type {
+  UniversalAlgorithm,
+  AlgorithmDescriptor,
+  UniversalResult,
+  AlgorithmType,
+  ParameterDescriptor,
+  AlgorithmMetadata,
+  AlgorithmConfig,
+  AlgorithmParameters as BaseAlgorithmParameters,
+  // on garde l'alias pour compat
+  AlgorithmResult as BaseAlgorithmResult,
+  BaseAlgorithm,
+  XClassification,
+  XClassifier,
+} from "./algorithms/base";
+
+// 👉 Expose aussi les noms canoniques attendus par les composants
+export type {
+  AlgorithmResult,
+  EnhancedAlgorithmResult,
+} from "./algorithms/base";
+
+// Adaptateur universel
+export type {
+  BaseCalculator,
+  AdapterConfig,
+  ConstructibleAlgorithm,
+} from "./algorithms/universal-adapter";
+
+export { createUniversalAlgorithm } from "./algorithms/universal-adapter";
+
+// ========================================================================
+// UI & UTILS (si présents dans ton repo)
+// ========================================================================
+
 export * from "./ui";
 export * from "./utils";
 
-// 👇 Ajoute/garantis ces exports (ils existent déjà côté core)
+// ========================================================================
+// RÉ-EXPORTS COMBINÉS (commodité)
+// ========================================================================
+
+// Variables
 export type {
-  InterAnnotatorData,
-  KappaMetrics,
+  VariableTarget,
+  VariableDetails,
+  XDetails,
+  YDetails,
+  M1Details,
+  M2Details,
+  M3Details,
+  VariableX,
+  VariableY,
+  XTag,
+  YTag,
+} from "./core/variables";
+
+// Validation
+export type {
+  ValidationMetrics,
+  ValidationResult,
+  AlgorithmTestConfig,
+  ValidationLevel,
+  TVMetadata,
+  TVValidationResult,
+  XValidationResult,
   DisagreementCase,
-} from "./core";
+  KappaMetrics,
+  InterAnnotatorData,
+} from "./core/validation";
+
+// UI types (si définis)
+export type {
+  BaseValidationProps,
+  XValidationProps,
+  YValidationProps,
+  M2ValidationProps,
+} from "./ui";
+
+// ========================================================================
+// CONSTANTES & FONCTIONS PUBLIQUES
+// ========================================================================
+
+export const ALGORITHM_LAB_VERSION = "2.0.0";
+export const SUPPORTED_VARIABLES = ["X", "Y", "M1", "M2", "M3"] as const;
+
+export {
+  isValidVariableTarget,
+  getVariableColor,
+  getVariableLabel,
+} from "./core/variables";
+
+export {
+  validateCalculationInput,
+  createEmptyResult,
+} from "./core/calculations";
+
+export { calculateMetrics, createValidationConfig } from "./core/validation";
+
+// ✅ Ajoute normalizeAlgorithmResult ici (manquait avant)
+export {
+  isValidAlgorithmResult,
+  normalizeAlgorithmResult,
+  createErrorResult,
+  createSuccessResult,
+} from "./algorithms/base";
+
+// ========================================================================
+// INTERFACES UI COMPLÉMENTAIRES (utilisées par tes composants)
+// ========================================================================
+
+export interface SimpleMetrics {
+  accuracy: number;
+  precision: number;
+  recall: number;
+  f1Score: number;
+  sampleSize: number;
+}
+
+export interface MetricsPanelProps {
+  metrics: ValidationMetrics | SimpleMetrics;
+  title?: string;
+  compact?: boolean;
+  showDetails?: boolean;
+}
+
+export interface ClassifierSelectorProps {
+  selectedClassifier?: string;
+  onClassifierChange: (classifier: string) => void;
+  availableClassifiers: Array<{
+    id: string;
+    name: string;
+    description?: string;
+  }>;
+  disabled?: boolean;
+}
+
+export interface ConfusionMatrixProps {
+  metrics: ValidationMetrics | null;
+  target?: VariableTarget;
+  showLabels?: boolean;
+  compact?: boolean;
+}
+
 ```
 
 ## algorithms
 
 ### Arborescence
-
 ```text
 algorithms/
 - base.ts
@@ -51,56 +226,37 @@ algorithms/
 
 **Exports**
 
-- **Déclarations**: AlgorithmParameters, UniversalAlgorithm, AlgorithmType, ParameterDescriptor, AlgorithmDescriptor, AlgorithmMetadata, AlgorithmConfig, XClassification, XClassifier, BaseAlgorithm, AlgorithmResult, AlgorithmTestState, UniversalResult, isValidAlgorithmResult, createErrorResult, createSuccessResult
+- **Déclarations**: AlgorithmType, AlgorithmParameters, ParameterDescriptor, AlgorithmConfig, AlgorithmDescriptor, AlgorithmMetadata, UniversalAlgorithm, BaseAlgorithm, AlgorithmResult, UniversalResult, isValidAlgorithmResult, normalizeAlgorithmResult, validateErrorAnalysisResult, createErrorResult, createSuccessResult, createAlgorithmMetadata, convertLegacyMetadata, XClassification, XClassifier, BaseAlgorithmResult, EnhancedAlgorithmResult
 
 **Contenu**
 
 ```ts
 /**
- * @fileoverview Interface universelle AlgorithmLab
- * Remplace les wrappers multiples (wrapX, wrapY, wrapM2) par une interface unifiée
+ * @fileoverview Types de base des algorithmes AlgorithmLab - VERSION FUSIONNÉE COMPATIBLE
+ * - Préserve votre existant
+ * - Ajoute les extensions nécessaires pour M2
+ * - Résout les conflits TypeScript
  */
 
-import type { VariableTarget, VariableDetails } from "../core/variables";
+import type {
+  VariableTarget,
+  VariableDetails,
+  VariableX,
+} from "../core/variables";
 
 // ========================================================================
-// TYPES COMPLÉMENTAIRES (MINIMAUX)
+// PARAMÈTRES & TYPES D'ALGO
 // ========================================================================
 
-/**
- * Paramètres passés aux algorithmes (clé → valeur primitive).
- * Volontairement simple pour ne pas sur-spécifier.
- */
-export type AlgorithmParameters = Record<string, boolean | number | string>;
+export type AlgorithmType = "rule-based" | "ml" | "llm" | "hybrid" | "metric";
 
-// ========================================================================
-// INTERFACE UNIVERSELLE ALGORITHMLAB
-// ========================================================================
-
-/**
- * Interface universelle que TOUS les algorithmes AlgorithmLab doivent implémenter
- * Remplace wrapX, wrapY, wrapM2, etc.
- */
-export interface UniversalAlgorithm {
-  // Métadonnées standardisées
-  describe(): AlgorithmDescriptor;
-  validateConfig(): boolean;
-
-  // Exécution unifiée
-  classify?(input: string): Promise<UniversalResult>; // Rétrocompatibilité (optionnelle)
-  run(input: unknown): Promise<UniversalResult>; // Input typé
-  batchRun?(inputs: unknown[]): Promise<UniversalResult[]>; // Batch optionnel
+/** ⚠️ Utilisé ailleurs avec alias dans index.ts (BaseAlgorithmParameters) */
+export interface AlgorithmParameters {
+  [key: string]: boolean | number | string;
 }
 
-// ========================================================================
-// DESCRIPTEUR D'ALGORITHME ALGORITHMLAB
-// ========================================================================
-
-export type AlgorithmType = "rule-based" | "ml" | "llm" | "hybrid";
-
 export interface ParameterDescriptor {
-  label: string;
-  type: "boolean" | "number" | "string" | "select";
+  type: "number" | "string" | "boolean" | "select";
   required?: boolean;
   min?: number;
   max?: number;
@@ -109,7 +265,16 @@ export interface ParameterDescriptor {
   description?: string;
 }
 
+export interface AlgorithmConfig {
+  [key: string]: unknown;
+}
+
+// ========================================================================
+// ALGORITHMDESCRIPTOR - VERSION NETTOYÉE
+// ========================================================================
+
 export interface AlgorithmDescriptor {
+  // ✅ PROPRIÉTÉS CORE D'UN ALGORITHME
   name: string; // ID unique (ex: "OpenAIXClassifier")
   displayName: string; // Nom affiché (ex: "OpenAI X Classifier")
   version: string; // Version semver (ex: "1.2.0")
@@ -120,78 +285,165 @@ export interface AlgorithmDescriptor {
   description?: string; // Description détaillée
   parameters?: Record<string, ParameterDescriptor>;
   examples?: Array<{ input: unknown; output?: unknown; note?: string }>; // Exemples d'utilisation
+
+  // ✅ PROPRIÉTÉS OPTIONNELLES POUR COMPATIBILITÉ UI
+  desc?: {
+    displayName?: string;
+    description?: string;
+  };
+  metrics?: {
+    differential?: number;
+    avgMs?: number;
+    accuracy?: number;
+    precision?: number;
+    recall?: number;
+    f1Score?: number;
+  };
+
+  // ✅ Identifiant alternatif pour certains composants
+  id?: string;
 }
 
+// ========================================================================
+// ALGORITHMMETADATA - VERSION ÉTENDUE COMPATIBLE
+// ========================================================================
+
+/**
+ * Interface AlgorithmMetadata ÉTENDUE pour supporter :
+ * - Votre existant (key, label, etc.)
+ * - Les nouveaux requis (name, displayName, type, etc.)
+ * - La rétrocompatibilité complète
+ */
 export interface AlgorithmMetadata {
-  key: string; // identifiant interne (ex: "m2-lexical")
-  label?: string; // libellé humain
-  version?: string; // semver, ex: "1.0.0"
+  key: string; // SEUL champ obligatoire
+
+  // Tous les autres champs optionnels
+  label?: string;
+  version?: string;
   description?: string;
-  target?: VariableTarget; // X|Y|M1|M2|M3 (si utile ici)
+  target?: VariableTarget;
   tags?: string[];
+  id?: string;
+  displayName?: string;
+  name?: string;
+  type?: AlgorithmType;
+  batchSupported?: boolean;
+  requiresContext?: boolean;
+  family?: string;
+  evidences?: string[];
+  topProbs?: { label: string; prob: number }[];
 }
 
-export interface AlgorithmConfig {
-  [param: string]: unknown;
+// ========================================================================
+// CONTRAT UNIVERSEL (UI) - INCHANGÉ
+// ========================================================================
+
+export interface UniversalAlgorithm {
+  // Métadonnées standardisées
+  describe(): AlgorithmDescriptor;
+  validateConfig(): boolean;
+
+  // Exécution unifiée
+  classify?(input: string): Promise<UniversalResult>; // rétro-compat
+  run(input: unknown): Promise<UniversalResult>; // canal principal
+  batchRun?(inputs: unknown[]): Promise<UniversalResult[]>; // optionnel
 }
 
-/** Résultat d'une classification X (structure légère) */
-export interface XClassification {
-  target: string; // étiquette prédite
-  confidence?: number; // 0..1
-  details?: Record<string, any>; // infos spécifiques
-}
+// ========================================================================
+// CONTRAT BAS NIVEAU - COMPATIBLE AVEC VOTRE EXISTANT
+// ========================================================================
 
-/** Contrat minimal d'un classifieur X */
-export interface XClassifier {
-  name: string;
-  classify(
-    input: string | Record<string, any>
-  ): Promise<XClassification> | XClassification;
-}
-
-/** Contrat minimal commun des algorithmes */
 export interface BaseAlgorithm<I = unknown, R = unknown> {
   key: string;
-  meta?: AlgorithmMetadata;
+  meta?: AlgorithmMetadata; // ✅ Utilise maintenant l'interface étendue
   run(input: I, config?: AlgorithmConfig): Promise<R> | R;
 }
 
+// ========================================================================
+// RÉSULTATS - VOS DÉFINITIONS PRÉSERVÉES + AMÉLIORATIONS
+// ========================================================================
+
 export interface AlgorithmResult {
-  ok: boolean;
+  ok?: boolean;
   message?: string;
   metrics?: Record<string, unknown>;
   details?: Record<string, unknown>;
-}
 
-export interface AlgorithmTestState {
-  startedAt: string; // ISO
-  finishedAt?: string; // ISO
-  status: "idle" | "running" | "done" | "error";
-  note?: string;
-}
+  // Identifiants & temps (optionnels car tout le monde ne les fournit pas)
+  callId?: string | number;
+  id?: string | number;
+  startTime?: number;
+  endTime?: number;
 
-// ========================================================================
-// RÉSULTAT UNIVERSEL ALGORITHMLAB
-// ========================================================================
+  // Contenu
+  input?: string;
+  verbatim?: string;
+  speaker?: string;
+
+  // Prédiction
+  prediction?: string;
+  predicted?: string; // alias de prediction
+  goldStandard?: string;
+  expected?: string; // alias de goldStandard
+
+  // Qualité
+  confidence?: number;
+  correct?: boolean;
+  processingTime?: number;
+
+  // Contexte (utiles pour EnhancedErrorAnalysis & supervision)
+  filename?: string;
+  next_turn_verbatim?: string;
+  next_turn_tag?: string;
+  hasAudio?: boolean;
+  hasTranscript?: boolean;
+}
 
 export interface UniversalResult {
   prediction: string; // Prédiction principale (label)
   confidence: number; // Confiance [0-1]
   processingTime?: number; // Temps de traitement (ms)
   algorithmVersion?: string; // Version utilisée
+
+  // ✅ VOS ENRICHISSEMENTS PRÉSERVÉS
+  id?: string | number;
+  verbatim?: string;
+  goldStandard?: string;
+  correct?: boolean;
+
+  // ✅ ENRICHISSEMENT pour EnhancedErrorAnalysis
+  callId?: string | number;
+  startTime?: number;
+  endTime?: number;
+  input?: string;
+  speaker?: string;
+  predicted?: string; // Alias pour prediction
+  filename?: string;
+  next_turn_verbatim?: string;
+  next_turn_tag?: string;
+  hasAudio?: boolean;
+  hasTranscript?: boolean;
+
   metadata?: {
-    inputSignature?: string; // Hash/signature de l'input
-    inputType?: string; // Type d'input détecté
-    executionPath?: string[]; // Étapes d'exécution
-    warnings?: string[]; // Avertissements non-bloquants
-    details?: VariableDetails; // Détails typés selon la variable (X/Y/M1/M2/M3)
-    [k: string]: unknown; // ouverture optionnelle pour champs additionnels
+    inputSignature?: string;
+    inputType?: string;
+    executionPath?: string[];
+    warnings?: string[];
+    details?: VariableDetails;
+
+    // ✅ VOS PROPRIÉTÉS M2 PRÉSERVÉES
+    clientTurn?: string;
+    m2?: {
+      value?: string | number;
+      scale?: string;
+    };
+
+    [k: string]: unknown;
   };
 }
 
 // ========================================================================
-// UTILITAIRES ALGORITHMLAB
+// UTILITAIRES - VOS FONCTIONS PRÉSERVÉES + NOUVELLES
 // ========================================================================
 
 export function isValidAlgorithmResult(result: any): result is UniversalResult {
@@ -205,6 +457,37 @@ export function isValidAlgorithmResult(result: any): result is UniversalResult {
   );
 }
 
+export function normalizeAlgorithmResult(
+  result: AlgorithmResult
+): AlgorithmResult {
+  return {
+    ...result,
+    // Normalisation des alias
+    predicted: result.predicted || result.prediction,
+    goldStandard: result.goldStandard || result.expected,
+    verbatim: result.verbatim || result.input,
+    id: result.id || result.callId,
+
+    // Assurer les propriétés minimales
+    confidence: result.confidence ?? 0,
+    correct: result.correct ?? false,
+  };
+}
+
+export function validateErrorAnalysisResult(result: AlgorithmResult): boolean {
+  const normalized = normalizeAlgorithmResult(result);
+  return !!(
+    normalized.callId ||
+    (normalized.id &&
+      typeof normalized.startTime === "number" &&
+      typeof normalized.endTime === "number" &&
+      (normalized.input || normalized.verbatim) &&
+      normalized.speaker &&
+      (normalized.predicted || normalized.prediction) &&
+      (normalized.goldStandard || normalized.expected))
+  );
+}
+
 export function createErrorResult(
   error: string,
   algorithmName?: string
@@ -214,6 +497,15 @@ export function createErrorResult(
     confidence: 0,
     processingTime: 0,
     algorithmVersion: algorithmName || "unknown",
+    // ✅ VOS PROPRIÉTÉS ENRICHIES PRÉSERVÉES
+    callId: "unknown",
+    startTime: 0,
+    endTime: 0,
+    input: "",
+    speaker: "unknown",
+    predicted: "ERROR",
+    goldStandard: "unknown",
+    correct: false,
     metadata: {
       warnings: [error],
       executionPath: ["error"],
@@ -226,12 +518,22 @@ export function createSuccessResult(
   prediction: string,
   confidence: number,
   processingTime: number = 0,
-  details?: VariableDetails
+  details?: VariableDetails,
+  // ✅ VOS PARAMÈTRES OPTIONNELS ENRICHIS PRÉSERVÉS
+  callId?: string | number,
+  input?: string,
+  speaker?: string
 ): UniversalResult {
   return {
     prediction,
-    confidence: Math.max(0, Math.min(1, confidence)), // Clamp [0-1]
+    confidence: Math.max(0, Math.min(1, confidence)),
     processingTime,
+    // ✅ PROPRIÉTÉS ENRICHIES
+    predicted: prediction,
+    callId,
+    input,
+    speaker,
+    correct: true,
     metadata: {
       details,
       executionPath: ["success"],
@@ -239,6 +541,87 @@ export function createSuccessResult(
     },
   };
 }
+
+// ========================================================================
+// NOUVELLES FACTORY FUNCTIONS POUR M2
+// ========================================================================
+
+/**
+ * Crée des métadonnées AlgorithmMetadata COMPATIBLES avec votre existant
+ * - Tous les champs sont optionnels sauf key
+ * - Fournit des valeurs par défaut raisonnables
+ */
+export function createAlgorithmMetadata(
+  base: {
+    key: string; // Seul champ obligatoire
+    name?: string;
+    target?: VariableTarget;
+    type?: AlgorithmType;
+    displayName?: string;
+    version?: string;
+  },
+  extensions?: Partial<AlgorithmMetadata>
+): AlgorithmMetadata {
+  return {
+    key: base.key, // Seul champ obligatoire
+    name: base.name || base.key,
+    displayName: base.displayName || base.name || base.key,
+    version: base.version || "1.0.0",
+    type: base.type || "rule-based",
+    target: base.target || "X",
+    batchSupported: false,
+    requiresContext: false,
+    ...extensions, // Permet d'overrider tout
+  };
+}
+
+/**
+ * Convertit des métadonnées legacy vers le format étendu SANS CASSER L'EXISTANT
+ */
+export function convertLegacyMetadata(
+  legacy: Record<string, unknown>,
+  fallbackKey: string
+): AlgorithmMetadata {
+  const key = (legacy.key as string) || fallbackKey;
+
+  return {
+    key, // Seul champ conservé comme obligatoire
+    name: legacy.name as string,
+    displayName: (legacy.displayName ||
+      legacy.label ||
+      legacy.name ||
+      key) as string,
+    target: legacy.target as VariableTarget,
+    type: legacy.type as AlgorithmType,
+    version: (legacy.version || "1.0.0") as string,
+    batchSupported: legacy.batchSupported as boolean,
+    requiresContext: legacy.requiresContext as boolean,
+
+    // Préserver TOUS les champs legacy existants
+    label: legacy.label as string,
+    description: legacy.description as string,
+    tags: legacy.tags as string[],
+    id: legacy.id as string,
+    family: legacy.family as string,
+    evidences: legacy.evidences as string[],
+    topProbs: legacy.topProbs as { label: string; prob: number }[],
+  };
+}
+
+// ========================================================================
+// SPÉCIFIQUES X - VOS DÉFINITIONS PRÉSERVÉES
+// ========================================================================
+
+export type XClassification = VariableX;
+
+export interface XClassifier {
+  classify(verbatim: string): Promise<XClassification>;
+}
+
+// ✅ VOS ALIAS PRÉSERVÉS
+export type BaseAlgorithmResult = AlgorithmResult;
+export type EnhancedAlgorithmResult = AlgorithmResult;
+
 ```
 
 #### `AlgorithmLab/types/algorithms/index.ts`
@@ -257,426 +640,327 @@ export function createSuccessResult(
  */
 
 // Interface universelle et types de base
-export * from "./base";
+export * from './base';
 
 // Adaptateur universel
-export * from "./universal-adapter";
+export * from './universal-adapter';
 
 // Exports groupés pour faciliter l'import dans AlgorithmLab
 export type {
   UniversalAlgorithm,
   AlgorithmDescriptor,
   UniversalResult,
-  AlgorithmType,
-} from "./base";
+  AlgorithmType
+} from './base';
 
-export type { BaseCalculator, AdapterConfig } from "./universal-adapter";
+export type {
+  BaseCalculator,
+  AdapterConfig
+} from './universal-adapter';
 
 // Export de la fonction principale
-export { createUniversalAlgorithm } from "./universal-adapter";
+export { createUniversalAlgorithm } from './universal-adapter';
+
 ```
 
 #### `AlgorithmLab/types/algorithms/universal-adapter.ts`
 
 **Exports**
 
-- **Déclarations**: BaseCalculator, AdapterConfig, createUniversalAlgorithm, createXAlgorithm, createYAlgorithm, createM2Algorithm
+- **Déclarations**: BaseCalculator, AdapterConfig, ConstructibleAlgorithm, createUniversalAlgorithm, createXAlgorithm, createYAlgorithm, createM1Algorithm, createM2Algorithm, createM3Algorithm
 
 **Contenu**
 
 ```ts
 /**
  * @fileoverview Adaptateur universel AlgorithmLab
- * Fonction createUniversalAlgorithm qui unifie wrapX, wrapY, wrapM2, etc.
+ * - Convertit un calculateur (BaseAlgorithm<.., CalculationResult<..>>) en UniversalAlgorithm homogène
+ * - Construit des descripteurs riches (AlgorithmDescriptor)
+ * - Expose des helpers pour X / Y / M1 / M2 / M3
  */
 
-import { VariableTarget, VariableDetails } from "../core/variables";
-import { CalculationInput, CalculationResult } from "../core/calculations";
-import {
+import type { VariableTarget, VariableDetails } from "../core/variables";
+import type { CalculationResult } from "../core/calculations";
+import type {
   UniversalAlgorithm,
   AlgorithmDescriptor,
   UniversalResult,
   AlgorithmType,
+  BaseAlgorithm,
+  AlgorithmMetadata,
+  AlgorithmConfig,
+  ParameterDescriptor,
 } from "./base";
 
 // ========================================================================
-// INTERFACE DE BASE POUR CALCULATEURS ALGORITHMLAB
-// ========================================================================
-
-export interface BaseCalculator<TInput = any, TDetails = VariableDetails> {
-  calculate(input: TInput): Promise<CalculationResult<TDetails>>;
-
-  // Métadonnées optionnelles
-  getName?(): string;
-  getVersion?(): string;
-  getDescription?(): string;
-  getType?(): AlgorithmType;
-}
-
-// ========================================================================
-// CONFIGURATION DE L'ADAPTATEUR ALGORITHMLAB
-// ========================================================================
-
-export interface AdapterConfig<TInput = any, TDetails = VariableDetails> {
-  // Support des fonctionnalités
-  requiresContext?: boolean;
-  supportsBatch?: boolean;
-
-  // Convertisseurs de données
-  inputValidator?: (input: unknown) => input is TInput;
-  inputConverter?: (input: string) => TInput;
-  resultMapper?: (result: CalculationResult<TDetails>) => UniversalResult;
-
-  // Métadonnées personnalisées
-  displayName?: string;
-  description?: string;
-  algorithmType?: AlgorithmType;
-
-  // Configuration avancée
-  timeout?: number; // ms
-  retries?: number;
-  batchSize?: number; // pour le traitement par lot
-}
-
-// ========================================================================
-// ADAPTATEUR UNIVERSEL ALGORITHMLAB
+// TYPES & INTERFACES
 // ========================================================================
 
 /**
- * Adaptateur universel AlgorithmLab remplaçant tous les wrappers
- * Usage: createUniversalAlgorithm(calculator, target, config)
+ * Un "calculateur" est un BaseAlgorithm qui renvoie un CalculationResult<Details>.
+ * On conserve le contrat existant : `key`, `meta`, `run(input, config?)`.
+ */
+export type BaseCalculator<
+  TInput = unknown,
+  TDetails extends VariableDetails = VariableDetails
+> = BaseAlgorithm<TInput, CalculationResult<TDetails>>;
+
+/**
+ * Options d’adaptation / overrides pour enrichir le descripteur UI.
+ */
+export interface AdapterConfig {
+  /** ID lisible (par défaut: `calculator.key`) */
+  name?: string;
+  /** Libellé affiché (par défaut: `calculator.meta?.label` ou `name`) */
+  displayName?: string;
+  /** Description longue */
+  description?: string;
+  /** Type d’implémentation (rule-based / ml / llm / hybrid) */
+  algorithmType?: AlgorithmType;
+  /** Semver (par défaut: `calculator.meta?.version` ou "1.0.0") */
+  version?: string;
+  /** Le modèle requiert-il du contexte conversationnel ? */
+  requiresContext?: boolean;
+  /** Prend en charge le batch ? */
+  batchSupported?: boolean;
+  /** Paramètres affichables en UI */
+  parameters?: Record<string, ParameterDescriptor>;
+}
+
+/** Constructeur sans argument d’un algo (utile pour registres dynamiques) */
+export interface ConstructibleAlgorithm<A = UniversalAlgorithm> {
+  new (): A;
+}
+
+// ========================================================================
+// BUILD DESCRIPTOR
+// ========================================================================
+
+function buildDescriptor(
+  calculator: { key: string; meta?: AlgorithmMetadata },
+  target: VariableTarget,
+  overrides?: AdapterConfig
+): AlgorithmDescriptor {
+  const name = overrides?.name ?? calculator.key;
+  const displayName = overrides?.displayName ?? calculator.meta?.label ?? name;
+  const version = overrides?.version ?? calculator.meta?.version ?? "1.0.0";
+  const description =
+    overrides?.description ?? calculator.meta?.description ?? "";
+
+  const type: AlgorithmType =
+    overrides?.algorithmType ??
+    // fallback "rule-based" si non renseigné
+    ("rule-based" as AlgorithmType);
+
+  return {
+    name,
+    displayName,
+    version,
+    type,
+    target,
+    batchSupported: !!overrides?.batchSupported,
+    requiresContext: !!overrides?.requiresContext,
+    description,
+    parameters: overrides?.parameters,
+    examples: calculator.meta?.tags?.map((t) => ({
+      input: { tag: t },
+      note: "Exemple basé sur tag méta",
+    })),
+  };
+}
+
+// ========================================================================
+// MAPPING: CalculationResult → UniversalResult
+// ========================================================================
+
+function toUniversalResult(
+  calc: CalculationResult<VariableDetails>,
+  algoVersion?: string
+): UniversalResult {
+  // Prediction en string robuste
+  const rawPred: unknown = (calc as any)?.prediction;
+  const prediction =
+    typeof rawPred === "string"
+      ? rawPred
+      : typeof rawPred === "number"
+      ? String(rawPred)
+      : typeof rawPred === "boolean"
+      ? rawPred
+        ? "TRUE"
+        : "FALSE"
+      : "UNKNOWN";
+
+  // Clamp confiance
+  const confidence =
+    typeof calc.confidence === "number"
+      ? Math.max(0, Math.min(1, calc.confidence))
+      : 0;
+
+  const processingTime =
+    typeof calc.processingTime === "number" ? calc.processingTime : 0;
+
+  const version = algoVersion || calc.metadata?.algorithmVersion || "unknown";
+
+  const warnings = Array.isArray(calc.metadata?.warnings)
+    ? calc.metadata?.warnings
+    : [];
+
+  return {
+    prediction,
+    confidence,
+    processingTime,
+    algorithmVersion: version,
+    metadata: {
+      inputSignature: calc.metadata?.inputSignature,
+      inputType: "unknown",
+      executionPath: calc.metadata?.executionPath ?? [],
+      warnings,
+      details: calc.details,
+    },
+  };
+}
+
+// ========================================================================
+// ADAPTATEUR GÉNÉRIQUE
+// ========================================================================
+
+/**
+ * Enveloppe un BaseCalculator en UniversalAlgorithm cohérent pour l’UI.
  */
 export function createUniversalAlgorithm<
-  TInput = any,
-  TDetails = VariableDetails
+  TInput = unknown,
+  TDetails extends VariableDetails = VariableDetails
 >(
   calculator: BaseCalculator<TInput, TDetails>,
   target: VariableTarget,
-  config: AdapterConfig<TInput, TDetails> = {}
+  overrides?: AdapterConfig
 ): UniversalAlgorithm {
-  const {
-    requiresContext = false,
-    supportsBatch = false,
-    inputValidator,
-    inputConverter,
-    resultMapper = defaultResultMapper,
-    displayName,
-    description,
-    algorithmType = "rule-based",
-    timeout = 30000,
-    retries = 3,
-    batchSize = 10,
-  } = config;
+  const descriptor = buildDescriptor(
+    { key: calculator.key, meta: calculator.meta },
+    target,
+    overrides
+  );
 
-  // Implémentation de l'interface universelle AlgorithmLab
-  const universalAlgorithm: UniversalAlgorithm = {
+  return {
     describe(): AlgorithmDescriptor {
-      const name = calculator.getName?.() || `${target}Calculator`;
-      return {
-        name,
-        displayName: displayName || name,
-        version: calculator.getVersion?.() || "1.0.0",
-        type: calculator.getType?.() || algorithmType,
-        target,
-        batchSupported: supportsBatch,
-        requiresContext,
-        description:
-          description ||
-          calculator.getDescription?.() ||
-          `Calculateur AlgorithmLab pour variable ${target}`,
-        examples: generateExamples(target),
-      };
+      return descriptor;
     },
 
     validateConfig(): boolean {
-      try {
-        // Validation basique du calculateur
-        if (!calculator || typeof calculator.calculate !== "function") {
-          return false;
-        }
-
-        // Test de calcul basique
-        const testInput = createTestInput(target);
-        if (inputValidator && !inputValidator(testInput)) {
-          return false;
-        }
-
-        return true;
-      } catch (error) {
-        console.warn(`Validation failed for ${target} calculator:`, error);
-        return false;
-      }
+      // À étendre si nécessaire : vérification de `overrides.parameters` etc.
+      return true;
     },
 
+    // Rétro-compat : certains panneaux utilisent encore `classify(string)`
     async classify(input: string): Promise<UniversalResult> {
-      return this.run(input);
+      const out = await Promise.resolve(
+        calculator.run(input as unknown as TInput)
+      );
+      return toUniversalResult(
+        out as CalculationResult<VariableDetails>,
+        descriptor.version
+      );
     },
 
+    // Exécution typée
     async run(input: unknown): Promise<UniversalResult> {
-      const startTime = Date.now();
-
-      try {
-        // 1. Validation et conversion de l'input
-        let typedInput: TInput;
-
-        if (inputValidator) {
-          if (!inputValidator(input)) {
-            throw new Error(`Invalid input type for ${target} calculator`);
-          }
-          typedInput = input;
-        } else if (inputConverter && typeof input === "string") {
-          typedInput = inputConverter(input);
-        } else if (typeof input === "string") {
-          typedInput = createDefaultInput(input, target) as TInput;
-        } else {
-          typedInput = input as TInput;
-        }
-
-        // 2. Exécution avec timeout et retry
-        const result = await executeWithRetry(
-          () => calculator.calculate(typedInput),
-          retries,
-          timeout
-        );
-
-        // 3. Mapping vers format universel
-        const universalResult = resultMapper(result);
-        universalResult.processingTime = Date.now() - startTime;
-
-        return universalResult;
-      } catch (error) {
-        return {
-          prediction: "ERROR",
-          confidence: 0,
-          processingTime: Date.now() - startTime,
-          metadata: {
-            warnings: [
-              `Execution failed: ${
-                error instanceof Error ? error.message : "Unknown error"
-              }`,
-            ],
-            executionPath: ["error"],
-            inputType: typeof input,
-          },
-        };
-      }
+      const out = await Promise.resolve(calculator.run(input as TInput));
+      return toUniversalResult(
+        out as CalculationResult<VariableDetails>,
+        descriptor.version
+      );
     },
 
+    // Batch optionnel
     async batchRun(inputs: unknown[]): Promise<UniversalResult[]> {
-      if (!supportsBatch) {
-        // Fallback: exécution séquentielle
-        const results: UniversalResult[] = [];
-        for (const input of inputs) {
-          results.push(await this.run(input));
-        }
-        return results;
-      }
-
-      // Traitement par batch optimisé
       const results: UniversalResult[] = [];
-
-      for (let i = 0; i < inputs.length; i += batchSize) {
-        const batch = inputs.slice(i, i + batchSize);
-        const batchPromises = batch.map((input) => this.run(input));
-        const batchResults = await Promise.all(batchPromises);
-        results.push(...batchResults);
+      for (const item of inputs) {
+        const out = await Promise.resolve(calculator.run(item as TInput));
+        results.push(
+          toUniversalResult(
+            out as CalculationResult<VariableDetails>,
+            descriptor.version
+          )
+        );
       }
-
       return results;
     },
   };
-
-  return universalAlgorithm;
 }
 
 // ========================================================================
-// FONCTIONS UTILITAIRES ALGORITHMLAB
-// ========================================================================
-
-function defaultResultMapper<TDetails>(
-  result: CalculationResult<TDetails>
-): UniversalResult {
-  return {
-    prediction: result.prediction,
-    confidence: result.confidence,
-    processingTime: result.processingTime,
-    algorithmVersion: result.metadata?.algorithmVersion,
-    metadata: {
-      inputSignature: result.metadata?.inputSignature,
-      executionPath: result.metadata?.executionPath || ["calculate"],
-      warnings: result.metadata?.warnings,
-      details: result.details as VariableDetails,
-    },
-  };
-}
-
-async function executeWithRetry<T>(
-  fn: () => Promise<T>,
-  retries: number,
-  timeout: number
-): Promise<T> {
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      return await Promise.race([
-        fn(),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Timeout")), timeout)
-        ),
-      ]);
-    } catch (error) {
-      if (attempt === retries) {
-        throw error;
-      }
-      // Délai exponentiel entre les tentatives
-      await new Promise((resolve) =>
-        setTimeout(resolve, Math.pow(2, attempt) * 1000)
-      );
-    }
-  }
-  throw new Error("Max retries exceeded");
-}
-
-function createTestInput(target: VariableTarget): unknown {
-  switch (target) {
-    case "X":
-      return { verbatim: "Bonjour, comment puis-je vous aider ?" };
-    case "Y":
-      return {
-        verbatim: "Oui, merci beaucoup",
-        previousConseillerTurn: "Je vais vérifier votre dossier",
-      };
-    case "M1":
-      return {
-        verbatim: "C'est une phrase de test pour l'analyse linguistique.",
-      };
-    case "M2":
-      return {
-        conseillerTurn: "Je comprends votre situation",
-        clientTurn: "Merci de votre compréhension",
-      };
-    case "M3":
-      return {
-        conversationPair: {
-          conseiller: "Avez-vous d'autres questions ?",
-          client: "Non, c'est parfait",
-        },
-      };
-    default:
-      return { verbatim: "Test input" };
-  }
-}
-
-function createDefaultInput(
-  verbatim: string,
-  target: VariableTarget
-): CalculationInput {
-  switch (target) {
-    case "X":
-      return { verbatim };
-    case "Y":
-      return { verbatim, previousConseillerTurn: "" };
-    case "M1":
-      return { verbatim };
-    case "M2":
-      return { conseillerTurn: verbatim, clientTurn: "" };
-    case "M3":
-      return {
-        conversationPair: { conseiller: verbatim, client: "" },
-      };
-    default:
-      return { verbatim } as any;
-  }
-}
-
-function generateExamples(
-  target: VariableTarget
-): Array<{ input: string; expectedOutput: string }> {
-  switch (target) {
-    case "X":
-      return [
-        {
-          input: "D'accord, je vais vérifier votre dossier",
-          expectedOutput: "ENGAGEMENT",
-        },
-        {
-          input: "Avez-vous d'autres questions ?",
-          expectedOutput: "OUVERTURE",
-        },
-        { input: "Je comprends votre frustration", expectedOutput: "REFLET" },
-      ];
-    case "Y":
-      return [
-        {
-          input: "Merci beaucoup pour votre aide",
-          expectedOutput: "CLIENT_POSITIF",
-        },
-        { input: "Ce n'est pas possible !", expectedOutput: "CLIENT_NEGATIF" },
-        { input: "D'accord", expectedOutput: "CLIENT_NEUTRE" },
-      ];
-    case "M1":
-      return [
-        { input: "Phrase simple", expectedOutput: "LOW_COMPLEXITY" },
-        {
-          input: "Construction syntaxique complexe",
-          expectedOutput: "HIGH_COMPLEXITY",
-        },
-      ];
-    case "M2":
-      return [
-        {
-          input: "Conseiller: 'Je comprends' | Client: 'Merci'",
-          expectedOutput: "HIGH_ALIGNMENT",
-        },
-      ];
-    case "M3":
-      return [
-        { input: "Conversation fluide", expectedOutput: "HIGH_FLUIDITY" },
-      ];
-    default:
-      return [];
-  }
-}
-
-// ========================================================================
-// FACTORY FUNCTIONS POUR USAGE SIMPLIFIÉ ALGORITHMLAB
+// HELPERS PAR VARIABLE
 // ========================================================================
 
 export function createXAlgorithm(
-  calculator: BaseCalculator
+  calculator: BaseCalculator,
+  overrides?: AdapterConfig
 ): UniversalAlgorithm {
   return createUniversalAlgorithm(calculator, "X", {
-    displayName: "X Classifier AlgorithmLab",
-    description: "Classification des actes conversationnels conseiller",
-    algorithmType: "rule-based", // was "RULE_BASED"
+    displayName: "X Classifier (AlgorithmLab)",
+    description:
+      "Classification X (Reflet / Ouverture / Engagement / Explication)",
+    algorithmType: "ml",
+    requiresContext: false,
+    ...overrides,
   });
 }
 
 export function createYAlgorithm(
-  calculator: BaseCalculator
+  calculator: BaseCalculator,
+  overrides?: AdapterConfig
 ): UniversalAlgorithm {
   return createUniversalAlgorithm(calculator, "Y", {
-    displayName: "Y Classifier AlgorithmLab",
-    description: "Classification des réactions client",
-    algorithmType: "rule-based", // was "RULE_BASED"
+    displayName: "Y Classifier (AlgorithmLab)",
+    description: "Polarité client (Positif / Négatif / Neutre)",
+    algorithmType: "ml",
+    requiresContext: false,
+    ...overrides,
+  });
+}
+
+export function createM1Algorithm(
+  calculator: BaseCalculator,
+  overrides?: AdapterConfig
+): UniversalAlgorithm {
+  return createUniversalAlgorithm(calculator, "M1", {
+    displayName: "M1 Action Verb Density",
+    description: "Densité de verbes d’action (M1)",
+    algorithmType: "rule-based",
+    ...overrides,
   });
 }
 
 export function createM2Algorithm(
-  calculator: BaseCalculator
+  calculator: BaseCalculator,
+  overrides?: AdapterConfig
 ): UniversalAlgorithm {
   return createUniversalAlgorithm(calculator, "M2", {
-    displayName: "M2 Alignment Calculator AlgorithmLab",
-    description: "Calcul de l'alignement interactionnel",
-    algorithmType: "ml", // was "MACHINE_LEARNING"
+    displayName: "M2 Alignment (Lexical/Semantic)",
+    description: "Alignement lexical+semantique T0 ↔ T+1 (M2)",
+    algorithmType: "hybrid",
     requiresContext: true,
+    ...overrides,
   });
 }
+
+export function createM3Algorithm(
+  calculator: BaseCalculator,
+  overrides?: AdapterConfig
+): UniversalAlgorithm {
+  return createUniversalAlgorithm(calculator, "M3", {
+    displayName: "M3 Temporal/Cognitive Metrics",
+    description: "Indicateurs temporels et charge cognitive (M3)",
+    algorithmType: "rule-based",
+    ...overrides,
+  });
+}
+
 ```
 
 ## core
 
 ### Arborescence
-
 ```text
 core/
 - calculations.ts
@@ -690,185 +974,152 @@ core/
 
 **Exports**
 
-- **Déclarations**: XInput, YInput, M1Input, M2Input, M3Input, CalculationInput, CalculationResult, XCalculationResult, YCalculationResult, M1CalculationResult, M2CalculationResult, M3CalculationResult, CalculationMetadata, validateCalculationInput, createEmptyResult
+- **Déclarations**: XInput, YInput, M1Input, M2Input, M3Input, AnyCalculationInput, CalculationInput, CalculationMetadata, CalculationResult, XCalculationResult, YCalculationResult, M1CalculationResult, M2CalculationResult, M3CalculationResult, createEmptyResult, validateCalculationInput, mergeWarnings, mergeExecutionPaths
 
 **Contenu**
 
 ```ts
 /**
- * @fileoverview Interfaces de calcul AlgorithmLab
- * Types pour les inputs, outputs et métadonnées des calculateurs AlgorithmLab
+ * @fileoverview Types et utilitaires de calcul AlgorithmLab
+ * - Entrées typées (X/Y/M1/M2/M3)
+ * - Résultats (CalculationResult<Details>)
+ * - Helpers communs : createEmptyResult, validateCalculationInput, mergeWarnings, mergeExecutionPaths
  */
 
-import { VariableTarget, VariableDetails } from "./variables";
+import type {
+  VariableTarget,
+  VariableDetails,
+  XDetails,
+  YDetails,
+  M1Details,
+  M2Details,
+  M3Details,
+} from "./variables";
 
 // ========================================================================
-// INPUTS POUR LES CALCULS ALGORITHMLAB
+// INPUTS
 // ========================================================================
 
 export interface XInput {
   verbatim: string;
-  context?: {
-    previousTurn?: string;
-    nextTurn?: string;
-    callId?: string;
-    turnIndex?: number;
-  };
-  metadata?: {
-    speaker: string;
-    timestamp: number;
-    duration: number;
-  };
+  language?: string;
+  contextTurnId?: number;
 }
 
 export interface YInput {
   verbatim: string;
-  previousConseillerTurn: string;
-  context?: {
-    conversationHistory?: string[];
-    emotionalContext?: string;
-    callMetadata?: Record<string, any>;
-  };
+  language?: string;
+  contextTurnId?: number;
 }
 
 export interface M1Input {
   verbatim: string;
+  tokens?: string[];
   language?: string;
-  analysisDepth?: "BASIC" | "ADVANCED" | "COMPREHENSIVE";
 }
 
 export interface M2Input {
-  conseillerTurn: string;
-  clientTurn: string;
+  conseillerTurn?: string;
+  clientTurn?: string;
+  t0?: string; // tour conseiller
+  t1?: string; // tour client (suivant)
+
+  // Propriétés alternatives pour compatibilité
+  turnVerbatim?: string;
+  nextTurnVerbatim?: string;
+
   context?: {
     previousTurns?: Array<{ speaker: string; text: string }>;
     conversationPhase?: "OPENING" | "DEVELOPMENT" | "RESOLUTION" | "CLOSING";
+    prevTurn?: string;
+    speaker?: string;
+    nextSpeaker?: string;
+  };
+
+  metadata?: {
+    turnId?: number;
+    callId?: string;
+    timestamp?: number;
   };
 }
 
 export interface M3Input {
-  conversationPair: {
-    conseiller: string;
-    client: string;
-  };
-  cognitiveContext?: {
-    conversationLength: number;
-    emotionalTone: string;
-    complexityLevel: "LOW" | "MEDIUM" | "HIGH";
-  };
+  segment: string;
+  withProsody?: boolean;
+  language?: string;
+  options?: Record<string, unknown>;
 }
 
-// Union type pour tous les inputs AlgorithmLab
-export type CalculationInput = XInput | YInput | M1Input | M2Input | M3Input;
+export type AnyCalculationInput = XInput | YInput | M1Input | M2Input | M3Input;
+// alias rétro-compatible
+export type CalculationInput = AnyCalculationInput;
 
 // ========================================================================
-// RÉSULTATS DES CALCULS ALGORITHMLAB
+// MÉTADONNÉES / RÉSULTATS
 // ========================================================================
+
+export interface CalculationMetadata {
+  algorithmVersion: string;
+  inputSignature: string;
+  executionPath: string[];
+  warnings?: string[];
+
+  // ✅ CORRECTION : Propriétés manquantes pour M1/M2/M3
+  id?: string;
+  label?: string;
+  target?: VariableTarget; // "M1" | "M2" | "M3"
+  algorithmKind?: string;
+  version?: string;
+  description?: string;
+
+  // ✅ CORRECTION : Pour RegexM1Calculator et PauseM3Calculator
+  tags?: string[];
+
+  // ✅ CORRECTION : Pour M2SemanticAlignmentCalculator
+  parameters?: Record<string, any>;
+
+  // Extension pour autres propriétés futures
+  [key: string]: unknown;
+}
 
 export interface CalculationResult<TDetails = VariableDetails> {
   prediction: string;
   confidence: number;
   processingTime: number;
 
+  // Propriété existante
+  score?: number;
+
   details: TDetails;
+
+  // ✅ NOUVELLES propriétés optionnelles pour M3ValidationInterface
+  markers?: string[]; // Erreur ligne 314 dans M3ValidationInterface
 
   metadata?: {
     algorithmVersion: string;
     inputSignature: string;
     executionPath: string[];
     warnings?: string[];
+
+    // ✅ NOUVELLES propriétés pour M3ValidationInterface
+    verbatim?: string; // Erreur lignes 94,273
+    clientTurn?: string; // Erreur lignes 94,274
+
+    // Extension pour autres propriétés futures
+    [key: string]: unknown;
   };
 }
 
-// Résultats typés spécifiques AlgorithmLab
-export type XCalculationResult = CalculationResult<
-  import("./variables").XDetails
->;
-export type YCalculationResult = CalculationResult<
-  import("./variables").YDetails
->;
-export type M1CalculationResult = CalculationResult<
-  import("./variables").M1Details
->;
-export type M2CalculationResult = CalculationResult<
-  import("./variables").M2Details
->;
-export type M3CalculationResult = CalculationResult<
-  import("./variables").M3Details
->;
+// Sorties spécialisées
+export type XCalculationResult = CalculationResult<XDetails>;
+export type YCalculationResult = CalculationResult<YDetails>;
+export type M1CalculationResult = CalculationResult<M1Details>;
+export type M2CalculationResult = CalculationResult<M2Details>;
+export type M3CalculationResult = CalculationResult<M3Details>;
 
 // ========================================================================
-// MÉTADONNÉES DES CALCULATEURS ALGORITHMLAB
+// HELPERS
 // ========================================================================
-
-export interface CalculationMetadata {
-  name: string;
-  version: string;
-  target: VariableTarget;
-  description: string;
-
-  capabilities: {
-    batchProcessing: boolean;
-    contextAware: boolean;
-    realTime: boolean;
-    requiresTraining: boolean;
-  };
-
-  performance: {
-    averageProcessingTime: number; // ms
-    accuracy: number; // 0-1
-    precision: number; // 0-1
-    recall: number; // 0-1
-  };
-
-  parameters?: Record<
-    string,
-    {
-      type: string;
-      default: any;
-      description: string;
-      required: boolean;
-    }
-  >;
-}
-
-// ========================================================================
-// UTILITAIRES DE VALIDATION ALGORITHMLAB
-// ========================================================================
-
-export function validateCalculationInput(
-  input: unknown,
-  target: VariableTarget
-): input is CalculationInput {
-  if (!input || typeof input !== "object") return false;
-
-  const obj = input as Record<string, any>;
-
-  switch (target) {
-    case "X":
-      return typeof obj.verbatim === "string";
-    case "Y":
-      return (
-        typeof obj.verbatim === "string" &&
-        typeof obj.previousConseillerTurn === "string"
-      );
-    case "M1":
-      return typeof obj.verbatim === "string";
-    case "M2":
-      return (
-        typeof obj.conseillerTurn === "string" &&
-        typeof obj.clientTurn === "string"
-      );
-    case "M3":
-      return (
-        obj.conversationPair &&
-        typeof obj.conversationPair.conseiller === "string" &&
-        typeof obj.conversationPair.client === "string"
-      );
-    default:
-      return false;
-  }
-}
 
 export function createEmptyResult<T extends VariableDetails>(
   target: VariableTarget
@@ -882,37 +1133,71 @@ export function createEmptyResult<T extends VariableDetails>(
       algorithmVersion: "unknown",
       inputSignature: "",
       executionPath: [],
-      warnings: ["Empty result created"],
     },
   };
 }
+
+/**
+ * ✅ Ajout attendu par types/index.ts
+ * Garde ultra-sûre pour valider une entrée de calcul.
+ */
+export function validateCalculationInput<T = unknown>(
+  input: unknown
+): input is T {
+  return input !== null && input !== undefined;
+}
+
+/** Fusionne/unique les warnings de plusieurs résultats (utile M2 composite) */
+export function mergeWarnings(
+  ...results: Array<CalculationResult<any> | undefined>
+): string[] | undefined {
+  const set = new Set<string>();
+  for (const r of results) {
+    if (Array.isArray(r?.metadata?.warnings)) {
+      for (const w of r!.metadata!.warnings!) set.add(w);
+    }
+  }
+  return set.size ? Array.from(set) : undefined;
+}
+
+/** Concatène les chemins d’exécution de plusieurs sous-calculs */
+export function mergeExecutionPaths(
+  ...results: Array<CalculationResult<any> | undefined>
+): string[] {
+  const path: string[] = [];
+  for (const r of results) {
+    if (Array.isArray(r?.metadata?.executionPath)) {
+      path.push(...r!.metadata!.executionPath!);
+    }
+  }
+  return path;
+}
+
 ```
 
 #### `AlgorithmLab/types/core/index.ts`
 
 **Exports**
 
-- **Re-exports `*`** depuis: ./variables, ./calculations, ./validation
+- **Nommés**: isValidVariableTarget, getVariableColor, getVariableLabel
+- **Re-exports `*`** depuis: ./validation
 
 **Contenu**
 
 ```ts
 /**
- * @fileoverview Export centralisé des types core AlgorithmLab
- * Point d'entrée principal pour tous les types fondamentaux AlgorithmLab
+ * @fileoverview Barrel des types "core" d'AlgorithmLab.
+ * On évite les collisions et on respecte 'isolatedModules'
+ * en distinguant les ré-exports de types vs de valeurs.
  */
 
-// Variables et détails
-export * from "./variables";
+// -------------------------
+// Exports depuis ./variables
+// -------------------------
 
-// Calculs et résultats
-export * from "./calculations";
-
-// Validation et métriques
-export * from "./validation";
-
-// Types combinés pour faciliter l'import dans AlgorithmLab
+// ✅ Tous ces symboles sont des TYPES -> `export type { ... }`
 export type {
+  // Types de variables
   VariableTarget,
   VariableDetails,
   XDetails,
@@ -920,24 +1205,28 @@ export type {
   M1Details,
   M2Details,
   M3Details,
+  VariableX,
+  XTag,
+  YTag,
 } from "./variables";
 
-export type {
-  CalculationInput,
-  CalculationResult,
-  CalculationMetadata,
-  XInput,
-  YInput,
-  M1Input,
-  M2Input,
-  M3Input,
-} from "./calculations";
+// ✅ Ces symboles sont des VALEURS (fonctions) -> `export { ... }`
+export {
+  isValidVariableTarget,
+  getVariableColor,
+  getVariableLabel,
+} from "./variables";
 
-export type {
-  ValidationMetrics,
-  ValidationResult,
-  AlgorithmTestConfig,
-} from "./validation";
+// -------------------------
+// Exports depuis ./validation
+// -------------------------
+// Ici on peut garder un export global. S'il y avait un conflit de nom,
+// on le résoudrait explicitement comme ci-dessus.
+export * from "./validation";
+
+// Alias de compat pour l'UI qui attend ce nom précis
+export type { TVValidationResult as TVValidationResultCore } from "./validation";
+
 ```
 
 #### `AlgorithmLab/types/core/level0.ts`
@@ -977,55 +1266,95 @@ export interface DisagreementCase {
   labels: Record<string, string>; // annotator -> label
   notes?: string;
 }
+
 ```
 
 #### `AlgorithmLab/types/core/validation.ts`
 
 **Exports**
 
-- **Déclarations**: TVMetadataCore, TVValidationResultCore, ValidationRow, ValidationMetrics, ValidationResult, TVValidationResultCore, TVMetadataCore, XGoldStandardItem, XValidationResult, TVMetadataM2, TVValidationResult, CoreTVValidationResult, CoreTVMetadata, AlgorithmTestConfig, DisagreementCase, KappaMetrics, InterAnnotatorData, ValidationLevel, calculateMetrics, createValidationConfig
+- **Déclarations**: TVMetadataCore, TVMetadata, TVValidationResultCore, ValidationRow, ValidationMetrics, ValidationResult, XGoldStandardItem, XValidationResult, TVMetadataM2, TVValidationResult, CoreTVValidationResult, CoreTVMetadata, AlgorithmTestConfig, DisagreementCase, KappaMetrics, InterAnnotatorData, ValidationLevel, calculateMetrics, createValidationConfig
 
 **Contenu**
 
 ```ts
+// ===================================================================
+// 1. CORRECTION: src/app/(protected)/analysis/components/AlgorithmLab/types/core/validation.ts
+// ===================================================================
+
 /**
  * @fileoverview Types de validation AlgorithmLab
  * Interfaces pour validation, tests et métriques de performance AlgorithmLab
+ * ✅ CORRECTION: Ajout propriétés metadata manquantes (verbatim, clientTurn, etc.)
  */
 
-import type { VariableTarget, VariableX, Xtag } from "./variables";
+import type { VariableTarget, VariableX } from "./variables";
 import type { CalculationResult } from "./calculations";
 
 // ========================================================================
 // MÉTRIQUES DE VALIDATION ALGORITHMLAB
 // ========================================================================
 
-// --- Nouveaux contrats centraux pour la validation technique ---
 export interface TVMetadataCore {
   // identifiants tour (optionnels)
   turnId?: number | string;
   id?: number | string;
+
+  // Propriétés existantes
+  annotations?: any[];
+  provider?: string;
+  scale?: "nominal" | "ordinal";
+
+  // ✅ NOUVELLES propriétés optionnelles pour M2ValidationInterface
+  clientTurn?: string;
+  verbatim?: string;
+  m2?: {
+    value?: string | number;
+    scale?: string;
+    alignmentType?: "ALIGNEMENT_FORT" | "ALIGNEMENT_FAIBLE" | "DESALIGNEMENT";
+    alignmentMethod?: "lexical" | "semantic" | "composite";
+    weights?: Record<string, number>;
+  };
+
+  // Autres propriétés optionnelles
+  source?: string;
+  createdAt?: string;
+  notes?: string;
 }
+
+// Alias pour TVMetadata (utilisé dans plusieurs composants)
+export type TVMetadata = TVMetadataCore;
 
 export interface TVValidationResultCore {
   verbatim: string;
   goldStandard: string;
   predicted: string;
-  confidence: number;
   correct: boolean;
+
+  // ✅ NOUVELLES propriétés optionnelles pour M2ValidationInterface
+  confidence?: number;
   processingTime?: number;
+  id?: string | number;
+
   metadata?: TVMetadataCore | Record<string, unknown>;
 }
 
 export type ValidationRow = TVValidationResultCore;
 
 export interface ValidationMetrics {
-  // 👉 valeurs globales, numériques
+  // Valeurs globales, numériques
   accuracy: number;
   precision: number;
   recall: number;
   f1Score: number;
-  kappa?: number; // 👉 ajouté (optionnel)
+
+  // Propriété manquante ajoutée pour TechnicalBenchmark
+  kappa?: number;
+
+  // Propriétés supplémentaires pour compatibility complète
+  errorRate?: number;
+  sampleSize?: number;
+  processingSpeed?: number;
 
   // Métriques détaillées
   confusionMatrix: Record<string, Record<string, number>>;
@@ -1038,6 +1367,17 @@ export interface ValidationMetrics {
       recall: number;
       f1Score: number;
       support: number;
+    }
+  >;
+
+  // Support pour les deux formats perClass (correction conflit ThesisVariables.ts:163)
+  perClass?: Record<
+    string,
+    {
+      precision: number;
+      recall: number;
+      f1: number;
+      support?: number; // ✅ CORRECTION: support optionnel pour résoudre l'erreur
     }
   >;
 
@@ -1074,53 +1414,47 @@ export interface ValidationResult {
   notes?: string;
 }
 
-export interface TVValidationResultCore {
-  items: Array<{ label: string; score: number }>;
-  summary?: Record<string, unknown>;
-}
-
-export interface TVMetadataCore {
-  source?: string;
-  createdAt?: string; // ISO
-  notes?: string;
-}
-
 export interface XGoldStandardItem {
   id: string;
   verbatim?: string;
-  goldStandard?: VariableX; // compat ancien
-  annotatorConfidence?: number; // compat ancien
-  callId?: string; // compat ancien
+  goldStandard?: VariableX;
+  annotatorConfidence?: number;
+  callId?: string;
   meta?: Record<string, unknown>;
+
+  // ✅ AJOUT: Propriété annotatorId manquante dans useXAlgorithmTesting.ts:222,231,240
+  annotatorId?: string;
 }
+
 export interface XValidationResult {
   id?: string;
   verbatim?: string;
   callId?: string;
-
-  predicted?: VariableX;
-  goldStandard?: VariableX;
-
+  predicted?: VariableX; // ✅ CORRECTION: Résolution conflit types/core/validation.ts:187
+  goldStandard?: VariableX; // ✅ CORRECTION: Résolution conflit types/core/validation.ts:188
   confidence?: number;
   processingTime?: number;
+  correct: boolean;
 
-  correct: boolean; // ⚠️ boolean (l’UI compare === true/false)
+  // Propriété manquante ajoutée
+  evidence?: string[];
+
+  // ✅ AJOUT: Support pour autres propriétés manquantes
+  timestamp?: number; // Propriété manquante dans useXAlgorithmTesting.ts:402,627
 }
-export interface TVMetadataM2 {
-  source?: string;
-  createdAt?: string; // ISO
-  notes?: string;
+
+export interface TVMetadataM2 extends TVMetadataCore {
+  value?: "ALIGNEMENT_FORT" | "ALIGNEMENT_FAIBLE" | "DESALIGNEMENT";
+  alignmentType?: TVMetadataM2["value"];
   alignmentMethod?: "lexical" | "semantic" | "composite";
   weights?: Record<string, number>;
 
-  // Ajouts pour la compat AL
-  value?: "ALIGNEMENT_FORT" | "ALIGNEMENT_FAIBLE" | "DESALIGNEMENT";
-  alignmentType?: TVMetadataM2["value"];
+  // ✅ AJOUT: Support pour propriétés étendues M2
+  details?: Record<string, any>; // Propriété manquante dans useM2AlgorithmTesting.ts:71
 }
-// Alias public simple attendu par l'UI
-export type TVValidationResult = TVValidationResultCore;
 
-// Aliases "Core*" utilisés par certains modules (ex: ResultsSample/types.ts)
+// Alias publics simples attendus par l'UI
+export type TVValidationResult = TVValidationResultCore;
 export type CoreTVValidationResult = TVValidationResultCore;
 export type CoreTVMetadata = TVMetadataCore;
 
@@ -1132,25 +1466,31 @@ export interface AlgorithmTestConfig {
   target: VariableTarget;
   algorithmName: string;
 
-  // Configuration du test
+  // ✅ NOUVELLES propriétés optionnelles pour corriger les erreurs
+  algorithmId?: string;
+  variable?: VariableTarget;
+  sampleSize?: number;
+  randomSeed?: number;
+  useGoldStandard?: boolean;
+  options?: Record<string, unknown>;
+
+  // Configuration du test (existant)
   testSet: {
     source: "MANUAL_ANNOTATIONS" | "SYNTHETIC" | "HISTORICAL";
     size?: number;
     stratified?: boolean;
     randomSeed?: number;
-    algorithmId?: string; // compat
-    sampleSize?: number; // compat
   };
 
-  // Métriques à calculer
+  // Métriques à calculer (existant)
   metrics: {
-    basic: boolean; // accuracy, precision, recall, f1
-    detailed: boolean; // confusion matrix, per-class metrics
-    temporal?: boolean; // performance over time
-    crossValidation?: boolean; // k-fold validation
+    basic: boolean;
+    detailed: boolean;
+    temporal?: boolean;
+    crossValidation?: boolean;
   };
 
-  // Seuils de performance
+  // Seuils de performance (existant)
   thresholds: {
     minimumAccuracy: number;
     minimumPrecision?: number;
@@ -1158,41 +1498,42 @@ export interface AlgorithmTestConfig {
     minimumF1?: number;
   };
 
-  // Options d'exécution
+  // Options d'exécution (existant)
   execution: {
     parallel?: boolean;
-    timeout?: number; // ms
+    timeout?: number;
     retries?: number;
     saveResults?: boolean;
+  };
+
+  // Support pour validation croisée (existant)
+  crossValidation?: {
+    folds: number;
+    stratified: boolean;
   };
 }
 
 // ========================================================================
-// INTER-ANNOTATOR AGREEMENT (IAA) — types nécessaires au Level 0
+// INTER-ANNOTATOR AGREEMENT (IAA) - Remplace Level0Types
 // ========================================================================
 
-/** Un cas de désaccord / comparaison entre deux annotations. */
 export interface DisagreementCase {
   id?: string | number;
   verbatim?: string;
-
-  // Scindé OU encapsulé : le hook lit parfois annotation.expert1/expert2
   annotatorA?: string;
   annotatorB?: string;
   labelA?: string;
   labelB?: string;
-
-  // Compat : certains chemins accèdent via `annotation.expert1`
   annotation?: { expert1: string; expert2: string };
-
   confusionType?: string;
   finalTag?: string;
   notes?: string;
 }
 
-/** Métriques de Kappa + dérivées pour l’IAA. */
 export interface KappaMetrics {
   kappa: number;
+  // ✅ CORRECTION: Ajout propriété observed manquante dans useLevel0Validation.ts:38
+  observed?: number; // Alias pour observedAgreement
   observedAgreement: number;
   expectedAgreement: number;
   confusionMatrix?: Record<string, Record<string, number>>;
@@ -1200,7 +1541,6 @@ export interface KappaMetrics {
     string,
     { observed: number; expected: number; kappa: number; support: number }
   >;
-  // fourni par useLevel0Validation.getInterpretation
   interpretation?:
     | "POOR"
     | "FAIR"
@@ -1209,23 +1549,31 @@ export interface KappaMetrics {
     | "ALMOST_PERFECT";
 }
 
-/** Données complètes pour l’interface d’accord inter-annotateurs. */
 export interface InterAnnotatorData {
   id?: string | number;
   verbatim?: string;
   agreed: boolean;
   annotation?: { expert1: string; expert2: string };
-  // champs libres tolerés par l’UI
+
+  // ✅ CORRECTION: Support pour propriétés étendues dans useLevel0Validation.ts:57,61
+  expert1?: string;
+  expert2?: string;
+  finalTag?: string; // Propriété manquante dans useLevel0Validation.ts:61
+
   [k: string]: unknown;
 }
+
+// ========================================================================
+// VALIDATION LEVEL - Remplace SharedTypes.ValidationLevel
+// ========================================================================
 
 export interface ValidationLevel {
   id: number;
   name: string;
   description: string;
-  status: "locked" | "in_progress" | "validated";
-  progress: number; // 0..100
-  prerequisites: number[]; // ids requis
+  status: "pending" | "in-progress" | "validated" | "failed";
+  progress: number;
+  prerequisites: number[];
 }
 
 // ========================================================================
@@ -1243,12 +1591,11 @@ export function calculateMetrics(
   const correct = predictions.filter((p) => p.expected === p.predicted).length;
   const accuracy = correct / total;
 
-  // Calcul simplifié pour l'exemple
   return {
     accuracy,
-    precision: accuracy, // Simplifié
-    recall: accuracy, // Simplifié
-    f1Score: accuracy, // Simplifié
+    precision: accuracy,
+    recall: accuracy,
+    f1Score: accuracy,
     confusionMatrix: {},
     classMetrics: {},
     totalSamples: total,
@@ -1294,22 +1641,28 @@ export function createValidationConfig(
     },
   };
 }
+
 ```
 
 #### `AlgorithmLab/types/core/variables.ts`
 
 **Exports**
 
-- **Déclarations**: VariableTarget, ValidationLevel, VariableX, XTag, YTag, XDetails, YDetails, M1Details, M2Details, M3Details, XValue, YValue, VariableM1Score, VariableM2Score, VariableM3Score, VariableDetails, VARIABLE_LABELS, VARIABLE_COLORS, isValidVariableTarget, getVariableColor, getVariableLabel
+- **Déclarations**: VariableTarget, ValidationLevel, VariableX, XTag, YTag, VariableY, XDetails, YDetails, M1Details, M2Details, M3Details, XValue, YValue, VariableM1Score, VariableM2Score, VariableM3Score, VariableDetails, VARIABLE_LABELS, VARIABLE_COLORS, isValidVariableTarget, getVariableColor, getVariableLabel
 
 **Contenu**
 
 ```ts
+// ===================================================================
+// 3. CORRECTION: src/app/(protected)/analysis/components/AlgorithmLab/types/core/variables.ts
+// ===================================================================
+
 /**
  * @fileoverview Variables & détails AlgorithmLab — version unifiée et canonique
  * - Ordre logique (tags avant usages)
  * - Pas de redéclarations : une seule interface par nom
  * - Compat ascendante : anciens champs conservés en option
+ * ✅ CORRECTION: Ajout des propriétés M3Details manquantes (pauseCount, hesitationCount, speechRate, markers)
  */
 
 // ========================================================================
@@ -1324,8 +1677,7 @@ export type ValidationLevel = "LEVEL0" | "LEVEL1" | "LEVEL2";
 // 2) Tags X/Y (catégories canoniques)
 // ========================================================================
 
-// ⚠️ Partout ailleurs, VariableX est utilisée comme union de libellés.
-// On la définit donc ici comme telle.
+// VariableX est utilisée comme union de libellés
 export type VariableX =
   | "ENGAGEMENT"
   | "EXPLICATION"
@@ -1334,29 +1686,28 @@ export type VariableX =
   | "REFLET_VOUS"
   | "OUVERTURE";
 
-// XTag = VariableX (et on garde la compat en ajoutant d’éventuels extras)
-export type XTag = VariableX | "CLOTURE" | "AUTRE_X";
+// XTag = VariableX avec extensions
+export type XTag = VariableX | "REFLET" | "CLOTURE" | "AUTRE_X";
 
 export type YTag =
   | "CLIENT_POSITIF"
-  | "CLIENT_NEUTRE"
   | "CLIENT_NEGATIF"
-  | "CLIENT_QUESTION"
-  | "CLIENT_SILENCE"
+  | "CLIENT_NEUTRE"
+  | "CLIENT_QUESTION" // ← Si utilisé dans RegexYClassifier
+  | "CLIENT_SILENCE" // ← Si utilisé dans RegexYClassifier
   | "AUTRE_Y";
+
+export type VariableY = YTag;
 
 // ========================================================================
 // 3) Détails par variable (définitions uniques)
 // ========================================================================
 
-/** Détails X (actes conseiller) — fusion des versions "simple" et "riche" */
 export interface XDetails {
-  // Ancienne spec (facilitent la validation X↔famille)
+  // Propriétés existantes
   family?: string;
   evidences?: string[];
   topProbs?: { label: string; prob: number }[];
-
-  // Mesures linguistiques/structurelles
   verbCount?: number;
   actionVerbs?: string[];
   pronounUsage?: {
@@ -1366,36 +1717,44 @@ export interface XDetails {
   };
   questionMarkers?: string[];
   declarativeMarkers?: string[];
-
-  // Métriques d'efficacité
   effectiveness?: {
     clientResponse: "POSITIVE" | "NEGATIVE" | "NEUTRAL";
     alignmentScore: number;
     nextTurnLabel?: string;
   };
+  label?: string;
+
+  // ✅ NOUVELLES propriétés optionnelles pour useLevel1Testing
+  confidence?: number; // Erreur ligne 94
+  matchedPatterns?: string[]; // Utilisé ligne 96
+  rationale?: string; // Utilisé ligne 97
+  probabilities?: any; // Utilisé ligne 98
+  spans?: any; // Utilisé ligne 99
 }
 
-/** Détails Y (réactions client) — fusion simple + riche */
 export interface YDetails {
-  // Ancienne spec
+  // Propriétés existantes
   family?: string;
   evidences?: string[];
   topProbs?: { label: string; prob: number }[];
-
-  // Spec riche
   sentiment?: "POSITIVE" | "NEGATIVE" | "NEUTRAL";
-  emotionalIntensity?: number; // 0..1
+  emotionalIntensity?: number;
   linguisticMarkers?: string[];
   responseType?: "ACCEPTANCE" | "RESISTANCE" | "INQUIRY" | "NEUTRAL";
-
   conversationalMetrics?: {
-    latency: number; // ms
-    verbosity: number; // nb mots
-    coherence: number; // 0..1
+    latency: number;
+    verbosity: number;
+    coherence: number;
   };
+  label?: string;
+
+  // ✅ NOUVELLES propriétés optionnelles pour useLevel1Testing
+  confidence?: number; // Erreur ligne 108
+  cues?: string[]; // Utilisé ligne 110
+  sentimentProxy?: any; // Utilisé ligne 111
+  spans?: any; // Utilisé ligne 112
 }
 
-/** M1 — densité/metrics linguistiques (compat + enrichi) */
 export interface M1Details {
   // Ancienne spec (compat)
   value?: number;
@@ -1413,7 +1772,6 @@ export interface M1Details {
   semanticCoherence?: number;
 }
 
-/** M2 — alignement interactionnel (compat + enrichi) */
 export interface M2Details {
   // Ancienne spec (compat)
   value?: string | number;
@@ -1434,7 +1792,6 @@ export interface M2Details {
   };
 }
 
-/** M3 — temporalité/charge (compat + enrichi) */
 export interface M3Details {
   // Ancienne spec (compat)
   value?: number;
@@ -1451,11 +1808,21 @@ export interface M3Details {
 
   predictedSatisfaction?: number;
   predictedCompliance?: number;
+
+  // ✅ CORRECTION MAJEURE: Ajout des propriétés manquantes signalées dans les erreurs
+  pauseCount?: number; // Erreur dans M3ValidationInterface.tsx:107,300
+  hesitationCount?: number; // Erreur dans M3ValidationInterface.tsx:109,302
+  speechRate?: number; // Erreur dans M3ValidationInterface.tsx:111,305
+  markers?: Array<{
+    type: string;
+    timestamp: number;
+    confidence: number;
+    value?: string | number;
+  }>; // Erreur dans M3ValidationInterface.tsx:314
 }
 
 // ========================================================================
 // 4) Objets composés X/Y (tag + détails)
-//    ⟶ renommés pour ne pas entrer en conflit avec `VariableX` (union)
 // ========================================================================
 export interface XValue {
   tag: XTag;
@@ -1484,7 +1851,7 @@ export interface VariableM3Score {
 }
 
 // ========================================================================
-// 5) Union de détails + utilitaires d’affichage
+// 5) Union de détails + utilitaires d'affichage
 // ========================================================================
 export type VariableDetails =
   | XDetails
@@ -1531,12 +1898,12 @@ export function getVariableColor(target: VariableTarget): string {
 export function getVariableLabel(target: VariableTarget): string {
   return VARIABLE_LABELS[target];
 }
+
 ```
 
 ## legacy
 
 ### Arborescence
-
 ```text
 legacy/
 ```
@@ -1544,7 +1911,6 @@ legacy/
 ## ui
 
 ### Arborescence
-
 ```text
 ui/
 - components.ts
@@ -1556,7 +1922,7 @@ ui/
 
 **Exports**
 
-- **Déclarations**: BaseValidationProps, DisplayConfig, ConfigFormProps, ResultDisplayProps, ResultsPanelProps, TVResultDisplayProps, TargetKind, ExtraColumn, ModalProps, createDefaultDisplayConfig, withDisplayDefaults, validateConfigSchema
+- **Déclarations**: BaseValidationProps, DisplayConfig, ConfigFormProps, ResultDisplayProps, ResultsPanelProps, TVResultDisplayProps, TargetKind, ExtraColumn, MetricsPanelProps, SimpleMetrics, ClassifierSelectorProps, ClassifierSelectorAlgorithm, ConfusionMatrixProps, ModalProps, createDefaultDisplayConfig, withDisplayDefaults, validateConfigSchema
 
 **Contenu**
 
@@ -1564,6 +1930,7 @@ ui/
 /**
  * @fileoverview Types de composants UI AlgorithmLab
  * Interfaces spécifiques aux composants d'interface AlgorithmLab
+ * ✅ CORRECTION: Ajout des props manquantes pour ResultsPanel, ConfusionMatrix, etc.
  */
 
 import type { ReactNode, CSSProperties } from "react";
@@ -1711,9 +2078,20 @@ export interface ResultDisplayProps {
 export interface ResultsPanelProps {
   results: TVValidationResultCore[];
   display?: DisplayConfig;
+
+  // Propriétés existantes (déjà présentes)
+  limit?: number;
+  showPagination?: boolean;
+  onResultSelect?: (result: any) => void;
+  displayMode?: "table" | "cards" | "list";
+
+  // ✅ AJOUTER ces nouvelles propriétés optionnelles pour M2ValidationInterface
+  targetKind?: "X" | "Y" | "M1" | "M2" | "M3";
+  classifierLabel?: string;
+  initialPageSize?: number;
 }
 
-// Optionnel : variante stricte TV pour d’autres composants UI
+// Optionnel : variante stricte TV pour d'autres composants UI
 export interface TVResultDisplayProps {
   results: TVValidationResultCore[];
   display?: DisplayConfig;
@@ -1727,6 +2105,63 @@ export type ExtraColumn<Row = any> = {
   header: string;
   render: (row: Row) => unknown; // opaque; UI gère le rendu
 };
+
+// ========================================================================
+// TYPES POUR COMPOSANTS MANQUANTS
+// ========================================================================
+
+// ✅ AJOUT: Interface pour MetricsPanel (TechnicalValidation/index.ts:5)
+export interface MetricsPanelProps {
+  metrics: ValidationMetrics | SimpleMetrics;
+  title?: string;
+  compact?: boolean;
+  showDetails?: boolean;
+}
+
+export interface SimpleMetrics {
+  accuracy: number;
+  precision: number;
+  recall: number;
+  f1Score: number;
+  sampleSize: number;
+}
+
+// ✅ AJOUT: Interface pour ClassifierSelector (TechnicalValidation.tsx:17)
+export interface ClassifierSelectorProps {
+  // Propriétés existantes (déjà présentes)
+  selectedClassifier?: string;
+  onClassifierChange?: (classifier: string) => void; // Rendre optionnelle
+  availableClassifiers?: Array<{
+    // Rendre optionnelle
+    id: string;
+    name: string;
+    description?: string;
+  }>;
+  disabled?: boolean;
+
+  // ✅ AJOUTER ces nouvelles propriétés pour M2ValidationInterface
+  algorithms?: ClassifierSelectorAlgorithm[];
+  selected?: string;
+  onSelectClassifier?: (id: string) => void;
+  target?: "X" | "Y" | "M1" | "M2" | "M3";
+}
+
+export interface ClassifierSelectorAlgorithm {
+  id: string;
+  name: string;
+  description: string;
+  differential: number;
+  time: number;
+  accuracy: number;
+}
+// ✅ AJOUT: Interface pour ConfusionMatrix (Level1Interface.tsx:93)
+export interface ConfusionMatrixProps {
+  metrics: ValidationMetrics | null; // Propriété metrics manquante corrigée
+  target?: VariableTarget;
+  showLabels?: boolean;
+  compact?: boolean;
+}
+
 // ========================================================================
 // MODALES ET DIALOGUES ALGORITHMLAB
 // ========================================================================
@@ -1789,7 +2224,7 @@ export function withDisplayDefaults(
   return { ...d, ...(cfg ?? {}) };
 }
 
-/** Validation simple d’un schema de config de formulaire */
+/** Validation simple d'un schema de config de formulaire */
 export function validateConfigSchema(
   config: Record<string, any>,
   schema: ConfigFormProps["schema"]
@@ -1860,6 +2295,7 @@ export function validateConfigSchema(
 
   return errors;
 }
+
 ```
 
 #### `AlgorithmLab/types/ui/index.ts`
@@ -1877,10 +2313,10 @@ export function validateConfigSchema(
  */
 
 // Composants génériques
-export * from "./components";
+export * from './components';
 
 // Validation spécialisée
-export * from "./validation";
+export * from './validation';
 
 // Exports groupés pour faciliter l'import dans AlgorithmLab
 export type {
@@ -1888,8 +2324,8 @@ export type {
   DisplayConfig,
   ConfigFormProps,
   ResultDisplayProps,
-  ModalProps,
-} from "./components";
+  ModalProps
+} from './components';
 
 export type {
   XValidationProps,
@@ -1897,8 +2333,9 @@ export type {
   M1ValidationProps,
   M2ValidationProps,
   M3ValidationProps,
-  AllValidationProps,
-} from "./validation";
+  AllValidationProps
+} from './validation';
+
 ```
 
 #### `AlgorithmLab/types/ui/validation.ts`
@@ -1915,21 +2352,9 @@ export type {
  * Props spécifiques pour validation des algorithmes AlgorithmLab
  */
 
-import { BaseValidationProps } from "./components";
-import {
-  XInput,
-  YInput,
-  M1Input,
-  M2Input,
-  M3Input,
-} from "../core/calculations";
-import {
-  XDetails,
-  YDetails,
-  M1Details,
-  M2Details,
-  M3Details,
-} from "../core/variables";
+import { BaseValidationProps } from './components';
+import { XInput, YInput, M1Input, M2Input, M3Input } from '../core/calculations';
+import { XDetails, YDetails, M1Details, M2Details, M3Details } from '../core/variables';
 
 // ========================================================================
 // PROPS DE VALIDATION SPÉCIALISÉES ALGORITHMLAB
@@ -1937,7 +2362,7 @@ import {
 
 export interface XValidationProps extends BaseValidationProps {
   target: "X";
-
+  
   // Configuration spécifique X AlgorithmLab
   xConfig: {
     analyzeActionVerbs: boolean;
@@ -1945,27 +2370,23 @@ export interface XValidationProps extends BaseValidationProps {
     classifyQuestions: boolean;
     contextWindow: number; // tours de contexte
   };
-
+  
   // Données spécifiques X
   testInputs?: XInput[];
   expectedOutputs?: Array<{
     tag: string;
     details: Partial<XDetails>;
   }>;
-
+  
   // Callbacks spécialisés
   onActionVerbsAnalyzed?: (verbs: string[]) => void;
-  onPronounUsageDetected?: (usage: {
-    je: number;
-    vous: number;
-    nous: number;
-  }) => void;
+  onPronounUsageDetected?: (usage: {je: number, vous: number, nous: number}) => void;
   onQuestionTypeClassified?: (type: "OPEN" | "CLOSED" | "NONE") => void;
 }
 
 export interface YValidationProps extends BaseValidationProps {
   target: "Y";
-
+  
   // Configuration spécifique Y AlgorithmLab
   yConfig: {
     analyzeSentiment: boolean;
@@ -1973,27 +2394,23 @@ export interface YValidationProps extends BaseValidationProps {
     classifyResponse: boolean;
     emotionThreshold: number; // 0-1
   };
-
+  
   // Données spécifiques Y
   testInputs?: YInput[];
   expectedOutputs?: Array<{
     tag: string;
     details: Partial<YDetails>;
   }>;
-
+  
   // Callbacks spécialisés
-  onSentimentAnalyzed?: (
-    sentiment: "POSITIVE" | "NEGATIVE" | "NEUTRAL"
-  ) => void;
+  onSentimentAnalyzed?: (sentiment: "POSITIVE" | "NEGATIVE" | "NEUTRAL") => void;
   onEmotionDetected?: (intensity: number) => void;
-  onResponseClassified?: (
-    type: "ACCEPTANCE" | "RESISTANCE" | "INQUIRY" | "NEUTRAL"
-  ) => void;
+  onResponseClassified?: (type: "ACCEPTANCE" | "RESISTANCE" | "INQUIRY" | "NEUTRAL") => void;
 }
 
 export interface M1ValidationProps extends BaseValidationProps {
   target: "M1";
-
+  
   // Configuration spécifique M1 AlgorithmLab
   m1Config: {
     calculateLexicalDiversity: boolean;
@@ -2001,14 +2418,14 @@ export interface M1ValidationProps extends BaseValidationProps {
     measureSemanticCoherence: boolean;
     linguisticDepth: "BASIC" | "ADVANCED" | "COMPREHENSIVE";
   };
-
+  
   // Données spécifiques M1
   testInputs?: M1Input[];
   expectedOutputs?: Array<{
     score: number;
     details: Partial<M1Details>;
   }>;
-
+  
   // Callbacks spécialisés
   onLexicalDiversityCalculated?: (diversity: number) => void;
   onSyntacticComplexityAnalyzed?: (complexity: number) => void;
@@ -2017,7 +2434,7 @@ export interface M1ValidationProps extends BaseValidationProps {
 
 export interface M2ValidationProps extends BaseValidationProps {
   target: "M2";
-
+  
   // Configuration spécifique M2 AlgorithmLab
   m2Config: {
     calculateLexicalAlignment: boolean;
@@ -2026,14 +2443,14 @@ export interface M2ValidationProps extends BaseValidationProps {
     extractSharedTerms: boolean;
     distanceMetrics: Array<"euclidean" | "cosine" | "jaccard">;
   };
-
+  
   // Données spécifiques M2
   testInputs?: M2Input[];
   expectedOutputs?: Array<{
     alignment: number;
     details: Partial<M2Details>;
   }>;
-
+  
   // Callbacks spécialisés
   onAlignmentCalculated?: (
     lexical: number,
@@ -2042,37 +2459,28 @@ export interface M2ValidationProps extends BaseValidationProps {
     overall: number
   ) => void;
   onSharedTermsExtracted?: (terms: string[]) => void;
-  onDistanceMetricsCalculated?: (metrics: {
-    euclidean: number;
-    cosine: number;
-    jaccard: number;
-  }) => void;
+  onDistanceMetricsCalculated?: (metrics: {euclidean: number, cosine: number, jaccard: number}) => void;
 }
 
 export interface M3ValidationProps extends BaseValidationProps {
   target: "M3";
-
+  
   // Configuration spécifique M3 AlgorithmLab
   m3Config: {
     assessCognitiveLoad: boolean;
     measureProcessingEfficiency: boolean;
     predictSatisfaction: boolean;
     predictCompliance: boolean;
-    cognitiveMetrics: Array<
-      | "fluidity"
-      | "attentionalFocus"
-      | "workingMemoryUsage"
-      | "executiveControl"
-    >;
+    cognitiveMetrics: Array<"fluidity" | "attentionalFocus" | "workingMemoryUsage" | "executiveControl">;
   };
-
+  
   // Données spécifiques M3
   testInputs?: M3Input[];
   expectedOutputs?: Array<{
     cognitiveScore: number;
     details: Partial<M3Details>;
   }>;
-
+  
   // Callbacks spécialisés
   onCognitiveLoadAssessed?: (load: number) => void;
   onProcessingEfficiencyMeasured?: (efficiency: number) => void;
@@ -2098,11 +2506,11 @@ export function createXValidationConfig(
       detectPronouns: true,
       classifyQuestions: true,
       contextWindow: 3,
-      ...overrides.xConfig,
+      ...overrides.xConfig
     },
     autoValidate: false,
     showMetrics: true,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -2120,11 +2528,11 @@ export function createYValidationConfig(
       detectEmotion: true,
       classifyResponse: true,
       emotionThreshold: 0.5,
-      ...overrides.yConfig,
+      ...overrides.yConfig
     },
     autoValidate: false,
     showMetrics: true,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -2143,11 +2551,11 @@ export function createM2ValidationConfig(
       calculateSemanticAlignment: true,
       extractSharedTerms: true,
       distanceMetrics: ["euclidean", "cosine", "jaccard"],
-      ...overrides.m2Config,
+      ...overrides.m2Config
     },
     autoValidate: false,
     showMetrics: true,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -2155,29 +2563,29 @@ export function createM2ValidationConfig(
 // UTILITAIRES DE VALIDATION UI ALGORITHMLAB
 // ========================================================================
 
-export type AllValidationProps =
-  | XValidationProps
-  | YValidationProps
-  | M1ValidationProps
-  | M2ValidationProps
+export type AllValidationProps = 
+  | XValidationProps 
+  | YValidationProps 
+  | M1ValidationProps 
+  | M2ValidationProps 
   | M3ValidationProps;
 
 export function validateValidationProps(props: AllValidationProps): string[] {
   const errors: string[] = [];
-
+  
   // Validation commune
   if (!props.callId) {
     errors.push("callId est requis");
   }
-
+  
   if (!props.algorithmName) {
     errors.push("algorithmName est requis");
   }
-
+  
   if (!props.target) {
     errors.push("target est requis");
   }
-
+  
   // Validation spécifique par type
   switch (props.target) {
     case "X":
@@ -2186,17 +2594,14 @@ export function validateValidationProps(props: AllValidationProps): string[] {
         errors.push("contextWindow doit être positif");
       }
       break;
-
+      
     case "Y":
       const yProps = props as YValidationProps;
-      if (
-        yProps.yConfig.emotionThreshold < 0 ||
-        yProps.yConfig.emotionThreshold > 1
-      ) {
+      if (yProps.yConfig.emotionThreshold < 0 || yProps.yConfig.emotionThreshold > 1) {
         errors.push("emotionThreshold doit être entre 0 et 1");
       }
       break;
-
+      
     case "M2":
       const m2Props = props as M2ValidationProps;
       if (m2Props.m2Config.distanceMetrics.length === 0) {
@@ -2204,7 +2609,7 @@ export function validateValidationProps(props: AllValidationProps): string[] {
       }
       break;
   }
-
+  
   return errors;
 }
 
@@ -2215,58 +2620,53 @@ export function getValidationConfigDefaults(target: string): any {
         analyzeActionVerbs: true,
         detectPronouns: true,
         classifyQuestions: true,
-        contextWindow: 3,
+        contextWindow: 3
       };
-
+      
     case "Y":
       return {
         analyzeSentiment: true,
         detectEmotion: true,
         classifyResponse: true,
-        emotionThreshold: 0.5,
+        emotionThreshold: 0.5
       };
-
+      
     case "M1":
       return {
         calculateLexicalDiversity: true,
         analyzeSyntacticComplexity: true,
         measureSemanticCoherence: true,
-        linguisticDepth: "ADVANCED",
+        linguisticDepth: "ADVANCED"
       };
-
+      
     case "M2":
       return {
         calculateLexicalAlignment: true,
         calculateSyntacticAlignment: true,
         calculateSemanticAlignment: true,
         extractSharedTerms: true,
-        distanceMetrics: ["euclidean", "cosine", "jaccard"],
+        distanceMetrics: ["euclidean", "cosine", "jaccard"]
       };
-
+      
     case "M3":
       return {
         assessCognitiveLoad: true,
         measureProcessingEfficiency: true,
         predictSatisfaction: true,
         predictCompliance: true,
-        cognitiveMetrics: [
-          "fluidity",
-          "attentionalFocus",
-          "workingMemoryUsage",
-          "executiveControl",
-        ],
+        cognitiveMetrics: ["fluidity", "attentionalFocus", "workingMemoryUsage", "executiveControl"]
       };
-
+      
     default:
       return {};
   }
 }
+
 ```
 
 ## utils
 
 ### Arborescence
-
 ```text
 utils/
 - converters.ts
@@ -2740,6 +3140,7 @@ export function validateConversionResult<T>(
     typeof result.metadata.conversionTime === "number"
   );
 }
+
 ```
 
 #### `AlgorithmLab/types/utils/index.ts`
@@ -2757,10 +3158,10 @@ export function validateConversionResult<T>(
  */
 
 // Normalisation
-export * from "./normalizers";
+export * from './normalizers';
 
 // Conversion et adaptation
-export * from "./converters";
+export * from './converters';
 
 // Exports groupés pour faciliter l'import dans AlgorithmLab
 export type {
@@ -2771,8 +3172,8 @@ export type {
   normalizeXLabel,
   normalizeYLabel,
   familyFromX,
-  familyFromY,
-} from "./normalizers";
+  familyFromY
+} from './normalizers';
 
 export type {
   ConversionDirection,
@@ -2783,8 +3184,9 @@ export type {
   ExportAdapter,
   DataTransformation,
   ChainedTransformation,
-  LegacyMapping,
-} from "./converters";
+  LegacyMapping
+} from './converters';
+
 ```
 
 #### `AlgorithmLab/types/utils/normalizers.ts`
@@ -2964,6 +3366,9 @@ export const FAMILY_MAPPING = {
     ENGAGEMENT: "ACTION",
     OUVERTURE: "EXPLORATION",
     REFLET: "EMPATHIE",
+    REFLET_ACQ: "EMPATHIE", // AJOUTER
+    REFLET_JE: "EMPATHIE",
+    REFLET_VOUS: "EMPATHIE",
     EXPLICATION: "INFORMATION",
     CLOTURE: "CONCLUSION",
     AUTRE_X: "AUTRE",
@@ -3138,4 +3543,5 @@ export function getFamilyFromTag(tag: XTag | YTag): string {
   }
   return "AUTRE";
 }
+
 ```

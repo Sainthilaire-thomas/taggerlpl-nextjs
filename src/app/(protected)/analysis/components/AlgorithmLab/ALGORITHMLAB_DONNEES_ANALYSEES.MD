@@ -285,6 +285,6 @@ constcalculateAllNextTurnTags=useCallback(
 
     [supabase, fetchTaggedTurns]
 
-); dans TggingDataContext. Quand on utilise AlgorithmLab le corpus est dans Turntagged et il faut extraire toujours le meme corpus défini précédemment, certains algo vont partir du tour conseiller comme X, M1 , M2 et certains vont partir du tour clientcomme Y et M3 comme on le verra plus tard. ValidateAlgorithm dans useLevel1Testin va orienter vers le bon algo mais on part toujours du meme corpus filtré de turntagged, cette partie semble mal mutualisée entre les algo
+); dans TaggingDataContext. Quand on utilise AlgorithmLab le corpus est dans Turntagged et il faut extraire toujours le meme corpus défini précédemment, certains algo vont partir du tour conseiller comme X, M1 , M2 et certains vont partir du tour clientcomme Y et M3 comme on le verra plus tard. ValidateAlgorithm dans useLevel1Testin va orienter vers le bon algo mais on part toujours du meme corpus filtré de turntagged, cette partie semble mal mutualisée entre les algo
 
 Je voudrais donc faire un audit de la situation, dis moi si tu as besoin de code
