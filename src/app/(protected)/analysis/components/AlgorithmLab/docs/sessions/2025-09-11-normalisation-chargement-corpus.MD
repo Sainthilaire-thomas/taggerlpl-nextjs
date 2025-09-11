@@ -68,16 +68,15 @@ Selon l'algorithme, il peut utiliser :
 
 | **Algorithme**        | **Contexte utilisé** | **Format d'input** | **Type**   |
 | --------------------- | -------------------- | ------------------ | ---------- |
-| `RegexM1Calculator`   | T0 seulement         | `string`           | rule-based |
 | `M1ActionVerbCounter` | T0 seulement         | `string`           | rule-based |
 
 ### **🎯 Variable M2 (Alignement T0 ↔ T+1)**
 
-| **Algorithme**                   | **Contexte utilisé** | **Format d'input**       | **Type**   |
-| -------------------------------- | -------------------- | ------------------------ | ---------- |
-| `M2LexicalAlignmentCalculator`   | T0 + T+1             | `{t0, t1}`               | rule-based |
-| `M2SemanticAlignmentCalculator`  | T0 + T+1             | `{t0, t1}`               | rule-based |
-| `M2CompositeAlignmentCalculator` | T0 + T+1 + contexte  | `{t0, t1, prev1, prev2}` | hybrid     |
+| **Algorithme**         | **Contexte utilisé** | **Format d'input**       | **Type**   |
+| ---------------------- | -------------------- | ------------------------ | ---------- |
+| `M2LexicalAlignment`   | T0 + T+1             | `{t0, t1}`               | rule-based |
+| `M2SemanticAlignment`  | T0 + T+1             | `{t0, t1}`               | rule-based |
+| `M2CompositeAlignment` | T0 + T+1 + contexte  | `{t0, t1, prev1, prev2}` | hybrid     |
 
 ### **🎯 Variable M3 (Charge cognitive client)**
 
@@ -90,7 +89,7 @@ Selon l'algorithme, il peut utiliser :
 ### Étape 1: Configuration centralisée par algorithme
 
 ```typescript
-// shared/algorithmConfig.ts - NOUVEAU FICHIER CRITIQUE
+// types/algorithms/base.ts - AJOUT à votre fichier existant
 export interface AlgorithmConfig {
   target: VariableTarget;
   speakerType: "conseiller" | "client";
@@ -104,7 +103,7 @@ export interface AlgorithmConfig {
   requiresPrevContext: boolean;
 }
 
-// ✅ BONNE APPROCHE (par algorithme, pas par target)
+// À ajouter dans types/algorithms/base.ts
 export const ALGORITHM_CONFIGS: Record<string, AlgorithmConfig> = {
   // === VARIABLE X ===
   RegexXClassifier: {
@@ -124,9 +123,9 @@ export const ALGORITHM_CONFIGS: Record<string, AlgorithmConfig> = {
   OpenAI3TXClassifier: {
     target: "X",
     speakerType: "conseiller",
-    inputFormat: "contextual", // string avec contexte 3 tours
+    inputFormat: "contextual", // Utilise 3 tours dans useLevel1Testing
     requiresNextTurn: false,
-    requiresPrevContext: true, // ✅ UTILISE T-2, T-1, T0
+    requiresPrevContext: true, // ✅ UTILISE prev1/prev2 existants
   },
   SpacyXClassifier: {
     target: "X",
@@ -142,67 +141,53 @@ export const ALGORITHM_CONFIGS: Record<string, AlgorithmConfig> = {
     speakerType: "client",
     inputFormat: "simple", // string simple
     requiresNextTurn: false,
-    requiresPrevContext: false, // Y peut utiliser contexte conseiller précédent
+    requiresPrevContext: false,
   },
 
   // === VARIABLE M1 ===
-  RegexM1Calculator: {
-    target: "M1",
-    speakerType: "conseiller",
-    inputFormat: "simple", // string simple
-    requiresNextTurn: false,
-    requiresPrevContext: false,
-  },
   M1ActionVerbCounter: {
     target: "M1",
     speakerType: "conseiller",
-    inputFormat: "simple", // string simple
+    inputFormat: "simple", // string simple vers M1Input
     requiresNextTurn: false,
     requiresPrevContext: false,
   },
 
   // === VARIABLE M2 ===
-  M2LexicalAlignmentCalculator: {
+  M2LexicalAlignment: {
     target: "M2",
     speakerType: "conseiller", // Part du conseiller
-    inputFormat: "alignment", // {t0, t1}
-    requiresNextTurn: true, // ✅ OBLIGATOIRE pour M2
+    inputFormat: "alignment", // {t0, t1} depuis useLevel1Testing
+    requiresNextTurn: true, // ✅ OBLIGATOIRE next_turn_verbatim
     requiresPrevContext: false,
   },
-  M2SemanticAlignmentCalculator: {
+  M2SemanticAlignment: {
     target: "M2",
     speakerType: "conseiller",
     inputFormat: "alignment", // {t0, t1}
-    requiresNextTurn: true, // ✅ OBLIGATOIRE pour M2
+    requiresNextTurn: true, // ✅ OBLIGATOIRE next_turn_verbatim
     requiresPrevContext: false,
   },
-  M2CompositeAlignmentCalculator: {
+  M2CompositeAlignment: {
     target: "M2",
     speakerType: "conseiller",
     inputFormat: "alignment_context", // {t0, t1, prev1, prev2}
-    requiresNextTurn: true, // ✅ OBLIGATOIRE pour M2
-    requiresPrevContext: true, // ✅ UTILISE contexte étendu
-  },
-
-  // === VARIABLE M3 ===
-  PausesM3Calculator: {
-    target: "M3",
-    speakerType: "client",
-    inputFormat: "cognitive", // M3Input {segment, options}
-    requiresNextTurn: false,
-    requiresPrevContext: true, // M3 peut utiliser contexte conseiller
+    requiresNextTurn: true, // ✅ OBLIGATOIRE next_turn_verbatim
+    requiresPrevContext: true, // ✅ UTILISE prev1/prev2 existants
   },
 };
 ```
 
-### Étape 2: Fonctions utilitaires centralisées
+### Étape 2: Fonctions utilitaires centralisées (À CRÉER)
 
 ```typescript
-// shared/corpusFilters.ts
+// utils/corpusFilters.ts - NOUVEAU FICHIER À CRÉER
+import { ALGORITHM_CONFIGS, AlgorithmConfig } from "../types/algorithms/base";
+
 export const filterCorpusForAlgorithm = (
-  goldStandardData: TVGoldStandardSample[],
+  goldStandardData: GoldStandardSample[], // ✅ Type existant dans useLevel1Testing
   algorithmName: string
-): TVGoldStandardSample[] => {
+): GoldStandardSample[] => {
   const config = ALGORITHM_CONFIGS[algorithmName];
   if (!config) {
     console.warn(`No config found for algorithm: ${algorithmName}`);
@@ -211,27 +196,25 @@ export const filterCorpusForAlgorithm = (
 
   let filtered = goldStandardData;
 
-  // 1. Filtre par type de speaker
+  // 1. Filtre par type de speaker (déjà fait dans mapTurnsToGoldStandard)
   filtered = filtered.filter((sample) => {
     if (config.speakerType === "conseiller") {
-      return (
-        sample.metadata?.target === "conseiller" &&
-        allowedConseiller.includes(sample.expectedTag)
-      );
+      return sample.metadata?.target === "conseiller";
     } else {
-      return (
-        sample.metadata?.target === "client" &&
-        allowedClient.includes(sample.expectedTag)
-      );
+      return sample.metadata?.target === "client";
     }
   });
 
-  // 2. Filtre : nécessite next_turn_verbatim (M2, certains X)
+  // 2. Filtre : nécessite next_turn_verbatim (M2 OBLIGATOIRE)
   if (config.requiresNextTurn) {
-    filtered = filtered.filter((s) => s.metadata?.next_turn_verbatim);
+    filtered = filtered.filter(
+      (s) =>
+        s.metadata?.next_turn_verbatim &&
+        s.metadata.next_turn_verbatim.trim().length > 0
+    );
   }
 
-  // 3. Filtre : nécessite contexte précédent (OpenAI3TXClassifier, M3, M2Composite)
+  // 3. Filtre : nécessite contexte précédent (OpenAI3TXClassifier, M2Composite)
   if (config.requiresPrevContext) {
     filtered = filtered.filter(
       (s) => s.metadata?.prev1_turn_verbatim || s.metadata?.prev2_turn_verbatim
@@ -241,9 +224,11 @@ export const filterCorpusForAlgorithm = (
   return filtered;
 };
 
-// shared/inputPreparation.ts
+// utils/inputPreparation.ts - NOUVEAU FICHIER À CRÉER
+import { ALGORITHM_CONFIGS } from "../types/algorithms/base";
+
 export const prepareInputsForAlgorithm = (
-  samples: TVGoldStandardSample[],
+  samples: GoldStandardSample[], // ✅ Type existant
   algorithmName: string
 ): any[] => {
   const config = ALGORITHM_CONFIGS[algorithmName];
@@ -252,25 +237,23 @@ export const prepareInputsForAlgorithm = (
   return samples.map((sample) => {
     switch (config.inputFormat) {
       case "simple":
-        // X (la plupart), Y, M1 (tous) : verbatim direct
+        // X (la plupart), Y, M1 : verbatim direct
         return sample.verbatim;
 
       case "contextual":
-        // OpenAI3TXClassifier : contexte 3 tours
-        return {
-          current: sample.verbatim,
-          prev1: sample.metadata?.prev1_turn_verbatim,
-          prev2: sample.metadata?.prev2_turn_verbatim,
-          context: `${sample.metadata?.prev2_turn_verbatim || ""} ${
-            sample.metadata?.prev1_turn_verbatim || ""
-          } ${sample.verbatim}`.trim(),
-        };
+        // OpenAI3TXClassifier : format déjà géré dans useLevel1Testing
+        const m = sample.metadata || {};
+        return `T-2: ${m.prev2_turn_verbatim ?? "—"}\nT-1: ${
+          m.prev1_turn_verbatim ?? "—"
+        }\nT0: ${sample.verbatim ?? ""}`;
 
       case "alignment":
         // M2 Lexical/Semantic : format basique
         return {
           t0: sample.verbatim,
           t1: sample.metadata?.next_turn_verbatim,
+          conseillerTurn: sample.verbatim,
+          clientTurn: sample.metadata?.next_turn_verbatim,
         };
 
       case "alignment_context":
@@ -285,7 +268,7 @@ export const prepareInputsForAlgorithm = (
         };
 
       case "cognitive":
-        // M3 : format charge cognitive
+        // M3 : format charge cognitive (PausesM3Calculator)
         return {
           segment: sample.verbatim,
           withProsody: false,
@@ -304,54 +287,49 @@ export const prepareInputsForAlgorithm = (
 };
 ```
 
-### Étape 3: Compléter useLevel1Testing
+### Étape 3: Compléter useLevel1Testing (MODIFICATION MINIMALE)
+
+**useLevel1Testing est déjà fonctionnel !** Il suffit de modifier `validateAlgorithm` pour utiliser les nouvelles fonctions :
 
 ```typescript
-// useLevel1Testing.ts - Hook unifié (à compléter)
-export const useLevel1Testing = () => {
-  const { allTurnTagged } = useTaggingData();
+// Modification dans useLevel1Testing.ts
+import { filterCorpusForAlgorithm } from "../utils/corpusFilters";
+import { prepareInputsForAlgorithm } from "../utils/inputPreparation";
 
-  // ✅ DÉJÀ EN PLACE : Mapping centralisé des données réelles
-  const goldStandardData = useMemo(
-    () => mapTurnsToGoldStandard(allTurnTagged, allowedConseiller),
-    [allTurnTagged, allowedConseiller]
-  );
+const validateAlgorithm = useCallback(
+  async (
+    classifierName: string,
+    sampleSize?: number
+  ): Promise<ValidationResult[]> => {
+    // ✅ AJOUT : Filtrage intelligent par algorithme
+    const filteredBase = filterCorpusForAlgorithm(
+      goldStandardData,
+      classifierName
+    );
 
-  // 🔧 À IMPLÉMENTER : Logique de validation unifiée par algorithme
-  const validateAlgorithm = useCallback(
-    async (algorithmName: string, sampleSize: number) => {
-      const algorithm = algorithmRegistry.get(algorithmName);
-      if (!algorithm) throw new Error(`Algorithm ${algorithmName} not found`);
+    if (filteredBase.length === 0) {
+      throw new Error(`Aucune donnée disponible pour ${classifierName}`);
+    }
 
-      // 1. FILTRAGE UNIFIÉ selon l'algorithme
-      const filteredBase = filterCorpusForAlgorithm(
-        goldStandardData,
-        algorithmName
-      );
+    const samples = randomSample(filteredBase, sampleSize);
 
-      // 2. ÉCHANTILLONNAGE
-      const samples = randomSample(filteredBase, sampleSize);
+    // ✅ AJOUT : Préparation d'inputs selon l'algorithme
+    const inputs = prepareInputsForAlgorithm(samples, classifierName);
 
-      // 3. PRÉPARATION UNIFIÉE des inputs selon l'algorithme
-      const inputs = prepareInputsForAlgorithm(samples, algorithmName);
-
-      // 4. EXÉCUTION et formatage des résultats
-      const results = await Promise.all(
-        inputs.map(async (input, i) => {
-          const sample = samples[i];
-          const prediction = await algorithm.run(input);
-          return formatResultForAlgorithm(sample, prediction, algorithmName);
-        })
-      );
-
-      return results;
-    },
-    [goldStandardData]
-  );
-
-  return { validateAlgorithm, goldStandardData };
-};
+    // ✅ GARDE : Le reste de la logique reste identique !
+    const classifier = algorithmRegistry.get<any, any>(classifierName);
+    // ... logique existante inchangée ...
+  },
+  [goldStandardData] // ✅ goldStandardData reste la source unique
+);
 ```
+
+**Avantages** :
+
+- ✅ **Aucune rupture** : `goldStandardData` reste la source unique
+- ✅ **Logique existante préservée** : M1, M2, X, Y fonctionnent comme avant
+- ✅ **Filtrage intelligent** : Chaque algorithme reçoit exactement ses données
+- ✅ **Préparation automatique** : Plus besoin de logique spécialisée par hook
 
 ### Étape 4: Migration des interfaces
 
@@ -398,9 +376,9 @@ export default function M1ValidationInterface() {
   return (
     <BaseAlgorithmTesting
       variableLabel="M1 — Densité de verbes d'action"
-      defaultClassifier="RegexM1Calculator"
+      defaultClassifier="M1ActionVerbCounter"
       target="M1"
-      availableAlgorithms={["RegexM1Calculator", "M1ActionVerbCounter"]}
+      availableAlgorithms={["M1ActionVerbCounter"]}
     />
   );
 }
@@ -411,12 +389,12 @@ export default function M2ValidationInterface() {
   return (
     <BaseAlgorithmTesting
       variableLabel="M2 — Alignement conseiller ↔ client"
-      defaultClassifier="M2CompositeAlignmentCalculator"
+      defaultClassifier="M2CompositeAlignment"
       target="M2"
       availableAlgorithms={[
-        "M2CompositeAlignmentCalculator",
-        "M2LexicalAlignmentCalculator",
-        "M2SemanticAlignmentCalculator",
+        "M2CompositeAlignment",
+        "M2LexicalAlignment",
+        "M2SemanticAlignment",
       ]}
       // ❌ SUPPRIME les données factices
       // ✅ UTILISE les vraies données via useLevel1Testing
@@ -442,49 +420,49 @@ export default function M3ValidationInterface() {
 
 ```bash
 # Hooks spécialisés à SUPPRIMER complètement
-rm src/hooks/level1/useXAlgorithmTesting.ts      # ~430 lignes
-rm src/hooks/level1/useM1AlgorithmTesting.ts     # ~50 lignes
-rm src/hooks/level1/useM2AlgorithmTesting.ts     # ~120 lignes (DONNÉES FACTICES)
-rm src/hooks/level1/useM3AlgorithmTesting.ts     # ~80 lignes
+rm src/app/(protected)/analysis/components/AlgorithmLab/hooks/level1/useM1AlgorithmTesting.ts     # ~50 lignes
+rm src/app/(protected)/analysis/components/AlgorithmLab/hooks/level1/useM2AlgorithmTesting.ts     # ~120 lignes (DONNÉES FACTICES)
+rm src/app/(protected)/analysis/components/AlgorithmLab/hooks/level1/useM3AlgorithmTesting.ts     # ~80 lignes
+rm src/app/(protected)/analysis/components/AlgorithmLab/hooks/level1/useXAlgorithmTesting.ts      # ~430 lignes
 
-# Composants de test spécialisés à SUPPRIMER
-rm src/components/Level1/algorithms/XClassifiers/XAlgorithmTesting.tsx
-rm src/components/Level1/algorithms/M1Calculators/M1AlgorithmTesting.tsx
-rm src/components/Level1/algorithms/M2Calculators/M2AlgorithmTesting.tsx
-rm src/components/Level1/algorithms/M3Calculators/M3AlgorithmTesting.tsx
+# Composants de test spécialisés à SUPPRIMER (si ils existent)
+# rm src/components/Level1/algorithms/XClassifiers/XAlgorithmTesting.tsx
+# rm src/components/Level1/algorithms/M1Calculators/M1AlgorithmTesting.tsx
+# rm src/components/Level1/algorithms/M2Calculators/M2AlgorithmTesting.tsx
+# rm src/components/Level1/algorithms/M3Calculators/M3AlgorithmTesting.tsx
 
 # TOTAL : ~680 lignes de code supprimées + maintenance simplifiée
 ```
 
 ## 🚀 Plan d'implémentation RÉVISÉ
 
-### Phase 1: Préparatifs (1-2h)
+### Phase 1: Création des utilitaires (1-2h)
 
-1. ✅ Documenter l'existant (fait)
-2. Créer `shared/algorithmConfig.ts` avec `ALGORITHM_CONFIGS`
-3. Créer `shared/corpusFilters.ts` avec `filterCorpusForAlgorithm`
-4. Créer `shared/inputPreparation.ts` avec `prepareInputsForAlgorithm`
+1. ✅ Analyser l'existant (fait)
+2. **Ajouter** `AlgorithmConfig` dans `types/algorithms/base.ts`
+3. **Ajouter** `ALGORITHM_CONFIGS` dans `types/algorithms/base.ts`
+4. Créer `utils/corpusFilters.ts` avec `filterCorpusForAlgorithm`
+5. Créer `utils/inputPreparation.ts` avec `prepareInputsForAlgorithm`
 
-### Phase 2: Compléter useLevel1Testing (2-3h)
+### Phase 2: Modification minimale useLevel1Testing (1h)
 
-1. Implémenter `validateAlgorithm` avec logique par algorithme
-2. Implémenter `formatResultForAlgorithm`
-3. Tester avec Y (référence)
-4. Tester avec M2 sur vraies données (PRIORITÉ)
+1. Importer les nouvelles fonctions utilitaires
+2. Modifier `validateAlgorithm` pour utiliser le filtrage/préparation par algorithme
+3. **AUCUNE rupture** : garder la logique existante M1/M2/X/Y
+4. Tester avec un algorithme existant
 
-### Phase 3: Migration progressive (3-4h)
+### Phase 3: Migration progressive (2-3h)
 
-1. **X** : Migrer vers BaseAlgorithmTesting
-2. **M1** : Migrer vers BaseAlgorithmTesting
-3. **M2** : Corriger pour utiliser vraies données (CRITIQUE)
-4. **M3** : Migrer vers BaseAlgorithmTesting
+1. **X** : Remplacer useXAlgorithmTesting par BaseAlgorithmTesting
+2. **M1** : Remplacer useM1AlgorithmTesting par BaseAlgorithmTesting
+3. **M2** : Remplacer useM2AlgorithmTesting par BaseAlgorithmTesting (PRIORITÉ - données factices)
+4. **M3** : Remplacer useM3AlgorithmTesting par BaseAlgorithmTesting
 
-### Phase 4: Nettoyage (1h)
+### Phase 4: Nettoyage (30min)
 
-1. Supprimer tous les hooks spécialisés
-2. Supprimer les composants de test spécialisés
-3. Tests de non-régression
-4. Documentation
+1. Supprimer les 4 hooks spécialisés
+2. Tests de non-régression
+3. Documentation
 
 ## ✅ Résultat final
 

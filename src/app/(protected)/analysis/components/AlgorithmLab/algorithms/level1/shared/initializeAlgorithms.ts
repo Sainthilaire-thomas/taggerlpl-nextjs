@@ -25,7 +25,8 @@ import { M1ActionVerbCounter } from "../M1Algorithms/M1ActionVerbCounter";
 import M2LexicalAlignmentCalculator from "../M2Algorithms/M2LexicalAlignmentCalculator";
 import M2SemanticAlignmentCalculator from "../M2Algorithms/M2SemanticAlignmentCalculator";
 import M2CompositeAlignmentCalculator from "../M2Algorithms/M2CompositeAlignmentCalculator";
-
+//---M3 (charge cognitive)
+import { PausesM3Calculator } from "../M3Algorithms/PausesM3Calculator";
 // -----------------------------------------------------------------------------
 // Helpers top-level
 // -----------------------------------------------------------------------------
@@ -127,6 +128,8 @@ export function initializeAlgorithms(): void {
       })
     );
 
+    // ===== M3 (calculateurs de charge cognitive) =====
+    algorithmRegistry.register("PausesM3Calculator", new PausesM3Calculator());
     // Log (optionnel)
     logAlgorithmStatus();
     console.log("✅ Algorithmes initialisés avec adaptateurs universels");

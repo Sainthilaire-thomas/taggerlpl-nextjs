@@ -1,12 +1,13 @@
 "use client";
-import React from "react";
-import { BaseAlgorithmTesting } from "../BaseAlgorithmTesting";
 
+// XValidationInterface.tsx - APRÈS
+import { BaseAlgorithmTesting } from "../BaseAlgorithmTesting";
 export default function XValidationInterface() {
   return (
     <BaseAlgorithmTesting
       variableLabel="X — Stratégies Conseiller"
-      defaultClassifier="RegexConseillerClassifier"
+      defaultClassifier="RegexXClassifier"
+      target="X" // ← Auto-filtre les algorithmes X
     />
   );
 }

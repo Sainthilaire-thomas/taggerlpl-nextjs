@@ -1,7 +1,11 @@
-"use client";
-import React from "react";
-import M1AlgorithmTesting from "./M1AlgorithmTesting";
-
+// M1ValidationInterface.tsx - APRÈS
+import { BaseAlgorithmTesting } from "../BaseAlgorithmTesting";
 export default function M1ValidationInterface() {
-  return <M1AlgorithmTesting />;
+  return (
+    <BaseAlgorithmTesting
+      variableLabel="M1 — Densité de verbes d'action"
+      defaultClassifier="M1ActionVerbCounter"
+      target="M1"
+    />
+  );
 }

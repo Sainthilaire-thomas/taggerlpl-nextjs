@@ -388,3 +388,142 @@ export interface XClassifier {
 // ✅ VOS ALIAS PRÉSERVÉS
 export type BaseAlgorithmResult = AlgorithmResult;
 export type EnhancedAlgorithmResult = AlgorithmResult;
+
+// types/algorithms/base.ts - AJOUT à votre fichier existant
+export interface AlgorithmConfig {
+  target: VariableTarget;
+  speakerType: "conseiller" | "client";
+  inputFormat:
+    | "simple"
+    | "contextual"
+    | "alignment"
+    | "alignment_context"
+    | "cognitive";
+  requiresNextTurn: boolean;
+  requiresPrevContext: boolean;
+}
+
+// ========================================================================
+// CONFIGS DES ALGORITHMES - NOUVEAU
+// ========================================================================
+
+export const ALGORITHM_CONFIGS: Record<string, AlgorithmConfig> = {
+  // === VARIABLE X ===
+  RegexXClassifier: {
+    target: "X",
+    speakerType: "conseiller",
+    inputFormat: "simple", // string simple
+    requiresNextTurn: false,
+    requiresPrevContext: false,
+  },
+  OpenAIXClassifier: {
+    target: "X",
+    speakerType: "conseiller",
+    inputFormat: "simple", // string simple
+    requiresNextTurn: false,
+    requiresPrevContext: false,
+  },
+  OpenAI3TXClassifier: {
+    target: "X",
+    speakerType: "conseiller",
+    inputFormat: "contextual", // Utilise 3 tours dans useLevel1Testing
+    requiresNextTurn: false,
+    requiresPrevContext: true, // ✅ UTILISE prev1/prev2 existants
+  },
+  SpacyXClassifier: {
+    target: "X",
+    speakerType: "conseiller",
+    inputFormat: "simple", // string simple
+    requiresNextTurn: false,
+    requiresPrevContext: false,
+  },
+
+  // === VARIABLE Y ===
+  RegexYClassifier: {
+    target: "Y",
+    speakerType: "client",
+    inputFormat: "simple", // string simple
+    requiresNextTurn: false,
+    requiresPrevContext: false,
+  },
+
+  // === VARIABLE M1 ===
+  M1ActionVerbCounter: {
+    target: "M1",
+    speakerType: "conseiller",
+    inputFormat: "simple", // string simple vers M1Input
+    requiresNextTurn: false,
+    requiresPrevContext: false,
+  },
+
+  // === VARIABLE M2 ===
+  M2LexicalAlignment: {
+    target: "M2",
+    speakerType: "conseiller", // Part du conseiller
+    inputFormat: "alignment", // {t0, t1} depuis useLevel1Testing
+    requiresNextTurn: true, // ✅ OBLIGATOIRE next_turn_verbatim
+    requiresPrevContext: false,
+  },
+  M2SemanticAlignment: {
+    target: "M2",
+    speakerType: "conseiller",
+    inputFormat: "alignment", // {t0, t1}
+    requiresNextTurn: true, // ✅ OBLIGATOIRE next_turn_verbatim
+    requiresPrevContext: false,
+  },
+  M2CompositeAlignment: {
+    target: "M2",
+    speakerType: "conseiller",
+    inputFormat: "alignment_context", // {t0, t1, prev1, prev2}
+    requiresNextTurn: true, // ✅ OBLIGATOIRE next_turn_verbatim
+    requiresPrevContext: true, // ✅ UTILISE prev1/prev2 existants
+  },
+  // === VARIABLE M3 ===
+  PausesM3Calculator: {
+    speakerType: "client" as const, // M3 = tours client
+    target: "M3",
+    inputFormat: "cognitive" as const, // { segment, ... }
+    requiresNextTurn: false,
+    requiresPrevContext: false,
+  },
+};
+
+// Types pour le système unifié
+export type SpeakerType = "conseiller" | "client";
+export type InputFormat =
+  | "simple" // string simple
+  | "contextual" // contexte 3 tours
+  | "alignment" // {t0, t1}
+  | "alignment_context" // {t0, t1, prev1, prev2}
+  | "cognitive"; // M3Input {segment, options}
+
+// Interface pour la configuration unifiée (renommée pour éviter conflit avec votre AlgorithmConfig existant)
+export interface UnifiedAlgorithmConfig {
+  target: VariableTarget;
+  speakerType: SpeakerType;
+  inputFormat: InputFormat;
+  requiresNextTurn: boolean;
+  requiresPrevContext: boolean;
+  description?: string;
+}
+
+// Fonctions utilitaires pour la configuration
+export const getAlgorithmsByTarget = (target: VariableTarget): string[] => {
+  return Object.entries(ALGORITHM_CONFIGS)
+    .filter(([, config]) => config.target === target)
+    .map(([name]) => name);
+};
+
+export const getConfigForAlgorithm = (
+  algorithmName: string
+): UnifiedAlgorithmConfig | undefined => {
+  return ALGORITHM_CONFIGS[algorithmName];
+};
+
+export const getAllTargets = (): VariableTarget[] => {
+  return ["X", "Y", "M1", "M2", "M3"];
+};
+
+export const validateAlgorithmName = (algorithmName: string): boolean => {
+  return algorithmName in ALGORITHM_CONFIGS;
+};

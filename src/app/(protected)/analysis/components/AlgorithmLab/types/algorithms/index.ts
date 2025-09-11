@@ -4,23 +4,31 @@
  */
 
 // Interface universelle et types de base
-export * from './base';
+export * from "./base";
 
 // Adaptateur universel
-export * from './universal-adapter';
+export * from "./universal-adapter";
 
 // Exports groupés pour faciliter l'import dans AlgorithmLab
 export type {
   UniversalAlgorithm,
   AlgorithmDescriptor,
   UniversalResult,
-  AlgorithmType
-} from './base';
+  AlgorithmType,
+} from "./base";
 
-export type {
-  BaseCalculator,
-  AdapterConfig
-} from './universal-adapter';
+// ✅ AJOUT : Exports pour le système unifié
+export type { AlgorithmConfig, SpeakerType, InputFormat } from "./base";
+
+export {
+  ALGORITHM_CONFIGS,
+  getAlgorithmsByTarget,
+  getConfigForAlgorithm,
+  getAllTargets,
+  validateAlgorithmName,
+} from "./base";
+
+export type { BaseCalculator, AdapterConfig } from "./universal-adapter";
 
 // Export de la fonction principale
-export { createUniversalAlgorithm } from './universal-adapter';
+export { createUniversalAlgorithm } from "./universal-adapter";

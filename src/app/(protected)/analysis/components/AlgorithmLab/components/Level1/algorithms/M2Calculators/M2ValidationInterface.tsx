@@ -2,21 +2,14 @@
 
 import React from "react";
 
-// Import du pattern unifié
+// M2ValidationInterface.tsx - APRÈS (FIX CRITIQUE)
 import { BaseAlgorithmTesting } from "../BaseAlgorithmTesting";
-
 export default function M2ValidationInterface() {
   return (
     <BaseAlgorithmTesting
+      variableLabel="M2 — Alignement conseiller ↔ client"
+      defaultClassifier="M2CompositeAlignment"
       target="M2"
-      availableAlgorithms={[
-        "M2CompositeAlignment",
-        "M2LexicalAlignment",
-        "M2SemanticAlignment",
-      ]}
-      defaultAlgorithm="M2CompositeAlignment"
-      domainLabel="Alignement M2"
-      description="Test des algorithmes d'alignement interactionnel (lexical + sémantique + composite)"
     />
   );
 }

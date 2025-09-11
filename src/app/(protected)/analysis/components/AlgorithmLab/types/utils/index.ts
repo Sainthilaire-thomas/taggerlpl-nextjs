@@ -3,13 +3,18 @@
  * Point d'entrée principal pour tous les types utilitaires AlgorithmLab
  */
 
+// Filtrage et préparation de corpus
+export * from "./corpusFilters";
+export * from "./inputPreparation";
+
 // Normalisation
-export * from './normalizers';
+export * from "./normalizers";
 
 // Conversion et adaptation
-export * from './converters';
+export * from "./converters";
 
 // Exports groupés pour faciliter l'import dans AlgorithmLab
+// Exports groupés
 export type {
   NormalizationLevel,
   NormalizationConfig,
@@ -18,8 +23,8 @@ export type {
   normalizeXLabel,
   normalizeYLabel,
   familyFromX,
-  familyFromY
-} from './normalizers';
+  familyFromY,
+} from "./normalizers";
 
 export type {
   ConversionDirection,
@@ -30,5 +35,5 @@ export type {
   ExportAdapter,
   DataTransformation,
   ChainedTransformation,
-  LegacyMapping
-} from './converters';
+  LegacyMapping,
+} from "./converters";
