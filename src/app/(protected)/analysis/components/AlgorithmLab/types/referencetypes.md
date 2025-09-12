@@ -1,7 +1,7 @@
 # Reference — Types normalisés AlgorithmLab
 
-> Généré automatiquement le 2025-09-11T07:36:23.395Z à partir de `C:/Users/thoma/OneDrive/SONEAR 2025/taggerlpl-nextjs/src/app/(protected)/analysis/components/AlgorithmLab/types`
-> Doc-Version: 2025-09-11T07:36:23.394Z-548
+> Généré automatiquement le 2025-09-11T17:29:12.646Z à partir de `C:/Users/thoma/OneDrive/SONEAR 2025/taggerlpl-nextjs/src/app/(protected)/analysis/components/AlgorithmLab/types`
+> Doc-Version: 2025-09-11T17:29:12.646Z-127
 > Code-Version: 2.0.0
 
 ## Contenu
@@ -226,7 +226,7 @@ algorithms/
 
 **Exports**
 
-- **Déclarations**: AlgorithmType, AlgorithmParameters, ParameterDescriptor, AlgorithmConfig, AlgorithmDescriptor, AlgorithmMetadata, UniversalAlgorithm, BaseAlgorithm, AlgorithmResult, UniversalResult, isValidAlgorithmResult, normalizeAlgorithmResult, validateErrorAnalysisResult, createErrorResult, createSuccessResult, createAlgorithmMetadata, convertLegacyMetadata, XClassification, XClassifier, BaseAlgorithmResult, EnhancedAlgorithmResult
+- **Déclarations**: AlgorithmType, AlgorithmParameters, ParameterDescriptor, AlgorithmConfig, AlgorithmDescriptor, AlgorithmMetadata, UniversalAlgorithm, BaseAlgorithm, AlgorithmResult, UniversalResult, isValidAlgorithmResult, normalizeAlgorithmResult, validateErrorAnalysisResult, createErrorResult, createSuccessResult, createAlgorithmMetadata, convertLegacyMetadata, XClassification, XClassifier, BaseAlgorithmResult, EnhancedAlgorithmResult, AlgorithmConfig, ALGORITHM_CONFIGS, SpeakerType, InputFormat, UnifiedAlgorithmConfig, getAlgorithmsByTarget, getConfigForAlgorithm, getAllTargets, validateAlgorithmName
 
 **Contenu**
 
@@ -622,13 +622,152 @@ export interface XClassifier {
 export type BaseAlgorithmResult = AlgorithmResult;
 export type EnhancedAlgorithmResult = AlgorithmResult;
 
+// types/algorithms/base.ts - AJOUT à votre fichier existant
+export interface AlgorithmConfig {
+  target: VariableTarget;
+  speakerType: "conseiller" | "client";
+  inputFormat:
+    | "simple"
+    | "contextual"
+    | "alignment"
+    | "alignment_context"
+    | "cognitive";
+  requiresNextTurn: boolean;
+  requiresPrevContext: boolean;
+}
+
+// ========================================================================
+// CONFIGS DES ALGORITHMES - NOUVEAU
+// ========================================================================
+
+export const ALGORITHM_CONFIGS: Record<string, AlgorithmConfig> = {
+  // === VARIABLE X ===
+  RegexXClassifier: {
+    target: "X",
+    speakerType: "conseiller",
+    inputFormat: "simple", // string simple
+    requiresNextTurn: false,
+    requiresPrevContext: false,
+  },
+  OpenAIXClassifier: {
+    target: "X",
+    speakerType: "conseiller",
+    inputFormat: "simple", // string simple
+    requiresNextTurn: false,
+    requiresPrevContext: false,
+  },
+  OpenAI3TXClassifier: {
+    target: "X",
+    speakerType: "conseiller",
+    inputFormat: "contextual", // Utilise 3 tours dans useLevel1Testing
+    requiresNextTurn: false,
+    requiresPrevContext: true, // ✅ UTILISE prev1/prev2 existants
+  },
+  SpacyXClassifier: {
+    target: "X",
+    speakerType: "conseiller",
+    inputFormat: "simple", // string simple
+    requiresNextTurn: false,
+    requiresPrevContext: false,
+  },
+
+  // === VARIABLE Y ===
+  RegexYClassifier: {
+    target: "Y",
+    speakerType: "client",
+    inputFormat: "simple", // string simple
+    requiresNextTurn: false,
+    requiresPrevContext: false,
+  },
+
+  // === VARIABLE M1 ===
+  M1ActionVerbCounter: {
+    target: "M1",
+    speakerType: "conseiller",
+    inputFormat: "simple", // string simple vers M1Input
+    requiresNextTurn: false,
+    requiresPrevContext: false,
+  },
+
+  // === VARIABLE M2 ===
+  M2LexicalAlignment: {
+    target: "M2",
+    speakerType: "conseiller", // Part du conseiller
+    inputFormat: "alignment", // {t0, t1} depuis useLevel1Testing
+    requiresNextTurn: true, // ✅ OBLIGATOIRE next_turn_verbatim
+    requiresPrevContext: false,
+  },
+  M2SemanticAlignment: {
+    target: "M2",
+    speakerType: "conseiller",
+    inputFormat: "alignment", // {t0, t1}
+    requiresNextTurn: true, // ✅ OBLIGATOIRE next_turn_verbatim
+    requiresPrevContext: false,
+  },
+  M2CompositeAlignment: {
+    target: "M2",
+    speakerType: "conseiller",
+    inputFormat: "alignment_context", // {t0, t1, prev1, prev2}
+    requiresNextTurn: true, // ✅ OBLIGATOIRE next_turn_verbatim
+    requiresPrevContext: true, // ✅ UTILISE prev1/prev2 existants
+  },
+  // === VARIABLE M3 ===
+  PausesM3Calculator: {
+    speakerType: "client" as const, // M3 = tours client
+    target: "M3",
+    inputFormat: "cognitive" as const, // { segment, ... }
+    requiresNextTurn: false,
+    requiresPrevContext: false,
+  },
+};
+
+// Types pour le système unifié
+export type SpeakerType = "conseiller" | "client";
+export type InputFormat =
+  | "simple" // string simple
+  | "contextual" // contexte 3 tours
+  | "alignment" // {t0, t1}
+  | "alignment_context" // {t0, t1, prev1, prev2}
+  | "cognitive"; // M3Input {segment, options}
+
+// Interface pour la configuration unifiée (renommée pour éviter conflit avec votre AlgorithmConfig existant)
+export interface UnifiedAlgorithmConfig {
+  target: VariableTarget;
+  speakerType: SpeakerType;
+  inputFormat: InputFormat;
+  requiresNextTurn: boolean;
+  requiresPrevContext: boolean;
+  description?: string;
+}
+
+// Fonctions utilitaires pour la configuration
+export const getAlgorithmsByTarget = (target: VariableTarget): string[] => {
+  return Object.entries(ALGORITHM_CONFIGS)
+    .filter(([, config]) => config.target === target)
+    .map(([name]) => name);
+};
+
+export const getConfigForAlgorithm = (
+  algorithmName: string
+): UnifiedAlgorithmConfig | undefined => {
+  return ALGORITHM_CONFIGS[algorithmName];
+};
+
+export const getAllTargets = (): VariableTarget[] => {
+  return ["X", "Y", "M1", "M2", "M3"];
+};
+
+export const validateAlgorithmName = (algorithmName: string): boolean => {
+  return algorithmName in ALGORITHM_CONFIGS;
+};
+
 ```
 
 #### `AlgorithmLab/types/algorithms/index.ts`
 
 **Exports**
 
-- **Nommés**: createUniversalAlgorithm
+- **Nommés**: ALGORITHM_CONFIGS, getAlgorithmsByTarget, getConfigForAlgorithm, getAllTargets, validateAlgorithmName, createUniversalAlgorithm
 - **Re-exports `*`** depuis: ./base, ./universal-adapter
 
 **Contenu**
@@ -640,26 +779,34 @@ export type EnhancedAlgorithmResult = AlgorithmResult;
  */
 
 // Interface universelle et types de base
-export * from './base';
+export * from "./base";
 
 // Adaptateur universel
-export * from './universal-adapter';
+export * from "./universal-adapter";
 
 // Exports groupés pour faciliter l'import dans AlgorithmLab
 export type {
   UniversalAlgorithm,
   AlgorithmDescriptor,
   UniversalResult,
-  AlgorithmType
-} from './base';
+  AlgorithmType,
+} from "./base";
 
-export type {
-  BaseCalculator,
-  AdapterConfig
-} from './universal-adapter';
+// ✅ AJOUT : Exports pour le système unifié
+export type { AlgorithmConfig, SpeakerType, InputFormat } from "./base";
+
+export {
+  ALGORITHM_CONFIGS,
+  getAlgorithmsByTarget,
+  getConfigForAlgorithm,
+  getAllTargets,
+  validateAlgorithmName,
+} from "./base";
+
+export type { BaseCalculator, AdapterConfig } from "./universal-adapter";
 
 // Export de la fonction principale
-export { createUniversalAlgorithm } from './universal-adapter';
+export { createUniversalAlgorithm } from "./universal-adapter";
 
 ```
 
@@ -2670,7 +2817,9 @@ export function getValidationConfigDefaults(target: string): any {
 ```text
 utils/
 - converters.ts
+- corpusFilters.ts
 - index.ts
+- inputPreparation.ts
 - normalizers.ts
 ```
 
@@ -3143,11 +3292,119 @@ export function validateConversionResult<T>(
 
 ```
 
+#### `AlgorithmLab/types/utils/corpusFilters.ts`
+
+**Exports**
+
+- **Déclarations**: TVGoldStandardSample, allowedConseiller, allowedClient, filterCorpusForAlgorithm, countSamplesPerAlgorithm
+
+**Contenu**
+
+```ts
+// utils/corpusFilters.ts
+import { ALGORITHM_CONFIGS, AlgorithmConfig } from "../algorithms/base";
+
+// Types (utiliser ceux existants dans votre projet)
+export interface TVGoldStandardSample {
+  verbatim: string;
+  expectedTag: string;
+  metadata?: {
+    target?: "conseiller" | "client";
+    callId?: string | number; // ✅ COMPATIBLE avec votre GoldStandardSample
+    speaker?: string;
+    start?: number;
+    end?: number;
+    turnId?: string | number; // ✅ COMPATIBLE avec votre GoldStandardSample
+    nextOf?: string | number;
+    next_turn_verbatim?: string;
+    prev1_turn_verbatim?: string;
+    prev2_turn_verbatim?: string;
+    [k: string]: any; // ✅ COMPATIBLE avec votre interface
+  };
+}
+
+// Tags autorisés
+export const allowedConseiller = [
+  "ENGAGEMENT",
+  "OUVERTURE",
+  "REFLET_VOUS",
+  "REFLET_JE",
+  "REFLET_ACQ",
+  "EXPLICATION",
+];
+
+export const allowedClient = [
+  "CLIENT_POSITIF",
+  "CLIENT_NEGATIF",
+  "CLIENT_NEUTRE",
+];
+
+export const filterCorpusForAlgorithm = (
+  goldStandardData: TVGoldStandardSample[],
+  algorithmName: string
+): TVGoldStandardSample[] => {
+  const config = ALGORITHM_CONFIGS[algorithmName];
+  if (!config) {
+    console.warn(`No config found for algorithm: ${algorithmName}`);
+    return goldStandardData;
+  }
+
+  let filtered = goldStandardData;
+
+  // 1. Filtre par speaker
+  filtered = filtered.filter((sample) => {
+    if (config.speakerType === "conseiller") {
+      return (
+        sample.metadata?.target === "conseiller" &&
+        allowedConseiller.includes(sample.expectedTag)
+      );
+    } else {
+      return (
+        sample.metadata?.target === "client" &&
+        allowedClient.includes(sample.expectedTag)
+      );
+    }
+  });
+
+  // 2. CRITIQUE : Filtre M2 - nécessite next_turn_verbatim
+  if (config.requiresNextTurn) {
+    filtered = filtered.filter(
+      (s) =>
+        s.metadata?.next_turn_verbatim &&
+        s.metadata.next_turn_verbatim.trim().length > 0
+    );
+  }
+
+  // 3. Filtre contexte
+  if (config.requiresPrevContext) {
+    filtered = filtered.filter(
+      (s) => s.metadata?.prev1_turn_verbatim || s.metadata?.prev2_turn_verbatim
+    );
+  }
+
+  return filtered;
+};
+
+export const countSamplesPerAlgorithm = (
+  goldStandardData: TVGoldStandardSample[]
+): Record<string, number> => {
+  const counts: Record<string, number> = {};
+
+  Object.keys(ALGORITHM_CONFIGS).forEach((algorithmName) => {
+    const filtered = filterCorpusForAlgorithm(goldStandardData, algorithmName);
+    counts[algorithmName] = filtered.length;
+  });
+
+  return counts;
+};
+
+```
+
 #### `AlgorithmLab/types/utils/index.ts`
 
 **Exports**
 
-- **Re-exports `*`** depuis: ./normalizers, ./converters
+- **Re-exports `*`** depuis: ./corpusFilters, ./inputPreparation, ./normalizers, ./converters
 
 **Contenu**
 
@@ -3157,13 +3414,18 @@ export function validateConversionResult<T>(
  * Point d'entrée principal pour tous les types utilitaires AlgorithmLab
  */
 
+// Filtrage et préparation de corpus
+export * from "./corpusFilters";
+export * from "./inputPreparation";
+
 // Normalisation
-export * from './normalizers';
+export * from "./normalizers";
 
 // Conversion et adaptation
-export * from './converters';
+export * from "./converters";
 
 // Exports groupés pour faciliter l'import dans AlgorithmLab
+// Exports groupés
 export type {
   NormalizationLevel,
   NormalizationConfig,
@@ -3172,8 +3434,8 @@ export type {
   normalizeXLabel,
   normalizeYLabel,
   familyFromX,
-  familyFromY
-} from './normalizers';
+  familyFromY,
+} from "./normalizers";
 
 export type {
   ConversionDirection,
@@ -3184,8 +3446,89 @@ export type {
   ExportAdapter,
   DataTransformation,
   ChainedTransformation,
-  LegacyMapping
-} from './converters';
+  LegacyMapping,
+} from "./converters";
+
+```
+
+#### `AlgorithmLab/types/utils/inputPreparation.ts`
+
+**Exports**
+
+- **Déclarations**: prepareInputsForAlgorithm, debugPreparedInputs
+
+**Contenu**
+
+```ts
+// utils/inputPreparation.ts
+import { ALGORITHM_CONFIGS } from "../algorithms/base";
+import type { TVGoldStandardSample } from "./corpusFilters";
+
+export const prepareInputsForAlgorithm = (
+  samples: TVGoldStandardSample[],
+  algorithmName: string
+): any[] => {
+  const config = ALGORITHM_CONFIGS[algorithmName];
+  if (!config) throw new Error(`Algorithm ${algorithmName} not configured`);
+
+  return samples.map((sample) => {
+    switch (config.inputFormat) {
+      case "simple":
+        return sample.verbatim;
+
+      case "contextual":
+        const m = sample.metadata || {};
+        return `T-2: ${m.prev2_turn_verbatim ?? "—"}\nT-1: ${
+          m.prev1_turn_verbatim ?? "—"
+        }\nT0: ${sample.verbatim ?? ""}`;
+
+      case "alignment":
+        return {
+          t0: sample.verbatim,
+          t1: sample.metadata?.next_turn_verbatim,
+          conseillerTurn: sample.verbatim,
+          clientTurn: sample.metadata?.next_turn_verbatim,
+        };
+
+      case "alignment_context":
+        return {
+          t0: sample.verbatim,
+          t1: sample.metadata?.next_turn_verbatim,
+          prev1: sample.metadata?.prev1_turn_verbatim,
+          prev2: sample.metadata?.prev2_turn_verbatim,
+          conseillerTurn: sample.verbatim,
+          clientTurn: sample.metadata?.next_turn_verbatim,
+        };
+
+      case "cognitive":
+        return {
+          segment: sample.verbatim,
+          withProsody: false,
+          language: "fr",
+          options: {
+            id: sample.metadata?.turnId,
+            clientTurn: sample.verbatim,
+            conseillerContext: sample.metadata?.prev1_turn_verbatim,
+          },
+        };
+
+      default:
+        return sample.verbatim;
+    }
+  });
+};
+
+export const debugPreparedInputs = (
+  inputs: any[],
+  algorithmName: string
+): void => {
+  console.group(`[${algorithmName}] Debug inputs préparés`);
+  console.log(`Nombre d'inputs: ${inputs.length}`);
+  if (inputs.length > 0) {
+    console.log("Premier input:", inputs[0]);
+  }
+  console.groupEnd();
+};
 
 ```
 
