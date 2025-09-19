@@ -34,9 +34,9 @@ export class OpenAIXClassifier implements UniversalAlgorithm {
     this.apiKey = config.apiKey || process.env.OPENAI_API_KEY || "";
 
     this.config = {
-      model: "gpt-4o", // Plus performant que gpt-4o-mini pour la classification complexe
-      temperature: 0, // Maintenir à 0 pour la cohérence
-      maxTokens: 16, // Réduire pour forcer des réponses concises
+      model: config.model ?? "gpt-4o-mini",
+      temperature: config.temperature ?? 0,
+      maxTokens: config.maxTokens ?? 32,
       timeout: config.timeout ?? 10000,
       enableFallback: config.enableFallback ?? true,
     };
@@ -129,81 +129,6 @@ export class OpenAIXClassifier implements UniversalAlgorithm {
     }
   }
 
-  // Ajoutez cette méthode dans votre classe OpenAIXClassifier
-
-  private parseOpenAIResponse(data: any, startTime: number): UniversalResult {
-    const rawContent = data?.choices?.[0]?.message?.content ?? "";
-    let label = "AUTRE_NON_RECONNU";
-
-    // Parse JSON avec fallback amélioré
-    try {
-      const parsed = JSON.parse(rawContent);
-      if (parsed?.label && LABELS.includes(parsed.label)) {
-        label = parsed.label;
-      }
-    } catch {
-      // Fallback avec priorités de la thèse
-      const content = rawContent.toUpperCase();
-
-      // Priorité 1: ENGAGEMENT
-      if (content.includes("ENGAGEMENT")) label = "ENGAGEMENT";
-      // Priorité 2: OUVERTURE
-      else if (content.includes("OUVERTURE")) label = "OUVERTURE";
-      // Priorité 3: REFLET (avec sous-types)
-      else if (content.includes("REFLET_VOUS")) label = "REFLET_VOUS";
-      else if (content.includes("REFLET_JE")) label = "REFLET_JE";
-      else if (content.includes("REFLET_ACQ")) label = "REFLET_ACQ";
-      else if (content.includes("REFLET")) label = "REFLET_ACQ"; // par défaut
-      // Priorité 4: EXPLICATION
-      else if (content.includes("EXPLICATION")) label = "EXPLICATION";
-    }
-
-    return {
-      prediction: label,
-      confidence: label === "AUTRE_NON_RECONNU" ? 0.25 : 0.85,
-      processingTime: Date.now() - startTime,
-      algorithmVersion: this.config.model,
-      metadata: {
-        target: "X",
-        inputType: "string",
-        executionPath: ["openai_gpt_json"],
-        provider: "openai",
-        details: {
-          family: this.familyFromX(label),
-          rawResponse: rawContent,
-          parseMethod: label !== "AUTRE_NON_RECONNU" ? "success" : "fallback",
-        },
-        raw: data,
-      },
-    };
-  }
-
-  private applyHierarchicalRules(label: string, verbatim: string): string {
-    // Vérification de cohérence avec les règles de la thèse
-    const cleanVerbatim = verbatim.toLowerCase();
-
-    // Force ENGAGEMENT si verbe d'action + "je"
-    if (
-      (cleanVerbatim.includes("je vais") ||
-        cleanVerbatim.includes("je fais") ||
-        cleanVerbatim.includes("je vérifie")) &&
-      label !== "ENGAGEMENT"
-    ) {
-      return "ENGAGEMENT";
-    }
-
-    // Force OUVERTURE si instruction client
-    if (
-      (cleanVerbatim.includes("vous allez") ||
-        cleanVerbatim.includes("veuillez") ||
-        cleanVerbatim.includes("il faut que vous")) &&
-      !["ENGAGEMENT", "OUVERTURE"].includes(label)
-    ) {
-      return "OUVERTURE";
-    }
-
-    return label;
-  }
   private async runServerSide(
     verbatim: string,
     startTime: number
@@ -285,86 +210,105 @@ export class OpenAIXClassifier implements UniversalAlgorithm {
     }
   }
 
-  // Prompt OpenAI optimisé basé sur l'analyse du corpus réel
-  // Ajouter cette méthode dans votre classe OpenAIXClassifier
-
-  // Version debug simplifiée - compatible avec votre JSON schema
-
-  // Prompt amélioré v2 - basé sur les erreurs observées
-
-  // Prompt basé sur la logique linguistique et pragmatique
-
   private buildMessages(verbatim: string) {
     return [
       {
         role: "system",
-        content: `Tu es un expert en classification des stratégies linguistiques des conseillers en centre de contact.
-
-RÈGLE FONDAMENTALE - HIÉRARCHIE DE PRIORITÉ :
-1. ENGAGEMENT > 2. OUVERTURE > 3. REFLET > 4. EXPLICATION
-
-Si plusieurs fonctions coexistent, choisis TOUJOURS la plus haute dans cette hiérarchie.
-
-CATÉGORIES ET MARQUEURS PRIORITAIRES :
-
-🎯 ENGAGEMENT (PRIORITÉ 1) - Action du conseiller
-MARQUEURS FORTS : "je vais/fais/vérifie/transfère/m'occupe", "je suis en train de", futur 1ère personne
-LOGIQUE : Le conseiller annonce une action concrète qu'il réalise
-- "D'accord, je vais vérifier votre dossier" → ENGAGEMENT (action prime sur acquiescement)
-- "Je comprends, je transfère maintenant" → ENGAGEMENT (action prime sur empathie)
-
-🎯 OUVERTURE (PRIORITÉ 2) - Action du client  
-MARQUEURS FORTS : "vous allez/recevrez/pourrez/devrez", impératifs ("précisez", "envoyez"), "veuillez", "il faut que vous"
-LOGIQUE : Le conseiller oriente le client vers une action
-- "Vous pouvez aller sur le site parce que..." → OUVERTURE (instruction prime sur explication)
-- "Il faut préciser l'heure et la station" → OUVERTURE
-
-🎯 REFLET (PRIORITÉ 3) - Reformulation/Acquiescement
-SOUS-TYPES par efficacité décroissante :
-- REFLET_VOUS : description client SANS instruction/justification ("Je vois que vous avez appelé")
-- REFLET_JE : état mental conseiller ("je comprends/vois/entends")  
-- REFLET_ACQ : micro-tours ≤20 chars ("oui", "d'accord", "ok")
-EXCLUSIONS : si données chiffrées ou marqueurs instruction/explication → pas REFLET
-
-🎯 EXPLICATION (PRIORITÉ 4) - Justification/Procédure
-MARQUEURS : "parce que", "car", "le système fonctionne", "notre politique", "c'est pour ça que"
-LOGIQUE : Justification institutionnelle sans action concrète
-- "Notre système fonctionne en trois étapes" → EXPLICATION
-- "C'est normal/faux" (correction normative) → EXPLICATION
-
-RÈGLES DE DÉPARTAGE CRITIQUES :
-- Action présente → ENGAGEMENT/OUVERTURE même si acquiescement en début
-- Instruction client → OUVERTURE même si justification après
-- Données chiffrées/quantifications → EXPLICATION (pas REFLET)
-- Micro-tour seul → REFLET_ACQ, mais si suivi d'instruction → prendre l'ensemble`,
+        content: [
+          "Tu es un classificateur ULTRA STRICT de tours de parole CONSEILLER (FR).",
+          "Renvoyer exactement un JSON conforme au schéma, avec un seul champ 'label'.",
+          "Labels possibles : ENGAGEMENT, OUVERTURE, REFLET_JE, REFLET_VOUS, REFLET_ACQ, EXPLICATION.",
+          "Si aucune catégorie ne convient clairement : AUTRE_NON_RECONNU.",
+          "",
+          "Consignes:",
+          "- Ignore les marques et notations : [TC], [AP], crochets, pseudos-transcriptions (hm, mhm, euh), meta ('…').",
+          "- Priorité à l'ACTION :",
+          "  • ENGAGEMENT = action du conseiller (1re pers.) : « je vérifie », « je vous envoie », « je vais… »",
+          "  • OUVERTURE  = action/instruction côté client (2e pers./impératif/futur proche) : « vous allez recevoir », « veuillez… »",
+          "- EXPLICATION = règle/procédure/système, sans engagement ou instruction immédiate.",
+          "- REFLET_JE  = empathie/reformulation centrée JE : « je comprends », « je vois ».",
+          "- REFLET_VOUS= reformulation centrée VOUS : « vous dites que… », « vous avez… ».",
+          "- REFLET_ACQ = acquiescement phatique minimal : « d'accord », « oui », « hm hm » (même suivi d'un '?').",
+          "",
+          "Résolution d'ambiguïtés (hiérarchie) : ENGAGEMENT > OUVERTURE > EXPLICATION > REFLET_VOUS > REFLET_JE > REFLET_ACQ.",
+        ].join("\n"),
       },
 
-      // Exemples avec cas limites de la thèse
-      { role: "user", content: "D'accord, je vais faire le nécessaire" },
-      { role: "assistant", content: '{"label": "ENGAGEMENT"}' },
+      // Few-shot examples
+      {
+        role: "user",
+        content: 'Texte: """je vais vérifier votre dossier"""',
+      },
+      { role: "assistant", content: '{"label":"ENGAGEMENT"}' },
 
       {
         role: "user",
-        content: "Vous pouvez aller sur le site parce que c'est plus rapide",
+        content: 'Texte: """vous allez recevoir un SMS de confirmation"""',
       },
-      { role: "assistant", content: '{"label": "OUVERTURE"}' },
+      { role: "assistant", content: '{"label":"OUVERTURE"}' },
 
-      { role: "user", content: "Je comprends, mais je vais vérifier" },
-      { role: "assistant", content: '{"label": "ENGAGEMENT"}' },
+      {
+        role: "user",
+        content: 'Texte: """notre politique exige un contrôle préalable"""',
+      },
+      { role: "assistant", content: '{"label":"EXPLICATION"}' },
 
-      // Cas piège REFLET
-      { role: "user", content: "Je vois que vous avez déjà appelé hier" },
-      { role: "assistant", content: '{"label": "REFLET_VOUS"}' },
+      {
+        role: "user",
+        content: 'Texte: """je comprends votre frustration"""',
+      },
+      { role: "assistant", content: '{"label":"REFLET_JE"}' },
 
-      { role: "user", content: "Je vois que vous avez reçu 1504,29 €" },
-      { role: "assistant", content: '{"label": "EXPLICATION"}' },
+      {
+        role: "user",
+        content: 'Texte: """vous dites avoir déjà envoyé le formulaire"""',
+      },
+      { role: "assistant", content: '{"label":"REFLET_VOUS"}' },
 
-      { role: "user", content: "Il faut bien préciser l'heure et la station" },
-      { role: "assistant", content: '{"label": "OUVERTURE"}' },
+      { role: "user", content: 'Texte: """oui ?"""' },
+      { role: "assistant", content: '{"label":"REFLET_ACQ"}' },
 
       // Instance à classer
-      { role: "user", content: verbatim.trim() },
+      { role: "user", content: `Texte: """${verbatim}"""` },
     ];
+  }
+
+  private parseOpenAIResponse(data: any, startTime: number): UniversalResult {
+    const rawContent = data?.choices?.[0]?.message?.content ?? "";
+    let label = "AUTRE_NON_RECONNU";
+
+    try {
+      const parsed = JSON.parse(rawContent);
+      if (parsed && typeof parsed.label === "string") {
+        const normalizedLabel = String(parsed.label)
+          .toUpperCase()
+          .replace(/\s+/g, "_");
+        if ((LABELS as readonly string[]).includes(normalizedLabel)) {
+          label = normalizedLabel;
+        }
+      }
+    } catch (parseError) {
+      console.warn("❌ Failed to parse OpenAI JSON response:", rawContent);
+      // On garde le fallback AUTRE_NON_RECONNU
+    }
+
+    return {
+      prediction: label,
+      confidence: label === "AUTRE_NON_RECONNU" ? 0.35 : 0.8,
+      processingTime: Date.now() - startTime,
+      algorithmVersion: this.config.model,
+      metadata: {
+        target: "X",
+        inputType: "string",
+        executionPath: ["openai_gpt_json"],
+        provider: "openai",
+        details: {
+          family: this.familyFromX(label),
+          rawResponse: rawContent,
+        },
+        raw: data,
+      },
+    };
   }
 
   async batchRun(inputs: unknown[]): Promise<UniversalResult[]> {

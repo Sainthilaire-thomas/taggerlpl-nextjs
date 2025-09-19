@@ -1,24 +1,29 @@
-// app/api/algolab/classifiers/route.ts
 import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 
-import { getAlgorithmStatus } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms";
+import {
+  getAlgorithmStatus,
+  initializeAlgorithms,
+} from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms";
 import { algorithmRegistry } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry";
 
+function ensureInitialized() {
+  initializeAlgorithms();
+}
+
 export async function GET() {
-  // statut **serveur** (avec OPENAI_API_KEY, etc.)
+  ensureInitialized();
   return NextResponse.json(getAlgorithmStatus());
 }
 
 export async function POST(req: Request) {
   try {
-    const { key, verbatim, verbatims } = await req.json();
-    const inputs: string[] = Array.isArray(verbatims)
-      ? verbatims.map(String)
-      : [String(verbatim ?? "")];
+    ensureInitialized();
 
-    // On s'assure que le registre serveur est prêt (il l’est via auto-init)
-    const algo = algorithmRegistry.get<string, any>(key);
+    const body = await req.json();
+    const { key } = body;
+
+    const algo = algorithmRegistry.get<any, any>(key);
     if (!algo) {
       return NextResponse.json(
         { ok: false, error: `Algorithme inconnu: ${key}` },
@@ -26,9 +31,33 @@ export async function POST(req: Request) {
       );
     }
 
-    const doBatch = typeof (algo as any).runBatch === "function";
-    const results = doBatch
-      ? await (algo as any).runBatch(inputs)
+    // 🔧 Normalisation du payload (string, objet contextuel, ou tableau)
+    let inputs: unknown[];
+
+    if (Array.isArray(body.inputs)) {
+      inputs = body.inputs; // nouveau: inputs[]
+    } else if (Array.isArray(body.input)) {
+      inputs = body.input; // tolérance
+    } else if (Array.isArray(body.verbatims)) {
+      inputs = body.verbatims.map(String); // legacy: verbatims[]
+    } else {
+      const single =
+        body.input !== undefined
+          ? body.input // nouveau: input
+          : body.verbatim !== undefined
+          ? body.verbatim // legacy: verbatim
+          : "";
+      inputs = [single];
+    }
+
+    const hasBatchRun =
+      typeof (algo as any).batchRun === "function" ||
+      typeof (algo as any).runBatch === "function"; // compat
+
+    const batchFn = (algo as any).batchRun ?? (algo as any).runBatch;
+
+    const results = hasBatchRun
+      ? await batchFn.call(algo, inputs)
       : await Promise.all(inputs.map((v) => (algo as any).run(v)));
 
     return NextResponse.json({ ok: true, results });

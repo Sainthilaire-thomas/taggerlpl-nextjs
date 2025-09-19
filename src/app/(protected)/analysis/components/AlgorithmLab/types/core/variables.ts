@@ -93,11 +93,16 @@ export interface YDetails {
   };
   label?: string;
 
-  // ✅ NOUVELLES propriétés optionnelles pour useLevel1Testing
-  confidence?: number; // Erreur ligne 108
-  cues?: string[]; // Utilisé ligne 110
-  sentimentProxy?: any; // Utilisé ligne 111
-  spans?: any; // Utilisé ligne 112
+  // Propriétés pour useLevel1Testing
+  confidence?: number;
+  cues?: string[];
+  sentimentProxy?: any;
+  spans?: any;
+
+  // ✅ AJOUT MANQUANT : Support des scores pour RegexYClassifier
+  scores?: Record<string, number>; // Pour les scores par YTag
+  method?: string; // Méthode de classification utilisée
+  thresholds?: Record<string, number>; // Seuils de classification
 }
 
 export interface M1Details {
@@ -140,7 +145,7 @@ export interface M2Details {
 export interface M3Details {
   // Ancienne spec (compat)
   value?: number;
-  unit?: "ms" | "s";
+  unit?: "ms" | "s" | "score";
 
   // Spec enrichie
   fluidity?: number;

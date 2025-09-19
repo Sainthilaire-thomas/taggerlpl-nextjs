@@ -1,16 +1,13 @@
 // algorithms/level1/YAlgorithms/RegexYClassifier.ts
-import type { BaseAlgorithm, AlgorithmMetadata } from "../shared/BaseAlgorithm";
+import type {
+  UniversalAlgorithm,
+  AlgorithmDescriptor,
+  UniversalResult,
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base";
 import type {
   VariableY,
   YTag,
 } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
-
-export interface YClassification {
-  prediction: VariableY | "ERREUR";
-  confidence: number; // [0,1]
-  processingTimeMs: number;
-  metadata?: Record<string, any>;
-}
 
 type YConfig = {
   seuilPositif: number;
@@ -19,9 +16,7 @@ type YConfig = {
   poidsMots: number;
 };
 
-export class RegexYClassifier
-  implements BaseAlgorithm<string, YClassification>
-{
+export class RegexYClassifier implements UniversalAlgorithm {
   private config: YConfig;
 
   constructor(config: Partial<YConfig> = {}) {
@@ -33,16 +28,28 @@ export class RegexYClassifier
     };
   }
 
-  describe(): AlgorithmMetadata {
+  // ========================================================================
+  // ✅ INTERFACE UNIVERSALALGORITHM
+  // ========================================================================
+
+  describe(): AlgorithmDescriptor {
     return {
       name: "RegexYClassifier",
       displayName: "Règles – Y (client)",
+      version: "1.0.0",
       type: "rule-based",
       target: "Y",
-      version: "1.0.0",
+      batchSupported: true,
+      requiresContext: false,
       description:
         "Classification des réactions client (positif / neutre / négatif) par dictionnaires pondérés (expressions + mots).",
-      batchSupported: true,
+      examples: [
+        {
+          input: "d'accord merci beaucoup",
+          output: { prediction: "CLIENT_POSITIF", confidence: 0.8 },
+          note: "Expressions et mots positifs détectés",
+        },
+      ],
     };
   }
 
@@ -56,7 +63,137 @@ export class RegexYClassifier
     );
   }
 
-  // ---------------- Normalisation
+  async run(input: unknown): Promise<UniversalResult> {
+    const verbatim = String(input);
+    const startTime = Date.now();
+
+    try {
+      // ✅ APPEL DE LA LOGIQUE EXISTANTE
+      const result = this.performYClassification(verbatim);
+
+      return {
+        prediction: result.prediction,
+        confidence: result.confidence,
+        processingTime: Date.now() - startTime,
+        algorithmVersion: "1.0.0",
+        metadata: {
+          target: "Y",
+          inputType: "string",
+          executionPath: ["sanitize", "dictionary_analysis", "classification"],
+          // ✅ STRUCTURE ATTENDUE PAR L'ADAPTATEUR
+          details: {
+            family: this.familyFromY(result.prediction),
+            evidences: result.evidences || [],
+            cues: result.matched || [],
+            scores: result.scores,
+            method: "dictionary-weighted",
+          },
+        },
+      };
+    } catch (e: any) {
+      return {
+        prediction: "CLIENT_NEUTRE",
+        confidence: 0,
+        processingTime: Date.now() - startTime,
+        algorithmVersion: "1.0.0",
+        metadata: {
+          target: "Y",
+          inputType: "string",
+          executionPath: ["error"],
+          details: {
+            family: "CLIENT",
+            evidences: [],
+          },
+          error: String(e?.message ?? e),
+        },
+      };
+    }
+  }
+
+  async batchRun(inputs: unknown[]): Promise<UniversalResult[]> {
+    return Promise.all(inputs.map((input) => this.run(input)));
+  }
+
+  // ========================================================================
+  // ✅ TOUTE LA LOGIQUE MÉTIER EXISTANTE (100% INCHANGÉE)
+  // ========================================================================
+
+  private performYClassification(verbatim: string): {
+    prediction: YTag;
+    confidence: number;
+    evidences: string[];
+    matched: string[];
+    scores: Record<YTag, number>;
+  } {
+    const text = this.sanitize(verbatim);
+    if (!text) {
+      return {
+        prediction: "CLIENT_NEUTRE",
+        confidence: 0.5,
+        evidences: [],
+        matched: [],
+        scores: this.getEmptyScores(),
+      };
+    }
+
+    // ✅ SCORES POUR TOUS LES YTAG
+    const scores: Record<YTag, number> = {
+      CLIENT_POSITIF: this.calculateScore(
+        text,
+        this.dictionnaires.CLIENT_POSITIF
+      ),
+      CLIENT_NEGATIF: this.calculateScore(
+        text,
+        this.dictionnaires.CLIENT_NEGATIF
+      ),
+      CLIENT_NEUTRE: this.calculateScore(
+        text,
+        this.dictionnaires.CLIENT_NEUTRE
+      ),
+      CLIENT_QUESTION: this.calculateScore(
+        text,
+        this.dictionnaires.CLIENT_QUESTION
+      ),
+      CLIENT_SILENCE: this.calculateScore(
+        text,
+        this.dictionnaires.CLIENT_SILENCE
+      ),
+      AUTRE_Y: this.calculateScore(text, this.dictionnaires.AUTRE_Y),
+    };
+
+    const { prediction, confidence, matched } = this.pickPrediction(
+      text,
+      scores
+    );
+
+    return {
+      prediction,
+      confidence,
+      evidences: matched[prediction] || [],
+      matched: Object.values(matched).flat(),
+      scores,
+    };
+  }
+
+  // Helper pour déterminer la famille
+  private familyFromY(label: YTag): string {
+    // Toutes les réactions clients appartiennent à la famille "CLIENT"
+    return "CLIENT";
+  }
+
+  private getEmptyScores(): Record<YTag, number> {
+    return {
+      CLIENT_POSITIF: 0,
+      CLIENT_NEGATIF: 0,
+      CLIENT_NEUTRE: 0,
+      CLIENT_QUESTION: 0,
+      CLIENT_SILENCE: 0,
+      AUTRE_Y: 0,
+    };
+  }
+
+  // ✅ GARDE TOUT LE CODE EXISTANT (dictionnaires, sanitize, etc.)
+
   private sanitize(verbatim: string): string {
     return (verbatim || "")
       .replace(/\[(?:TC|AP)\]/gi, " ")
@@ -67,9 +204,8 @@ export class RegexYClassifier
       .toLowerCase();
   }
 
-  // ✅ CORRECTION : Dictionnaires complets avec tous les YTag
   private dictionnaires: Record<
-    YTag, // Utiliser YTag au lieu de VariableY
+    YTag,
     { expressions: string[]; mots: string[] }
   > = {
     CLIENT_POSITIF: {
@@ -164,7 +300,6 @@ export class RegexYClassifier
         "besoin",
       ],
     },
-    // ✅ AJOUT : Tags manquants avec dictionnaires spécialisés
     CLIENT_QUESTION: {
       expressions: [
         "comment ça",
@@ -224,79 +359,6 @@ export class RegexYClassifier
     },
   };
 
-  // ---------------- API BaseAlgorithm
-  async run(input: string): Promise<YClassification> {
-    const start = this.now();
-    try {
-      const text = this.sanitize(input);
-      if (!text) {
-        return {
-          prediction: "CLIENT_NEUTRE",
-          confidence: 0.5,
-          processingTimeMs: this.delta(start),
-          metadata: { emptyInput: true },
-        };
-      }
-
-      // ✅ CORRECTION : Scores pour tous les YTag
-      const scores: Record<YTag, number> = {
-        CLIENT_POSITIF: this.calculateScore(
-          text,
-          this.dictionnaires.CLIENT_POSITIF
-        ),
-        CLIENT_NEGATIF: this.calculateScore(
-          text,
-          this.dictionnaires.CLIENT_NEGATIF
-        ),
-        CLIENT_NEUTRE: this.calculateScore(
-          text,
-          this.dictionnaires.CLIENT_NEUTRE
-        ),
-        CLIENT_QUESTION: this.calculateScore(
-          text,
-          this.dictionnaires.CLIENT_QUESTION
-        ),
-        CLIENT_SILENCE: this.calculateScore(
-          text,
-          this.dictionnaires.CLIENT_SILENCE
-        ),
-        AUTRE_Y: this.calculateScore(text, this.dictionnaires.AUTRE_Y),
-      };
-
-      const { prediction, confidence, matched } = this.pickPrediction(
-        text,
-        scores
-      );
-
-      return {
-        prediction,
-        confidence,
-        processingTimeMs: this.delta(start),
-        metadata: {
-          method: "dictionary-weighted",
-          thresholds: {
-            positif: this.config.seuilPositif,
-            negatif: this.config.seuilNegatif,
-          },
-          scores,
-          matched,
-        },
-      };
-    } catch (e: any) {
-      return {
-        prediction: "ERREUR",
-        confidence: 0,
-        processingTimeMs: this.delta(start),
-        metadata: { error: String(e?.message ?? e) },
-      };
-    }
-  }
-
-  async runBatch(inputs: string[]): Promise<YClassification[]> {
-    return Promise.all(inputs.map((i) => this.run(i)));
-  }
-
-  // ---------------- Scoring
   private calculateScore(
     text: string,
     dictionary: { expressions: string[]; mots: string[] }
@@ -328,7 +390,6 @@ export class RegexYClassifier
     return totalWeight > 0 ? score / totalWeight : 0;
   }
 
-  // ✅ CORRECTION : Logique de prédiction étendue
   private pickPrediction(
     text: string,
     scores: Record<YTag, number>
@@ -376,7 +437,6 @@ export class RegexYClassifier
     };
   }
 
-  // ✅ CORRECTION : Matches pour tous les YTag
   private getAllMatches(text: string): Record<YTag, string[]> {
     const matched: Record<YTag, string[]> = {
       CLIENT_POSITIF: this.getMatches(text, this.dictionnaires.CLIENT_POSITIF),
@@ -416,16 +476,5 @@ export class RegexYClassifier
 
   private escapeRegex(str: string) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  }
-
-  private now(): number {
-    return typeof performance !== "undefined" &&
-      typeof performance.now === "function"
-      ? performance.now()
-      : Date.now();
-  }
-
-  private delta(start: number): number {
-    return this.now() - start;
   }
 }

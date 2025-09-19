@@ -1,15 +1,12 @@
 // algorithms/level1/M2Algorithms/M2LexicalAlignmentCalculator.ts
-import {
-  BaseM2Calculator,
-  ClassificationResultM2,
-} from "./shared/BaseM2Calculator";
-import {
+import type {
+  UniversalAlgorithm,
+  AlgorithmDescriptor,
+  UniversalResult,
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base";
+import type {
   M2Input,
   M2Details,
-  CalculationMetadata,
-  BaseAlgorithm,
-  AlgorithmMetadata,
-  CalculationResult,
 } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
 import { tokenize, jaccard, shared } from "./shared/m2-utils";
 
@@ -18,27 +15,10 @@ interface LexicalConfig {
   thresholdPartial: number; // ex: 0.3
 }
 
-export class M2LexicalAlignmentCalculator
-  extends BaseM2Calculator
-  implements BaseAlgorithm<M2Input, CalculationResult<M2Details>>
-{
-  // Propriété key requise par BaseAlgorithm
-  key = "m2-lexical-alignment";
-
-  // Métadonnées pour BaseAlgorithm
-  meta: AlgorithmMetadata = {
-    key: this.key,
-    label: "M2 — Alignement lexical (Jaccard)",
-    version: "1.0.0",
-    target: "M2",
-    tags: ["lexical", "jaccard", "tokens"],
-    description: "Score Jaccard entre T0 et T+1 (tokens FR, stopwords filtrés)",
-  };
-
+export class M2LexicalAlignmentCalculator implements UniversalAlgorithm {
   private config: LexicalConfig;
 
   constructor(config?: Partial<LexicalConfig>) {
-    super();
     this.config = {
       thresholdAligned: 0.5,
       thresholdPartial: 0.3,
@@ -46,27 +26,32 @@ export class M2LexicalAlignmentCalculator
     };
   }
 
-  // Métadonnées pour Calculator (Level 2 - validation scientifique)
-  getMetadata(): CalculationMetadata {
+  // ========================================================================
+  // ✅ INTERFACE UNIVERSALALGORITHM
+  // ========================================================================
+
+  describe(): AlgorithmDescriptor {
     return {
-      // Propriétés obligatoires
-      algorithmVersion: "1.0.0",
-      inputSignature: "m2-lexical-input",
-      executionPath: ["tokenize", "jaccard"],
-      warnings: [],
-
-      // Propriétés existantes
-      id: this.key,
-      label: "M2 Alignement Lexical (Jaccard)",
+      name: "M2LexicalAlignment",
+      displayName: "M2 — Alignement lexical (Jaccard)",
+      version: "1.0.0",
+      type: "rule-based",
       target: "M2",
-      algorithmKind: "lexical",
-      version: "1.0",
+      batchSupported: true,
+      requiresContext: true,
+      description:
+        "Score Jaccard entre T0 et T+1 (tokens FR, stopwords filtrés). Mesure l'alignement lexical entre conseiller et client.",
+      examples: [
+        {
+          input: {
+            t0: "je vais vérifier",
+            t1: "d'accord pour la vérification",
+          },
+          output: { prediction: "ALIGNEMENT_FORT", confidence: 0.7 },
+          note: "Reprise lexicale 'vérifier/vérification'",
+        },
+      ],
     };
-  }
-
-  // Méthode run() requise par BaseAlgorithm
-  async run(input: M2Input): Promise<CalculationResult<M2Details>> {
-    return this.calculate(input);
   }
 
   validateConfig(): boolean {
@@ -79,13 +64,93 @@ export class M2LexicalAlignmentCalculator
     );
   }
 
-  async calculate(input: M2Input): Promise<CalculationResult<M2Details>> {
-    const start = performance.now();
+  async run(input: unknown): Promise<UniversalResult> {
+    const m2Input = input as M2Input;
+    const startTime = Date.now();
 
+    try {
+      // ✅ APPEL DE LA LOGIQUE EXISTANTE
+      const result = await this.calculateM2Score(m2Input);
+
+      return {
+        prediction: result.prediction,
+        confidence: result.confidence,
+        processingTime: Date.now() - startTime,
+        algorithmVersion: "1.0.0",
+        metadata: {
+          target: "M2",
+          inputType: "M2Input",
+          executionPath: ["tokenize", "jaccard", "classify"],
+          // ✅ STRUCTURE ATTENDUE PAR L'ADAPTATEUR
+          details: {
+            value: result.prediction,
+            scale: "lexical",
+            lexicalAlignment: result.lexicalScore,
+            semanticAlignment: undefined,
+            overall: result.lexicalScore,
+            sharedTerms: result.sharedTerms,
+          },
+          // Contexte pour l'UI
+          prev2_turn_verbatim: (m2Input as any)?.prev2_turn_verbatim,
+          prev1_turn_verbatim: (m2Input as any)?.prev1_turn_verbatim,
+          next_turn_verbatim: m2Input.t1,
+          // Métadonnées supplémentaires
+          classifier: "M2LexicalAlignment",
+          extra: {
+            lexicalScore: result.lexicalScore,
+            sharedTokens: result.sharedTerms,
+            thresholds: this.config,
+            tokenCounts: result.tokenCounts,
+          },
+        },
+      };
+    } catch (e: any) {
+      return {
+        prediction: "DESALIGNEMENT",
+        confidence: 0,
+        processingTime: Date.now() - startTime,
+        algorithmVersion: "1.0.0",
+        metadata: {
+          target: "M2",
+          inputType: "M2Input",
+          executionPath: ["error"],
+          details: {
+            value: "DESALIGNEMENT",
+            scale: "lexical",
+            lexicalAlignment: 0,
+            overall: 0,
+            sharedTerms: [],
+          },
+          error: String(e?.message ?? e),
+        },
+      };
+    }
+  }
+
+  async batchRun(inputs: unknown[]): Promise<UniversalResult[]> {
+    return Promise.all(inputs.map((input) => this.run(input)));
+  }
+
+  // ========================================================================
+  // ✅ TOUTE LA LOGIQUE MÉTIER EXISTANTE (100% INCHANGÉE)
+  // ========================================================================
+
+  private async calculateM2Score(input: M2Input): Promise<{
+    prediction: string;
+    confidence: number;
+    lexicalScore: number;
+    sharedTerms: string[];
+    tokenCounts: {
+      t0: number;
+      t1: number;
+      shared: number;
+    };
+  }> {
     // Utiliser t0 et t1 des types centralisés
     const a = new Set(tokenize(input.t0 || ""));
     const b = new Set(tokenize(input.t1 || ""));
     const s = jaccard(a, b);
+    const sharedTerms = shared(a, b);
 
     const prediction =
       s >= this.config.thresholdAligned
@@ -94,68 +159,58 @@ export class M2LexicalAlignmentCalculator
         ? "ALIGNEMENT_FAIBLE"
         : "DESALIGNEMENT";
 
-    const duration = performance.now() - start;
-
-    // Structure M2Details conforme aux types centralisés
-    const details: M2Details = {
-      value: prediction,
-      scale: "lexical",
-      lexicalAlignment: s,
-      semanticAlignment: undefined, // Pas applicable pour lexical seul
-      overall: s,
-      sharedTerms: shared(a, b),
-    };
-
     return {
       prediction,
       confidence: s, // confiance = score lexical
-      processingTime: duration,
-      details,
-      metadata: {
-        algorithmVersion: "1.0.0",
-        inputSignature: `${input.t0?.slice(0, 10)}...${input.t1?.slice(0, 10)}`,
-        executionPath: ["tokenize", "jaccard", "classify"],
-        warnings: a.size === 0 && b.size === 0 ? ["Entrées vides"] : [],
-        // 🔽 new: pass context so the UI can render it
-        prev2_turn_verbatim:
-          (input as any).prev2_turn_verbatim ?? (input as any).prev2 ?? null,
-        prev1_turn_verbatim:
-          (input as any).prev1_turn_verbatim ?? (input as any).prev1 ?? null,
-        next_turn_verbatim:
-          (input as any).next_turn_verbatim ?? input.t1 ?? null,
-
-        // optional hints (used in header chips / annotations)
-        classifier: "M2LexicalAlignment",
-        type: "rule-based",
-        extra: {
-          lexicalScore: s,
-          sharedTokens: shared(a, b),
-          thresholds: this.config,
-          tokenCounts: {
-            t0: a.size,
-            t1: b.size,
-            shared: shared(a, b).length,
-          },
-        },
+      lexicalScore: s,
+      sharedTerms,
+      tokenCounts: {
+        t0: a.size,
+        t1: b.size,
+        shared: sharedTerms.length,
       },
     };
   }
 
-  async batchCalculate(
-    inputs: M2Input[]
-  ): Promise<CalculationResult<M2Details>[]> {
-    return Promise.all(inputs.map((i) => this.calculate(i)));
+  // ========================================================================
+  // MÉTHODES UTILITAIRES (pour compatibilité si nécessaire)
+  // ========================================================================
+
+  getInfo() {
+    const desc = this.describe();
+    return {
+      id: desc.name,
+      displayName: desc.displayName,
+      target: desc.target,
+      version: desc.version,
+      description: desc.description,
+      supportsBatch: desc.batchSupported,
+    };
   }
 
-  // Méthodes utilitaires pour compatibilité
-  getInfo() {
+  // Wrapper pour l'ancienne interface calculate() si nécessaire
+  async calculate(input: M2Input) {
+    const result = await this.calculateM2Score(input);
     return {
-      id: this.key,
-      displayName: this.meta.label,
-      target: "M2" as const,
-      version: this.meta.version,
-      description: this.meta.description,
-      supportsBatch: true,
+      prediction: result.prediction,
+      confidence: result.confidence,
+      processingTime: 0, // sera recalculé dans run()
+      details: {
+        value: result.prediction,
+        scale: "lexical",
+        lexicalAlignment: result.lexicalScore,
+        overall: result.lexicalScore,
+        sharedTerms: result.sharedTerms,
+      } as M2Details,
+      metadata: {
+        algorithmVersion: "1.0.0",
+        inputSignature: `${input.t0?.slice(0, 10)}...${input.t1?.slice(0, 10)}`,
+        executionPath: ["tokenize", "jaccard", "classify"],
+        warnings:
+          result.tokenCounts.t0 === 0 && result.tokenCounts.t1 === 0
+            ? ["Entrées vides"]
+            : [],
+      },
     };
   }
 }

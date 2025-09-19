@@ -627,3 +627,295 @@ expect(newResult.confidence).toBeCloseTo(oldResult.confidence, 2);
 - **Compatibilité** - L'UI existing doit continuer à fonctionner
 
 Cette migration vous donnera une architecture AlgorithmLab propre et homogène, prête pour ajouter de nouveaux algorithmes facilement.
+
+## 7 Normaliser les sorties
+
+Tu as raison — **on arrête les rustines** . On se met d’accord sur **une sortie unique (`UniversalResult`)** et **un seul adaptateur** qui transforme _n’importe quel_ résultat en **`TVValidationResult`** consommable par l’UI, **sans que l’UI connaisse les détails de chaque algo** .
+
+Voici le plan propre et _universel_ qui marche pour **X/Y** (classifieurs) **et M1/M2/M3** (métriques), en s’alignant sur ton M1 déjà clean.
+
+---
+
+# Architecture cible (simple & stable)
+
+1. **Chaque algorithme retourne un `UniversalResult`** avec au minimum :
+
+   - `prediction: string`
+   - `confidence: number`
+   - `processingTime?: number`
+   - `algorithmVersion?: string`
+   - `metadata: { target: "X" | "Y" | "M1" | "M2" | "M3", details?: object }`
+
+   ### Convention par type de target
+
+   - **X/Y (classifieurs)**
+
+     `metadata.details = { family: string, evidences?: string[] }`
+
+   - **M1/M2/M3 (métriques)**
+
+     `metadata = { metric: "M1" | "M2" | "M3", value?/density?, … }`
+
+     (Ton M1 convient déjà, on n’exige pas `details` ici.)
+
+2. **Un seul adaptateur `normalizeUniversalToTV`** (niveau hook) transforme un `UniversalResult` en **`TVValidationResult`** que l’UI connaît déjà (famille/évidences pour X/Y, bloc m1/m2/m3 pour métriques).
+3. **L’UI (`ResultsPanel`, `ExtraColumns`, `MetricsPanel`) ne lit que `TVValidationResult`** et n’inspecte plus jamais `algorithmMetadata`. Ainsi, **ajouter un nouvel algo = 0 changement UI** .
+
+---
+
+# A. Adaptateur universel (à ajouter)
+
+Crée (ou colle) ce fichier utilitaire, p. ex. `hooks/normalizeUniversalToTV.ts` :
+
+<pre class="overflow-visible!" data-start="1563" data-end="4055"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-ts"><span><span>import</span><span></span><span>type</span><span> { </span><span>UniversalResult</span><span> } </span><span>from</span><span></span><span>"@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base"</span><span>;
+
+</span><span>export</span><span></span><span>type</span><span></span><span>TVValidationResult</span><span> = {
+  </span><span>verbatim</span><span>: </span><span>string</span><span>;
+  </span><span>goldStandard</span><span>: </span><span>string</span><span>;
+  </span><span>predicted</span><span>: </span><span>string</span><span>;
+  </span><span>confidence</span><span>: </span><span>number</span><span>;
+  </span><span>correct</span><span>: </span><span>boolean</span><span>;
+  processingTime?: </span><span>number</span><span>;
+  metadata?: </span><span>Record</span><span><</span><span>string</span><span>, </span><span>any</span><span>>;
+};
+
+</span><span>type</span><span></span><span>AdaptConfig</span><span> = {
+  </span><span>target</span><span>: </span><span>"X"</span><span> | </span><span>"Y"</span><span> | </span><span>"M1"</span><span> | </span><span>"M2"</span><span> | </span><span>"M3"</span><span>;
+};
+
+</span><span>export</span><span></span><span>function</span><span></span><span>normalizeUniversalToTV</span><span>(
+  uni: UniversalResult,
+  sample: { verbatim: </span><span>string</span><span>; expectedTag: </span><span>string</span><span> },
+  cfg: AdaptConfig
+): </span><span>TVValidationResult</span><span> {
+  </span><span>const</span><span></span><span>meta</span><span>: </span><span>any</span><span> = uni.</span><span>metadata</span><span> ?? {};
+  </span><span>const</span><span> target = (meta.</span><span>target</span><span></span><span>as</span><span></span><span>AdaptConfig</span><span>[</span><span>"target"</span><span>]) || cfg.</span><span>target</span><span>;
+
+  </span><span>// valeurs communes</span><span>
+  </span><span>const</span><span> predicted = </span><span>String</span><span>(uni.</span><span>prediction</span><span> ?? </span><span>""</span><span>);
+  </span><span>const</span><span> confidence = </span><span>Number</span><span>(uni.</span><span>confidence</span><span> ?? </span><span>0</span><span>);
+  </span><span>const</span><span> correct = predicted === sample.</span><span>expectedTag</span><span>;
+
+  </span><span>// mapping spécifique par famille d’algo</span><span>
+  </span><span>let</span><span></span><span>specific</span><span>: </span><span>Record</span><span><</span><span>string</span><span>, </span><span>any</span><span>> = {};
+
+  </span><span>if</span><span> (target === </span><span>"X"</span><span> || target === </span><span>"Y"</span><span>) {
+    </span><span>const</span><span> details = meta.</span><span>details</span><span> ?? {};
+    </span><span>const</span><span> family = details.</span><span>family</span><span> ?? meta.</span><span>family</span><span> ?? </span><span>null</span><span>;
+    </span><span>const</span><span></span><span>evidences</span><span>: </span><span>string</span><span>[] =
+      details.</span><span>evidences</span><span> ?? meta.</span><span>evidences</span><span> ?? meta.</span><span>rationales</span><span> ?? [];
+
+    </span><span>if</span><span> (target === </span><span>"X"</span><span>) {
+      specific = {
+        </span><span>x_details</span><span>: family ? { family } : </span><span>undefined</span><span>,
+        </span><span>x_evidences</span><span>: evidences.</span><span>length</span><span> ? evidences : </span><span>undefined</span><span>,
+      };
+    } </span><span>else</span><span> {
+      specific = {
+        </span><span>y_details</span><span>: family ? { family } : </span><span>undefined</span><span>,
+        </span><span>y_evidences</span><span>: evidences.</span><span>length</span><span> ? evidences : </span><span>undefined</span><span>,
+      };
+    }
+  }
+
+  </span><span>if</span><span> (target === </span><span>"M1"</span><span>) {
+    </span><span>// Ton M1 déjà migré expose ces champs dans metadata</span><span>
+    specific = {
+      </span><span>m1</span><span>: {
+        </span><span>value</span><span>: meta.</span><span>value</span><span> ?? meta.</span><span>density</span><span> ?? </span><span>undefined</span><span>,
+        </span><span>densityPer</span><span>: meta.</span><span>densityPer</span><span>,
+        </span><span>actionVerbCount</span><span>: meta.</span><span>actionVerbCount</span><span>,
+        </span><span>totalTokens</span><span>: meta.</span><span>totalTokens</span><span>,
+        </span><span>verbsFound</span><span>: meta.</span><span>verbsFound</span><span>,
+      },
+    };
+  }
+
+  </span><span>if</span><span> (target === </span><span>"M2"</span><span>) {
+    specific = {
+      </span><span>m2</span><span>: {
+        </span><span>value</span><span>: meta.</span><span>value</span><span>,
+        </span><span>scale</span><span>: meta.</span><span>scale</span><span>,
+      },
+    };
+  }
+
+  </span><span>if</span><span> (target === </span><span>"M3"</span><span>) {
+    specific = {
+      </span><span>m3</span><span>: {
+        </span><span>value</span><span>: meta.</span><span>value</span><span>,
+        </span><span>unit</span><span>: meta.</span><span>unit</span><span> ?? </span><span>"ms"</span><span>,
+      },
+    };
+  }
+
+  </span><span>return</span><span> {
+    </span><span>verbatim</span><span>: sample.</span><span>verbatim</span><span>,
+    </span><span>goldStandard</span><span>: sample.</span><span>expectedTag</span><span>,
+    predicted,
+    confidence,
+    correct,
+    </span><span>processingTime</span><span>: uni.</span><span>processingTime</span><span>,
+    </span><span>metadata</span><span>: {
+      </span><span>// utile pour tracer</span><span>
+      target,
+      </span><span>algorithmVersion</span><span>: uni.</span><span>algorithmVersion</span><span>,
+      </span><span>executionPath</span><span>: meta.</span><span>executionPath</span><span>,
+      </span><span>// ce que l’UI consomme :</span><span>
+      ...specific,
+    },
+  };
+}
+</span></span></code></div></div></pre>
+
+> Remarques :
+>
+> - On **ne lit plus `algorithmMetadata`** côté UI. Tout passe par `TVValidationResult.metadata`.
+> - Pour **X/Y** , on ne dépend que de `details.family` et `details.evidences` (avec fallback sur racine si besoin).
+> - Pour **M1** , on récupère directement ce que M1 expose (ton code est déjà good).
+
+---
+
+# B. `useLevel1Testing.ts` — utilise l’adaptateur (et basta)
+
+Dans `validateAlgorithm`, **remplace le bloc qui construisait “à la main”** `ValidationResult` par un appel à l’adaptateur :
+
+<pre class="overflow-visible!" data-start="4563" data-end="5134"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-ts"><span><span>import</span><span> { normalizeUniversalToTV } </span><span>from</span><span></span><span>"./normalizeUniversalToTV"</span><span>; </span><span>// adapte le chemin</span><span>
+
+</span><span>// ...</span><span>
+</span><span>const</span><span> results = </span><span>await</span><span></span><span>Promise</span><span>.</span><span>all</span><span>(
+  inputs.</span><span>map</span><span>(</span><span>async</span><span> (input, i) => {
+    </span><span>const</span><span> sample = samples[i];
+    </span><span>const</span><span> uni = </span><span>await</span><span> classifier.</span><span>run</span><span>(input); </span><span>// ← chaque algo retourne UniversalResult</span><span>
+
+    </span><span>// inférer le target depuis la config de l’algo (déjà dans ton hook)</span><span>
+    </span><span>const</span><span> config = </span><span>getConfigForAlgorithm</span><span>(classifierName);
+    </span><span>const</span><span> target = (config?.</span><span>target</span><span></span><span>as</span><span></span><span>"X"</span><span> | </span><span>"Y"</span><span> | </span><span>"M1"</span><span> | </span><span>"M2"</span><span> | </span><span>"M3"</span><span>) ?? </span><span>"X"</span><span>;
+
+    </span><span>return</span><span></span><span>normalizeUniversalToTV</span><span>(uni, sample, { target });
+  })
+);
+</span></span></code></div></div></pre>
+
+👉 Du coup, **plus aucun switch/case dans le hook** .
+
+👉 La logique de mapping est **dans une seule fonction** , testable et stable.
+
+👉 **L’UI n’a pas besoin de changer** à chaque nouvel algo.
+
+---
+
+# C. Algorithmes — exigences minimales
+
+- **Toujours renvoyer `metadata.target`** (utile au traçage).
+
+  - M1 : ajoute `metadata.target: "M1"` (optionnel si on infère côté hook via config, mais c’est plus propre).
+  - X/Y : ajoute `metadata.target: "X"` / `"Y"`.
+
+- **X/Y** : remplir **uniquement**
+
+  `metadata.details = { family, evidences? }`
+
+  (Pas besoin de dupliquer ailleurs si tu appliques l’adaptateur ci-dessus.)
+
+- **M1** : **tu es déjà aligné** (tes champs sont sous `metadata.*`). Rien à changer, sauf `metadata.target: "M1"` si tu veux.
+
+---
+
+# D. UI (`ExtraColumns`, `MetricsPanel`, `ResultsTableBase`)
+
+- L’UI lit **exclusivement `TVValidationResult`** :
+
+  - **Famille X** : `r.metadata?.x_details?.family`
+  - **Évidences X** : `r.metadata?.x_evidences`
+  - **M1** : `r.metadata?.m1.{value, actionVerbCount, …}`
+
+- **Supprime** les lectures de `algorithmMetadata` ou de chemins alternatifs.
+
+  → L’UI est **aveugle au format interne** des algos.
+
+---
+
+## Pourquoi ton M1 “n’a pas le problème” ?
+
+Parce qu’il **remplit déjà** un `UniversalResult` propre et que, dans tes vues actuelles, on lit ses champs métiers (`density`, `actionVerbCount`, …) **toujours aux mêmes clés** .
+
+En reproduisant la même discipline pour X/Y (via `details.family/evidences` + adaptateur unique), on obtient **la même robustesse** .
+
+---
+
+# comment ça marche (schéma simple)
+
+1. **Corpus → Gold**
+
+   `mapTurnsToGoldStandard(...)` transforme tes tours en **GoldStandardSample[]**
+
+   → chaque item a :
+
+   - `verbatim`
+   - `expectedTag` (le label gold, normalisé)
+   - `metadata` **(contexte que tu veux voir dans l’UI)** : `prev1_turn_verbatim`, `next_turn_verbatim`, `annotations`, etc.
+
+2. **Validation** (dans `useLevel1Testing.validateAlgorithm`)
+
+   Pour chaque sample sélectionné :
+
+   - on prépare l’input selon l’algo (`prepareInputsForAlgorithm`) — **indispensable pour M1** ;
+   - on appelle l’algo et on récupère un **UniversalResult** ;
+   - on passe ce résultat au **normaliseur** `normalizeUniversalToTV(...)` → il te fabrique des champs standard pour l’UI :
+     - si `target = "X"` → `metadata.x_details.family`, `metadata.x_evidences[]`
+     - si `target = "Y"` → `metadata.y_*`
+     - si `target = "M1"` → `metadata.m1.*` (densité, etc.)
+   - **on fusionne** le **contexte du sample** + la **méta normalisée** pour constituer `row.metadata`.
+
+   À la fin, `validateAlgorithm` renvoie un tableau de **ValidationResult[]** (c’est ce que la table attend).
+
+3. **UI**
+
+   - `ResultsPanel` appelle `validateAlgorithm` et récupère `ValidationResult[]`.
+   - `ResultsTableBase` / `extraColumns.tsx` lisent **uniquement** `row.metadata` :
+     - colonne “Famille X” → `row.metadata?.x_details?.family`
+     - colonne “Évidences” → `row.metadata?.x_evidences`
+
+👉 si `x_details`/`x_evidences` ne sont pas présents dans `row.metadata`, tu verras “—”.
+
+---
+
+# les 3 types à connaître
+
+- **UniversalResult** (retourné par tes algos) – forme minimale :
+  <pre class="overflow-visible!" data-start="1876" data-end="2212"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-ts"><span><span>{
+    </span><span>prediction</span><span>: </span><span>string</span><span>;
+    </span><span>confidence</span><span>: </span><span>number</span><span>;
+    </span><span>processingTime</span><span>: </span><span>number</span><span>;
+    algorithmVersion?: </span><span>string</span><span>;
+    metadata?: {
+      target?: </span><span>"X"</span><span>|</span><span>"Y"</span><span>|</span><span>"M1"</span><span>|</span><span>"M2"</span><span>|</span><span>"M3"</span><span>;
+      details?: {
+        family?: </span><span>string</span><span>;
+        evidences?: </span><span>string</span><span>[]; </span><span>// ou evs/matches — le normaliseur tolère</span><span>
+      };
+      [</span><span>k</span><span>: </span><span>string</span><span>]: </span><span>any</span><span>;
+    }
+  }
+  </span></span></code></div></div></pre>
+- **ValidationResult** (ce que la table attend) :
+  <pre class="overflow-visible!" data-start="2266" data-end="2512"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-ts"><span><span>{
+    </span><span>verbatim</span><span>: </span><span>string</span><span>;
+    </span><span>goldStandard</span><span>: </span><span>string</span><span>;
+    </span><span>predicted</span><span>: </span><span>string</span><span>;
+    </span><span>confidence</span><span>: </span><span>number</span><span>;
+    </span><span>correct</span><span>: </span><span>boolean</span><span>;
+    processingTime?: </span><span>number</span><span>;
+    metadata?: </span><span>Record</span><span><</span><span>string</span><span>, </span><span>any</span><span>>; </span><span>// ← ici on met contexte + champs normalisés</span><span>
+  }
+  </span></span></code></div></div></pre>
+- **GoldStandardSample** (ton gold) :
+  <pre class="overflow-visible!" data-start="2554" data-end="2677"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-ts"><span><span>{
+    </span><span>verbatim</span><span>: </span><span>string</span><span>;
+    </span><span>expectedTag</span><span>: </span><span>string</span><span>;
+    metadata?: { ...contexte prev/next/annotations... };
+  }
+  </span></span></code></div></div></pre>
+
+> On n’introduit **aucun** autre type (pas de `TVValidationResult`, etc.). Ça évite les erreurs TS que tu viens d’avoir.

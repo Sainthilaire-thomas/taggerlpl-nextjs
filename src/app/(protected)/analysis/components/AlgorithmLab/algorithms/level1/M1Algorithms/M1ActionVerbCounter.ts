@@ -1,13 +1,15 @@
 // algorithms/level1/M1Algorithms/M1ActionVerbCounter.ts
 import type {
-  BaseAlgorithm,
-  AlgorithmMetadata,
-  AlgorithmType,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+  UniversalAlgorithm,
+  AlgorithmDescriptor,
+  UniversalResult,
+} from "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base";
 
 /**
  * M1 = densité de verbes d'action dans le tour conseiller (T0).
  * Heuristique "sans dépendance NLP": dictionnaire de verbes d'action + motifs simples.
+ *
+ * ✅ Migré vers UniversalAlgorithm - Version Propre
  */
 type Config = {
   perTokens: number; // normalisation (ex. pour 100 tokens)
@@ -17,8 +19,7 @@ type Config = {
   excludeAuxiliaries: boolean; // exclure être/avoir/pouvoir/devoir/falloir
 };
 
-export class M1ActionVerbCounter implements BaseAlgorithm<string, any> {
-  key = "m1-action-verb-counter";
+export class M1ActionVerbCounter implements UniversalAlgorithm {
   private currentConfig: Config = {
     perTokens: 100,
     includeFutureProche: true,
@@ -27,7 +28,6 @@ export class M1ActionVerbCounter implements BaseAlgorithm<string, any> {
   };
 
   // Dictionnaire minimal de verbes d'action fréquents (lemme)
-  // (on peut enrichir via PUT config.customVerbs)
   private baseActionLemmas = new Set<string>([
     "verifier",
     "envoyer",
@@ -87,20 +87,75 @@ export class M1ActionVerbCounter implements BaseAlgorithm<string, any> {
     "confirmer",
   ]);
 
-  describe(): AlgorithmMetadata {
+  // ========================================================================
+  // ✅ INTERFACE UNIVERSALALGORITHM
+  // ========================================================================
+
+  describe(): AlgorithmDescriptor {
     return {
-      key: this.key,
-      label: "M1 — Densité de verbes d'action (T0)",
+      name: "M1ActionVerbCounter",
+      displayName: "M1 — Densité de verbes d'action",
       version: "1.0.0",
+      type: "metric",
+      target: "M1",
+      batchSupported: true,
+      requiresContext: false,
       description:
         "Compte les verbes d'action dans le tour conseiller et renvoie une densité normalisée.",
-      target: "M1",
-      tags: ["action", "verbs", "density"],
-      // Propriétés additionnelles pour compatibilité
-      id: this.key,
-      displayName: "M1 — Densité de verbes d'action (T0)",
+      examples: [
+        {
+          input: "je vais vérifier votre dossier et traiter votre demande",
+          output: { prediction: "25.00", confidence: 0.7 },
+          note: "2 verbes d'action sur 8 tokens = 25/100 tokens",
+        },
+      ],
     };
   }
+
+  validateConfig(): boolean {
+    return this.currentConfig.perTokens > 0;
+  }
+
+  async run(input: unknown): Promise<UniversalResult> {
+    const verbatim = String(input);
+    const startTime = Date.now();
+    console.log("🔍 M1 input reçu:", verbatim);
+
+    // ✅ APPEL DE LA LOGIQUE EXISTANTE (inchangée)
+    const result = this.calculateM1Score(verbatim);
+    console.log("🔍 M1 result calculé:", result);
+
+    // ✅ CONVERSION VERS UNIVERSALRESULT
+    return {
+      prediction: result.prediction,
+      confidence: result.confidence,
+      processingTime: Date.now() - startTime,
+      algorithmVersion: "1.0.0",
+      metadata: {
+        target: "M1",
+        inputType: "string",
+        executionPath: ["tokenize", "lemmatize", "count_verbs", "normalize"],
+        // Métadonnées M1 directement accessibles
+        densityPer: result.metadata.densityPer,
+        density: result.metadata.density,
+        actionVerbCount: result.metadata.actionVerbCount,
+        totalTokens: result.metadata.totalTokens,
+        verbsFound: result.metadata.verbsFound,
+        // Données supplémentaires pour l'UI
+        metric: "M1",
+        algorithm: "M1ActionVerbCounter",
+      },
+    };
+  }
+
+  // ✅ SUPPORT BATCH OPTIONNEL
+  async batchRun(inputs: unknown[]): Promise<UniversalResult[]> {
+    return Promise.all(inputs.map((input) => this.run(input)));
+  }
+
+  // ========================================================================
+  // ✅ TOUTE LA LOGIQUE MÉTIER EXISTANTE (100% INCHANGÉE)
+  // ========================================================================
 
   getConfig() {
     return { ...this.currentConfig };
@@ -109,12 +164,6 @@ export class M1ActionVerbCounter implements BaseAlgorithm<string, any> {
   updateConfig(next: Partial<Config>) {
     this.currentConfig = { ...this.currentConfig, ...next };
   }
-
-  validateConfig(): boolean {
-    return true;
-  }
-
-  // --- utils ---------------------------------------------------------------
 
   private normalize(text: string) {
     return (text || "")
@@ -189,8 +238,6 @@ export class M1ActionVerbCounter implements BaseAlgorithm<string, any> {
     return count;
   }
 
-  // --- coeur ---------------------------------------------------------------
-
   private countActionVerbs(text: string) {
     const cfg = this.currentConfig;
     const tokens = this.tokenize(text);
@@ -230,7 +277,7 @@ export class M1ActionVerbCounter implements BaseAlgorithm<string, any> {
     };
   }
 
-  private toResult(text: string) {
+  private calculateM1Score(text: string) {
     const c = this.countActionVerbs(text || "");
     return {
       prediction: `${c.density.toFixed(2)}`, // valeur lisible
@@ -244,13 +291,5 @@ export class M1ActionVerbCounter implements BaseAlgorithm<string, any> {
         verbsFound: c.verbs,
       },
     };
-  }
-
-  async run(input: string) {
-    return this.toResult(input);
-  }
-
-  async runBatch(inputs: string[]) {
-    return inputs.map((s) => this.toResult(s));
   }
 }

@@ -1,12 +1,22 @@
 // app/api/algolab/classifiers/[name]/route.ts
 import { NextRequest, NextResponse } from "next/server";
+export const runtime = "nodejs";
+
 import { algorithmRegistry } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry";
+import { initializeAlgorithms } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms";
+
+function ensureInitialized() {
+  // initializeAlgorithms est idempotent (protégé par un flag)
+  initializeAlgorithms();
+}
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: { name: string } }
 ) {
   try {
+    ensureInitialized();
+
     const config = await request.json();
     const key = decodeURIComponent(params.name);
     const algo = algorithmRegistry.get<any, any>(key);
@@ -18,7 +28,6 @@ export async function PUT(
       );
     }
 
-    // updateConfig optionnelle
     if (typeof (algo as any).updateConfig !== "function") {
       return NextResponse.json(
         { error: "Cet algorithme ne supporte pas la configuration dynamique" },
@@ -38,6 +47,10 @@ export async function PUT(
       message: isValid
         ? "Configuration mise à jour"
         : "Configuration mise à jour mais invalide",
+      config:
+        typeof (algo as any).getConfig === "function"
+          ? (algo as any).getConfig()
+          : undefined,
     });
   } catch (error) {
     console.error("Erreur mise à jour config:", error);
@@ -53,6 +66,8 @@ export async function GET(
   { params }: { params: { name: string } }
 ) {
   try {
+    ensureInitialized();
+
     const key = decodeURIComponent(params.name);
     const algo = algorithmRegistry.get<any, any>(key);
 

@@ -1,7 +1,7 @@
 # Reference — Types normalisés AlgorithmLab
 
-> Généré automatiquement le 2025-09-11T17:29:12.646Z à partir de `C:/Users/thoma/OneDrive/SONEAR 2025/taggerlpl-nextjs/src/app/(protected)/analysis/components/AlgorithmLab/types`
-> Doc-Version: 2025-09-11T17:29:12.646Z-127
+> Généré automatiquement le 2025-09-12T09:12:30.573Z à partir de `C:/Users/thoma/OneDrive/SONEAR 2025/taggerlpl-nextjs/src/app/(protected)/analysis/components/AlgorithmLab/types`
+> Doc-Version: 2025-09-12T09:12:30.573Z-023
 > Code-Version: 2.0.0
 
 ## Contenu

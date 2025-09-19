@@ -6,8 +6,13 @@ import {
   BaseClassifier,
   ClassificationResult,
 } from "../algorithms/level1/shared/BaseClassifier";
-import { algorithmRegistry } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry";
 import { initializeAlgorithms } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms";
+
+import { normalizeUniversalToTV } from "./normalizeUniversalToTV";
+import type { TVValidationResult } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import type { TVGoldStandardSample as GoldStandardSample } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+
+import { algorithmRegistry } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry";
 
 import type {
   XTag,
@@ -28,31 +33,6 @@ import {
   debugPreparedInputs,
 } from "../types/utils/inputPreparation";
 // ----------------- Types -----------------
-
-interface GoldStandardSample {
-  verbatim: string;
-  expectedTag: string;
-  metadata?: {
-    target?: "conseiller" | "client";
-    callId?: string | number;
-    speaker?: string;
-    start?: number;
-    end?: number;
-    turnId?: string | number;
-    nextOf?: string | number;
-    [k: string]: any;
-  };
-}
-
-interface ValidationResult {
-  verbatim: string;
-  goldStandard: string;
-  predicted: string;
-  confidence: number;
-  correct: boolean;
-  processingTime?: number;
-  metadata?: Record<string, any>;
-}
 
 interface ClassificationMetrics {
   accuracy: number; // en %
@@ -457,120 +437,76 @@ export const useLevel1Testing = () => {
     async (
       classifierName: string,
       sampleSize?: number
-    ): Promise<ValidationResult[]> => {
-      console.log(`\n🔍 [${classifierName}] Démarrage validation unifiée`);
+    ): Promise<TVValidationResult[]> => {
+      console.log(`\n🔍 [${classifierName}] Validation unifiée`);
 
-      // ✅ NOUVEAU : Vérification de configuration
       const config = getConfigForAlgorithm(classifierName);
-      if (!config) {
+      if (!config)
         throw new Error(`Configuration manquante pour ${classifierName}`);
-      }
 
-      console.log(`📋 [${classifierName}] Config:`, {
-        target: config.target,
-        speaker: config.speakerType,
-        format: config.inputFormat,
-        needsNext: config.requiresNextTurn,
-        needsPrev: config.requiresPrevContext,
-      });
-
-      // ✅ NOUVEAU : Filtrage intelligent selon l'algorithme
+      // 1) Filtrer le corpus selon l’algo (M2 a besoin de next, etc.)
       const filteredBase = filterCorpusForAlgorithm(
         goldStandardData,
         classifierName
       );
-
       if (filteredBase.length === 0) {
         throw new Error(
-          `Aucune donnée disponible pour ${classifierName}. ` +
-            `Vérifiez que le corpus contient des données compatibles.`
+          `Aucune donnée compatible pour ${classifierName} (cible=${config.target}).`
         );
       }
 
-      console.log(
-        `📊 [${classifierName}] Données disponibles: ${filteredBase.length}/${goldStandardData.length}`
-      );
-
-      // ✅ EXISTANT : Échantillonnage (logique inchangée)
+      // 2) Échantillon (si demandé)
       const samples = randomSample(filteredBase, sampleSize);
       console.log(
-        `🎯 [${classifierName}] Échantillon: ${samples.length} éléments`
+        `📊 [${classifierName}] ${samples.length}/${filteredBase.length} exemples`
       );
 
-      // ✅ NOUVEAU : Préparation d'inputs selon l'algorithme
+      // 3) Inputs adaptés (⚠️ on utilise ces inputs et pas sample.verbatim)
       const inputs = prepareInputsForAlgorithm(samples, classifierName);
-
-      // Debug en mode développement
       if (process.env.NODE_ENV === "development") {
         debugPreparedInputs(inputs, classifierName);
       }
 
-      // ✅ EXISTANT : Récupération de l'algorithme (inchangé)
+      // 4) Récupérer l’algo
       const classifier = algorithmRegistry.get<any, any>(classifierName);
       if (!classifier) {
         throw new Error(
-          `Algorithme ${classifierName} non trouvé dans le registre`
+          `Algorithme ${classifierName} introuvable dans le registre`
         );
       }
 
-      // ✅ EXISTANT : Exécution des prédictions (logique inchangée)
-      console.log(`⚡ [${classifierName}] Exécution des prédictions...`);
+      // 5) Exécuter & normaliser → TVValidationResult (pour la table)
+      const tvRows: TVValidationResult[] = [];
+      for (let i = 0; i < inputs.length; i++) {
+        const input = inputs[i];
+        const sample = samples[i];
 
-      const results = await Promise.all(
-        inputs.map(async (input, i) => {
-          const sample = samples[i];
-          try {
-            const prediction = await classifier.run(input);
+        const uni = await classifier.run(input); // ✅ IMPORTANT : on passe l'input préparé
+        const tv = normalizeUniversalToTV(
+          uni,
+          {
+            verbatim: sample.verbatim,
+            expectedTag: sample.expectedTag,
+            metadata: sample.metadata,
+          },
+          { target: config.target as "X" | "Y" | "M1" | "M2" | "M3" }
+        );
+        console.log("TV ROW →", tv.predicted, tv.metadata);
+        tvRows.push(tv);
+      }
 
-            // ✅ CORRECTION: Format ValidationResult complet
-            return {
-              verbatim: sample.verbatim,
-              goldStandard: sample.expectedTag, // ✅ REQUIS
-              predicted: prediction.prediction || prediction, // ✅ REQUIS
-              confidence: prediction.confidence || 0, // ✅ REQUIS
-              correct:
-                (prediction.prediction || prediction) === sample.expectedTag, // ✅ REQUIS
-              processingTime: prediction.processingTime,
-              metadata: {
-                ...sample.metadata,
-                algorithmConfig: config,
-                inputFormat: config.inputFormat,
-              },
-            };
-          } catch (error) {
-            console.error(`Erreur prédiction ${i}:`, error);
-            return {
-              verbatim: sample.verbatim,
-              goldStandard: sample.expectedTag, // ✅ REQUIS
-              predicted: "ERROR", // ✅ REQUIS
-              confidence: 0, // ✅ REQUIS
-              correct: false, // ✅ REQUIS
-              processingTime: 0,
-              metadata: {
-                ...sample.metadata,
-                error: (error as Error)?.message || String(error), // ✅ CORRECTION error
-                algorithmConfig: config,
-                inputFormat: config.inputFormat,
-              },
-            };
-          }
-        })
-      );
-
-      console.log(
-        `✅ [${classifierName}] Validation terminée: ${results.length} résultats`
-      );
-      return results;
+      console.log(`✅ [${classifierName}] ${tvRows.length} résultats`);
+      return tvRows;
     },
-    [goldStandardData] // ✅ goldStandardData reste la source unique
+    [goldStandardData]
   );
 
   const compareAlgorithms = useCallback(
     async (
       classifierNames: string[],
       sampleSize?: number
-    ): Promise<Record<string, ValidationResult[]>> => {
-      const map: Record<string, ValidationResult[]> = {};
+    ): Promise<Record<string, TVValidationResult[]>> => {
+      const map: Record<string, TVValidationResult[]> = {};
       for (const name of classifierNames) {
         try {
           map[name] = await validateAlgorithm(name, sampleSize);
@@ -589,7 +525,7 @@ export const useLevel1Testing = () => {
   const PSEUDO_OTHER = "__AUTRE__";
 
   const calculateMetrics = useCallback(
-    (results: ValidationResult[]): ClassificationMetrics => {
+    (results: TVValidationResult[]): ClassificationMetrics => {
       if (results.length === 0) {
         return {
           accuracy: 0,
@@ -682,7 +618,7 @@ export const useLevel1Testing = () => {
     []
   );
 
-  const analyzeErrors = useCallback((results: ValidationResult[]) => {
+  const analyzeErrors = useCallback((results: TVValidationResult[]) => {
     const errors = results.filter((r) => !r.correct);
     const totalErrors = errors.length;
 
@@ -789,8 +725,9 @@ export const useLevel1Testing = () => {
   const getRelevantCountFor = useCallback(
     (classifierName: string): number => {
       const target = getClassificationTarget(classifierName);
-      return goldStandardData.filter((s) => s.metadata?.target === target)
-        .length;
+      return goldStandardData.filter(
+        (s: GoldStandardSample) => s.metadata?.target === target
+      ).length;
     },
     [goldStandardData]
   );

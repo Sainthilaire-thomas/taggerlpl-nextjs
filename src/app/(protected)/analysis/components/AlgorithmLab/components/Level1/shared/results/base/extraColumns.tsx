@@ -27,7 +27,12 @@ export const buildXColumns = (): ExtraColumn[] => [
         size="small"
         variant="outlined"
         color="primary"
-        label={r.metadata?.x_details?.family ?? "—"}
+        label={
+          r.metadata?.x_details?.family ??
+          (r.metadata as any)?.details?.family ??
+          (r.metadata as any)?.algorithmMetadata?.details?.family ??
+          "—"
+        }
       />
     ),
   },
@@ -39,6 +44,8 @@ export const buildXColumns = (): ExtraColumn[] => [
     render: (r) => {
       const evs: string[] =
         r.metadata?.x_evidences ??
+        (r.metadata as any)?.details?.evidences ??
+        (r.metadata as any)?.algorithmMetadata?.details?.evidences ??
         r.metadata?.evidences ??
         r.metadata?.rationales ??
         [];
