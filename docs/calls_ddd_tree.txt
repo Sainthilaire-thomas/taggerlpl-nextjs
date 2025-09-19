@@ -1,0 +1,62 @@
+Structure du dossier pour le volume Local Disk
+Le numéro de série du volume est 9CC0-39AA
+C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\COMPONENTS\CALLS
+|   CallImporter.tsx
+|   CallList.tsx
+|   CallPreparation.tsx
+|   CallTableList_old.tsx
+|   ComplementActionButtons.tsx
+|   DuplicateDialog.tsx
+|   TranscriptionUploadModal.tsx
+|   
++---application
+|   \---services
++---CallTableList
+|   |   BulkActionsToolbar.tsx
+|   |   CallTableFilters.tsx
+|   |   CallTableList.tsx
+|   |   CallTableRow.tsx
+|   |   index.ts
+|   |   MobileCallCard.tsx
+|   |   types.ts
+|   |   utils.ts
+|   |   
+|   \---hooks
+|           useBulkActions.tsx
+|           useOptimizedCallData.tsx
+|           
++---domain
+|   +---entities
+|   |       AudioFile.ts
+|   |       Call.ts
+|   |       index.ts
+|   |       Transcription.ts
+|   |       TranscriptionWord.ts
+|   |       
+|   +---repositories
+|   |       CallRepository.ts
+|   |       index.ts
+|   |       StorageRepository.ts
+|   |       
+|   +---services
+|   |       CallService.ts
+|   |       DuplicateService.ts
+|   |       index.ts
+|   |       StorageService.ts
+|   |       ValidationService.ts
+|   |       
+|   \---workflows
++---infrastructure
+|   \---supabase
+\---shared
+    +---config
+    |       CallsConfig.ts
+    |       
+    +---exceptions
+    |       DomainExceptions.ts
+    |       
+    \---types
+            CallStatus.ts
+            CommonTypes.ts
+            index.ts
+            
