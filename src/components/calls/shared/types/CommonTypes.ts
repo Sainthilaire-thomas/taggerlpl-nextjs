@@ -23,12 +23,26 @@ export interface ImportCallbacks {
   showMessage?: (message: string) => void;
 }
 
-export interface ImportResult {
-  success: boolean;
-  callId?: string;
-  message?: string;
-  error?: string;
-  reason?: string;
+export type ImportResult = ImportSuccess | ImportFailure;
+
+interface ImportSuccess {
+  success: true;
+  callId: string;
+  message: string;
+}
+
+export type CancellationReason = "cancelled" | "cancel" | "block";
+export type ImportFailureReason =
+  | "validation"
+  | "duplicate"
+  | "storage"
+  | "unknown"
+  | CancellationReason;
+
+interface ImportFailure {
+  success: false;
+  error: string;
+  reason?: ImportFailureReason;
 }
 
 export type DuplicateAction = "upgrade" | "create_new" | "cancel" | "block";
