@@ -1,3 +1,5 @@
+// src/components/calls/shared/types/CommonTypes.ts - MISE À JOUR
+
 export interface CreateCallData {
   audioFile?: File;
   filename?: string;
@@ -77,6 +79,20 @@ export interface PreparationResult {
   processedCount?: number;
   message: string;
   error?: string;
+  duration?: number;
+  skipped?: boolean;
+}
+
+// ✅ NOUVEAU : Type pour les résultats de préparation en lot
+export interface BulkPreparationResult {
+  success: boolean;
+  totalCalls: number;
+  successCount: number;
+  errorCount: number;
+  results: PreparationResult[];
+  duration: number;
+  strategy: string;
+  error?: string;
 }
 
 export type UpgradeRecommendation = "upgrade" | "create_new" | "block";
@@ -115,4 +131,51 @@ export interface DuplicateResult {
   matchType?: "filename" | "content" | "description";
   confidence: number;
   analysis: UpgradeAnalysis;
+}
+
+// ✅ NOUVEAU : Types pour les opérations en lot
+export interface BulkOperationResult {
+  callId: string;
+  success: boolean;
+  error?: string;
+}
+
+export interface BulkResult {
+  total: number;
+  successCount: number;
+  errorCount: number;
+  results: BulkOperationResult[];
+}
+
+// ✅ NOUVEAU : Types pour les callbacks de bulk operations
+export interface BulkCallbacks {
+  onStart?: (totalCalls: number) => void;
+  onProgress?: (
+    progress: number,
+    successCount: number,
+    errorCount: number
+  ) => void;
+  onBatchStart?: (
+    batchNumber: number,
+    totalBatches: number,
+    batchSize: number
+  ) => void;
+  onBatchComplete?: (batchNumber: number, results: PreparationResult[]) => void;
+  onComplete?: (
+    successCount: number,
+    errorCount: number,
+    duration: number
+  ) => void;
+  onError?: (error: string) => void;
+}
+
+// ✅ NOUVEAU : Types pour l'analyse de préparation
+export interface PreparationAnalysis {
+  total: number;
+  readyToPrepare: number;
+  alreadyPrepared: number;
+  missingTranscription: number;
+  inProcessing: number;
+  withErrors: number;
+  estimatedDuration: number; // en millisecondes
 }

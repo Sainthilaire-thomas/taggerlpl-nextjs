@@ -1,382 +1,328 @@
-// utils/callApiUtils.ts - Version finale CORRIGÉE
-import supabase from "@/lib/supabaseClient";
-import { generateSignedUrl } from "./signedUrls";
-import { insertTranscriptionWords } from "./transcriptionProcessor";
+// src/components/utils/callApiUtils.tsx - VERSION DDD FINALE
+
+import { createServices } from "../calls/infrastructure/ServiceFactory";
+import { ImportWorkflow } from "../calls/domain/workflows/ImportWorkflow";
+import { BulkPreparationWorkflow } from "../calls/domain/workflows/BulkPreparationWorkflow";
 import {
-  validateTranscriptionJSON,
-  formatValidationError,
-} from "./validateTranscriptionJSON";
-import {
-  checkForDuplicates,
-  upgradeExistingCall,
-  generateUniqueFilename,
-} from "./duplicateManager";
+  ImportResult,
+  DuplicateDialogData,
+  DuplicateAction,
+  PreparationResult,
+  BulkPreparationResult,
+} from "../calls/shared/types/CommonTypes";
 
-import { ImportWorkflow } from "@/components/calls/domain/workflows/ImportWorkflow";
-import { createServices } from "@/components/calls/infrastructure/ServiceFactory";
-
-// Define types for the functions
-interface Word {
-  word: string;
-  startTime: number;
-  endTime: number;
-  speaker: string;
-  [key: string]: any;
-}
-
-interface TranscriptionData {
-  words: Word[];
-  [key: string]: any;
-}
-
-interface Call {
-  callid: string;
-  audiourl?: string | null;
-  transcription?: TranscriptionData | null;
-  [key: string]: any;
-}
-
-interface PrepareCallOptions {
-  call: Call;
-  showMessage?: (message: string) => void;
-}
-
+// ===== TYPES LEGACY (pour compatibilité) =====
 interface HandleCallSubmissionOptions {
   audioFile?: File | null;
-  description?: string | null;
-  transcriptionText?: string | null;
-  workdriveFileName?: string; // ✅ NOUVEAU: Nom du fichier WorkDrive
+  description?: string;
+  transcriptionText?: string;
+  workdriveFileName?: string;
   showMessage: (message: string) => void;
   onCallUploaded?: (callId: string) => void;
   onDuplicateFound?: (
-    duplicateData: any
-  ) => Promise<"upgrade" | "create_new" | "cancel">;
+    duplicateData: DuplicateDialogData
+  ) => Promise<DuplicateAction>;
 }
 
-// ✅ AJOUT: Fonction pour générer un nom de fichier intelligent
-
-const generateFilename = (
-  audioFile: File | null,
-  parsedTranscription: any,
-  workdriveFileName?: string
-): string | null => {
-  console.log("🔍 generateFilename appelé avec:", {
-    audioFile: audioFile?.name,
-    workdriveFileName,
-    hasTranscription: !!parsedTranscription,
-  });
-
-  // 1. Si on a un fichier audio, utiliser son nom
-  if (audioFile) {
-    console.log("✅ Utilisation nom audioFile:", audioFile.name);
-    return audioFile.name;
-  }
-
-  // 2. Si on a un nom de fichier WorkDrive, l'utiliser
-  if (workdriveFileName) {
-    console.log("✅ Utilisation nom WorkDrive:", workdriveFileName);
-    return workdriveFileName; // ← Ce devrait être le cas !
-  }
-
-  // 3. Si on a seulement une transcription, générer un nom basé sur le contenu
-  if (parsedTranscription && parsedTranscription.words) {
-    const timestamp = new Date()
-      .toISOString()
-      .slice(0, 19)
-      .replace(/[:-]/g, "");
-    const wordCount = parsedTranscription.words.length;
-    const fallbackName = `transcript_${wordCount}words_${timestamp}.json`;
-    console.log("⚠️ Fallback généré:", fallbackName);
-    return fallbackName;
-  }
-
-  // 4. Dernier recours
-  const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, "");
-  const lastResort = `workdrive_import_${timestamp}.unknown`;
-  console.log("❌ Dernier recours:", lastResort);
-  return lastResort;
-};
+// ===== FONCTIONS PRINCIPALES (Architecture DDD) =====
 
 /**
- * Uploads an audio file to Supabase storage
+ * Import d'appel principal - VERSION DDD
+ * Utilise l'ImportWorkflow pour orchestrer l'import
  */
-export const uploadAudio = async (file: File): Promise<string> => {
-  const fileName = `${Date.now()}.${file.name.split(".").pop()}`;
-  const filePath = `audio/${fileName}`;
-
-  const { error } = await supabase.storage
-    .from("Calls")
-    .upload(filePath, file, {
-      contentType: file.type,
-      upsert: true,
-    });
-
-  if (error) {
-    console.error("Erreur lors de l'upload :", error.message);
-    throw new Error(error.message);
-  }
-
-  return filePath;
-};
-
-/**
- * Adds a transcription for a call
- */
-export const addTranscription = async (
-  callid: string,
-  transcriptionText?: TranscriptionData | null
-): Promise<string> => {
-  const { data: transcriptData, error: transcriptError } = await supabase
-    .from("transcript")
-    .insert([{ callid }])
-    .select("*");
-
-  if (transcriptError || !transcriptData || transcriptData.length === 0) {
-    throw new Error(
-      "Erreur lors de l'insertion dans 'transcript': " +
-        (transcriptError?.message || "Aucune donnée retournée")
-    );
-  }
-
-  const transcriptId = transcriptData[0].transcriptid;
-
-  if (transcriptionText) {
-    await insertTranscriptionWords(transcriptId, transcriptionText, supabase);
-  }
-
-  return transcriptId;
-};
-
-/**
- * Updates a call's status to mark it as prepared
- */
-export const markCallAsPrepared = async (callid: string): Promise<void> => {
-  const { error } = await supabase
-    .from("call")
-    .update({ preparedfortranscript: true })
-    .eq("callid", callid);
-
-  if (error) {
-    throw new Error(
-      "Erreur lors de la mise à jour de 'call': " + error.message
-    );
-  }
-};
-
-/**
- * Prepares a call for tagging by adding transcription and marking it as prepared
- */
-export const prepareCallForTagging = async ({
-  call,
-  showMessage,
-}: PrepareCallOptions): Promise<void> => {
-  console.log("🔍 prepareCallForTagging - call reçu :", call);
-
-  if (!call || !call.callid) {
-    console.error("❌ prepareCallForTagging - call est invalide :", call);
-    showMessage?.(
-      "Erreur : Impossible de préparer l'appel car il est invalide."
-    );
-    return;
-  }
-
+export const handleCallSubmission = async (
+  options: HandleCallSubmissionOptions
+): Promise<void> => {
   try {
-    console.log(
-      "📄 prepareCallForTagging - Ajout de transcription pour callid :",
-      call.callid
-    );
-    await addTranscription(call.callid, call.transcription);
+    // Création des services via factory
+    const services = createServices();
 
-    if (!call.audiourl) {
-      console.warn("⚠️ prepareCallForTagging - Aucun fichier audio associé");
-      showMessage?.(
-        "Aucun fichier audio associé. Vous pouvez le charger plus tard."
-      );
+    // Création du workflow d'import
+    const workflow = new ImportWorkflow(
+      services.callService,
+      services.validationService,
+      services.duplicateService,
+      services.storageService
+    );
+
+    // Préparation des données d'import
+    const importData = {
+      audioFile: options.audioFile,
+      description: options.description,
+      transcriptionText: options.transcriptionText,
+      workdriveFileName: options.workdriveFileName,
+      origin: options.audioFile ? "upload" : "workdrive",
+    };
+
+    // Callbacks pour l'UI
+    const callbacks = {
+      onDuplicateFound: options.onDuplicateFound,
+      onProgress: (progress: number) => {
+        // Optionnel : feedback de progression
+        console.log(`Progression import: ${progress}%`);
+      },
+      showMessage: options.showMessage,
+    };
+
+    // Exécution du workflow
+    const result = await workflow.execute(importData, callbacks);
+
+    if (result.success) {
+      options.showMessage(result.message || "Import réussi !");
+      options.onCallUploaded?.(result.callId!);
+    } else {
+      if (result.reason === "cancelled") {
+        options.showMessage("Import annulé par l'utilisateur");
+        return;
+      }
+
+      throw new Error(result.error || "Erreur d'import");
     }
-
-    console.log(
-      "📌 prepareCallForTagging - Marquage comme préparé pour callid :",
-      call.callid
-    );
-    await markCallAsPrepared(call.callid);
-
-    showMessage?.("L'appel a été préparé pour le tagging avec succès !");
   } catch (error) {
-    console.error(
-      "❌ prepareCallForTagging - Erreur :",
-      error instanceof Error ? error.message : String(error)
-    );
-    showMessage?.(
-      `Erreur: ${error instanceof Error ? error.message : String(error)}`
-    );
+    const errorMessage =
+      error instanceof Error ? error.message : "Erreur inconnue";
+    options.showMessage(`Erreur: ${errorMessage}`);
+    console.error("Erreur dans handleCallSubmission:", error);
     throw error;
   }
 };
 
 /**
- * ✅ CORRECTION COMPLÈTE: Gère les conflits de doublons avec ARRÊT forcé
+ * Préparation en lot d'appels - NOUVELLE FONCTIONNALITÉ
  */
-const handleDuplicateConflict = async (
-  duplicateResult: any,
-  audioFile: File | null,
-  parsedTranscription: any,
-  showMessage: (message: string) => void,
-  onDuplicateFound?: (
-    duplicateData: any
-  ) => Promise<"upgrade" | "create_new" | "cancel">
-): Promise<{
-  action: "upgrade" | "create_new" | "cancel" | "block";
-  callId?: string;
-}> => {
-  console.log(
-    "🔍 handleDuplicateConflict - Recommandation:",
-    duplicateResult.recommendation
-  );
-  console.log("🔍 handleDuplicateConflict - Données reçues:", {
-    hasAudioFile: !!audioFile,
-    hasParsedTranscription: !!parsedTranscription,
-    audioFileName: audioFile?.name,
-    transcriptionWordCount: parsedTranscription?.words?.length || 0,
-  });
-
-  if (!onDuplicateFound) {
-    // Mode automatique - Appliquer la recommandation système
-    if (duplicateResult.recommendation === "upgrade") {
-      console.log("📈 Mode auto: upgrade autorisé");
-      return { action: "upgrade" };
-    } else if (duplicateResult.recommendation === "create_new") {
-      console.log("📝 Mode auto: create_new autorisé");
-      return { action: "create_new" };
-    } else {
-      // Pour "block", on bloque complètement en mode auto
-      console.log("🚫 Mode auto: import bloqué (contenu identique)");
-      return { action: "block" };
-    }
+export const bulkPrepareCalls = async (
+  callIds: string[],
+  options?: {
+    onProgress?: (progress: number, success: number, errors: number) => void;
+    onComplete?: (result: BulkPreparationResult) => void;
+    showMessage?: (message: string) => void;
   }
-
-  // ✅ CORRECTION CRITIQUE: Mode interactif avec dialog utilisateur
-  console.log("🤝 Mode interactif: ouverture du dialog");
-
-  // ✅ CORRECTION: Préparer les données COMPLÈTES pour le dialog
-  const dialogData = {
-    ...duplicateResult,
-    // ✅ AJOUT: Transmettre les nouvelles données au dialog
-    newAudioFile: audioFile,
-    newTranscriptionText: parsedTranscription
-      ? JSON.stringify(parsedTranscription)
-      : null,
-    // ✅ AJOUT: Données brutes pour debug
-    rawTranscriptionText: parsedTranscription,
-    // ✅ AJOUT: Informations supplémentaires
-    newImportInfo: {
-      hasAudio: !!audioFile,
-      hasTranscription: !!parsedTranscription,
-      audioFileName: audioFile?.name,
-      transcriptionWordCount: parsedTranscription?.words?.length || 0,
-    },
-  };
-
-  console.log("🔍 Données envoyées au dialog:", {
-    hasNewAudioFile: !!dialogData.newAudioFile,
-    hasNewTranscriptionText: !!dialogData.newTranscriptionText,
-    transcriptionLength: dialogData.newTranscriptionText?.length || 0,
-    newImportInfo: dialogData.newImportInfo,
-  });
-
+): Promise<BulkPreparationResult> => {
   try {
-    const userChoice = await onDuplicateFound(dialogData);
-    console.log("✅ Choix utilisateur:", userChoice);
-    return { action: userChoice };
+    const services = createServices();
+
+    const workflow = new BulkPreparationWorkflow(
+      services.callService,
+      services.validationService
+    );
+
+    const result = await workflow.prepareBatch(callIds, {
+      onProgress: options?.onProgress,
+      onComplete: (success, errors, duration) => {
+        const message = `Préparation terminée: ${success} succès, ${errors} erreurs (${duration}ms)`;
+        options?.showMessage?.(message);
+
+        options?.onComplete?.({
+          success: errors === 0,
+          totalCalls: callIds.length,
+          successCount: success,
+          errorCount: errors,
+          results: [],
+          duration,
+          strategy: "bulk",
+        });
+      },
+      onError: (error) => {
+        options?.showMessage?.(`Erreur: ${error}`);
+      },
+    });
+
+    // Conversion des résultats pour compatibilité de types
+    const convertedResult: BulkPreparationResult = {
+      success: result.success,
+      totalCalls: result.totalCalls,
+      successCount: result.successCount,
+      errorCount: result.errorCount,
+      duration: result.duration,
+      strategy: result.strategy,
+      results: result.results.map((r) => ({
+        success: r.success,
+        callId: r.callId,
+        strategy: r.strategy || "bulk", // Garantit que strategy n'est jamais undefined
+        message: r.message || "",
+        error: r.error,
+        duration: r.duration,
+        skipped: r.skipped,
+      })),
+      error: result.error,
+    };
+
+    return convertedResult;
   } catch (error) {
-    console.error("❌ Erreur dans le dialog utilisateur:", error);
-    return { action: "cancel" };
+    const errorMessage =
+      error instanceof Error ? error.message : "Erreur inconnue";
+    options?.showMessage?.(`Erreur de préparation en lot: ${errorMessage}`);
+    throw error;
   }
 };
 
 /**
- * ✅ CORRECTION MAJEURE: Handles the complete call submission process
+ * Mise à jour d'origine d'appel - VERSION DDD
  */
-export const handleCallSubmission = async (options: {
-  audioFile?: File | null;
+export const updateCallOrigin = async (
+  callId: string,
+  newOrigin: string,
+  showMessage?: (message: string) => void
+): Promise<boolean> => {
+  try {
+    const services = createServices();
+    await services.callService.updateCallOrigin(callId, newOrigin);
+
+    showMessage?.(`Origine mise à jour: ${newOrigin}`);
+    return true;
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Erreur inconnue";
+    showMessage?.(`Erreur: ${errorMessage}`);
+    return false;
+  }
+};
+
+/**
+ * Suppression d'appel - VERSION DDD
+ */
+export const deleteCall = async (
+  callId: string,
+  showMessage?: (message: string) => void
+): Promise<boolean> => {
+  try {
+    const services = createServices();
+    await services.callService.deleteCall(callId);
+
+    showMessage?.("Appel supprimé avec succès");
+    return true;
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Erreur inconnue";
+    showMessage?.(`Erreur de suppression: ${errorMessage}`);
+    return false;
+  }
+};
+
+/**
+ * Génération d'URL signée - VERSION DDD
+ */
+export const createSignedUrl = async (
+  filePath: string,
+  expiration: number = 1200
+): Promise<string> => {
+  try {
+    const services = createServices();
+    return await services.storageService.generateSignedUrl(
+      filePath,
+      expiration
+    );
+  } catch (error) {
+    console.error("Erreur génération URL signée:", error);
+    throw new Error("Impossible de générer l'URL signée");
+  }
+};
+
+/**
+ * Validation de transcription JSON - VERSION DDD
+ */
+export const validateTranscription = (jsonText: string) => {
+  try {
+    const services = createServices();
+
+    const result = services.validationService.validateCallData({
+      transcriptionText: jsonText,
+    });
+
+    return {
+      isValid: result.isValid,
+      error: result.errors.join(", ") || undefined,
+      data: result.isValid ? JSON.parse(jsonText) : undefined,
+      warnings: result.warnings,
+    };
+  } catch (error) {
+    return {
+      isValid: false,
+      error: error instanceof Error ? error.message : "Erreur de validation",
+      warnings: [],
+    };
+  }
+};
+
+/**
+ * Analyse des doublons pour un fichier
+ */
+export const analyzeDuplicates = async (criteria: {
+  filename?: string;
   description?: string;
   transcriptionText?: string;
-  workdriveFileName?: string;
-  onDuplicateFound?: (d: any) => Promise<"cancel" | "upgrade" | "create_new">;
-  onCallUploaded?: (id: string) => void;
-  showMessage?: (msg: string, severity?: "success" | "error" | "info") => void;
 }) => {
-  const services = createServices();
-  const workflow = new ImportWorkflow(
-    services.callService,
-    services.validationService,
-    services.duplicateService,
-    services.storageService
-  );
-
-  const result = await workflow.execute(
-    {
-      audioFile: options.audioFile,
-      description: options.description,
-      transcriptionText: options.transcriptionText,
-      workdriveFileName: options.workdriveFileName,
-    },
-    { onDuplicateFound: options.onDuplicateFound }
-  );
-
-  if (result.success) {
-    options.onCallUploaded?.(result.callId);
-    options.showMessage?.(result.message, "success");
-  } else if (result.reason !== "cancelled") {
-    options.showMessage?.(result.error ?? "Erreur inconnue", "error");
+  try {
+    const services = createServices();
+    return await services.duplicateService.checkForDuplicates(criteria);
+  } catch (error) {
+    console.error("Erreur vérification doublons:", error);
+    return {
+      isDuplicate: false,
+      confidence: 0,
+      analysis: {
+        canAddAudio: false,
+        canAddTranscription: false,
+        hasConflict: false,
+        recommendation: "create_new" as const,
+      },
+    };
   }
-};
-/**
- * Génère une description automatique
- */
-const generateAutoDescription = (
-  audioFile: File | null,
-  transcriptionData: any
-): string => {
-  const timestamp = new Date().toLocaleString("fr-FR");
-  const parts = [];
-
-  if (audioFile) {
-    parts.push(`Audio: ${audioFile.name}`);
-  }
-
-  if (transcriptionData) {
-    const wordCount = transcriptionData.words?.length || 0;
-    parts.push(`Transcription (${wordCount} mots)`);
-  }
-
-  const content = parts.length > 0 ? ` [${parts.join(" + ")}]` : "";
-  return `Import WorkDrive${content} - ${timestamp}`;
 };
 
 /**
- * Génère un message de succès adaptatif
+ * Statistiques des doublons dans la base
  */
-const generateSuccessMessage = (
-  audioFile: File | null,
-  transcriptionData: any,
-  wasDuplicate: boolean
-): string => {
-  const hasAudio = !!audioFile;
-  const hasTranscription = !!transcriptionData;
-
-  let message = wasDuplicate
-    ? "Appel mis à jour avec succès"
-    : "Appel importé avec succès";
-
-  if (hasAudio && hasTranscription) {
-    message += " (audio + transcription)";
-  } else if (hasAudio) {
-    message += " (audio seulement)";
-  } else if (hasTranscription) {
-    message += " (transcription seulement)";
+export const getDuplicatesStatistics = async () => {
+  try {
+    const services = createServices();
+    return await services.duplicateService.getDuplicateStats();
+  } catch (error) {
+    console.error("Erreur stats doublons:", error);
+    return {
+      totalCalls: 0,
+      potentialDuplicates: 0,
+      incompleteApps: 0,
+      duplicateByFilename: 0,
+      averageCompleteness: 0,
+    };
   }
-
-  message += ". Utilisez l'onglet 'Préparation' pour l'analyser.";
-
-  return message;
 };
+
+/**
+ * Vérification de l'existence d'un fichier
+ */
+export const verifyFileExists = async (filePath: string): Promise<boolean> => {
+  try {
+    const services = createServices();
+    return await services.storageService.fileExists(filePath);
+  } catch (error) {
+    console.error("Erreur vérification fichier:", error);
+    return false;
+  }
+};
+
+// ===== EXPORTS POUR COMPATIBILITÉ LEGACY =====
+
+// Export par défaut pour compatibilité
+export default handleCallSubmission;
+
+// Alias pour compatibilité avec les anciens noms
+export const updateCallOrigine = updateCallOrigin;
+export const removeCallUpload = deleteCall;
+export const generateSignedUrl = createSignedUrl;
+export const validateTranscriptionJSON = validateTranscription;
+export const checkForDuplicates = analyzeDuplicates;
+export const getDuplicateStats = getDuplicatesStatistics;
+export const checkFileExists = verifyFileExists;
+export const prepareBulkCalls = bulkPrepareCalls;
+
+// ===== CONSTANTES =====
+
+export const CALL_API_CONFIG = {
+  MAX_FILE_SIZE_MB: 100,
+  ALLOWED_FORMATS: ["mp3", "wav", "m4a", "aac", "ogg"],
+  DEFAULT_SIGNED_URL_EXPIRATION: 1200, // 20 minutes
+  BULK_BATCH_SIZE: 5,
+  MAX_BULK_OPERATIONS: 100,
+} as const;

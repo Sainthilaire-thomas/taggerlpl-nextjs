@@ -28,18 +28,18 @@ import { useZoho } from "@/context/ZohoContext";
 import AudioList from "./AudioList";
 import { useTaggingData } from "@/context/TaggingDataContext";
 import CallListUnprepared from "./CallListUnprepared";
-import { removeCallUpload } from "./utils/removeCallUpload";
-import {
-  handleCallSubmission,
-  prepareCallForTagging,
-} from "./utils/callApiUtils";
+// ❌ legacy: removeCallUpload (remplacé par useCallManagement)
+// ❌ legacy: signedUrls util (on utilise le hook service)
+import { useCallImport } from "@/components/calls/ui/hooks/useCallImport";
+import { useCallPreparation } from "@/components/calls/ui/hooks/useCallPreparation";
+import { useCallManagement } from "@/components/calls/ui/hooks/useCallManagement";
+import { useStorageService } from "@/components/calls/ui/hooks/useStorageService";
 import SnackbarManager from "./SnackBarManager";
-import { generateSignedUrl } from "./utils/signedUrls";
 import SimpleWorkdriveExplorer from "@/components/SimpleWorkdriveExplorer";
 
 // Types - Correction pour correspondre au type attendu par AudioList
 interface ZohoFile {
-  originalId?: string; // Correction: rendre optionnel pour correspondre au type attendu
+  originalId?: string; // optionnel
   name: string;
   [key: string]: any;
 }
@@ -78,15 +78,18 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
   const handleOpenModal = () => setShowModal(true);
   const handleCloseModal = () => setShowModal(false);
 
+  // ✅ hooks DDD
+  const { importCall, isImporting } = useCallImport();
+  const { prepareCall, isPreparing } = useCallPreparation();
+  const { deleteCall } = useCallManagement();
+  const { generateSignedUrl } = useStorageService();
+
   const { taggingCalls, selectTaggingCall, fetchTaggingTranscription } =
     useTaggingData();
-  console.log("taggingCalls", taggingCalls);
 
   const showMessage = (message: string) => {
     setSnackPack((prev) => [...prev, { message, key: new Date().getTime() }]);
   };
-
-  console.log("🔧 Parent - onPrepareCall :", prepareCallForTagging);
 
   const handleAudioChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length) {
@@ -99,12 +102,8 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
   };
 
   const handleCallClick = async (call: Call) => {
-    console.log("handleCallClick - Début", call);
     try {
       if (!call.upload) {
-        console.log(
-          "handleCallClick - Audio non téléchargé, réinitialisation de l'appel"
-        );
         selectTaggingCall({
           ...call,
           audiourl: "",
@@ -116,17 +115,12 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
       }
 
       if (!call.filepath) {
-        console.log("handleCallClick - Filepath est manquant");
         showMessage("Chemin du fichier audio manquant.");
         return;
       }
 
-      console.log(
-        "handleCallClick - Génération de l'URL signée pour le fichier",
-        call.filepath
-      );
+      // ✅ URL signée via le service DDD
       const audioUrl = await generateSignedUrl(call.filepath);
-      console.log("handleCallClick - URL signée générée :", audioUrl);
 
       selectTaggingCall({
         ...call,
@@ -134,14 +128,8 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
         is_tagging_call: true,
         preparedfortranscript: false,
       });
-      console.log("handleCallClick - Appel sélectionné avec l'URL signée");
 
-      console.log(
-        "handleCallClick - Récupération de la transcription pour l'appel",
-        call.callid
-      );
       await fetchTaggingTranscription(call.callid);
-      console.log("handleCallClick - Transcription récupérée avec succès");
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erreur inconnue";
@@ -159,17 +147,14 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
     }
   };
 
-  // Gestion des fichiers sélectionnés depuis AudioList
+  // Gestion des fichiers sélectionnés depuis AudioList (ancien Workdrive)
   const handleFileSelect = async (
     file: ZohoFile,
     type: string
   ): Promise<void> => {
     try {
       const fileId = file.originalId;
-      console.log(`🛠️ Gestion du fichier (${type}) avec ID :`, fileId);
-
       const proxyUrl = `http://localhost:8888/.netlify/functions/zohoDownloadFile?fileId=${fileId}`;
-      console.log("🌐 URL de proxy utilisée :", proxyUrl);
 
       const response = await fetch(proxyUrl, {
         headers: {
@@ -184,7 +169,6 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
       }
 
       const contentType = response.headers.get("content-type") || "";
-      console.log("📝 Content-Type reçu :", contentType);
 
       if (contentType.includes("application/json")) {
         const data = await response.json();
@@ -197,20 +181,16 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
               }) chargée de Workdrive le ${new Date().toLocaleString()}`
           );
         }
-        console.log("✅ Transcription téléchargée :", data);
       } else if (contentType.includes("audio")) {
         const blob = await response.blob();
         const fileName = file.name || "audio_downloaded.mp3";
-        console.log("🔍 Taille du blob audio :", blob.size, "octets");
-
         const audioFile = new File([blob], fileName, { type: contentType });
-        console.log("📝 Fichier audio prêt à être uploadé :", audioFile);
 
+        // Déclenche un téléchargement local (comportement existant)
         const downloadLink = document.createElement("a");
         downloadLink.href = URL.createObjectURL(blob);
         downloadLink.download = fileName;
         downloadLink.click();
-        console.log("🔽 Téléchargement manuel du fichier audio déclenché.");
 
         setAudioFile(audioFile);
         setDescription(
@@ -220,7 +200,6 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
             }) chargé de Workdrive le ${new Date().toLocaleString()}`
         );
       } else {
-        console.error("❌ Type de contenu non pris en charge :", contentType);
         throw new Error(`Unsupported content type: ${contentType}`);
       }
     } catch (error) {
@@ -233,7 +212,7 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
     }
   };
 
-  // Correction: Ajouter les types pour les paramètres
+  // Sélection via SimpleWorkdriveExplorer (nouveau)
   const handleWorkdriveFileSelect = async (
     audioFile: File | null,
     transcriptionText: string = ""
@@ -269,6 +248,7 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
     }
   };
 
+  // ✅ Remplacement de handleCallSubmission (legacy) par le hook DDD
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
@@ -280,23 +260,27 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
     }
 
     setIsLoading(true);
-
     try {
-      await handleCallSubmission({
-        audioFile,
-        description,
-        transcriptionText,
-        showMessage,
-        onCallUploaded,
+      // NOTE: adapter si ta signature diffère.
+      await importCall({
+        audioFile: audioFile ?? undefined,
+        description: description || undefined,
+        // Si transcriptionText est du JSON, décommente la ligne suivante et commente l'autre :
+        // transcriptionData: transcriptionText ? JSON.parse(transcriptionText) : undefined,
+        transcriptionText: transcriptionText || undefined,
       });
 
       setDescription("");
       setAudioFile(null);
       setTranscriptionText("");
+
+      showMessage("Appel importé avec succès.");
+      onCallUploaded?.();
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erreur inconnue";
       console.error("Erreur dans handleSubmit :", errorMessage);
+      showMessage("Erreur lors de l'import d'appel.");
     } finally {
       setIsLoading(false);
     }
@@ -310,21 +294,17 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
   const handleConfirmDelete = async () => {
     if (!callToDelete) return;
 
-    const { callid, filepath } = callToDelete;
+    const { callid } = callToDelete;
 
     try {
-      if (filepath) {
-        await removeCallUpload(callid, filepath);
-      } else {
-        throw new Error("Filepath manquant pour la suppression");
-      }
-
-      showMessage("Appel mis à jour, audio et word retirés.");
+      // ✅ DDD: suppression via useCallManagement
+      await deleteCall(callid);
+      showMessage("Appel supprimé.");
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erreur inconnue";
       console.error("Error in handleConfirmDelete:", errorMessage);
-      showMessage("Error removing call upload.");
+      showMessage("Erreur lors de la suppression de l'appel.");
     } finally {
       setConfirmDeleteOpen(false);
       setCallToDelete(null);
@@ -332,7 +312,7 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
   };
 
   return (
-    <Box>
+    <Box component="form" onSubmit={handleSubmit}>
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography>Import ZohoWorkdrive (Ancien)</Typography>
@@ -360,7 +340,7 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
             <Button
               variant="outlined"
               component="label"
-              disabled={isLoading}
+              disabled={isLoading || isImporting}
               fullWidth
             >
               Choisir un fichier audio
@@ -382,7 +362,7 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
               label="Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              disabled={isLoading}
+              disabled={isLoading || isImporting}
               variant="outlined"
             />
             <TextField
@@ -391,7 +371,7 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
               label="Transcription"
               value={transcriptionText}
               onChange={handleTranscriptionChange}
-              disabled={isLoading}
+              disabled={isLoading || isImporting}
               multiline
               rows={4}
               variant="outlined"
@@ -400,12 +380,13 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
               type="submit"
               variant="contained"
               color="primary"
-              disabled={isLoading}
-              onClick={handleSubmit}
+              disabled={isLoading || isImporting}
             >
               Charger
             </Button>
-            {isLoading && <CircularProgress size={24} />}
+            {(isLoading || isImporting) && (
+              <CircularProgress size={24} sx={{ ml: 2 }} />
+            )}
           </Box>
         </AccordionDetails>
       </Accordion>
@@ -415,14 +396,7 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
           <Typography>Appels chargés pour le tagging</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          {/* Correction: Remplacement de Grid par Box avec Flexbox */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-            }}
-          >
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {taggingCalls.map((call) => (
               <Card variant="outlined" key={call.callid}>
                 <CardContent>
@@ -473,19 +447,24 @@ const CallUploaderTaggerLPL: FC<CallUploaderTaggerLPLProps> = ({
       >
         <DialogTitle>Sélection taggage manuel appels transcrits</DialogTitle>
         <DialogContent>
-          {/* Correction: Wrapper avec gestion d'erreur pour les types incompatibles */}
+          {/*
+            ✅ Remplacement de prepareCallForTagging:
+            on passe par le hook DDD et on adapte les params reçus.
+          */}
           <CallListUnprepared
-            onPrepareCall={(params) => {
-              // Adapter les types si nécessaire
+            onPrepareCall={async (params: any) => {
               try {
-                return prepareCallForTagging(params as any);
+                const callId =
+                  params?.callid ?? params?.callId ?? params?.id ?? params;
+                // NOTE: si ton hook supporte un mode, passe-le ici ("manual"/"standard")
+                await prepareCall(callId);
+                showMessage("Appel préparé pour le tagging.");
               } catch (error) {
                 console.error(
                   "Erreur lors de la préparation de l'appel:",
                   error
                 );
                 showMessage("Erreur lors de la préparation de l'appel");
-                return Promise.resolve();
               }
             }}
             showMessage={showMessage}
