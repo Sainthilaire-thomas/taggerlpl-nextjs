@@ -1,6 +1,6 @@
 // src/components/calls/ui/pages/CallManagementPage.tsx
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Box,
   Card,
@@ -24,35 +24,66 @@ import {
   IconButton,
   Tooltip,
   LinearProgress,
-  useTheme,
-  alpha,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  TableSortLabel,
+  TablePagination,
+  Checkbox,
 } from "@mui/material";
 import {
-  List as ListIcon,
   Edit,
   Delete,
   CheckCircle,
   Warning,
-  Error,
+  Error as ErrorIcon,
   Refresh,
-  FilterList,
   ClearAll,
-  GetApp,
+  Close as CloseIcon,
+  Done as DoneIcon,
 } from "@mui/icons-material";
 
+import { CallRelationsService } from "../../domain/services/CallRelationsService";
+import { SupabaseRelationsRepository } from "../../infrastructure/supabase/SupabaseRelationsRepository";
+import { useRelationsNextTurn } from "../hooks/useRelationsNextTurn";
 import { useCallManagement } from "../hooks/useCallManagement";
 import { CallStatus } from "../../shared/types/CallStatus";
-
+import type { Call } from "../../domain/entities/Call";
 /**
- * Page de gestion avancée des appels avec actions en lot
- * Interface complète pour administrer tous les appels
+ * Helpers tri
  */
+type Order = "asc" | "desc";
+type OrderBy = "filename" | "status" | "origin" | "createdAt";
+
+type AccessorValue = string | number;
+type Accessor = (c: Call) => AccessorValue;
+
+const accessors: Record<OrderBy, Accessor> = {
+  filename: (c) => (c.filename ?? "").toString().toLowerCase(),
+  status: (c) => (c.status ?? "").toString(),
+  origin: (c) => (c.origin ?? "").toString().toLowerCase(),
+  createdAt: (c) => {
+    const t =
+      c.createdAt instanceof Date
+        ? c.createdAt.getTime()
+        : new Date(c.createdAt as any).getTime();
+    return Number.isFinite(t) ? t : 0;
+  },
+};
+
+function getComparator(order: Order, orderBy: OrderBy) {
+  const acc = accessors[orderBy];
+  return (a: Call, b: Call): number => {
+    const va = acc(a);
+    const vb = acc(b);
+    if (va < vb) return order === "asc" ? -1 : 1;
+    if (va > vb) return order === "asc" ? 1 : -1;
+    return 0;
+  };
+}
+
 export const CallManagementPage: React.FC = () => {
-  const theme = useTheme();
   const {
     calls,
     loading,
@@ -61,7 +92,6 @@ export const CallManagementPage: React.FC = () => {
     stats,
     loadCalls,
     updateCallOrigin,
-    updateCallStatus,
     deleteCall,
     toggleCallSelection,
     selectAllCalls,
@@ -72,7 +102,7 @@ export const CallManagementPage: React.FC = () => {
     selectedCount,
   } = useCallManagement();
 
-  // État local pour les filtres
+  // -------- Filtres --------
   const [filters, setFilters] = useState({
     search: "",
     status: "",
@@ -81,7 +111,45 @@ export const CallManagementPage: React.FC = () => {
     hasTranscription: "",
   });
 
-  // État pour les actions en lot
+  // -------- Tri & pagination --------
+  const [order, setOrder] = useState<Order>("desc");
+  const [orderBy, setOrderBy] = useState<OrderBy>("createdAt");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
+
+  const handleRequestSort = (property: OrderBy) => {
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(property);
+  };
+
+  const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
+  const handleChangeRowsPerPage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(e.target.value, 10));
+    setPage(0);
+  };
+
+  // -------- Inline edit origine --------
+  const [editingOriginFor, setEditingOriginFor] = useState<string | null>(null);
+  const [editingOriginValue, setEditingOriginValue] = useState("");
+
+  const startEditOrigin = (id: string, current?: string) => {
+    setEditingOriginFor(id);
+    setEditingOriginValue(current ?? "");
+  };
+  const cancelEditOrigin = () => {
+    setEditingOriginFor(null);
+    setEditingOriginValue("");
+  };
+  const saveEditOrigin = async (id: string) => {
+    const value = editingOriginValue.trim();
+    if (value && value !== undefined) {
+      await updateCallOrigin(id, value);
+    }
+    cancelEditOrigin();
+  };
+
+  // -------- Bulk dialog --------
   const [bulkOrigin, setBulkOrigin] = useState("");
   const [showBulkDialog, setShowBulkDialog] = useState(false);
   const [bulkAction, setBulkAction] = useState<"origin" | "delete" | null>(
@@ -89,46 +157,12 @@ export const CallManagementPage: React.FC = () => {
   );
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
-  /**
-   * Chargement initial
-   */
-  useEffect(() => {
-    loadCalls();
-  }, [loadCalls]);
-
-  /**
-   * Filtrage des appels
-   */
-  const filteredCalls = calls.filter((call) => {
-    if (
-      filters.search &&
-      !call.filename?.toLowerCase().includes(filters.search.toLowerCase()) &&
-      !call.description?.toLowerCase().includes(filters.search.toLowerCase())
-    ) {
-      return false;
-    }
-    if (filters.status && call.status !== filters.status) return false;
-    if (filters.origin && call.origin !== filters.origin) return false;
-    if (filters.hasAudio === "true" && !call.hasValidAudio()) return false;
-    if (filters.hasAudio === "false" && call.hasValidAudio()) return false;
-    if (filters.hasTranscription === "true" && !call.hasValidTranscription())
-      return false;
-    if (filters.hasTranscription === "false" && call.hasValidTranscription())
-      return false;
-    return true;
-  });
-
-  /**
-   * Gestion des actions en lot
-   */
-  const handleBulkAction = useCallback(async (action: "origin" | "delete") => {
+  const openBulkAction = (action: "origin" | "delete") => {
     setBulkAction(action);
     setShowBulkDialog(true);
-  }, []);
-
+  };
   const executeBulkAction = useCallback(async () => {
     if (!bulkAction) return;
-
     setIsBulkProcessing(true);
     try {
       if (bulkAction === "origin" && bulkOrigin) {
@@ -137,8 +171,6 @@ export const CallManagementPage: React.FC = () => {
         await bulkDelete();
       }
       clearSelection();
-    } catch (error) {
-      console.error("Erreur action en lot:", error);
     } finally {
       setIsBulkProcessing(false);
       setShowBulkDialog(false);
@@ -147,58 +179,142 @@ export const CallManagementPage: React.FC = () => {
     }
   }, [bulkAction, bulkOrigin, bulkUpdateOrigin, bulkDelete, clearSelection]);
 
-  /**
-   * Actions individuelles
-   */
-  const handleEditOrigin = useCallback(
-    async (callId: string, newOrigin: string) => {
-      await updateCallOrigin(callId, newOrigin);
-    },
-    [updateCallOrigin]
-  );
+  // -------- Chargement initial --------
+  useEffect(() => {
+    loadCalls();
+  }, [loadCalls]);
 
-  const handleDeleteCall = useCallback(
-    async (callId: string) => {
-      if (window.confirm("Êtes-vous sûr de vouloir supprimer cet appel ?")) {
-        await deleteCall(callId);
+  // -------- Origines dynamiques (pour filtre & inline) --------
+  const originOptions = useMemo(() => {
+    const set = new Set<string>();
+    calls.forEach((c) => c.origin && set.add(c.origin));
+    return Array.from(set).sort();
+  }, [calls]);
+
+  // -------- Filtrage --------
+  const filteredCalls = useMemo(() => {
+    const term = filters.search.trim().toLowerCase();
+    return calls.filter((call) => {
+      if (
+        term &&
+        !`${call.filename ?? ""} ${call.description ?? ""} ${call.id}`
+          .toLowerCase()
+          .includes(term)
+      )
+        return false;
+
+      if (filters.status && call.status !== filters.status) return false;
+
+      if (filters.origin) {
+        if (filters.origin === "__none__") {
+          if (call.origin) return false;
+        } else if (call.origin !== filters.origin) return false;
       }
-    },
-    [deleteCall]
+
+      if (filters.hasAudio === "true" && !call.hasValidAudio()) return false;
+      if (filters.hasAudio === "false" && call.hasValidAudio()) return false;
+
+      if (filters.hasTranscription === "true" && !call.hasValidTranscription())
+        return false;
+      if (filters.hasTranscription === "false" && call.hasValidTranscription())
+        return false;
+
+      return true;
+    });
+  }, [calls, filters]);
+
+  // -------- Tri + pagination --------
+  const sortedCalls = useMemo(
+    () => filteredCalls.slice().sort(getComparator(order, orderBy)),
+    [filteredCalls, order, orderBy]
+  );
+  const pagedCalls = useMemo(
+    () =>
+      sortedCalls.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [sortedCalls, page, rowsPerPage]
   );
 
-  const getStatusColor = (status: CallStatus) => {
-    switch (status) {
-      case CallStatus.READY:
-        return "success";
-      case CallStatus.PROCESSING:
-        return "info";
-      case CallStatus.ERROR:
-        return "error";
-      case CallStatus.COMPLETED:
-        return "success";
-      default:
-        return "default";
+  //----- relations -----
+  const relationsService = React.useMemo(
+    () => new CallRelationsService(new SupabaseRelationsRepository()),
+    []
+  );
+  const { byId: nextTurnById, loading: relLoading } = useRelationsNextTurn(
+    pagedCalls,
+    { service: relationsService }
+  );
+
+  // renderer colonne "Relations" :
+  const renderRelations = (callId: string) => {
+    const r = nextTurnById.get(String(callId));
+    if (!r) return <Chip size="small" label={relLoading ? "…" : "—"} />;
+
+    const color =
+      r.status === "complete"
+        ? "success"
+        : r.status === "partial"
+        ? "warning"
+        : "error";
+
+    const missing = Math.max(0, r.total - r.tagged);
+    const tooltip = `Relations: ${r.tagged}/${r.total} (${r.percent}%)
+${missing ? `${missing} relation(s) manquante(s)\n` : ""}${
+      r.lastCheckedAt
+        ? `Dernière vérification: ${new Date(
+            r.lastCheckedAt
+          ).toLocaleTimeString()}`
+        : ""
+    }`;
+
+    return (
+      <Tooltip
+        title={<span style={{ whiteSpace: "pre-line" }}>{tooltip}</span>}
+      >
+        <Chip size="small" color={color as any} label={`${r.percent}%`} />
+      </Tooltip>
+    );
+  };
+  // -------- Sélection page courante --------
+  const allPageSelected =
+    pagedCalls.length > 0 &&
+    pagedCalls.every((c) => selectedCalls.has(c.id as string));
+  const somePageSelected =
+    pagedCalls.some((c) => selectedCalls.has(c.id as string)) &&
+    !allPageSelected;
+
+  const handleToggleSelectAllPage = () => {
+    if (allPageSelected) {
+      // retire seulement ceux de la page
+      pagedCalls.forEach((c) => toggleCallSelection(c.id as string));
+    } else {
+      // ajoute ceux de la page non sélectionnés
+      pagedCalls.forEach((c) => {
+        if (!selectedCalls.has(c.id as string)) {
+          toggleCallSelection(c.id as string);
+        }
+      });
     }
   };
 
-  const getStatusIcon = (status: CallStatus) => {
+  const getStatusChip = (status: CallStatus) => {
+    const base: any = { label: status, size: "small", variant: "outlined" };
     switch (status) {
       case CallStatus.READY:
-        return <CheckCircle />;
+        return <Chip {...base} color="success" icon={<CheckCircle />} />;
       case CallStatus.PROCESSING:
-        return <Warning />;
+        return <Chip {...base} color="info" icon={<Warning />} />;
       case CallStatus.ERROR:
-        return <Error />;
+        return <Chip {...base} color="error" icon={<ErrorIcon />} />;
       case CallStatus.COMPLETED:
-        return <CheckCircle />;
+        return <Chip {...base} color="success" icon={<CheckCircle />} />;
       default:
-        return null;
+        return <Chip {...base} />;
     }
   };
 
   return (
     <Box>
-      {/* En-tête avec statistiques */}
+      {/* En-tête & stats */}
       <Box mb={3}>
         <Typography variant="h5" gutterBottom>
           Gestion des Appels
@@ -225,45 +341,82 @@ export const CallManagementPage: React.FC = () => {
         <CardContent>
           <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
             <TextField
-              label="Rechercher"
+              label="Rechercher (nom, desc, id)"
               value={filters.search}
               onChange={(e) =>
-                setFilters((prev) => ({ ...prev, search: e.target.value }))
+                setFilters((p) => ({ ...p, search: e.target.value }))
               }
               size="small"
-              sx={{ minWidth: 200 }}
+              sx={{ minWidth: 240 }}
             />
 
-            <FormControl size="small" sx={{ minWidth: 120 }}>
+            <FormControl size="small" sx={{ minWidth: 140 }}>
               <InputLabel>Statut</InputLabel>
               <Select
                 value={filters.status}
-                onChange={(e) =>
-                  setFilters((prev) => ({ ...prev, status: e.target.value }))
-                }
                 label="Statut"
+                onChange={(e) =>
+                  setFilters((p) => ({ ...p, status: e.target.value }))
+                }
               >
                 <MenuItem value="">Tous</MenuItem>
-                {Object.values(CallStatus).map((status) => (
-                  <MenuItem key={status} value={status}>
-                    {status}
+                {Object.values(CallStatus).map((s) => (
+                  <MenuItem key={s} value={s}>
+                    {s}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
 
-            <FormControl size="small" sx={{ minWidth: 120 }}>
+            <FormControl size="small" sx={{ minWidth: 160 }}>
+              <InputLabel>Origine</InputLabel>
+              <Select
+                value={filters.origin}
+                label="Origine"
+                onChange={(e) =>
+                  setFilters((p) => ({ ...p, origin: e.target.value }))
+                }
+              >
+                <MenuItem value="">Toutes</MenuItem>
+                <MenuItem value="__none__">Sans origine</MenuItem>
+                {originOptions.map((o) => (
+                  <MenuItem key={o} value={o}>
+                    {o}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl size="small" sx={{ minWidth: 140 }}>
               <InputLabel>Audio</InputLabel>
               <Select
                 value={filters.hasAudio}
-                onChange={(e) =>
-                  setFilters((prev) => ({ ...prev, hasAudio: e.target.value }))
-                }
                 label="Audio"
+                onChange={(e) =>
+                  setFilters((p) => ({ ...p, hasAudio: e.target.value }))
+                }
               >
                 <MenuItem value="">Tous</MenuItem>
                 <MenuItem value="true">Avec audio</MenuItem>
                 <MenuItem value="false">Sans audio</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <InputLabel>Transcription</InputLabel>
+              <Select
+                value={filters.hasTranscription}
+                label="Transcription"
+                onChange={(e) =>
+                  setFilters((p) => ({
+                    ...p,
+                    hasTranscription: e.target.value,
+                  }))
+                }
+              >
+                <MenuItem value="">Toutes</MenuItem>
+                <MenuItem value="true">Avec transcription</MenuItem>
+                <MenuItem value="false">Sans transcription</MenuItem>
               </Select>
             </FormControl>
 
@@ -307,23 +460,22 @@ export const CallManagementPage: React.FC = () => {
                 value={bulkOrigin}
                 onChange={(e) => setBulkOrigin(e.target.value)}
                 size="small"
-                placeholder="workdrive, upload, etc."
+                placeholder="workdrive, upload, …"
               />
-
               <Button
                 variant="outlined"
-                onClick={() => handleBulkAction("origin")}
+                onClick={() => openBulkAction("origin")}
                 disabled={!bulkOrigin || isBulkProcessing}
               >
-                Mettre à Jour Origine
+                Mettre à jour l’origine
               </Button>
 
               <Button
                 variant="outlined"
                 color="error"
-                onClick={() => handleBulkAction("delete")}
-                disabled={isBulkProcessing}
                 startIcon={<Delete />}
+                onClick={() => openBulkAction("delete")}
+                disabled={isBulkProcessing}
               >
                 Supprimer
               </Button>
@@ -340,36 +492,28 @@ export const CallManagementPage: React.FC = () => {
         </Card>
       )}
 
-      {/* Erreurs */}
+      {/* Erreur */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
 
-      {/* Progression */}
+      {/* Progress */}
       {(loading || isBulkProcessing) && <LinearProgress sx={{ mb: 2 }} />}
 
-      {/* Table des appels */}
+      {/* Tableau */}
       <Card>
         <CardContent>
           <Box
             display="flex"
             justifyContent="space-between"
             alignItems="center"
-            mb={2}
+            mb={1}
           >
             <Typography variant="h6">
               Appels ({filteredCalls.length})
             </Typography>
-            <Box>
-              <Button size="small" onClick={selectAllCalls}>
-                Tout Sélectionner
-              </Button>
-              <Button size="small" onClick={clearSelection} sx={{ ml: 1 }}>
-                Désélectionner
-              </Button>
-            </Box>
           </Box>
 
           <TableContainer component={Paper} variant="outlined">
@@ -377,153 +521,239 @@ export const CallManagementPage: React.FC = () => {
               <TableHead>
                 <TableRow>
                   <TableCell padding="checkbox">
-                    <input type="checkbox" />
+                    <Checkbox
+                      indeterminate={somePageSelected}
+                      checked={allPageSelected}
+                      onChange={handleToggleSelectAllPage}
+                    />
                   </TableCell>
-                  <TableCell>Fichier</TableCell>
-                  <TableCell>Statut</TableCell>
-                  <TableCell>Origine</TableCell>
+
+                  <TableCell
+                    sortDirection={orderBy === "filename" ? order : false}
+                  >
+                    <TableSortLabel
+                      active={orderBy === "filename"}
+                      direction={orderBy === "filename" ? order : "asc"}
+                      onClick={() => handleRequestSort("filename")}
+                    >
+                      Fichier
+                    </TableSortLabel>
+                  </TableCell>
+
+                  <TableCell
+                    sortDirection={orderBy === "status" ? order : false}
+                  >
+                    <TableSortLabel
+                      active={orderBy === "status"}
+                      direction={orderBy === "status" ? order : "asc"}
+                      onClick={() => handleRequestSort("status")}
+                    >
+                      Statut
+                    </TableSortLabel>
+                  </TableCell>
+
                   <TableCell>Contenu</TableCell>
-                  <TableCell>Créé</TableCell>
+
+                  <TableCell
+                    sortDirection={orderBy === "origin" ? order : false}
+                  >
+                    <TableSortLabel
+                      active={orderBy === "origin"}
+                      direction={orderBy === "origin" ? order : "asc"}
+                      onClick={() => handleRequestSort("origin")}
+                    >
+                      Origine
+                    </TableSortLabel>
+                  </TableCell>
+
+                  <TableCell>Relations</TableCell>
+
+                  <TableCell
+                    sortDirection={orderBy === "createdAt" ? order : false}
+                  >
+                    <TableSortLabel
+                      active={orderBy === "createdAt"}
+                      direction={orderBy === "createdAt" ? order : "asc"}
+                      onClick={() => handleRequestSort("createdAt")}
+                    >
+                      Créé le
+                    </TableSortLabel>
+                  </TableCell>
+
                   <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
-              <TableBody>
-                {filteredCalls.map((call) => (
-                  <TableRow
-                    key={call.id}
-                    selected={selectedCalls.has(call.id)}
-                    hover
-                  >
-                    <TableCell padding="checkbox">
-                      <input
-                        type="checkbox"
-                        checked={selectedCalls.has(call.id)}
-                        onChange={() => toggleCallSelection(call.id)}
-                      />
-                    </TableCell>
 
-                    <TableCell>
-                      <Box>
-                        <Typography variant="body2" fontWeight="medium">
-                          {call.filename || "Sans nom"}
+              <TableBody>
+                {pagedCalls.map((call) => {
+                  const isEditing = editingOriginFor === call.id;
+                  return (
+                    <TableRow
+                      key={call.id}
+                      hover
+                      selected={selectedCalls.has(call.id)}
+                    >
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={selectedCalls.has(call.id)}
+                          onChange={() => toggleCallSelection(call.id)}
+                        />
+                      </TableCell>
+
+                      <TableCell>
+                        <Box>
+                          <Typography variant="body2" fontWeight="medium">
+                            {call.filename || "Sans nom"}
+                          </Typography>
+                          {call.description && (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{
+                                display: "block",
+                                maxWidth: 260,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                              title={call.description}
+                            >
+                              {call.description}
+                            </Typography>
+                          )}
+                        </Box>
+                      </TableCell>
+
+                      <TableCell>{getStatusChip(call.status)}</TableCell>
+
+                      <TableCell>
+                        <Box display="flex" gap={0.5}>
+                          {call.hasValidAudio() && (
+                            <Chip label="Audio" size="small" color="primary" />
+                          )}
+                          {call.hasValidTranscription() && (
+                            <Chip
+                              label="Transcription"
+                              size="small"
+                              color="secondary"
+                            />
+                          )}
+                        </Box>
+                      </TableCell>
+
+                      <TableCell sx={{ minWidth: 220 }}>
+                        {isEditing ? (
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <TextField
+                              size="small"
+                              autoFocus
+                              value={editingOriginValue}
+                              onChange={(e) =>
+                                setEditingOriginValue(e.target.value)
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") saveEditOrigin(call.id);
+                                if (e.key === "Escape") cancelEditOrigin();
+                              }}
+                            />
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={() => saveEditOrigin(call.id)}
+                              aria-label="Confirmer"
+                            >
+                              <DoneIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              onClick={cancelEditOrigin}
+                              aria-label="Annuler"
+                            >
+                              <CloseIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+                        ) : (
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <Chip
+                              label={call.origin || "Non défini"}
+                              size="small"
+                              variant="outlined"
+                            />
+                            <Tooltip title="Modifier l’origine">
+                              <IconButton
+                                size="small"
+                                onClick={() =>
+                                  startEditOrigin(call.id, call.origin)
+                                }
+                                aria-label="Modifier l’origine"
+                              >
+                                <Edit fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        )}
+                      </TableCell>
+
+                      <TableCell>{renderRelations(call.id)}</TableCell>
+
+                      <TableCell>
+                        <Typography variant="caption">
+                          {call.createdAt instanceof Date
+                            ? call.createdAt.toLocaleDateString()
+                            : new Date(call.createdAt).toLocaleDateString()}
                         </Typography>
-                        {call.description && (
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{
-                              display: "block",
-                              maxWidth: 200,
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
+                      </TableCell>
+
+                      <TableCell align="right">
+                        <Tooltip title="Supprimer">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => {
+                              if (window.confirm("Supprimer cet appel ?")) {
+                                deleteCall(call.id);
+                              }
                             }}
                           >
-                            {call.description}
-                          </Typography>
-                        )}
-                      </Box>
-                    </TableCell>
-
-                    <TableCell>
-                      <Chip
-                        {...(call.status === CallStatus.READY && {
-                          icon: <CheckCircle />,
-                        })}
-                        {...(call.status === CallStatus.PROCESSING && {
-                          icon: <Warning />,
-                        })}
-                        {...(call.status === CallStatus.ERROR && {
-                          icon: <Error />,
-                        })}
-                        {...(call.status === CallStatus.COMPLETED && {
-                          icon: <CheckCircle />,
-                        })}
-                        label={call.status}
-                        size="small"
-                        color={getStatusColor(call.status)}
-                        variant="outlined"
-                      />
-                    </TableCell>
-
-                    <TableCell>
-                      <Chip
-                        label={call.origin || "Non défini"}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </TableCell>
-
-                    <TableCell>
-                      <Box display="flex" gap={0.5}>
-                        {call.hasValidAudio() && (
-                          <Chip label="Audio" size="small" color="primary" />
-                        )}
-                        {call.hasValidTranscription() && (
-                          <Chip
-                            label="Transcription"
-                            size="small"
-                            color="secondary"
-                          />
-                        )}
-                      </Box>
-                    </TableCell>
-
-                    <TableCell>
-                      <Typography variant="caption">
-                        {call.createdAt.toLocaleDateString()}
-                      </Typography>
-                    </TableCell>
-
-                    <TableCell align="right">
-                      <Tooltip title="Modifier l'origine">
-                        <IconButton
-                          size="small"
-                          onClick={() => {
-                            const newOrigin = prompt(
-                              "Nouvelle origine:",
-                              call.origin
-                            );
-                            if (newOrigin) handleEditOrigin(call.id, newOrigin);
-                          }}
-                        >
-                          <Edit />
-                        </IconButton>
-                      </Tooltip>
-
-                      <Tooltip title="Supprimer">
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleDeleteCall(call.id)}
-                        >
-                          <Delete />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                            <Delete />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
+
+            {sortedCalls.length === 0 && !loading && (
+              <Box py={4} textAlign="center">
+                <Typography color="text.secondary">
+                  Aucun appel trouvé avec les filtres actuels
+                </Typography>
+              </Box>
+            )}
           </TableContainer>
 
-          {filteredCalls.length === 0 && !loading && (
-            <Box py={4} textAlign="center">
-              <Typography color="text.secondary">
-                Aucun appel trouvé avec les filtres actuels
-              </Typography>
-            </Box>
-          )}
+          <TablePagination
+            component="div"
+            count={sortedCalls.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+          />
         </CardContent>
       </Card>
 
-      {/* Dialog de confirmation pour actions en lot */}
+      {/* Dialog bulk */}
       <Dialog open={showBulkDialog} onClose={() => setShowBulkDialog(false)}>
-        <DialogTitle>Confirmer l'Action en Lot</DialogTitle>
+        <DialogTitle>Confirmer l’action en lot</DialogTitle>
         <DialogContent>
           <Typography>
             {bulkAction === "origin"
-              ? `Mettre à jour l'origine de ${selectedCount} appels vers "${bulkOrigin}" ?`
-              : `Supprimer définitivement ${selectedCount} appels ?`}
+              ? `Mettre à jour l’origine de ${selectedCount} appel(s) vers « ${bulkOrigin} » ?`
+              : `Supprimer définitivement ${selectedCount} appel(s) ?`}
           </Typography>
         </DialogContent>
         <DialogActions>

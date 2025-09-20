@@ -12,3 +12,10 @@ export type {
   DuplicateDetectionConfig,
 } from "./DuplicateService";
 export { DEFAULT_DUPLICATE_CONFIG } from "./DuplicateService";
+
+export { CallRelationsService } from "./CallRelationsService";
+// … (tes exports existants)
+export type {
+  RelationsService,
+  RelationsNextTurnView,
+} from "./RelationsService";
