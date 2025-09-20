@@ -1,300 +1,290 @@
-// CallsPage.tsx - Intégration complète avec détection doublons
+// src/app/(protected)/calls/page.tsx - VERSION DDD MIGRÉE
+
 "use client";
 
-import { useState } from "react";
-import { Box, Typography, Tabs, Tab, Alert } from "@mui/material";
-import CallTableList from "@/components/calls/CallTableList/CallTableList";
-import CallPreparation from "@/components/calls/CallPreparation";
-import SnackbarManager from "@/components/SnackBarManager";
-import SimpleWorkdriveExplorer from "@/components/SimpleWorkdriveExplorer";
-import { DuplicateDialog } from "@/components/calls/DuplicateDialog";
-import { handleCallSubmission } from "@/components/utils/callApiUtils";
-import type { ZohoFile } from "@/components/SimpleWorkdriveExplorer/types";
+import React, { useState, useCallback } from "react";
+import {
+  Box,
+  Tabs,
+  Tab,
+  Paper,
+  Typography,
+  Alert,
+  useTheme,
+  alpha,
+  Fade,
+} from "@mui/material";
+import { CloudUpload, Build, List, Analytics } from "@mui/icons-material";
 
+// Nouveaux composants DDD
+import { CallImportPage } from "../../../components/calls/ui/pages/CallImportPage";
+import { CallPreparationPage } from "../../../components/calls/ui/pages/CallPreparationPage";
+import { CallManagementPage } from "../../../components/calls/ui/pages/CallManagementPage";
+
+// Hook pour les statistiques globales
+import { useCallStatistics } from "../../../components/calls/ui/hooks/useCallStatistics";
+
+// Types
 interface TabPanelProps {
   children?: React.ReactNode;
-  value: number;
   index: number;
+  value: number;
 }
 
-interface SnackbarMessage {
-  message: string;
-  key: number;
-}
+const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
+  <div role="tabpanel" hidden={value !== index}>
+    {value === index && (
+      <Fade in={value === index} timeout={300}>
+        <Box>{children}</Box>
+      </Fade>
+    )}
+  </div>
+);
 
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`calls-tabpanel-${index}`}
-      aria-labelledby={`calls-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-    </div>
-  );
-}
-
+/**
+ * Page principale du module Calls avec architecture DDD
+ * Orchestrie les 3 workflows principaux : Import, Préparation, Gestion
+ */
 export default function CallsPage() {
-  const [tabValue, setTabValue] = useState<number>(0);
-  const [snackPack, setSnackPack] = useState<SnackbarMessage[]>([]);
+  const theme = useTheme();
+  const [activeTab, setActiveTab] = useState(0);
 
-  // État pour le dialog des doublons (existant)
-  const [duplicateDialog, setDuplicateDialog] = useState<{
-    open: boolean;
-    data?: any;
-    newImport?: {
-      hasAudio: boolean;
-      hasTranscription: boolean;
-      filename?: string;
-    };
-    resolve?: (action: "upgrade" | "create_new" | "cancel") => void;
-  }>({
-    open: false,
-  });
+  // Statistiques globales avec hook DDD
+  const {
+    stats,
+    loading: statsLoading,
+    error: statsError,
+  } = useCallStatistics();
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
+  /**
+   * Changement d'onglet avec analytics
+   */
+  const handleTabChange = useCallback(
+    (event: React.SyntheticEvent, newValue: number) => {
+      setActiveTab(newValue);
 
-  const showMessage = (message: string) => {
-    setSnackPack((prev) => [...prev, { message, key: new Date().getTime() }]);
-  };
-
-  // Gestionnaire de doublons avec dialog (existant)
-  const handleDuplicateFound = async (
-    duplicateData: any
-  ): Promise<"upgrade" | "create_new" | "cancel"> => {
-    console.log("🔄 Dialog doublon ouvert avec data:", duplicateData);
-
-    const hasNewAudio = !!duplicateData.newAudioFile;
-    const hasNewTranscription = !!(
-      duplicateData.newTranscriptionText &&
-      duplicateData.newTranscriptionText.length > 0
-    );
-
-    return new Promise((resolve) => {
-      setDuplicateDialog({
-        open: true,
-        data: duplicateData,
-        newImport: {
-          hasAudio: hasNewAudio,
-          hasTranscription: hasNewTranscription,
-          filename: duplicateData.newAudioFile?.name || "Transcription JSON",
-        },
-        resolve,
-      });
-    });
-  };
-
-  // Gestionnaire d'action du dialog (existant)
-  const handleDialogAction = (action: "upgrade" | "create_new" | "cancel") => {
-    console.log("🎯 Action choisie dans le dialog:", action);
-
-    if (duplicateDialog.resolve) {
-      duplicateDialog.resolve(action);
-    }
-    setDuplicateDialog({ open: false });
-  };
-
-  // ✅ NOUVEAU: Gestionnaire pour clic sur doublon depuis WorkDrive
-  const handleWorkdriveDuplicateClick = (file: ZohoFile, existingCall: any) => {
-    console.log("⚠️ Doublon détecté depuis WorkDrive:", {
-      file: file.attributes?.name || file.name,
-      existingCall: existingCall.filename || existingCall.description,
-    });
-
-    // Option 1: Rediriger vers l'onglet approprié pour voir l'appel existant
-    setTabValue(2); // Onglet "Liste des appels"
-    showMessage(
-      `⚠️ Ce fichier (${
-        file.attributes?.name || file.name
-      }) semble déjà importé comme: ${
-        existingCall.filename || existingCall.description
-      }`
-    );
-
-    // Option 2: Ou ouvrir un dialog d'information
-    // Vous pourriez créer un dialog dédié pour cette situation
-  };
-
-  // Handler pour l'import avec gestion des doublons (existant)
-  const handleWorkdriveFilesSelect = async (
-    audioFile: File | null,
-    transcriptionText: string = "",
-    workdriveFileName?: string
-  ): Promise<void> => {
-    console.log("🔍 CallsPage - Fichiers reçus:", {
-      audioFile: audioFile?.name,
-      transcriptionText: transcriptionText
-        ? `${transcriptionText.length} caractères`
-        : "Vide",
-      workdriveFileName,
-      hasAudio: !!audioFile,
-      hasTranscription: !!transcriptionText,
-    });
-
-    try {
-      if (!audioFile && !transcriptionText) {
-        showMessage("Aucun fichier à importer");
-        return;
-      }
-
-      // Appeler handleCallSubmission avec callback doublons
-      console.log("📥 Appel de handleCallSubmission...");
-
-      await handleCallSubmission({
-        audioFile,
-        description: generateDescription(
-          audioFile,
-          transcriptionText,
-          workdriveFileName
-        ),
-        transcriptionText,
-        workdriveFileName,
-        showMessage,
-        onCallUploaded: (callId) => {
-          console.log("✅ Appel créé avec ID:", callId);
-          showMessage(`Appel importé avec succès (ID: ${callId})`);
-        },
-        onDuplicateFound: handleDuplicateFound,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Erreur inconnue";
-      console.error(
-        "❌ Erreur lors de l'importation depuis WorkDrive:",
-        errorMessage
-      );
-      showMessage(`Erreur lors de l'importation: ${errorMessage}`);
-    }
-  };
-
-  // Fonction utilitaire pour générer une description (existante)
-  const generateDescription = (
-    audioFile: File | null,
-    transcriptionText: string,
-    workdriveFileName?: string
-  ): string => {
-    const timestamp = new Date().toLocaleString("fr-FR");
-    const parts = [];
-
-    if (audioFile) {
-      parts.push(`Audio: ${audioFile.name}`);
-    } else if (workdriveFileName) {
-      parts.push(`Fichier: ${workdriveFileName}`);
-    }
-
-    if (transcriptionText) {
-      try {
-        const parsed = JSON.parse(transcriptionText);
-        const wordCount = parsed.words?.length || 0;
-        parts.push(`Transcription (${wordCount} mots)`);
-      } catch {
-        parts.push("Transcription");
-      }
-    }
-
-    return `Import WorkDrive [${parts.join(" + ")}] - ${timestamp}`;
-  };
+      // Optionnel : Analytics
+      const tabNames = ["import", "preparation", "management"];
+      console.log(`Onglet activé: ${tabNames[newValue]}`);
+    },
+    []
+  );
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
-        Gestion des appels
-      </Typography>
-
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-        <Tabs
-          value={tabValue}
-          onChange={handleTabChange}
-          aria-label="calls management tabs"
-        >
-          <Tab
-            label="📥 Import d'appels"
-            id="calls-tab-0"
-            aria-controls="calls-tabpanel-0"
-          />
-          <Tab
-            label="🔧 Préparation"
-            id="calls-tab-2"
-            aria-controls="calls-tabpanel-2"
-          />
-          <Tab
-            label="🏷️ Liste des appels"
-            id="calls-tab-1"
-            aria-controls="calls-tabpanel-1"
-          />
-        </Tabs>
-      </Box>
-
-      <TabPanel value={tabValue} index={0}>
-        <Typography variant="h6" gutterBottom>
-          Import de nouveaux appels depuis Zoho WorkDrive
-        </Typography>
-        <Typography variant="body2" color="textSecondary" paragraph>
-          Utilisez l'explorateur ci-dessous pour parcourir votre Zoho WorkDrive
-          et importer directement vos fichiers audio et transcriptions.
-        </Typography>
-
-        {/* ✅ NOUVEAU: Information sur la détection de doublons */}
-        <Alert severity="info" sx={{ mb: 2 }}>
-          <Typography variant="body2">
-            💡 <strong>Détection de doublons activée :</strong> Les fichiers
-            déjà importés seront automatiquement détectés et marqués pour éviter
-            les doublons.
+    <Box
+      sx={{
+        minHeight: "100vh",
+        background:
+          theme.palette.mode === "dark"
+            ? "linear-gradient(135deg, rgba(18, 18, 18, 0.95) 0%, rgba(29, 35, 42, 0.95) 100%)"
+            : "linear-gradient(135deg, rgba(240, 242, 247, 0.8) 0%, rgba(255, 255, 255, 0.9) 100%)",
+        p: { xs: 1, md: 2 },
+      }}
+    >
+      <Box maxWidth="xl" mx="auto">
+        {/* En-tête avec statistiques */}
+        <Box mb={3}>
+          <Typography
+            variant="h4"
+            gutterBottom
+            sx={{
+              fontWeight: 600,
+              color: theme.palette.text.primary,
+              textAlign: "center",
+              mb: 1,
+            }}
+          >
+            Gestion des Appels
           </Typography>
-        </Alert>
 
-        {/* ✅ MODIFIÉ: SimpleWorkdriveExplorer avec détection de doublons */}
-        <SimpleWorkdriveExplorer
-          onFilesSelect={handleWorkdriveFilesSelect}
-          enableDuplicateCheck={true} // ✅ Activer la détection
-          showDuplicateToggle={true} // ✅ Permettre à l'utilisateur de désactiver
-          onDuplicateFound={handleWorkdriveDuplicateClick} // ✅ Gestionnaire custom
-        />
-      </TabPanel>
+          {!statsLoading && stats && (
+            <Box
+              display="flex"
+              gap={2}
+              justifyContent="center"
+              flexWrap="wrap"
+              mb={2}
+            >
+              <Alert
+                severity="info"
+                variant="outlined"
+                sx={{
+                  borderRadius: 2,
+                  backgroundColor: alpha(theme.palette.info.main, 0.1),
+                }}
+              >
+                <Typography variant="body2">
+                  <strong>{stats.total}</strong> appels •
+                  <strong> {stats.readyForTagging}</strong> prêts pour tagging •
+                  <strong> {stats.completeness}%</strong> de complétude
+                </Typography>
+              </Alert>
+            </Box>
+          )}
 
-      <TabPanel value={tabValue} index={1}>
-        <Typography variant="h6" gutterBottom>
-          Préparation des appels pour le tagging
-        </Typography>
-        <Typography variant="body2" color="textSecondary" paragraph>
-          Gérez vos appels importés et préparez-les pour l'analyse.
-        </Typography>
-        <CallPreparation showMessage={showMessage} />
-      </TabPanel>
+          {statsError && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              Impossible de charger les statistiques
+            </Alert>
+          )}
+        </Box>
 
-      <TabPanel value={tabValue} index={2}>
-        <Typography variant="h6" gutterBottom>
-          Appels prêts pour le tagging
-        </Typography>
-        <Typography variant="body2" color="textSecondary" paragraph>
-          Liste des appels préparés et prêts pour l'analyse et le tagging.
-        </Typography>
-        <CallTableList showMessage={showMessage} />
-      </TabPanel>
+        {/* Navigation par onglets */}
+        <Paper
+          elevation={2}
+          sx={{
+            borderRadius: 2,
+            overflow: "hidden",
+            backgroundColor:
+              theme.palette.mode === "dark"
+                ? alpha(theme.palette.background.paper, 0.9)
+                : theme.palette.background.paper,
+          }}
+        >
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            variant="fullWidth"
+            sx={{
+              borderBottom: 1,
+              borderColor: "divider",
+              "& .MuiTab-root": {
+                minHeight: 64,
+                textTransform: "none",
+                fontSize: "1rem",
+                fontWeight: 500,
+              },
+            }}
+          >
+            <Tab
+              icon={<CloudUpload />}
+              label="Import d'Appels"
+              iconPosition="start"
+              sx={{
+                gap: 1,
+                "& .MuiSvgIcon-root": {
+                  fontSize: "1.2rem",
+                },
+              }}
+            />
+            <Tab
+              icon={<Build />}
+              label="Préparation"
+              iconPosition="start"
+              sx={{
+                gap: 1,
+                "& .MuiSvgIcon-root": {
+                  fontSize: "1.2rem",
+                },
+              }}
+            />
+            <Tab
+              icon={<List />}
+              label="Gestion Avancée"
+              iconPosition="start"
+              sx={{
+                gap: 1,
+                "& .MuiSvgIcon-root": {
+                  fontSize: "1.2rem",
+                },
+              }}
+            />
+          </Tabs>
 
-      {/* Dialog de gestion des doublons (existant) */}
-      {duplicateDialog.data && (
-        <DuplicateDialog
-          open={duplicateDialog.open}
-          onClose={() => handleDialogAction("cancel")}
-          duplicateData={duplicateDialog.data}
-          newImport={
-            duplicateDialog.newImport || {
-              hasAudio: false,
-              hasTranscription: false,
-            }
-          }
-          onAction={handleDialogAction}
-        />
-      )}
+          {/* Contenu des onglets */}
+          <Box>
+            {/* Onglet 1: Import d'Appels */}
+            <TabPanel value={activeTab} index={0}>
+              <Box p={{ xs: 2, md: 3 }}>
+                <CallImportPage />
+              </Box>
+            </TabPanel>
 
-      <SnackbarManager snackPack={snackPack} setSnackPack={setSnackPack} />
+            {/* Onglet 2: Préparation */}
+            <TabPanel value={activeTab} index={1}>
+              <Box p={{ xs: 2, md: 3 }}>
+                <CallPreparationPage />
+              </Box>
+            </TabPanel>
+
+            {/* Onglet 3: Gestion Avancée */}
+            <TabPanel value={activeTab} index={2}>
+              <Box p={{ xs: 2, md: 3 }}>
+                <CallManagementPage />
+              </Box>
+            </TabPanel>
+          </Box>
+        </Paper>
+
+        {/* Footer informatif */}
+        <Box mt={4}>
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 3,
+              borderRadius: 2,
+              backgroundColor: alpha(theme.palette.background.paper, 0.7),
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <Typography variant="h6" gutterBottom>
+              🚀 Architecture DDD - Nouvelles Fonctionnalités
+            </Typography>
+
+            <Box display="flex" gap={4} flexWrap="wrap">
+              <Box flex="1" minWidth="250px">
+                <Typography variant="subtitle2" color="primary" gutterBottom>
+                  Import Intelligent
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  • Détection automatique de doublons
+                  <br />
+                  • Validation JSON stricte
+                  <br />
+                  • Support WorkDrive complet
+                  <br />• URLs signées sécurisées
+                </Typography>
+              </Box>
+
+              <Box flex="1" minWidth="250px">
+                <Typography variant="subtitle2" color="primary" gutterBottom>
+                  Préparation Avancée
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  • Préparation en lot optimisée
+                  <br />
+                  • Stratégies multiples
+                  <br />
+                  • Validation métier complète
+                  <br />• Feedback temps réel
+                </Typography>
+              </Box>
+
+              <Box flex="1" minWidth="250px">
+                <Typography variant="subtitle2" color="primary" gutterBottom>
+                  Gestion Professionnelle
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  • Cache intelligent (30s)
+                  <br />
+                  • Actions en lot
+                  <br />
+                  • Interface responsive
+                  <br />• Métriques avancées
+                </Typography>
+              </Box>
+            </Box>
+
+            <Alert severity="success" sx={{ mt: 2 }}>
+              <Typography variant="body2">
+                <strong>Architecture DDD complète :</strong> Services métier,
+                Workflows, Repositories et UI pure séparés pour une
+                maintenabilité optimale.
+              </Typography>
+            </Alert>
+          </Paper>
+        </Box>
+      </Box>
     </Box>
   );
 }

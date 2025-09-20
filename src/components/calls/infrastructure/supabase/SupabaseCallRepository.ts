@@ -5,6 +5,7 @@ import { AudioFile } from "../../domain/entities/AudioFile";
 import { CallRepository } from "../../domain/repositories/CallRepository";
 import { RepositoryError } from "../../shared/exceptions/DomainExceptions";
 import { CallStatus } from "../../shared/types/CallStatus";
+import { Transcription } from "../../domain/entities/Transcription";
 
 type DbCall = {
   callid: string;
@@ -213,10 +214,23 @@ export class SupabaseCallRepository implements CallRepository {
   // --- mapping persistence → domaine
 
   private mapToCall = (row: DbCall): Call => {
+    // AudioFile depuis les colonnes
     const audio = row.filepath
       ? new AudioFile(row.filepath, row.audiourl ?? undefined)
       : undefined;
 
+    // Transcription depuis le JSON
+    let transcription: Transcription | undefined;
+    if (row.transcription) {
+      try {
+        transcription = Transcription.fromJSON(row.transcription);
+      } catch (error) {
+        console.warn("Erreur parsing transcription JSON:", error);
+        transcription = undefined;
+      }
+    }
+
+    // Retourner l'entité Call complète
     return new Call(
       row.callid,
       row.filename ?? undefined,
@@ -224,7 +238,7 @@ export class SupabaseCallRepository implements CallRepository {
       (row.status as CallStatus) ?? CallStatus.DRAFT,
       row.origine ?? undefined,
       audio,
-      (row.transcription as any) ?? undefined,
+      transcription,
       row.created_at ? new Date(row.created_at) : new Date(),
       row.updated_at ? new Date(row.updated_at) : new Date()
     );
