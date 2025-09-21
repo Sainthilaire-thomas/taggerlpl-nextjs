@@ -1,24 +1,244 @@
-// src/components/calls/infrastructure/ServiceFactory.ts
+// src/components/calls/infrastructure/ServiceFactory.ts - VERSION PROPRE
+
 import { SupabaseCallRepository } from "./supabase/SupabaseCallRepository";
 import { SupabaseStorageRepository } from "./supabase/SupabaseStorageRepository";
 import { CallService } from "../domain/services/CallService";
 import { ValidationService } from "../domain/services/ValidationService";
 import { DuplicateService } from "../domain/services/DuplicateService";
 import { StorageService } from "../domain/services/StorageService";
+import { TranscriptionTransformationService } from "../domain/services/TranscriptionTransformationService";
+import { CallFilteringService } from "../domain/services/CallFilteringService";
 
+/**
+ * Factory pour créer et configurer tous les services DDD
+ *
+ * Pattern Singleton + Dependency Injection
+ * Centralise la création des services avec leurs dépendances
+ */
+export class CallsServiceFactory {
+  private static instance: CallsServiceFactory;
+
+  // Repositories (couche infrastructure)
+  private callRepository: SupabaseCallRepository;
+  private storageRepository: SupabaseStorageRepository;
+
+  // Services (couche domaine)
+  private validationService: ValidationService;
+  private callService: CallService;
+  private duplicateService: DuplicateService;
+  private storageService: StorageService;
+  private transcriptionTransformationService: TranscriptionTransformationService;
+  private callFilteringService: CallFilteringService;
+
+  private constructor() {
+    // Initialisation des repositories
+    this.callRepository = new SupabaseCallRepository();
+    this.storageRepository = new SupabaseStorageRepository();
+
+    // Initialisation des services avec injection des dépendances
+    this.validationService = new ValidationService();
+    this.callService = new CallService(
+      this.callRepository,
+      this.validationService
+    );
+    this.duplicateService = new DuplicateService(this.callRepository);
+    this.storageService = new StorageService(this.storageRepository);
+    this.transcriptionTransformationService =
+      new TranscriptionTransformationService();
+    this.callFilteringService = new CallFilteringService();
+  }
+
+  public static getInstance(): CallsServiceFactory {
+    if (!CallsServiceFactory.instance) {
+      CallsServiceFactory.instance = new CallsServiceFactory();
+    }
+    return CallsServiceFactory.instance;
+  }
+
+  // ============================================================================
+  // GETTERS POUR LES SERVICES
+  // ============================================================================
+
+  getCallService(): CallService {
+    return this.callService;
+  }
+
+  getValidationService(): ValidationService {
+    return this.validationService;
+  }
+
+  getDuplicateService(): DuplicateService {
+    return this.duplicateService;
+  }
+
+  getStorageService(): StorageService {
+    return this.storageService;
+  }
+
+  getTranscriptionTransformationService(): TranscriptionTransformationService {
+    return this.transcriptionTransformationService;
+  }
+
+  getCallFilteringService(): CallFilteringService {
+    return this.callFilteringService;
+  }
+
+  getCallRepository(): SupabaseCallRepository {
+    return this.callRepository;
+  }
+
+  getStorageRepository(): SupabaseStorageRepository {
+    return this.storageRepository;
+  }
+
+  // ============================================================================
+  // SERVICE COMPOSÉ POUR CALLPREPARATIONPAGE
+  // ============================================================================
+
+  createCallPreparationService() {
+    const callRepository = this.callRepository;
+    const transcriptionTransformationService =
+      this.transcriptionTransformationService;
+    const callFilteringService = this.callFilteringService;
+
+    return {
+      // Services exposés
+      filtering: callFilteringService,
+      transformation: transcriptionTransformationService,
+      repository: callRepository,
+
+      // Actions composées
+      async findPreparableCalls() {
+        return callRepository.findCallsForPreparation();
+      },
+
+      async findPreparableCallsWithFilters(filters: any) {
+        return callRepository.findCallsForPreparationWithFilters(filters);
+      },
+
+      async prepareCall(callId: string, transcriptionJson: any) {
+        const transformResult =
+          await transcriptionTransformationService.transformJsonToWords(
+            callId,
+            transcriptionJson
+          );
+
+        if (!transformResult.success) {
+          throw new Error(transformResult.error || "Transformation failed");
+        }
+
+        return transformResult;
+      },
+
+      async prepareBatch(
+        callIds: string[],
+        transcriptions: Record<string, any>
+      ) {
+        const results = [];
+
+        for (const callId of callIds) {
+          try {
+            const transcription = transcriptions[callId];
+            const result = await this.prepareCall(callId, transcription);
+            results.push({ callId, success: true, result });
+          } catch (error) {
+            results.push({
+              callId,
+              success: false,
+              error: error instanceof Error ? error.message : "Unknown error",
+            });
+          }
+        }
+
+        return results;
+      },
+
+      async getOriginStatistics() {
+        return callRepository.getOriginStatistics();
+      },
+    };
+  }
+
+  // ============================================================================
+  // CONFIGURATION ET MONITORING
+  // ============================================================================
+
+  configure(config: {
+    enableDebugLogs?: boolean;
+    batchSize?: number;
+    cacheTimeout?: number;
+  }) {
+    console.log("Configuration des services DDD:", config);
+  }
+
+  async getServicesHealth(): Promise<{
+    callRepository: boolean;
+    storageRepository: boolean;
+    services: Record<string, boolean>;
+  }> {
+    try {
+      const callRepoHealth =
+        (await this.callRepository.exists("test")) !== undefined;
+
+      return {
+        callRepository: callRepoHealth,
+        storageRepository: true,
+        services: {
+          callService: !!this.callService,
+          validationService: !!this.validationService,
+          duplicateService: !!this.duplicateService,
+          storageService: !!this.storageService,
+          transcriptionTransformationService:
+            !!this.transcriptionTransformationService,
+          callFilteringService: !!this.callFilteringService,
+        },
+      };
+    } catch (error) {
+      console.warn("Erreur health check services:", error);
+      return {
+        callRepository: false,
+        storageRepository: false,
+        services: {},
+      };
+    }
+  }
+
+  reset() {
+    CallsServiceFactory.instance = new CallsServiceFactory();
+  }
+}
+
+// ============================================================================
+// FONCTION HELPER PRINCIPALE
+// ============================================================================
+
+/**
+ * Fonction helper pour créer tous les services
+ * Compatible avec l'interface existante
+ */
 export const createServices = () => {
-  const callRepo = new SupabaseCallRepository();
-  const storageRepo = new SupabaseStorageRepository();
-
-  const validationService = new ValidationService();
-  const callService = new CallService(callRepo, validationService);
-  const duplicateService = new DuplicateService(callRepo);
-  const storageService = new StorageService(storageRepo);
+  const factory = CallsServiceFactory.getInstance();
 
   return {
-    callService,
-    duplicateService,
-    storageService,
-    validationService,
+    // Services principaux
+    callService: factory.getCallService(),
+    duplicateService: factory.getDuplicateService(),
+    storageService: factory.getStorageService(),
+    validationService: factory.getValidationService(),
+
+    // Nouveaux services
+    transcriptionTransformationService:
+      factory.getTranscriptionTransformationService(),
+    callFilteringService: factory.getCallFilteringService(),
+
+    // Repositories
+    callRepository: factory.getCallRepository(),
+    storageRepository: factory.getStorageRepository(),
+
+    // Service composé principal
+    callPreparationService: factory.createCallPreparationService(),
+
+    // Factory pour accès avancé
+    factory: factory,
   };
 };
