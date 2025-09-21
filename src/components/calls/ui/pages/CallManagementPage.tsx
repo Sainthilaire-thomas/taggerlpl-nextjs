@@ -1,4 +1,4 @@
-// src/components/calls/ui/pages/CallManagementPage.tsx - VERSION ULTRA-OPTIMISÉE
+// src/components/calls/ui/pages/CallManagementPage.tsx - VERSION FINALE OPTIMISÉE
 
 import React, {
   useState,
@@ -64,6 +64,7 @@ import {
   Refresh,
   ExpandLess,
 } from "@mui/icons-material";
+import { useRouter } from "next/navigation";
 
 // Hook unifié optimisé
 import { useUnifiedCallManagement } from "../hooks/useUnifiedCallManagement";
@@ -80,6 +81,10 @@ import { useCallAudioActions } from "../hooks/actions/useCallAudioActions";
 import { useCallPreparationActions } from "../hooks/actions/useCallPreparationActions";
 import { useCallFlags } from "../hooks/actions/useCallFlags";
 import { useCallCleanup } from "../hooks/actions/useCallCleanup";
+
+// Nouvelles importations pour le cycle de vie
+import { CallLifecycleColumn } from "../components/CallLifecycleColumn";
+import { CallExtended } from "../../domain";
 
 type ManagementTab =
   | "overview"
@@ -101,26 +106,28 @@ interface AccordionStates {
  */
 interface LazyLoadedData {
   [origin: string]: {
-    calls: any[];
+    calls: CallExtended[];
     loaded: boolean;
     loading: boolean;
   };
 }
 
 /**
- * 🚀 COMPOSANT OPTIMISÉ - Table virtualisée pour grandes listes
+ * 🚀 COMPOSANT OPTIMISÉ - Table virtualisée pour grandes listes avec cycle de vie
  */
 const VirtualizedCallTable: React.FC<{
-  calls: any[];
+  calls: CallExtended[];
   selectedCalls: Set<string>;
   onToggleSelection: (id: string) => void;
   onSelectAll: () => void;
+  onLifecycleAction: (action: string, call: CallExtended) => void;
   renderRelationStatus: (callId: string) => React.ReactNode;
 }> = ({
   calls,
   selectedCalls,
   onToggleSelection,
   onSelectAll,
+  onLifecycleAction,
   renderRelationStatus,
 }) => {
   const [displayedCalls, setDisplayedCalls] = useState(calls.slice(0, 20));
@@ -187,7 +194,7 @@ const VirtualizedCallTable: React.FC<{
             </TableCell>
             <TableCell>Fichier</TableCell>
             <TableCell>Statut</TableCell>
-            <TableCell>Contenu</TableCell>
+            <TableCell>Cycle de vie</TableCell>
             <TableCell>Relations</TableCell>
             <TableCell>Créé le</TableCell>
             <TableCell>Actions</TableCell>
@@ -233,35 +240,7 @@ const VirtualizedCallTable: React.FC<{
                 />
               </TableCell>
               <TableCell>
-                <Box display="flex" gap={0.5} flexWrap="wrap">
-                  {call.hasValidAudio() && (
-                    <Chip
-                      icon={<AudioFile />}
-                      label="Audio"
-                      size="small"
-                      color="primary"
-                      variant="outlined"
-                    />
-                  )}
-                  {call.hasValidTranscription() && (
-                    <Chip
-                      icon={<Description />}
-                      label="Transcription"
-                      size="small"
-                      color="success"
-                      variant="outlined"
-                    />
-                  )}
-                  {call.isReadyForTagging() && (
-                    <Chip
-                      icon={<CheckCircle />}
-                      label="Prêt"
-                      size="small"
-                      color="info"
-                      variant="outlined"
-                    />
-                  )}
-                </Box>
+                <CallLifecycleColumn call={call} onAction={onLifecycleAction} />
               </TableCell>
               <TableCell>{renderRelationStatus(call.id)}</TableCell>
               <TableCell>
@@ -327,9 +306,12 @@ const VirtualizedCallTable: React.FC<{
 };
 
 /**
- * 🚀 COMPOSANT PRINCIPAL OPTIMISÉ
+ * 🚀 COMPOSANT PRINCIPAL OPTIMISÉ avec cycle de vie
  */
 export const CallManagementPage: React.FC = () => {
+  // Router pour navigation
+  const router = useRouter();
+
   // Hook unifié pour la gestion des appels
   const {
     calls,
@@ -352,6 +334,7 @@ export const CallManagementPage: React.FC = () => {
     updateFilters,
     resetFilters,
     services,
+    lifecycleService, // Service de cycle de vie exposé par le hook
   } = useUnifiedCallManagement();
 
   // État local pour les optimisations
@@ -377,6 +360,36 @@ export const CallManagementPage: React.FC = () => {
   const preparation = useCallPreparationActions({ reload: loadCalls });
   const flags = useCallFlags({ reload: loadCalls });
   const cleanup = useCallCleanup({ reload: loadCalls });
+
+  /**
+   * 🚀 NOUVEAU : Handler pour les actions de cycle de vie
+   */
+  const handleLifecycleAction = useCallback(
+    async (action: string, call: CallExtended) => {
+      try {
+        switch (action) {
+          case "prepare":
+            await preparation.prepareForTagging([call]);
+            break;
+          case "select":
+            await flags.setTagging([call], true);
+            break;
+          case "unselect":
+            await flags.setTagging([call], false);
+            break;
+          case "tag":
+            router.push(`/new-tagging?callId=${call.id}`);
+            break;
+          default:
+            console.warn(`Action lifecycle inconnue: ${action}`);
+        }
+        await loadCalls(); // Recharger les données
+      } catch (error) {
+        console.error("Erreur action lifecycle:", error);
+      }
+    },
+    [preparation, flags, router, loadCalls]
+  );
 
   /**
    * 🚀 OPTIMISATION : Gestion intelligente des accordéons
@@ -409,7 +422,7 @@ export const CallManagementPage: React.FC = () => {
   );
 
   /**
-   * Rendu des relations/tags avec mémoisation
+   * Rendu des relations/tags avec mémorisation
    */
   const renderRelationStatus = useCallback(
     (callId: string) => {
@@ -438,7 +451,7 @@ export const CallManagementPage: React.FC = () => {
   );
 
   /**
-   * Actions par onglet (mémorisées)
+   * Actions par onglet (mémorisées) avec nouveau bouton "Préparer pour tagging"
    */
   const renderTabActions = useCallback(() => {
     switch (activeTab) {
@@ -544,6 +557,15 @@ export const CallManagementPage: React.FC = () => {
       case "flags":
         return (
           <Box display="flex" gap={1} flexWrap="wrap">
+            {/* NOUVEAU BOUTON pour préparer pour tagging */}
+            <Button
+              variant="contained"
+              startIcon={<Build />}
+              disabled={!hasSelection}
+              onClick={() => preparation.prepareForTagging(selectedCallObjects)}
+            >
+              Préparer pour Tagging ({selectedCalls.size})
+            </Button>
             <Button
               variant="outlined"
               disabled={!hasSelection}
@@ -621,7 +643,7 @@ export const CallManagementPage: React.FC = () => {
   ]);
 
   /**
-   * 🚀 RENDU OPTIMISÉ DES ACCORDÉONS avec chargement paresseux
+   * 🚀 RENDU OPTIMISÉ DES ACCORDÉONS avec chargement paresseux et cycle de vie
    */
   const renderOriginAccordions = useMemo(() => {
     return Object.entries(callsByOrigin).map(([origin, originCalls]) => {
@@ -737,6 +759,7 @@ export const CallManagementPage: React.FC = () => {
                     }
                   });
                 }}
+                onLifecycleAction={handleLifecycleAction}
                 renderRelationStatus={renderRelationStatus}
               />
             ) : (
@@ -755,6 +778,7 @@ export const CallManagementPage: React.FC = () => {
     selectedCalls,
     toggleSelection,
     selectByOrigin,
+    handleLifecycleAction,
     renderRelationStatus,
     handleAccordionToggle,
   ]);
@@ -767,11 +791,11 @@ export const CallManagementPage: React.FC = () => {
       {/* En-tête avec statistiques */}
       <Box mb={3}>
         <Typography variant="h4" gutterBottom>
-          🏢 Gestion Unifiée des Appels (Optimisée)
+          🏢 Gestion Unifiée des Appels (Cycle de Vie Intégré)
         </Typography>
         <Typography variant="body1" color="text.secondary" paragraph>
-          Interface centralisée avec chargement paresseux et virtualisation pour
-          682+ appels
+          Interface centralisée avec cycle de vie intelligent, chargement
+          paresseux et virtualisation pour 682+ appels
         </Typography>
 
         {/* Statistiques avec performance */}
@@ -799,7 +823,8 @@ export const CallManagementPage: React.FC = () => {
         {/* Indicateur performance */}
         <Alert severity="info" sx={{ mb: 2 }}>
           <Typography variant="body2">
-            <strong>🚀 Optimisations actives:</strong> Chargement paresseux,
+            <strong>🚀 Optimisations actives:</strong> Cycle de vie intelligent
+            (CallExtended + CallLifecycleColumn), chargement paresseux,
             virtualisation des tables, cache intelligent, accordéons
             non-bloquants. {Object.keys(callsByOrigin).length} origines
             détectées.
@@ -1013,9 +1038,9 @@ export const CallManagementPage: React.FC = () => {
             {loading
               ? "🔄 Chargement des appels en cours..."
               : error
-              ? "❌ Erreur lors du chargement des appels"
+              ? "⌘ Erreur lors du chargement des appels"
               : calls.length === 0
-              ? "📭 Aucun appel trouvé dans la base de données"
+              ? "🔭 Aucun appel trouvé dans la base de données"
               : "🔍 Aucun appel ne correspond aux filtres sélectionnés"}
           </Typography>
         </Alert>
@@ -1026,7 +1051,7 @@ export const CallManagementPage: React.FC = () => {
         <Card variant="outlined">
           <CardContent>
             <Typography variant="h6" gutterBottom color="primary">
-              🚀 Optimisations de Performance Appliquées
+              🚀 Optimisations de Performance + Cycle de Vie
             </Typography>
 
             <Box display="flex" flexWrap="wrap" gap={3}>
@@ -1064,7 +1089,7 @@ export const CallManagementPage: React.FC = () => {
                     invalidation
                   </Typography>
                   <Typography component="li" variant="body2" sx={{ mb: 1 }}>
-                    <strong>Mémoisation</strong> : useCallback sur handlers
+                    <strong>Mémorisation</strong> : useCallback sur handlers
                     critiques
                   </Typography>
                   <Typography component="li" variant="body2" sx={{ mb: 1 }}>
@@ -1076,13 +1101,47 @@ export const CallManagementPage: React.FC = () => {
                   </Typography>
                 </Box>
               </Box>
+
+              <Box flex="1 1 300px">
+                <Typography variant="subtitle2" gutterBottom>
+                  🔄 Nouvelles fonctionnalités cycle de vie
+                </Typography>
+                <Box component="ul" sx={{ pl: 2, m: 0 }}>
+                  <Typography component="li" variant="body2" sx={{ mb: 1 }}>
+                    <strong>CallExtended</strong> : Entité enrichie avec
+                    workflow
+                  </Typography>
+                  <Typography component="li" variant="body2" sx={{ mb: 1 }}>
+                    <strong>CallLifecycleColumn</strong> : Interface intuitive
+                    par étape
+                  </Typography>
+                  <Typography component="li" variant="body2" sx={{ mb: 1 }}>
+                    <strong>Actions contextuelles</strong> : Boutons
+                    intelligents selon l'état
+                  </Typography>
+                  <Typography component="li" variant="body2">
+                    <strong>Navigation directe</strong> : Vers /new-tagging
+                    depuis l'interface
+                  </Typography>
+                </Box>
+              </Box>
             </Box>
 
             <Alert severity="success" sx={{ mt: 2 }}>
               <Typography variant="body2">
                 <strong>✅ Performance optimisée pour 682+ appels</strong> :
                 Chargement initial rapide, accordéons non-bloquants, tables
-                virtualisées, cache intelligent avec invalidation automatique.
+                virtualisées, cache intelligent avec invalidation automatique,
+                et cycle de vie intégré pour un workflow fluide.
+              </Typography>
+            </Alert>
+
+            <Alert severity="info" sx={{ mt: 1 }}>
+              <Typography variant="body2">
+                <strong>🔄 Cycle de vie intégré</strong> : La colonne "Cycle de
+                vie" remplace l'ancienne colonne "Contenu" et offre une
+                interface interactive pour gérer chaque appel selon son stade de
+                workflow (brouillon → préparé → sélectionné → taggé).
               </Typography>
             </Alert>
           </CardContent>
