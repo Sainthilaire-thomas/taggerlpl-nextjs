@@ -10,6 +10,7 @@ export { CallService } from "./CallService";
 export { StorageService } from "./StorageService";
 export { DuplicateService } from "./DuplicateService";
 export { CallRelationsService } from "./CallRelationsService";
+export { CallLifecycleService } from "./CallLifecycleService";
 
 // Types et interfaces de DuplicateService
 export type {
@@ -17,6 +18,10 @@ export type {
   DuplicateDetectionConfig,
 } from "./DuplicateService";
 export { DEFAULT_DUPLICATE_CONFIG } from "./DuplicateService";
+export type {
+  LifecycleActionResult,
+  LifecycleStats,
+} from "./CallLifecycleService";
 
 // Types et interfaces de RelationsService
 export type {

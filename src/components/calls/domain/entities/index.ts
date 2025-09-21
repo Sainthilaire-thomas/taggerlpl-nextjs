@@ -3,6 +3,9 @@ export { TranscriptionWord } from "./TranscriptionWord";
 export { AudioFile } from "./AudioFile";
 export { Call } from "./Call";
 
+export { CallExtended, TaggingWorkflowStage } from "./CallExtended";
+export type { CallLifecycleStatus } from "./CallExtended";
+
 // Exports des types et enums
 export type { CallStatus } from "../../shared/types/CallStatus";
 export {

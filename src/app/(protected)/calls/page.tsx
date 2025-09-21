@@ -18,7 +18,7 @@ import { CloudUpload, Build, List, Analytics } from "@mui/icons-material";
 
 // Nouveaux composants DDD
 import { CallImportPage } from "../../../components/calls/ui/pages/CallImportPage";
-import { CallPreparationPage } from "../../../components/calls/ui/pages/CallPreparationPage";
+
 import { CallManagementPage } from "../../../components/calls/ui/pages/CallManagementPage";
 
 // Hook pour les statistiques globales
@@ -197,13 +197,6 @@ export default function CallsPage() {
             <TabPanel value={activeTab} index={0}>
               <Box p={{ xs: 2, md: 3 }}>
                 <CallImportPage />
-              </Box>
-            </TabPanel>
-
-            {/* Onglet 2: Préparation */}
-            <TabPanel value={activeTab} index={1}>
-              <Box p={{ xs: 2, md: 3 }}>
-                <CallPreparationPage />
               </Box>
             </TabPanel>
 
