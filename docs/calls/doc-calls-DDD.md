@@ -1,488 +1,844 @@
-# Analyse du Système DDD Calls - Documentation Complète
+# Documentation Architecture DDD - Module Calls
 
-## 1. Description du Système Existant
+## Vue d'ensemble
 
-### Vue d'ensemble de l'Architecture DDD
+Le module Calls de l'application TaggerLPL implémente une architecture **Domain Driven Design (DDD)** complète pour la gestion des appels téléphoniques. Cette architecture sépare clairement les préoccupations métier de l'infrastructure technique, offrant une maintenabilité et une évolutivité optimales.
 
-Le système **Calls** est une implémentation d'architecture **Domain-Driven Design (DDD)** destinée à la gestion des appels téléphoniques dans le contexte d'un centre de contact pour la recherche en linguistique conversationnelle. Il s'intègre dans l'application TaggerLPL pour l'analyse des interactions conflictuelles entre conseillers et clients.
-
-### Métier et Domaine
-
-**Domaine métier** : Analyse conversationnelle d'appels téléphoniques conflictuels dans les centres de contact
-
-**Objectifs principaux** :
-
-- Import et stockage d'appels audio avec transcriptions
-- Préparation technique des données pour l'annotation linguistique
-- Gestion du cycle de vie des appels (Import → Préparation → Tagging → Analyse)
-- Détection et traitement des doublons
-- Support des workflows d'annotation linguistique
-
-**Contexte de recherche** : Le système supporte une thèse de doctorat en linguistique appliquée étudiant l'efficacité des stratégies communicationnelles dans la résolution de conflits au téléphone.
-
-## 2. Architecture Technique Actuelle
-
-### Structure en Couches DDD
+## Structure Architecturale
 
 ```
-📁 src/components/calls/
-├── 🏗️ domain/                    # Couche Domaine (cœur métier)
-│   ├── entities/                 # Entités métier
-│   │   ├── AudioFile.ts          # Gestion fichiers audio
-│   │   ├── Call.ts               # Entité principale d'un appel
-│   │   ├── Transcription.ts      # Données de transcription
-│   │   └── TranscriptionWord.ts  # Mots individuels
-│   ├── services/                 # Services métier
-│   │   ├── CallService.ts        # Logique principale des appels
-│   │   ├── ValidationService.ts  # Validation des données
-│   │   ├── DuplicateService.ts   # Détection de doublons
-│   │   ├── StorageService.ts     # Gestion du stockage
-│   │   ├── CallFilteringService.ts       # Filtrage avancé
-│   │   └── TranscriptionTransformationService.ts  # JSON → DB
-│   ├── repositories/             # Interfaces de persistance
-│   │   ├── CallRepository.ts     # Interface appels
-│   │   ├── StorageRepository.ts  # Interface stockage
-│   │   └── RelationsRepository.ts # Interface relations
-│   └── workflows/                # Processus métier complexes
-│       ├── BulkPreparationWorkflow.ts    # Préparation en lot
-│       └── ImportWorkflow.ts             # Import d'appels
-├── 🔌 infrastructure/            # Couche Infrastructure
-│   ├── ServiceFactory.ts        # Factory des services
-│   └── supabase/                # Implémentations Supabase
-│       ├── SupabaseCallRepository.ts
-│       ├── SupabaseStorageRepository.ts
-│       └── SupabaseRelationsRepository.ts
-├── 🎯 ui/                        # Couche Interface Utilisateur
-│   ├── hooks/                   # Hooks React pour l'UI
-│   │   ├── useCallManagement.ts  # Gestion des appels
-│   │   ├── useCallImport.ts      # Import d'appels
-│   │   ├── useCallPreparation.ts # Préparation pour tagging
-│   │   └── actions/              # Actions spécialisées
-│   ├── components/              # Composants UI
-│   │   ├── ImportForm.tsx        # Formulaire d'import
-│   │   ├── DuplicateResolutionDialog.tsx
-│   │   └── ImportProgress.tsx
-│   └── pages/                   # Pages principales
-│       ├── CallImportPage.tsx
-│       ├── CallManagementPage.tsx
-│       └── CallPreparationPage.tsx
-└── 📋 shared/                   # Types et utilitaires partagés
-    ├── types/
-    ├── exceptions/
-    └── config/
+src/components/calls/
+├── domain/                    # Couche métier (logique pure)
+│   ├── entities/             # Entités métier
+│   ├── services/             # Services métier
+│   ├── repositories/         # Interfaces des dépôts
+│   └── workflows/            # Workflows complexes
+├── infrastructure/           # Couche technique
+│   ├── supabase/            # Implémentations Supabase
+│   └── ServiceFactory.ts    # Factory d'injection
+├── shared/                   # Types et utilitaires partagés
+│   ├── types/               # Types TypeScript
+│   ├── exceptions/          # Exceptions métier
+│   └── config/              # Configuration
+└── ui/                       # Interface utilisateur
+    ├── components/          # Composants React
+    ├── hooks/               # Hooks métier
+    └── pages/               # Pages de l'application
 ```
 
-### Entités Principales
+## Couche Domaine (Domain Layer)
 
-#### 1. **Call** - Entité racine d'agrégat
+### 1. Entités Métier
 
-typescript
+#### Call - Entité principale
 
 ```typescript
-classCall{
-  id:string
-  filename?:string
-  description?:string
-  status:CallStatus=DRAFT|PROCESSING|READY|TAGGING|COMPLETED|ERROR
-  origin?:string
-  audioFile?:AudioFile// Composition
-  transcription?:Transcription// Composition
-  createdAt:Date
-  updatedAt:Date
+export class Call {
+  constructor(
+    public readonly id: string,
+    public readonly filename?: string,
+    public readonly description?: string,
+    public readonly status: CallStatus = CallStatus.DRAFT,
+    public readonly origin?: string,
+    private audioFile?: AudioFile,
+    private transcription?: Transcription,
+    public readonly createdAt: Date = new Date(),
+    public readonly updatedAt: Date = new Date()
+  ) {}
 
-// Règles métier
-isReadyForTagging():boolean
-hasValidAudio():boolean
-hasValidTranscription():boolean
-canBeUpgraded(newData):UpgradeAnalysis
+  // Règles métier
+  isReadyForTagging(): boolean {
+    return this.hasValidAudio() && this.hasValidTranscription();
+  }
+
+  hasValidAudio(): boolean {
+    return !!this.audioFile && this.audioFile.isValid();
+  }
+
+  hasValidTranscription(): boolean {
+    return !!this.transcription;
+  }
+
+  canBeUpgraded(newData: Partial<CallUpgradeData>): UpgradeAnalysis {
+    // Logique de mise à niveau des appels
+  }
+
+  // Méthodes immutables
+  withAudio(audioFile: AudioFile): Call {
+    /* ... */
+  }
+  withTranscription(transcription: Transcription): Call {
+    /* ... */
+  }
+  withOrigin(origin: string): Call {
+    /* ... */
+  }
+  withStatus(status: CallStatus): Call {
+    /* ... */
+  }
 }
 ```
 
-#### 2. **AudioFile** - Value Object
-
-typescript
+#### CallExtended - Extension avec cycle de vie
 
 ```typescript
-classAudioFile{
-  path:string
-  url?:string
-  originalFile?:File
-  size?:number
-  mimeType?:string
-  duration?:number
-  uploadedAt:Date
+export class CallExtended extends Call {
+  constructor(
+    // Paramètres de Call +
+    public readonly preparedForTranscript: boolean = false,
+    public readonly isTaggingCall: boolean = false,
+    public readonly isTagged: boolean = false,
+    private readonly transcriptionJson?: any
+  ) {
+    super(/* paramètres Call */);
+  }
 
-// Validation métier
-isValid():boolean
-isPlayable():boolean
-isSupportedFormat():boolean
-getSizeInMB():number
-getFormattedDuration():string
+  // Cycle de vie du tagging
+  canPrepare(): boolean {
+    return (
+      this.hasValidTranscription() &&
+      !this.preparedForTranscript &&
+      !this.isTaggingCall &&
+      !this.isTagged
+    );
+  }
+
+  canSelect(): boolean {
+    return (
+      this.hasValidTranscription() &&
+      this.preparedForTranscript &&
+      !this.isTaggingCall &&
+      !this.isTagged
+    );
+  }
+
+  canTag(): boolean {
+    return (
+      this.hasValidTranscription() &&
+      this.preparedForTranscript &&
+      this.isTaggingCall &&
+      !this.isTagged
+    );
+  }
+
+  getLifecycleStatus(): CallLifecycleStatus {
+    // Calcul de l'état complet du cycle de vie
+  }
 }
 ```
 
-#### 3. **Transcription** et **TranscriptionWord**
-
-typescript
+#### AudioFile - Gestion des fichiers audio
 
 ```typescript
-classTranscription{
-  words:TranscriptionWord[]
-  metadata?:TranscriptionMetadata
+export class AudioFile {
+  private static readonly SUPPORTED_FORMATS = [
+    "mp3",
+    "wav",
+    "m4a",
+    "aac",
+    "ogg",
+  ];
+  private static readonly MAX_SIZE_MB = 100;
 
-isValid():boolean
-getWordCount():number
-getDurationInSeconds():number
-getSpeakers():string[]
-}
+  constructor(
+    public readonly path: string,
+    public readonly url?: string,
+    public readonly originalFile?: File,
+    public readonly size?: number,
+    public readonly mimeType?: string,
+    public readonly duration?: number,
+    public readonly uploadedAt: Date = new Date()
+  ) {
+    this.validateAudioFile();
+  }
 
-classTranscriptionWord{
-  text:string
-  startTime:number
-  endTime:number
-  speaker:string
-  turn?:string
-  confidence?:number
+  isValid(): boolean {
+    // Validation complète du fichier
+  }
+
+  isPlayable(): boolean {
+    return this.isValid() && !!this.url && this.url.length > 0;
+  }
+
+  isSupportedFormat(): boolean {
+    // Vérification du format
+  }
+
+  getSizeInMB(): number {
+    // Calcul de la taille en MB
+  }
+
+  getFormattedDuration(): string {
+    // Format mm:ss
+  }
 }
 ```
 
-### Services Métier Clés
-
-#### 1. **CallService** - Service principal
-
-- Création, mise à jour, suppression d'appels
-- Gestion des transitions d'état
-- Règles de validation métier
-- Coordination avec autres services
-
-#### 2. **DuplicateService** - Détection de doublons
-
-- Stratégies multiples : nom de fichier, contenu, description
-- Analyse de possibilité de mise à niveau
-- Algorithmes de similarité de transcription
-
-#### 3. **TranscriptionTransformationService** - Transformation technique
-
-- Conversion JSON → table `word` en base
-- Validation de structure JSON
-- Marquage `preparedfortranscript = true`
-
-#### 4. **CallFilteringService** - Filtrage avancé (NOUVEAU)
-
-- Filtres par statut conflictuel
-- Groupement par origine
-- Recherche multicritères
-- Interface accordéon pour CallPreparationPage
-
-## 3. Incohérences et Problèmes Identifiés
-
-### 🚨 Incohérences Majeures
-
-#### 1. **Confusion dans les critères de filtrage**
-
-**Problème** : CallPreparationPage utilisait `is_tagging_call = true` au lieu du bon critère
-
-typescript
+#### Transcription & TranscriptionWord
 
 ```typescript
-// ❌ INCORRECT (ancien code)
-const preparableCalls = calls.filter((call) => call.isTaggingCall);
+export class Transcription {
+  constructor(
+    public readonly words: TranscriptionWord[],
+    public readonly metadata?: TranscriptionMetadata
+  ) {}
 
-// ✅ CORRECT (corrigé)
-const preparableCalls = calls.filter(
-  (call) => call.hasValidTranscription() && !call.isReadyForTagging() // = preparedfortranscript: false
-);
+  isValid(): boolean {
+    return this.words.length > 0 && this.words.every((word) => word.isValid());
+  }
+
+  getWordCount(): number {
+    /* ... */
+  }
+  getDurationInSeconds(): number {
+    /* ... */
+  }
+  getSpeakers(): string[] {
+    /* ... */
+  }
+}
+
+export class TranscriptionWord {
+  constructor(
+    public readonly text: string,
+    public readonly startTime: number,
+    public readonly endTime: number,
+    public readonly speaker: string,
+    public readonly turn?: string,
+    public readonly confidence?: number
+  ) {
+    this.validateWord();
+  }
+
+  isValid(): boolean {
+    /* ... */
+  }
+  getDuration(): number {
+    /* ... */
+  }
+  overlapsWith(other: TranscriptionWord): boolean {
+    /* ... */
+  }
+}
 ```
 
-#### 2. **Mélange des responsabilités dans l'UI**
+### 2. Services Métier
 
-- CallPreparationPage dupliquait la logique de CallManagementPage
-- Pas de séparation claire entre "préparation technique" et "sélection pour tagging"
-
-#### 3. **Services incomplets dans l'architecture**
-
-- CallFilteringService ajouté tardivement
-- TranscriptionTransformationService pas intégré initialement
-- Workflows BulkPreparation peu utilisés
-
-#### 4. **Types conflictuels**
-
-typescript
+#### CallService - Service principal
 
 ```typescript
-// Problème : Status string vs enum CallStatus
-typeConflictStatus = "conflictuel" | "non_conflictuel" | "non_supervisé"; // String
-enumCallStatus = DRAFT | PROCESSING | READY; // Enum
+export class CallService {
+  constructor(
+    private callRepository: CallRepository,
+    private validationService: ValidationService
+  ) {}
 
-// Comparaisons incohérentes dans le code
-call.status === "conflictuel"; // String
-call.status === CallStatus.READY; // Enum
+  async createCall(data: CreateCallData): Promise<Call> {
+    // Validation des données
+    const validationResult = this.validationService.validateCallData(data);
+    if (!validationResult.isValid) {
+      throw new ValidationError(validationResult.errors);
+    }
+
+    // Création des entités
+    // Sauvegarde
+    // Retour du Call créé
+  }
+
+  async updateCallOrigin(callId: string, origin: string): Promise<void> {
+    /* ... */
+  }
+  async updateCallStatus(callId: string, status: CallStatus): Promise<void> {
+    /* ... */
+  }
+  async deleteCall(callId: string): Promise<void> {
+    /* ... */
+  }
+  async markAsPrepared(callId: string): Promise<void> {
+    /* ... */
+  }
+}
 ```
 
-### 🔧 Problèmes Techniques
-
-#### 1. **Factory Pattern incomplet**
-
-- ServiceFactory existe mais pas utilisé partout
-- Injection de dépendances manuelle dans certains hooks
-- Configuration des services dispersée
-
-#### 2. **Gestion d'erreurs incohérente**
-
-- Exceptions DDD bien définies mais pas utilisées uniformément
-- Gestion d'erreurs UI basique dans certains composants
-
-#### 3. **Cache et performance**
-
-- Pas de cache au niveau des services DDD
-- Optimisations uniquement dans les hooks UI
-
-## 4. Simplification vers CallManagementPage Unique
-
-### Objectif : Une seule page pour tout gérer
-
-L'idée est de remplacer les 3 pages actuelles par une seule **CallManagementPage** avec des onglets de services :
-
-```
-CallManagementPage
-├── 📊 Aperçu          # Dashboard global
-├── 📝 Transcription   # Actions sur les transcriptions
-├── 🎵 Audio          # Actions sur les fichiers audio
-├── 🔧 Préparation    # Préparation technique (ex-CallPreparationPage)
-├── 🏷️ Flags/Statuts  # Gestion des statuts
-└── 🧹 Nettoyage      # Actions de maintenance
-```
-
-### Architecture des Hooks Actions
-
-**Pattern proposé** : Hooks d'actions spécialisés qui encapsulent les services DDD
-
-typescript
+#### CallLifecycleService - Gestion du cycle de vie
 
 ```typescript
-// src/components/calls/ui/hooks/actions/
-├── useCallTranscriptionActions.ts    # Actions transcription
-├── useCallAudioActions.ts            # Actions audio
-├── useCallPreparationActions.ts      # Actions préparation
-├── useCallFlags.ts                   # Actions flags/statuts
-└── useCallCleanup.ts                 # Actions nettoyage
+export class CallLifecycleService {
+  constructor(
+    private callRepository: CallRepository,
+    private transformationService?: any
+  ) {}
+
+  async progressCall(callId: string): Promise<LifecycleActionResult> {
+    const call = await this.getCallWithWorkflow(callId);
+    const lifecycle = call.getLifecycleStatus();
+
+    if (lifecycle.canPrepare) {
+      return await this.prepareCall(call);
+    } else if (lifecycle.canSelect) {
+      return await this.selectCall(call);
+    }
+    // ...
+  }
+
+  async prepareCall(call: CallExtended): Promise<LifecycleActionResult> {
+    // Transformation JSON → words dans la table word
+  }
+
+  async selectCall(call: CallExtended): Promise<LifecycleActionResult> {
+    // Sélection pour le tagging (is_tagging_call = true)
+  }
+
+  async getLifecycleStats(callIds: string[]): Promise<LifecycleStats> {
+    // Statistiques par étape du cycle de vie
+  }
+}
 ```
 
-**Exemple d'implémentation** :
-
-typescript
+#### CallFilteringService - Filtrage avancé
 
 ```typescript
-// useCallPreparationActions.ts
-exportfunctionuseCallPreparationActions({ reload }:{reload:()=>void}){
-const{ prepareCall }=useCallPreparation()
-const{ markAsPrepared }=useCallManagement()
+export class CallFilteringService {
+  filterPreparableCalls(calls: Call[]): Call[] {
+    return calls.filter((call) => {
+      const hasValidTranscription = call.hasValidTranscription();
+      const notReadyForTagging = !call.isReadyForTagging();
+      return hasValidTranscription && notReadyForTagging;
+    });
+  }
 
-const prepareForTagging =useCallback(async(calls:Call[])=>{
-for(const call of calls){
-awaitprepareCall(call.id)// JSON → word + flag DB
-}
-awaitreload()
-},[prepareCall, reload])
+  filterByCriteria(calls: Call[], criteria: FilterCriteria): Call[] {
+    // Filtrage multi-critères intelligent
+  }
 
-const markPrepared =useCallback(async(calls:Call[])=>{
-for(const call of calls){
-awaitmarkAsPrepared(call.id)
-}
-awaitreload()
-},[markAsPrepared, reload])
-
-return{ prepareForTagging, markPrepared }
+  groupByOrigin(calls: Call[]): GroupedCalls {
+    /* ... */
+  }
+  getOriginStats(calls: Call[]): OriginStats[] {
+    /* ... */
+  }
 }
 ```
 
-## 5. Modifications Recommandées
-
-### Phase 1 : Suppression de CallPreparationPage
-
-#### 1. **Supprimer les fichiers obsolètes**
-
-bash
-
-```bash
-rm src/components/calls/ui/pages/CallPreparationPage.tsx
-rm -rf src/components/calls/ui/hooks/useCallPreparation.ts  # Si dupliqué
-```
-
-#### 2. **Intégrer la logique dans CallManagementPage**
-
-- Déplacer les filtres avancés de CallPreparationPage
-- Intégrer les actions de préparation dans l'onglet "Préparation"
-- Conserver l'interface accordéon par origine
-
-### Phase 2 : Consolidation des Services DDD
-
-#### 1. **Refactoring ServiceFactory**
-
-typescript
+#### DuplicateService - Détection de doublons
 
 ```typescript
-// Centraliser toute la création de services
-exportclassCallsServiceFactory{
-// Singleton pattern renforcé
-// Configuration unique
-// Health checks automatiques
-// Injection de dépendances complète
+export class DuplicateService {
+  async checkForDuplicates(
+    criteria: DuplicateCriteria
+  ): Promise<DuplicateResult> {
+    // Stratégie 1: Nom de fichier exact
+    if (criteria.filename) {
+      const filenameDuplicate = await this.checkFilenameMatch(
+        criteria.filename
+      );
+      if (filenameDuplicate) {
+        return {
+          isDuplicate: true,
+          existingCall: filenameDuplicate,
+          matchType: "filename",
+          confidence: 1.0,
+          analysis: filenameDuplicate.canBeUpgraded(/* ... */),
+        };
+      }
+    }
+
+    // Stratégie 2: Hash de contenu
+    // Stratégie 3: Description similaire
+  }
+
+  async upgradeExistingCall(
+    callId: string,
+    upgradeData: CallUpgradeData
+  ): Promise<boolean> {
+    // Mise à niveau d'un appel existant
+  }
 }
 ```
 
-#### 2. **Standardisation des Types**
-
-typescript
+### 3. Repositories (Interfaces)
 
 ```typescript
-// Unifier les types de statut
-exporttypeCallConflictStatus="conflictuel"|"non_conflictuel"|"non_supervisé"
-exportenumCallSystemStatus{DRAFT,PROCESSING,READY,TAGGING,COMPLETED,ERROR}
+export interface CallRepository {
+  save(call: Call): Promise<void>;
+  update(call: Call): Promise<void>;
+  delete(callId: string): Promise<void>;
+  findById(id: string): Promise<Call | null>;
+  findAll(offset?: number, limit?: number): Promise<Call[]>;
+  findByFilename(filename: string): Promise<Call[]>;
+  findByOrigin(origin: string): Promise<Call[]>;
+  findByStatus(status: CallStatus): Promise<Call[]>;
+  count(): Promise<number>;
+  exists(id: string): Promise<boolean>;
+}
 
-// Séparer clairement les deux domaines
-interfaceCall{
-  systemStatus:CallSystemStatus// Workflow technique
-  conflictStatus?:CallConflictStatus// Classification métier
+export interface StorageRepository {
+  uploadFile(file: File, path?: string): Promise<string>;
+  deleteFile(path: string): Promise<void>;
+  generateSignedUrl(path: string, expiration?: number): Promise<string>;
+  fileExists(path: string): Promise<boolean>;
+  getFileMetadata(path: string): Promise<FileMetadata | null>;
 }
 ```
 
-### Phase 3 : Optimisation des Performances
+### 4. Workflows Complexes
 
-#### 1. **Cache au niveau Services**
-
-typescript
+#### ImportWorkflow - Workflow d'import
 
 ```typescript
-exportclassCallService{
-private cache =newMap<string,Call>()
-private cacheTimeout =30000
+export class ImportWorkflow {
+  constructor(
+    private callService: CallService,
+    private validationService: ValidationService,
+    private duplicateService: DuplicateService,
+    private storageService: StorageService
+  ) {}
 
-asyncgetCallById(id:string):Promise<Call>{
-if(this.cache.has(id)&&!this.isCacheExpired(id)){
-returnthis.cache.get(id)!
-}
-// Fetch from repository...
-}
+  async execute(
+    data: ImportData,
+    callbacks?: Callbacks
+  ): Promise<ImportResult> {
+    // 1. Validation via l'API publique
+    // 2. Détection de doublons
+    // 3. Upload éventuel
+    // 4. Création du Call via CallService
+  }
 }
 ```
 
-#### 2. **Batch Operations optimisées**
-
-typescript
+#### BulkPreparationWorkflow - Préparation en lot
 
 ```typescript
-exportclassBulkPreparationWorkflow{
-asyncprepareBatch(callIds:string[], callbacks?:BulkCallbacks){
-// Traitement en parallèle optimisé
-// Progress reporting
-// Error handling robuste
-// Rollback automatique
-}
+export class BulkPreparationWorkflow {
+  async prepareBatch(
+    callIds: string[],
+    callbacks?: BulkCallbacks
+  ): Promise<BulkPreparationResult> {
+    // Division en lots
+    // Traitement par lots avec gestion d'erreur
+    // Callbacks de progression
+  }
+
+  async prepareSingle(
+    callId: string,
+    strategy: PreparationStrategy
+  ): Promise<PrepareResult> {
+    // Préparation individuelle avec stratégies multiples
+  }
 }
 ```
 
-### Phase 4 : Interface Unifiée
+## Couche Infrastructure
 
-#### 1. **CallManagementPage améliorée**
+### 1. Implémentations Supabase
 
-typescript
+#### SupabaseCallRepository
 
 ```typescript
-exportconstCallManagementPage: React.FC = () => {
-  const [tab, setTab] = useState(0);
-  const { calls, loading, reload } = useCallManagement();
+export class SupabaseCallRepository implements CallRepository {
+  constructor(private sb = supabaseClient) {}
 
-  // Actions spécialisées par onglet
-  const transcriptionActions = useCallTranscriptionActions({ reload });
-  const preparationActions = useCallPreparationActions({ reload });
-  // ... autres actions
+  async save(call: Call): Promise<void> {
+    const payload = this.mapToDatabase(call);
+    const { error } = await this.sb.from("call").insert([payload]);
+    if (error)
+      throw new RepositoryError(`Failed to save call: ${error.message}`);
+  }
+
+  async findByIdWithWorkflow(id: string): Promise<CallExtended | null> {
+    // Version enrichie avec informations de workflow
+  }
+
+  async findManyWithWorkflowOptimized(ids: string[]): Promise<CallExtended[]> {
+    // Version optimisée utilisant une vue SQL
+  }
+
+  private mapToCall(row: DbCall): CallExtended {
+    // Mapping DB → Entité avec gestion d'erreur
+  }
+}
+```
+
+### 2. Factory d'Injection de Dépendances
+
+```typescript
+export class CallsServiceFactory {
+  private static instance: CallsServiceFactory;
+
+  private constructor() {
+    // Initialisation des repositories
+    this.callRepository = new SupabaseCallRepository();
+    this.storageRepository = new SupabaseStorageRepository();
+
+    // Initialisation des services avec injection
+    this.validationService = new ValidationService();
+    this.callService = new CallService(
+      this.callRepository,
+      this.validationService
+    );
+    this.duplicateService = new DuplicateService(this.callRepository);
+    // ...
+  }
+
+  public static getInstance(): CallsServiceFactory {
+    if (!CallsServiceFactory.instance) {
+      CallsServiceFactory.instance = new CallsServiceFactory();
+    }
+    return CallsServiceFactory.instance;
+  }
+
+  createCallPreparationService() {
+    // Service composé pour CallPreparationPage
+  }
+}
+
+export const createServices = () => {
+  const factory = CallsServiceFactory.getInstance();
+  return {
+    callService: factory.getCallService(),
+    duplicateService: factory.getDuplicateService(),
+    // ... autres services
+    factory: factory,
+  };
+};
+```
+
+## Couche UI
+
+### 1. Hooks Métier
+
+#### useUnifiedCallManagement - Hook principal
+
+```typescript
+export const useUnifiedCallManagement = () => {
+  const [calls, setCalls] = useState<CallExtended[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<CallManagementFilters>({
+    /* ... */
+  });
+
+  const services = useMemo(() => createServices(), []);
+  const lifecycleService = useMemo(
+    () => new CallLifecycleService(/* ... */),
+    []
+  );
+
+  const loadCalls = useCallback(async () => {
+    try {
+      const ids = await services.callRepository.getAllCallIds();
+      const enrichedCalls =
+        await services.callRepository.findManyWithWorkflowOptimized(ids);
+      setCalls(enrichedCalls);
+    } catch (error) {
+      setError(error.message);
+    }
+  }, [services]);
+
+  const workflowActions = useMemo(
+    () => ({
+      prepare: async (call: CallExtended) => {
+        const result = await lifecycleService.prepareCall(call);
+        if (result.success) await loadCalls();
+        return result;
+      },
+      // ... autres actions
+    }),
+    [lifecycleService, loadCalls]
+  );
+
+  return {
+    calls,
+    filteredCalls,
+    stats,
+    loading,
+    error,
+    loadCalls,
+    workflowActions,
+    lifecycleService,
+    // ... autres exports
+  };
+};
+```
+
+### 2. Composants Spécialisés
+
+#### CallLifecycleColumn - Colonne cycle de vie
+
+```typescript
+export const CallLifecycleColumn: React.FC<CallLifecycleColumnProps> = ({
+  call,
+  onAction,
+  isLoading = false,
+}) => {
+  const lifecycle = call.getLifecycleStatus();
+  const stageConfig = STAGE_CONFIG[lifecycle.overallStage];
+
+  const getPrimaryAction = () => {
+    if (lifecycle.canPrepare) {
+      return {
+        key: "prepare",
+        label: "Préparer",
+        icon: <Build />,
+        tooltip: "Transformer le JSON en mots pour le tagging",
+      };
+    }
+    // ... autres actions
+  };
 
   return (
     <Box>
-      <Tabs value={tab} onChange={(_, v) => setTab(v)}>
-        <Tab label="Aperçu" />
-        <Tab label="Transcription" icon={<Description />} />
-        <Tab label="Audio" icon={<AudioFile />} />
-        <Tab label="Préparation" icon={<Build />} />
-        {/* ... autres onglets */}
-      </Tabs>
-
-      {/* Barre d'actions contextuelle par onglet */}
-      <ActionsToolbar
-        tab={tab}
-        selectedCalls={selectedCalls}
-        actions={allActions}
-      />
-
-      {/* Tableau unifié avec colonnes adaptatives */}
-      <CallTable calls={calls} onSelectionChange={setSelectedCalls} />
+      {/* Indicateurs de contenu */}
+      {/* Chip d'état principal */}
+      {/* Bouton d'action contextuel */}
     </Box>
   );
 };
 ```
 
-## 6. Avantages de la Simplification
+### 3. Pages Complètes
 
-### ✅ **Bénéfices Utilisateur**
+#### CallManagementPage - Interface unifiée
 
-- **Interface unique** : Plus simple à comprendre et utiliser
-- **Actions cohérentes** : Même UX pour toutes les opérations
-- **Contexte préservé** : Pas de navigation entre pages
-- **Performance** : Moins de recharges de données
+```typescript
+export const CallManagementPage: React.FC = () => {
+  const {
+    calls,
+    filteredCalls,
+    callsByOrigin,
+    stats,
+    loading,
+    error,
+    selectedCalls,
+    toggleSelection,
+    selectAll,
+    clearSelection,
+    updateFilters,
+    resetFilters,
+    workflowActions,
+  } = useUnifiedCallManagement();
 
-### ✅ **Bénéfices Technique**
+  const handleLifecycleAction = useCallback(
+    async (action: string, call: CallExtended) => {
+      switch (action) {
+        case "prepare":
+          await workflowActions.prepare(call);
+          break;
+        case "select":
+          await workflowActions.select(call);
+          break;
+        // ...
+      }
+    },
+    [workflowActions]
+  );
 
-- **Code centralisé** : Moins de duplication
-- **Maintenance simplifiée** : Un seul point d'entrée
-- **Architecture claire** : Services DDD bien séparés de l'UI
-- **Testabilité** : Hooks d'actions facilement testables
+  return (
+    <Box>
+      {/* Statistiques */}
+      {/* Filtres */}
+      {/* Onglets de services */}
+      {/* Table avec cycle de vie */}
+    </Box>
+  );
+};
+```
 
-### ✅ **Bénéfices Métier**
+## Types et Configuration
 
-- **Workflow unifié** : Toutes les étapes dans une interface
-- **Visibilité globale** : Vue d'ensemble sur tous les appels
-- **Actions en lot** : Traitement efficace de gros volumes
-- **Traçabilité** : Historique des actions centralisé
+### Types Métier
 
-## 7. Plan de Migration
+```typescript
+export enum CallStatus {
+  DRAFT = "draft",
+  PROCESSING = "processing",
+  READY = "ready",
+  TAGGING = "tagging",
+  COMPLETED = "completed",
+  ERROR = "error",
+}
 
-### Étape 1 : Préparation (1-2 jours)
+export enum TaggingWorkflowStage {
+  EMPTY = "empty",
+  AUDIO_ONLY = "audio_only",
+  TRANSCRIPTION_ONLY = "transcription_only",
+  COMPLETE = "complete",
+  NOT_PREPARED = "not_prepared",
+  PREPARED = "prepared",
+  SELECTED = "selected",
+  TAGGED = "tagged",
+}
 
-1. Audit des fonctionnalités de CallPreparationPage
-2. Identification des éléments à conserver
-3. Mapping vers les nouveaux hooks d'actions
+export interface CallLifecycleStatus {
+  hasAudio: boolean;
+  hasTranscription: boolean;
+  preparedForTranscript: boolean;
+  isTaggingCall: boolean;
+  isTagged: boolean;
+  contentStage: TaggingWorkflowStage;
+  workflowStage: TaggingWorkflowStage;
+  overallStage: TaggingWorkflowStage;
+  canPrepare: boolean;
+  canSelect: boolean;
+  canTag: boolean;
+  nextAction?: string;
+  description: string;
+}
+```
 
-### Étape 2 : Implémentation (3-5 jours)
+### Configuration
 
-1. Création des hooks d'actions spécialisés
-2. Extension de CallManagementPage avec les onglets
-3. Migration des composants UI réutilisables
-4. Tests d'intégration
+```typescript
+export const CallsConfig = {
+  storage: {
+    bucket: "Calls",
+    maxFileSize: 100 * 1024 * 1024, // 100MB
+    allowedFormats: ["mp3", "wav", "m4a", "aac", "ogg"],
+    signedUrlExpiration: 1200, // 20 minutes
+  },
+  transcription: {
+    validation: {
+      strictMode: true,
+      maxWords: 50000,
+      maxFileSize: 10 * 1024 * 1024, // 10MB
+    },
+    processing: {
+      timeoutMs: 30000,
+      retryAttempts: 3,
+      batchSize: 100,
+    },
+  },
+  performance: {
+    cacheTimeout: 30000, // 30 secondes
+    batchSize: 10,
+    maxConcurrentOperations: 5,
+  },
+};
+```
 
-### Étape 3 : Validation (1-2 jours)
+## Exceptions et Gestion d'Erreur
 
-1. Tests fonctionnels complets
-2. Vérification des performances
-3. Validation UX avec les utilisateurs
-4. Documentation mise à jour
+```typescript
+export abstract class DomainError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = this.constructor.name;
+  }
+}
 
-### Étape 4 : Nettoyage (1 jour)
+export class ValidationError extends DomainError {
+  constructor(public readonly errors: string[]) {
+    super(`Validation failed: ${errors.join(", ")}`);
+  }
+}
 
-1. Suppression de CallPreparationPage
-2. Nettoyage des imports obsolètes
-3. Mise à jour des routes
-4. Déploiement final
+export class BusinessRuleError extends DomainError {
+  constructor(message: string, public readonly rule?: string) {
+    super(message);
+  }
+}
 
-## Conclusion
+export class NotFoundError extends DomainError {
+  constructor(entity: string, identifier: string) {
+    super(`${entity} with identifier '${identifier}' not found`);
+  }
+}
+```
 
-Le système DDD Calls est une **architecture solide** avec des **concepts métier bien définis** , mais qui souffre d'**incohérences dans l'interface utilisateur** et d'une **complexité artificielle** due à la multiplication des pages.
+## Optimisations et Performance
 
-La **simplification vers CallManagementPage unique** permettra de :
+### 1. Cache Intelligent
 
-- **Préserver la qualité** de l'architecture DDD
-- **Simplifier l'expérience utilisateur**
-- **Améliorer la maintenabilité** du code
-- **Optimiser les performances** globales
+- **TTL** : 30 secondes configurable
+- **Invalidation** : Automatique lors des mutations
+- **Stratégies** : Cache par clé, batch loading, pagination
 
-Cette approche respecte les principes DDD en gardant le domaine métier intact tout en améliorant significativement la couche présentation.
+### 2. Chargement Paresseux
+
+- **Accordéons** : Chargement à l'ouverture
+- **Pagination** : Infinie avec virtualisation
+- **Skeleton UI** : Feedback pendant chargement
+
+### 3. Optimisations SQL
+
+- **Vues** : `call_with_tagging_status` pour éviter les JOINs multiples
+- **Index** : Sur callid, origine, status, timestamps
+- **Batch queries** : Regroupement des requêtes
+
+### 4. Gestion Mémoire
+
+- **Immutabilité** : Toutes les entités sont immutables
+- **Factory Methods** : Création contrôlée des instances
+- **Cleanup** : Nettoyage automatique des références
+
+## Points Forts de l'Architecture
+
+### 1. **Séparation des Responsabilités**
+
+- Domain : Logique métier pure, indépendante de la technologie
+- Infrastructure : Implémentations techniques (Supabase, API)
+- UI : Interface utilisateur avec hooks métier
+
+### 2. **Testabilité**
+
+- Services injectés via Factory
+- Interfaces mockables
+- Logique métier isolée
+
+### 3. **Évolutivité**
+
+- Nouvelles implémentations faciles (PostgreSQL, MongoDB)
+- Services composables
+- Workflows extensibles
+
+### 4. **Maintenabilité**
+
+- Code auto-documenté
+- Types stricts
+- Exceptions explicites
+
+### 5. **Performance**
+
+- Cache intelligent multi-niveau
+- Optimisations SQL
+- Chargement paresseux
+
+## Utilisation Pratique
+
+### Import Simple
+
+```typescript
+import { createServices } from "@/components/calls/domain";
+
+const services = createServices();
+const call = await services.callService.createCall({
+  audioFile: file,
+  transcriptionText: jsonString,
+  origin: "upload",
+});
+```
+
+### Workflow Complexe
+
+```typescript
+import { useUnifiedCallManagement } from "@/components/calls/ui/hooks";
+
+const { calls, workflowActions, lifecycleService } = useUnifiedCallManagement();
+
+// Action sur le cycle de vie
+await workflowActions.prepare(call);
+await workflowActions.select(call);
+
+// Statistiques
+const stats = await lifecycleService.getLifecycleStats(callIds);
+```
+
+### Interface UI
+
+```typescript
+import { CallManagementPage } from "@/components/calls/ui/pages";
+
+// Page complète avec toutes les fonctionnalités
+<CallManagementPage />;
+```
+
+Cette architecture DDD offre une base solide pour la gestion des appels, avec une séparation claire des responsabilités, une testabilité optimale, et des performances élevées même avec des volumes importants (682+ appels testés).

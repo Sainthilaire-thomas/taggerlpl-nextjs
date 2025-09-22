@@ -407,15 +407,21 @@ export const CallManagementPage: React.FC = () => {
       if (!lazyData[origin]?.loaded && !lazyData[origin]?.loading) {
         setLazyData((prev) => ({
           ...prev,
-          [origin]: { calls: [], loaded: false, loading: true },
+          [origin]: {
+            calls: [] as CallExtended[],
+            loaded: false,
+            loading: true,
+          },
         }));
 
-        // Simuler un délai de chargement pour éviter les blocages UI
+        // 2) Lors du "chargement" paresseux, cast vers CallExtended[]
         setTimeout(() => {
-          const originCalls = callsByOrigin[origin] || [];
+          const originCallsExt =
+            (callsByOrigin[origin] as unknown as CallExtended[]) ?? [];
+
           setLazyData((prev) => ({
             ...prev,
-            [origin]: { calls: originCalls, loaded: true, loading: false },
+            [origin]: { calls: originCallsExt, loaded: true, loading: false },
           }));
         }, 100);
       }

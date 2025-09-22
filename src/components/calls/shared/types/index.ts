@@ -95,3 +95,16 @@ export interface BaseStats {
   total: number;
   timestamp: Date;
 }
+
+// ============================================================================
+// TRANSCRIPTION / DIARISATION
+// ============================================================================
+
+export type {
+  Word,
+  WordTurn,
+  TranscriptionMeta,
+  TranscriptionJson,
+  DiarizationSegment,
+  TranscriptionResult,
+} from "./TranscriptionTypes";

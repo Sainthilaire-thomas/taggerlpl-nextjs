@@ -1,0 +1,1957 @@
+{
+  "words": [
+    {
+      "text": "[HORS_TRAITEMENT]",
+      "turn": "turn2",
+      "type": "\n      [HORS_TRAITEMENT",
+      "endTime": 3.498,
+      "startTime": 0
+    },
+    {
+      "text": "un instant",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 4.201,
+      "startTime": 3.498
+    },
+    {
+      "text": "(prénom)",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 4.826,
+      "startTime": 4.201
+    },
+    {
+      "text": "va vous répondre",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 5.92,
+      "startTime": 4.826
+    },
+    {
+      "text": "(...)",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 7.013,
+      "startTime": 5.92
+    },
+    {
+      "text": "(prénom)",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 7.654,
+      "startTime": 7.013
+    },
+    {
+      "text": "bonjour ?",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 8.232,
+      "startTime": 7.654
+    },
+    {
+      "text": "(...) [/HORS_TRAITEMENT]",
+      "turn": "turn2",
+      "type": "\n      [/HORS_TRAITEMENT]\n",
+      "endTime": 8.795,
+      "startTime": 8.232
+    },
+    {
+      "text": "[B_EXPLIQUE] oui bonjour ?",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 9.998,
+      "startTime": 8.795
+    },
+    {
+      "text": "euh je vous appelle parce que je viens d'appeler le centre de...",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 14.061,
+      "startTime": 9.998
+    },
+    {
+      "text": "de... d'amende chez vous [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [/B_EXPLIQUE]\n",
+      "endTime": 16.204,
+      "startTime": 14.061
+    },
+    {
+      "text": "[A_REFLET] oui ? [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 16.672,
+      "startTime": 16.204
+    },
+    {
+      "text": "[B_EXPLIQUE] qui m'a dit de vous appeler [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 17.719,
+      "startTime": 16.672
+    },
+    {
+      "text": "[A_REFLET] oui ? [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 18.282,
+      "startTime": 17.719
+    },
+    {
+      "text": "[B_EXPLIQUE] euh voilà je suis quelqu'un qui utilise jamais les transports [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 21.019,
+      "startTime": 18.282
+    },
+    {
+      "text": "[A_REFLET] d'accord",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 21.582,
+      "startTime": 21.019
+    },
+    {
+      "text": "(...) [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [/A_REFLET]\n",
+      "endTime": 22.056,
+      "startTime": 21.582
+    },
+    {
+      "text": "[B_EXPLIQUE] euh hier j'ai voulu pour une fois prendre vos services",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 26.571,
+      "startTime": 22.056
+    },
+    {
+      "text": "et j'ai acheté un ticket [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [/B_EXPLIQUE]\n",
+      "endTime": 27.727,
+      "startTime": 26.571
+    },
+    {
+      "text": "[A_REFLET] oui [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 28.289,
+      "startTime": 27.727
+    },
+    {
+      "text": "[B_EXPLIQUE] ce ticket euh, j'ai un collègue qui m'a dit tu vérifies bien que c'est\n      RER, donc j'ai pris un truc pour le RER [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 33.968,
+      "startTime": 28.289
+    },
+    {
+      "text": "[A_REFLET] hm hm [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 34.562,
+      "startTime": 33.968
+    },
+    {
+      "text": "[B_EXPLIQUE] sauf que j'ai pris le RER Paris",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 36.937,
+      "startTime": 34.562
+    },
+    {
+      "text": "d'accord ? [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [/B_EXPLIQUE]\n",
+      "endTime": 37.234,
+      "startTime": 36.937
+    },
+    {
+      "text": "[A_REFLET] hm hm",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 37.578,
+      "startTime": 37.234
+    },
+    {
+      "text": "(...) [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [/A_REFLET]\n",
+      "endTime": 38.125,
+      "startTime": 37.578
+    },
+    {
+      "text": "[B_EXPLIQUE] et je me suis retrouvé à la Défense [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 39.876,
+      "startTime": 38.125
+    },
+    {
+      "text": "[A_REFLET] ah ! d'accord, hm...",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 41.318,
+      "startTime": 39.876
+    },
+    {
+      "text": "et donc vous vous êtes fait verbalisé pour euh... prolongement de\n      parcours non autorisé, c'est-à-dire 35 euros d'amende... [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [/A_REFLET]\n",
+      "endTime": 46.726,
+      "startTime": 41.318
+    },
+    {
+      "text": "[B_EXPLIQUE] (...)",
+      "turn": "turn2",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 47.163,
+      "startTime": 46.726
+    },
+    {
+      "text": "oui, sauf que la personne qui m'a verbalisé [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [/B_EXPLIQUE]\n",
+      "endTime": 49.538,
+      "startTime": 47.163
+    },
+    {
+      "text": "[A_REFLET] oui ? [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 49.913,
+      "startTime": 49.538
+    },
+    {
+      "text": "[B_EXPLIQUE] ne m'a pas dit du tout",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 52.837,
+      "startTime": 49.913
+    },
+    {
+      "text": "qu'il fallait que je paie maintenant ou si je payais après",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 55.441,
+      "startTime": 52.837
+    },
+    {
+      "text": "(...) [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [/B_EXPLIQUE]\n",
+      "endTime": 56.066,
+      "startTime": 55.441
+    },
+    {
+      "text": "[A_REFLET] hm hm [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 56.535,
+      "startTime": 56.066
+    },
+    {
+      "text": "[B_EXPLIQUE] je payais plus cher",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 57.269,
+      "startTime": 56.535
+    },
+    {
+      "text": "(...) [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [/B_EXPLIQUE]\n",
+      "endTime": 57.676,
+      "startTime": 57.269
+    },
+    {
+      "text": "[A_MAUVAISE_NOUVELLE] oui",
+      "turn": "turn2",
+      "type": "\n      [A_MAUVAISE_NOUVELLE",
+      "endTime": 57.957,
+      "startTime": 57.676
+    },
+    {
+      "text": "(...)",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 58.457,
+      "startTime": 57.957
+    },
+    {
+      "text": "oui il y a toujours",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 58.903,
+      "startTime": 58.457
+    },
+    {
+      "text": "oui",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 59.28,
+      "startTime": 58.903
+    },
+    {
+      "text": "50 euros de frais de dossier, tout à fait [/A_MAUVAISE_NOUVELLE]",
+      "turn": "turn2",
+      "type": "\n      [/A_MAUVAISE_NOUVELLE]\n",
+      "endTime": 60.576,
+      "startTime": 59.28
+    },
+    {
+      "text": "[B_NEGATIF] oui",
+      "turn": "turn1",
+      "type": "\n      [B_NEGATIF",
+      "endTime": 61.186,
+      "startTime": 60.576
+    },
+    {
+      "text": "sauf que moi je le savais pas et j'ai pas été averti",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 63.357,
+      "startTime": 61.186
+    },
+    {
+      "text": "donc en plus le gars donc...",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 65.607,
+      "startTime": 63.357
+    },
+    {
+      "text": "m'a... m'a mis cette contravention [/B_NEGATIF]",
+      "turn": "turn1",
+      "type": "\n      [/B_NEGATIF]\n",
+      "endTime": 67.712,
+      "startTime": 65.607
+    },
+    {
+      "text": "[A_REFLET] oui [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 68.087,
+      "startTime": 67.712
+    },
+    {
+      "text": "[B_NEGATIF] donc à la limite, bon je le conçois, mais en sachant que votre système il\n      est...",
+      "turn": "turn1",
+      "type": "\n      [B_NEGATIF",
+      "endTime": 72.79,
+      "startTime": 68.087
+    },
+    {
+      "text": "il est nul à chier hein",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 74.087,
+      "startTime": 72.79
+    },
+    {
+      "text": "euh je peux vous dire que j'achète des [/B_NEGATIF]",
+      "turn": "turn1",
+      "type": "\n      [/B_NEGATIF]\n",
+      "endTime": 75.43,
+      "startTime": 74.087
+    },
+    {
+      "text": "[A_MAUVAISE_NOUVELLE] non ! [/A_MAUVAISE_NOUVELLE]",
+      "turn": "turn2",
+      "type": "\n      [A_MAUVAISE_NOUVELLE",
+      "endTime": 75.868,
+      "startTime": 75.43
+    },
+    {
+      "text": "[B_EXPLIQUE] des billets...",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 76.386,
+      "startTime": 75.868
+    },
+    {
+      "text": "si, j'achète des billets de train, c'est super facile [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [/B_EXPLIQUE]\n",
+      "endTime": 78.205,
+      "startTime": 76.386
+    },
+    {
+      "text": "[A_MAUVAISE_NOUVELLE] non, mais un billet de train monsieur, si vous prenez un billet pour Lyon\n      et que vous arrivez à Bordeaux, forcément vous allez être verbalisé",
+      "turn": "turn2",
+      "type": "\n      [A_MAUVAISE_NOUVELLE",
+      "endTime": 84.094,
+      "startTime": 78.205
+    },
+    {
+      "text": "c'est... c'est la même chose [/A_MAUVAISE_NOUVELLE]",
+      "turn": "turn2",
+      "type": "\n      [/A_MAUVAISE_NOUVELLE]\n",
+      "endTime": 84.875,
+      "startTime": 84.094
+    },
+    {
+      "text": "[B_NEGATIF] ah non non non, moi ce que je fais... [/B_NEGATIF]",
+      "turn": "turn1",
+      "type": "\n      [B_NEGATIF",
+      "endTime": 85.328,
+      "startTime": 84.875
+    },
+    {
+      "text": "[A_MAUVAISE_NOUVELLE] c'est aussi simple qu'un billet ou un billet d'avion hein",
+      "turn": "turn2",
+      "type": "\n      [A_MAUVAISE_NOUVELLE",
+      "endTime": 87.266,
+      "startTime": 85.328
+    },
+    {
+      "text": "(...) [/A_MAUVAISE_NOUVELLE]",
+      "turn": "turn2",
+      "type": "\n      [/A_MAUVAISE_NOUVELLE]\n",
+      "endTime": 87.813,
+      "startTime": 87.266
+    },
+    {
+      "text": "[B_EXPLIQUE] ben moi je trouve que c'est vachement plus simple parce que je le fais\n      tous les jours [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 89.739,
+      "startTime": 87.813
+    },
+    {
+      "text": "[A_MAUVAISE_NOUVELLE] c'est pas nul à chier comme vous le dites [/A_MAUVAISE_NOUVELLE]",
+      "turn": "turn2",
+      "type": "\n      [A_MAUVAISE_NOUVELLE",
+      "endTime": 91.364,
+      "startTime": 89.739
+    },
+    {
+      "text": "[B_NEGATIF] ah ben c'est... je vais vous dire pourquoi",
+      "turn": "turn1",
+      "type": "\n      [B_NEGATIF",
+      "endTime": 93.666,
+      "startTime": 91.364
+    },
+    {
+      "text": "moi quand j'achète un billet de train, quand je vais à un endroit [/B_NEGATIF]",
+      "turn": "turn1",
+      "type": "\n      [/B_NEGATIF]\n",
+      "endTime": 96.4,
+      "startTime": 93.666
+    },
+    {
+      "text": "[A_REFLET] oui [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 96.791,
+      "startTime": 96.4
+    },
+    {
+      "text": "[B_EXPLIQUE] euh je vais dans Paris, je prends un billet de train",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 99.166,
+      "startTime": 96.791
+    },
+    {
+      "text": "un billet de, de... un ticket",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 101.416,
+      "startTime": 99.166
+    },
+    {
+      "text": "d'accord ? [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [/B_EXPLIQUE]\n",
+      "endTime": 101.729,
+      "startTime": 101.416
+    },
+    {
+      "text": "[A_REFLET] hm hm [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 102.056,
+      "startTime": 101.729
+    },
+    {
+      "text": "[B_EXPLIQUE] je vais au... j'ai... j'ai pas l'habitude donc j'ai été à votre guichet,\n      à votre guichet je suis tombé sur une femme qui m'a dit",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 107.965,
+      "startTime": 102.056
+    },
+    {
+      "text": "euh je super aimablement",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 109.875,
+      "startTime": 107.965
+    },
+    {
+      "text": "monsieur il y a des distributeurs, vous avez qu'à les chercher là [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [/B_EXPLIQUE]\n",
+      "endTime": 112.467,
+      "startTime": 109.875
+    },
+    {
+      "text": "[A_REFLET] hm hm [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 112.998,
+      "startTime": 112.467
+    },
+    {
+      "text": "[B_EXPLIQUE] si je vais voir quelqu'un c'est parce que je sais pas comment\n      l'utiliser [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 115.873,
+      "startTime": 112.998
+    },
+    {
+      "text": "[A_REFLET] d'accord [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 116.654,
+      "startTime": 115.873
+    },
+    {
+      "text": "[B_QUESTION_NEUTRE] on est bien d'accord ? [/B_QUESTION_NEUTRE]",
+      "turn": "turn1",
+      "type": "\n      [B_QUESTION_NEUTRE",
+      "endTime": 117.669,
+      "startTime": 116.654
+    },
+    {
+      "text": "[A_REFLET] hm hm [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 118.2,
+      "startTime": 117.669
+    },
+    {
+      "text": "[B_EXPLIQUE] donc qu'est-ce que je fais, je vois ticket pour Paris",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 120.809,
+      "startTime": 118.2
+    },
+    {
+      "text": "qu'est-ce que je fais je me prends un ticket",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 122.263,
+      "startTime": 120.809
+    },
+    {
+      "text": "en plus j'en achète 2",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 123.498,
+      "startTime": 122.263
+    },
+    {
+      "text": "(...)",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 124.326,
+      "startTime": 123.498
+    },
+    {
+      "text": "d'accord ? [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [/B_EXPLIQUE]\n",
+      "endTime": 124.967,
+      "startTime": 124.326
+    },
+    {
+      "text": "[A_REFLET] hm hm",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 125.358,
+      "startTime": 124.967
+    },
+    {
+      "text": "(...) [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [/A_REFLET]\n",
+      "endTime": 125.764,
+      "startTime": 125.358
+    },
+    {
+      "text": "[B_EXPLIQUE] et moi Paris euh... [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 126.904,
+      "startTime": 125.764
+    },
+    {
+      "text": "[A_MAUVAISE_NOUVELLE] ouais mais la Défense, la Défense c'est pas Paris quoi [/A_MAUVAISE_NOUVELLE]",
+      "turn": "turn2",
+      "type": "\n      [A_MAUVAISE_NOUVELLE",
+      "endTime": 128.358,
+      "startTime": 126.904
+    },
+    {
+      "text": "[B_NEGATIF] oui pour vous, mais pour, pour moi euh qui travaille",
+      "turn": "turn1",
+      "type": "\n      [B_NEGATIF",
+      "endTime": 131.579,
+      "startTime": 128.358
+    },
+    {
+      "text": "qui travaille tous les jours euh....",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 133.392,
+      "startTime": 131.579
+    },
+    {
+      "text": "en Ile-de-France [/B_NEGATIF]",
+      "turn": "turn1",
+      "type": "\n      [/B_NEGATIF]\n",
+      "endTime": 134.674,
+      "startTime": 133.392
+    },
+    {
+      "text": "[A_REFLET] hm hm [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 135.174,
+      "startTime": 134.674
+    },
+    {
+      "text": "[B_EXPLIQUE] euh c'est Paris, vous voyez ce que je veux dire donc... [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 137.377,
+      "startTime": 135.174
+    },
+    {
+      "text": "[A_MAUVAISE_NOUVELLE] ouais mais bon c'est pas Paris, c'est dans le 92",
+      "turn": "turn2",
+      "type": "\n      [A_MAUVAISE_NOUVELLE",
+      "endTime": 139.595,
+      "startTime": 137.377
+    },
+    {
+      "text": "c'est pas du tout Paris, mais enfin bref...",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 141.595,
+      "startTime": 139.595
+    },
+    {
+      "text": "ça arrive [/A_MAUVAISE_NOUVELLE]",
+      "turn": "turn2",
+      "type": "\n      [/A_MAUVAISE_NOUVELLE]\n",
+      "endTime": 142.142,
+      "startTime": 141.595
+    },
+    {
+      "text": "[B_EXPLIQUE] si [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 142.501,
+      "startTime": 142.142
+    },
+    {
+      "text": "[A_MAUVAISE_NOUVELLE] c'est euh... ça arrive assez fréquemment",
+      "turn": "turn2",
+      "type": "\n      [A_MAUVAISE_NOUVELLE",
+      "endTime": 145.055,
+      "startTime": 142.501
+    },
+    {
+      "text": "les gens, parce que ils pensent que... comme ils peuvent aller avec un\n      ticket de métro normal",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 149.195,
+      "startTime": 145.055
+    },
+    {
+      "text": "ils peuvent aller à la Défense avec la ligne une",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 151.366,
+      "startTime": 149.195
+    },
+    {
+      "text": "c'est ce que vous auriez dû faire en fait",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 152.57,
+      "startTime": 151.366
+    },
+    {
+      "text": "euh... mais par contre pas le RER [/A_MAUVAISE_NOUVELLE]",
+      "turn": "turn2",
+      "type": "\n      [/A_MAUVAISE_NOUVELLE]\n",
+      "endTime": 153.803,
+      "startTime": 152.57
+    },
+    {
+      "text": "[B_NEGATIF] non mais j'ai pris le RER [/B_NEGATIF]",
+      "turn": "turn1",
+      "type": "\n      [B_NEGATIF",
+      "endTime": 155.007,
+      "startTime": 153.803
+    },
+    {
+      "text": "[A_OUVERTURE] le RER c'est quand dans Paris intramuros, c'est entre Nation et... et\n      Charles de Gaulle - Etoile",
+      "turn": "turn2",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 159.321,
+      "startTime": 155.007
+    },
+    {
+      "text": "uniquement",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 160.165,
+      "startTime": 159.321
+    },
+    {
+      "text": "donc là vous avez fait un dépassement de zone, donc ce que allez\n      faire",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 162.29,
+      "startTime": 160.165
+    },
+    {
+      "text": "vous allez nous envoyer",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 163.54,
+      "startTime": 162.29
+    },
+    {
+      "text": "euh... la copie de l'amende ou juste le numéro de l'amende",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 167.15,
+      "startTime": 163.54
+    },
+    {
+      "text": "du PV [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [/A_OUVERTURE]\n",
+      "endTime": 167.51,
+      "startTime": 167.15
+    },
+    {
+      "text": "[B_POSITIF] je peux vous le donner ? [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 168.276,
+      "startTime": 167.51
+    },
+    {
+      "text": "[A_QUESTION] euh oui mais là je pense que je l'aurai pas sur ma base de données, vous\n      m'avez dit ça s'est passé hier c'est ça ? [/A_QUESTION]",
+      "turn": "turn2",
+      "type": "\n      [A_QUESTION",
+      "endTime": 172.338,
+      "startTime": 168.276
+    },
+    {
+      "text": "[B_POSITIF] oui hier ouais [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 173.306,
+      "startTime": 172.338
+    },
+    {
+      "text": "[A_QUESTION] ouais je pense pas l'avoir, donnez-moi le, je vais tenter mais à mon avis\n      c'est pas encore remonté sur notre base de... de données",
+      "turn": "turn2",
+      "type": "\n      [A_QUESTION",
+      "endTime": 177.846,
+      "startTime": 173.306
+    },
+    {
+      "text": "(...) [/A_QUESTION]",
+      "turn": "turn2",
+      "type": "\n      [/A_QUESTION]\n",
+      "endTime": 178.299,
+      "startTime": 177.846
+    },
+    {
+      "text": "[B_EXPLIQUE] alors ça doit être le",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 179.844,
+      "startTime": 178.299
+    },
+    {
+      "text": "(ref. PV)",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 180.62,
+      "startTime": 179.844
+    },
+    {
+      "text": "(ref. PV)",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 181.362,
+      "startTime": 180.62
+    },
+    {
+      "text": "(ref. PV)",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 181.908,
+      "startTime": 181.362
+    },
+    {
+      "text": "(ref. PV)",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 182.736,
+      "startTime": 181.908
+    },
+    {
+      "text": "(...)",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 183.187,
+      "startTime": 182.736
+    },
+    {
+      "text": "(ref. PV)",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 183.986,
+      "startTime": 183.187
+    },
+    {
+      "text": "(ref. PV)",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 185.049,
+      "startTime": 183.986
+    },
+    {
+      "text": "(ref. PV) [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [/B_EXPLIQUE]\n",
+      "endTime": 186.812,
+      "startTime": 185.049
+    },
+    {
+      "text": "[A_QUESTION] oh la je pense que c'est pas ça",
+      "turn": "turn2",
+      "type": "\n      [A_QUESTION",
+      "endTime": 188.94,
+      "startTime": 186.812
+    },
+    {
+      "text": "ça ça doit être la... la clef de télépaiement ça, que vous m'avez\n      donné [/A_QUESTION]",
+      "turn": "turn2",
+      "type": "\n      [/A_QUESTION]\n",
+      "endTime": 192.382,
+      "startTime": 188.94
+    },
+    {
+      "text": "[B_EXPLIQUE] ah peut-être alors",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 193.225,
+      "startTime": 192.382
+    },
+    {
+      "text": "c'est en-dessous",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 193.616,
+      "startTime": 193.225
+    },
+    {
+      "text": "ah le...",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 194.132,
+      "startTime": 193.616
+    },
+    {
+      "text": "(ref. PV)",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 195.569,
+      "startTime": 194.132
+    },
+    {
+      "text": "alors",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 195.881,
+      "startTime": 195.569
+    },
+    {
+      "text": "(ref. PV)",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 196.55,
+      "startTime": 195.881
+    },
+    {
+      "text": "déjà c'est mieux",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 197.237,
+      "startTime": 196.55
+    },
+    {
+      "text": "(...)",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 197.769,
+      "startTime": 197.237
+    },
+    {
+      "text": "(ref. PV)",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 199.314,
+      "startTime": 197.769
+    },
+    {
+      "text": "(ref. PV)",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 200.97,
+      "startTime": 199.314
+    },
+    {
+      "text": "(ref. PV)",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 201.611,
+      "startTime": 200.97
+    },
+    {
+      "text": "[/B_EXPLIQUE] (...)",
+      "turn": "turn2",
+      "type": "\n      [/B_EXPLIQUE",
+      "endTime": 202.814,
+      "startTime": 201.611
+    },
+    {
+      "text": "[A_ENGAGEMENT] je pense que je dois... non je l'ai pas encore c'est sûr, ouais",
+      "turn": "turn2",
+      "type": "\n      [A_ENGAGEMENT",
+      "endTime": 206.115,
+      "startTime": 202.814
+    },
+    {
+      "text": "ça met plus de 48 heures avant de remonter",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 208.302,
+      "startTime": 206.115
+    },
+    {
+      "text": "euh... [/A_ENGAGEMENT]",
+      "turn": "turn2",
+      "type": "\n      [/A_ENGAGEMENT]\n",
+      "endTime": 208.849,
+      "startTime": 208.302
+    },
+    {
+      "text": "[B_POSITIF] ouais [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 209.312,
+      "startTime": 208.849
+    },
+    {
+      "text": "[A_OUVERTURE] vous allez nous écrire, pour faire une demande d'indulgence",
+      "turn": "turn2",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 211.265,
+      "startTime": 209.312
+    },
+    {
+      "text": "sachez que pour ce genre de cas",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 212.875,
+      "startTime": 211.265
+    },
+    {
+      "text": "en général on fait une indulgence. alors je vous promets pas que l'amende\n      sera annulée purement et simplement hein",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 216.975,
+      "startTime": 212.875
+    },
+    {
+      "text": "mais par contre [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [/A_OUVERTURE]\n",
+      "endTime": 217.459,
+      "startTime": 216.975
+    },
+    {
+      "text": "[B_NEUTRE] ah non [/B_NEUTRE]",
+      "turn": "turn1",
+      "type": "\n      [B_NEUTRE",
+      "endTime": 217.897,
+      "startTime": 217.459
+    },
+    {
+      "text": "[A_OUVERTURE] elle sera réduite",
+      "turn": "turn2",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 218.577,
+      "startTime": 217.897
+    },
+    {
+      "text": "donc ce que vous allez faire... [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [/A_OUVERTURE]\n",
+      "endTime": 219.854,
+      "startTime": 218.577
+    },
+    {
+      "text": "[B_POSITIF] moi je vous, je vous demande pas ça",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 221.104,
+      "startTime": 219.854
+    },
+    {
+      "text": "moi ce que je veux, c'est à la limite, les 35 euros, bon les... [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [/B_POSITIF]\n",
+      "endTime": 223.892,
+      "startTime": 221.104
+    },
+    {
+      "text": "[A_OUVERTURE] oui, oui la réduction des frais de dossier quoi [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 225.997,
+      "startTime": 223.892
+    },
+    {
+      "text": "[B_EXPLIQUE] voilà, mais moi les frais de dossier je veux pas les payer, je veux dire\n      aujourd'hui je suis de bonne foi donc... [/B_EXPLIQUE]",
+      "turn": "turn1",
+      "type": "\n      [B_EXPLIQUE",
+      "endTime": 230.133,
+      "startTime": 225.997
+    },
+    {
+      "text": "[A_OUVERTURE] dans votre courrier, dans votre courrier",
+      "turn": "turn2",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 231.727,
+      "startTime": 230.133
+    },
+    {
+      "text": "euh.. stipulez que... on vous a pas proposé le paiement sur place",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 235.781,
+      "startTime": 231.727
+    },
+    {
+      "text": "d'accord ?",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 236.391,
+      "startTime": 235.781
+    },
+    {
+      "text": "(...) [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [/A_OUVERTURE]\n",
+      "endTime": 236.954,
+      "startTime": 236.391
+    },
+    {
+      "text": "[B_POSITIF] oui [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 237.47,
+      "startTime": 236.954
+    },
+    {
+      "text": "[A_OUVERTURE] vous allez nous envoyer euh donc le, le numéro de l'amende",
+      "turn": "turn2",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 240.895,
+      "startTime": 237.47
+    },
+    {
+      "text": "par courrier hein, ça... ça c'est que par courrier",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 243.16,
+      "startTime": 240.895
+    },
+    {
+      "text": "et euh je vais vous donner l'adresse où il faudra nous envoyer ça",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 246.331,
+      "startTime": 243.16
+    },
+    {
+      "text": "(...)",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 247.128,
+      "startTime": 246.331
+    },
+    {
+      "text": "vous avez de quoi noter monsieur ? [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [/A_OUVERTURE]\n",
+      "endTime": 248.363,
+      "startTime": 247.128
+    },
+    {
+      "text": "[B_NEUTRE] oui [/B_NEUTRE]",
+      "turn": "turn1",
+      "type": "\n      [B_NEUTRE",
+      "endTime": 249.238,
+      "startTime": 248.363
+    },
+    {
+      "text": "[A_OUVERTURE] alors c'est RATP service clientèle [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 251.441,
+      "startTime": 249.238
+    },
+    {
+      "text": "[B_POSITIF] en plus euh... c'est, c'est dingue parce que je travaille pour vous en\n      plus [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 255.909,
+      "startTime": 251.441
+    },
+    {
+      "text": "[A_REFLET] hm hm",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 256.518,
+      "startTime": 255.909
+    },
+    {
+      "text": "(...) [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [/A_REFLET]\n",
+      "endTime": 257.456,
+      "startTime": 256.518
+    },
+    {
+      "text": "[B_POSITIF] parce que le...",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 258.659,
+      "startTime": 257.456
+    },
+    {
+      "text": "euh je fais des ascenseurs et je travaille euh...",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 261.152,
+      "startTime": 258.659
+    },
+    {
+      "text": "(...)",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 261.714,
+      "startTime": 261.152
+    },
+    {
+      "text": "je travaille avec vous sur des certains ascenseurs [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [/B_POSITIF]\n",
+      "endTime": 264.465,
+      "startTime": 261.714
+    },
+    {
+      "text": "[A_REFLET] d'accord",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 265.09,
+      "startTime": 264.465
+    },
+    {
+      "text": "(...) [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [/A_REFLET]\n",
+      "endTime": 266.465,
+      "startTime": 265.09
+    },
+    {
+      "text": "[A_OUVERTURE] allez-y",
+      "turn": "turn1",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 266.997,
+      "startTime": 266.465
+    },
+    {
+      "text": "service clientèle",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 267.966,
+      "startTime": 266.997
+    },
+    {
+      "text": "alors RATP service clientèle",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 269.56,
+      "startTime": 267.966
+    },
+    {
+      "text": "bon en-dessous vous allez écrire verbalisation",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 271.826,
+      "startTime": 269.56
+    },
+    {
+      "text": "ça c'est pour que ce soit traité en priorité",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 274.163,
+      "startTime": 271.826
+    },
+    {
+      "text": "d'accord ?",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 274.741,
+      "startTime": 274.163
+    },
+    {
+      "text": "(...) [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [/A_OUVERTURE]\n",
+      "endTime": 275.116,
+      "startTime": 274.741
+    },
+    {
+      "text": "[B_NEUTRE] oui ? [/B_NEUTRE]",
+      "turn": "turn1",
+      "type": "\n      [B_NEUTRE",
+      "endTime": 275.663,
+      "startTime": 275.116
+    },
+    {
+      "text": "[A_OUVERTURE] et l'adresse donc c'est un code, c'est TSA [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 277.865,
+      "startTime": 275.663
+    },
+    {
+      "text": "[B_QUESTION_NEUTRE] (...)",
+      "turn": "turn2",
+      "type": "\n      [B_QUESTION_NEUTRE",
+      "endTime": 278.677,
+      "startTime": 277.865
+    },
+    {
+      "text": "T comme T comme Thérèse ? [/B_QUESTION_NEUTRE]",
+      "turn": "turn1",
+      "type": "\n      [/B_QUESTION_NEUTRE]\n",
+      "endTime": 280.432,
+      "startTime": 278.677
+    },
+    {
+      "text": "[A_OUVERTURE] T comme Thomas, S comme Sabine, A comme André",
+      "turn": "turn2",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 282.65,
+      "startTime": 280.432
+    },
+    {
+      "text": "(...) [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [/A_OUVERTURE]\n",
+      "endTime": 283.26,
+      "startTime": 282.65
+    },
+    {
+      "text": "[B_NEUTRE] oui [/B_NEUTRE]",
+      "turn": "turn1",
+      "type": "\n      [B_NEUTRE",
+      "endTime": 283.729,
+      "startTime": 283.26
+    },
+    {
+      "text": "[A_OUVERTURE] 81250 [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 286.042,
+      "startTime": 283.729
+    },
+    {
+      "text": "[B_NEUTRE] oui [/B_NEUTRE]",
+      "turn": "turn1",
+      "type": "\n      [B_NEUTRE",
+      "endTime": 286.87,
+      "startTime": 286.042
+    },
+    {
+      "text": "[A_OUVERTURE] et le code postal c'est 75 564",
+      "turn": "turn2",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 290.907,
+      "startTime": 286.87
+    },
+    {
+      "text": "(...) [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [/A_OUVERTURE]\n",
+      "endTime": 291.61,
+      "startTime": 290.907
+    },
+    {
+      "text": "[B_NEUTRE] oui [/B_NEUTRE]",
+      "turn": "turn1",
+      "type": "\n      [B_NEUTRE",
+      "endTime": 292.078,
+      "startTime": 291.61
+    },
+    {
+      "text": "[A_OUVERTURE] Paris cedex 12",
+      "turn": "turn2",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 293.687,
+      "startTime": 292.078
+    },
+    {
+      "text": "(...)",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 295.062,
+      "startTime": 293.687
+    },
+    {
+      "text": "donc si je peux vous donner un conseil, expliquez bien que euh vous...\n      vous, vous prenez rarement les transports, que c'était une des seules fois\n      où vous avez pris les transports",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 304.687,
+      "startTime": 295.062
+    },
+    {
+      "text": "et qu'on ne vous a pas proposé le paiement sur place",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 306.875,
+      "startTime": 304.687
+    },
+    {
+      "text": "parce qu'au minimum vous aurez les 50 euros de frais de dossiers qui\n      seront annulés",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 310.251,
+      "startTime": 306.875
+    },
+    {
+      "text": "au mieux peut-être qu'on pourra faire plus, d'accord ?",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 313.33,
+      "startTime": 310.251
+    },
+    {
+      "text": "(...) [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [/A_OUVERTURE]\n",
+      "endTime": 313.768,
+      "startTime": 313.33
+    },
+    {
+      "text": "[B_POSITIF] d'accord",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 314.268,
+      "startTime": 313.768
+    },
+    {
+      "text": "non moi...",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 315.132,
+      "startTime": 314.268
+    },
+    {
+      "text": "à la limite je suis de bonne foi et je, je comprends que il y ait des\n      règles [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [/B_POSITIF]\n",
+      "endTime": 318.896,
+      "startTime": 315.132
+    },
+    {
+      "text": "[A_REFLET] hm hm [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 319.458,
+      "startTime": 318.896
+    },
+    {
+      "text": "[B_POSITIF] ce que j'arrive pas à admettre",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 320.834,
+      "startTime": 319.458
+    },
+    {
+      "text": "c'est que quand je... on se fait avoir [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [/B_POSITIF]\n",
+      "endTime": 323.209,
+      "startTime": 320.834
+    },
+    {
+      "text": "[A_REFLET] hm hm [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 323.615,
+      "startTime": 323.209
+    },
+    {
+      "text": "[B_POSITIF] qu'on le dise pas",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 324.24,
+      "startTime": 323.615
+    },
+    {
+      "text": "moi j'ai... j'en, j'en... ma femme prend le Navigo chez vous [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [/B_POSITIF]\n",
+      "endTime": 327.163,
+      "startTime": 324.24
+    },
+    {
+      "text": "[A_REFLET] hm hm [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 327.726,
+      "startTime": 327.163
+    },
+    {
+      "text": "[B_POSITIF] euh je lui ai dit hier, j'ai dit, j'étais énervé parce qu'en plus j'ai\n      horreur de me faire... c'est... [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 331.993,
+      "startTime": 327.726
+    },
+    {
+      "text": "[A_REFLET] ah ouais non mais ça personne n'aime se faire verbaliser hein, que ce\n      soit par les contrôleurs RATP, sur la route [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 337.414,
+      "startTime": 331.993
+    },
+    {
+      "text": "[B_POSITIF] mais c'est même pas d'être verbalisé, parce qu'à la limite, je, je saute\n      quand j'étais jeune je sautais euh... un, un, un tourniquet [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 343.305,
+      "startTime": 337.414
+    },
+    {
+      "text": "[A_REFLET] oui [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 343.587,
+      "startTime": 343.305
+    },
+    {
+      "text": "[B_POSITIF] je sais à quoi m'en tenir",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 344.587,
+      "startTime": 343.587
+    },
+    {
+      "text": "là j'ai fait la queue pour payer un truc",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 346.618,
+      "startTime": 344.587
+    },
+    {
+      "text": "(...) [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [/B_POSITIF]\n",
+      "endTime": 347.087,
+      "startTime": 346.618
+    },
+    {
+      "text": "[A_REFLET] hm hm [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 347.602,
+      "startTime": 347.087
+    },
+    {
+      "text": "[B_POSITIF] derrière on me dit qu'il est pas bon, euh je veux dire que là j'ai les\n      boules",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 350.71,
+      "startTime": 347.602
+    },
+    {
+      "text": "et derrière ma femme me dit... [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [/B_POSITIF]\n",
+      "endTime": 351.694,
+      "startTime": 350.71
+    },
+    {
+      "text": "[A_REFLET] ouais ouais non mais je comprends",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 352.46,
+      "startTime": 351.694
+    },
+    {
+      "text": "(...) [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [/A_REFLET]\n",
+      "endTime": 352.886,
+      "startTime": 352.46
+    },
+    {
+      "text": "[B_POSITIF] alors en plus me dit ah ben ouais mais tu devrais le savoir, mais non je\n      le sais pas non [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 356.871,
+      "startTime": 352.886
+    },
+    {
+      "text": "[A_OUVERTURE] ouais ouais non mais c'est pareil avec...",
+      "turn": "turn2",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 358.88,
+      "startTime": 356.871
+    },
+    {
+      "text": "avec par exemple la gare de Vincennes sur le RER A",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 361.802,
+      "startTime": 358.88
+    },
+    {
+      "text": "les gens pensent qu'ils peuvent y aller avec un ticket de métro alors que\n      non",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 364.912,
+      "startTime": 361.802
+    },
+    {
+      "text": "parce que Vincennes effectivement il y a Château-de-Vincennes sur la\n      ligne une du métro, mais le métro c'est un tarif unique",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 370.343,
+      "startTime": 364.912
+    },
+    {
+      "text": "à partir du moment où vous prenez le RER, faut toujours demander",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 374.031,
+      "startTime": 370.343
+    },
+    {
+      "text": "euh un billet origine destination, c'est-à-dire de là où vous partez et\n      vous dites la gare où vous voulez aller",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 380.141,
+      "startTime": 374.031
+    },
+    {
+      "text": "et là vous êtes sûr d'avoir le bon titre",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 382.063,
+      "startTime": 380.141
+    },
+    {
+      "text": "(...) [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [/A_OUVERTURE]\n",
+      "endTime": 382.891,
+      "startTime": 382.063
+    },
+    {
+      "text": "[B_NEUTRE] ben ouais mais... [/B_NEUTRE]",
+      "turn": "turn1",
+      "type": "\n      [B_NEUTRE",
+      "endTime": 383.499,
+      "startTime": 382.891
+    },
+    {
+      "text": "[A_OUVERTURE] ça je vous le dis pour euh... à l'avenir, on sait jamais",
+      "turn": "turn2",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 385.546,
+      "startTime": 383.499
+    },
+    {
+      "text": "ça peut vous aider [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [/A_OUVERTURE]\n",
+      "endTime": 386.858,
+      "startTime": 385.546
+    },
+    {
+      "text": "[B_POSITIF] oui mais vous savez, je vais vous faire rigoler... [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 388.217,
+      "startTime": 386.858
+    },
+    {
+      "text": "[A_TAG_A_CREER] chaque titre est différent, c'est comme, comme je vous disais tout à\n      l'heure hein",
+      "turn": "turn2",
+      "type": "\n      [A_TAG_A_CREER",
+      "endTime": 391.1,
+      "startTime": 388.217
+    },
+    {
+      "text": "j'ai fait une métaphore peut-être un petit peu",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 392.85,
+      "startTime": 391.1
+    },
+    {
+      "text": "un petit peu euh... foireuse on va dire mais",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 395.527,
+      "startTime": 392.85
+    },
+    {
+      "text": "euh quand on prend un Paris-Lyon ou un Paris-Bordeaux c'est pas\n      pareil",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 398.643,
+      "startTime": 395.527
+    },
+    {
+      "text": "c'est pas le même prix et forcément on se fait verbaliser si on n'a pas\n      le bon titre avec soi",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 402.187,
+      "startTime": 398.643
+    },
+    {
+      "text": "et et sur le RER c'est pareil",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 404,
+      "startTime": 402.187
+    },
+    {
+      "text": "en fait on peut circuler avec un ticket T plus, que entre Nation",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 407.564,
+      "startTime": 404
+    },
+    {
+      "text": "et Charles de Gaulle - Etoile",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 408.674,
+      "startTime": 407.564
+    },
+    {
+      "text": "vraiment Paris intramuros [/A_TAG_A_CREER]",
+      "turn": "turn2",
+      "type": "\n      [/A_TAG_A_CREER]\n",
+      "endTime": 409.389,
+      "startTime": 408.674
+    },
+    {
+      "text": "[B_POSITIF] et je vais vous faire rigoler",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 410.327,
+      "startTime": 409.389
+    },
+    {
+      "text": "dans le cas de figure où j'ai pris exprès les transports, c'était pour\n      pas prendre ma voiture [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [/B_POSITIF]\n",
+      "endTime": 415.324,
+      "startTime": 410.327
+    },
+    {
+      "text": "[A_REFLET] hm hm [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 415.793,
+      "startTime": 415.324
+    },
+    {
+      "text": "[B_POSITIF] pour pas payer le, le parking qui coûte une blinde à la Défense [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 419.893,
+      "startTime": 415.793
+    },
+    {
+      "text": "[A_REFLET] ben oui je comprends",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 420.831,
+      "startTime": 419.893
+    },
+    {
+      "text": "(...) [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [/A_REFLET]\n",
+      "endTime": 421.33,
+      "startTime": 420.831
+    },
+    {
+      "text": "[B_POSITIF] et c'est le truc qui, qui, qui... qui tue",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 423.814,
+      "startTime": 421.33
+    },
+    {
+      "text": "(...)",
+      "turn": "turn1",
+      "type": "",
+      "endTime": 425.33,
+      "startTime": 423.814
+    },
+    {
+      "text": "ouais...",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 425.737,
+      "startTime": 425.33
+    },
+    {
+      "text": "mais bon [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [/B_POSITIF]\n",
+      "endTime": 426.17,
+      "startTime": 425.737
+    },
+    {
+      "text": "[A_OUVERTURE] ben écrivez-nous, écrivez-nous, de toute façon, on connaît, on connaît ce\n      problème là, ça arrive souvent",
+      "turn": "turn2",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 430.468,
+      "startTime": 426.17
+    },
+    {
+      "text": "euh... donc on va, on va pouvoir gérer euh gérer le dossier hein",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 434.952,
+      "startTime": 430.468
+    },
+    {
+      "text": "(...) [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [/A_OUVERTURE]\n",
+      "endTime": 435.359,
+      "startTime": 434.952
+    },
+    {
+      "text": "[B_QUESTION_NEUTRE] donc par contre euh... quelles sont, quelles sont les procédures parce\n      que...",
+      "turn": "turn1",
+      "type": "\n      [B_QUESTION_NEUTRE",
+      "endTime": 438.671,
+      "startTime": 435.359
+    },
+    {
+      "text": "là on va me demander de payer euh... sous... [/B_QUESTION_NEUTRE]",
+      "turn": "turn1",
+      "type": "\n      [/B_QUESTION_NEUTRE]\n",
+      "endTime": 441.646,
+      "startTime": 438.671
+    },
+    {
+      "text": "[A_OUVERTURE] non vous ne payez pas",
+      "turn": "turn2",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 442.818,
+      "startTime": 441.646
+    },
+    {
+      "text": "vous nous écrivez [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [/A_OUVERTURE]\n",
+      "endTime": 443.442,
+      "startTime": 442.818
+    },
+    {
+      "text": "[B_POSITIF] d'accord [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 443.848,
+      "startTime": 443.442
+    },
+    {
+      "text": "[A_REFLET] d'accord ? [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 444.41,
+      "startTime": 443.848
+    },
+    {
+      "text": "[B_POSITIF] d'accord [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 444.785,
+      "startTime": 444.41
+    },
+    {
+      "text": "[A_TAG_A_CREER] nous de toute façon à partir du moment où on reçoit votre courrier, donc\n      envoyez-le au plus vite",
+      "turn": "turn2",
+      "type": "\n      [A_TAG_A_CREER",
+      "endTime": 447.41,
+      "startTime": 444.785
+    },
+    {
+      "text": "à partir du moment où on reçoit [/A_TAG_A_CREER]",
+      "turn": "turn2",
+      "type": "\n      [/A_TAG_A_CREER]\n",
+      "endTime": 449.258,
+      "startTime": 447.41
+    },
+    {
+      "text": "[B_POSITIF] oui je vais vous l'envoyer... dès demain matin [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 449.961,
+      "startTime": 449.258
+    },
+    {
+      "text": "[A_OUVERTURE] votre courrier, on... on peut bloquer le dossier, le temps de... de le\n      traiter, donc ne payez pas",
+      "turn": "turn2",
+      "type": "\n      [A_OUVERTURE",
+      "endTime": 454.711,
+      "startTime": 449.961
+    },
+    {
+      "text": "pour le moment",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 455.836,
+      "startTime": 454.711
+    },
+    {
+      "text": "et attendez notre réponse, d'accord ? [/A_OUVERTURE]",
+      "turn": "turn2",
+      "type": "\n      [/A_OUVERTURE]\n",
+      "endTime": 457.805,
+      "startTime": 455.836
+    },
+    {
+      "text": "[B_POSITIF] OK, pas de souci [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 458.977,
+      "startTime": 457.805
+    },
+    {
+      "text": "[A_TAG_A_CREER] voilà monsieur [/A_TAG_A_CREER]",
+      "turn": "turn2",
+      "type": "\n      [A_TAG_A_CREER",
+      "endTime": 459.477,
+      "startTime": 458.977
+    },
+    {
+      "text": "[B_POSITIF] bon ben je vous... je vous mets dans le double du ticket de....",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 462.9,
+      "startTime": 459.477
+    },
+    {
+      "text": "je vous ferai tout, le ticket [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [/B_POSITIF]\n",
+      "endTime": 465.293,
+      "startTime": 462.9
+    },
+    {
+      "text": "[A_REFLET] d'accord [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 465.871,
+      "startTime": 465.293
+    },
+    {
+      "text": "[B_POSITIF] le double de l'infraction et puis le courrier avec [/B_POSITIF]",
+      "turn": "turn1",
+      "type": "\n      [B_POSITIF",
+      "endTime": 468.2,
+      "startTime": 465.871
+    },
+    {
+      "text": "[A_REFLET] d'accord... pas de problème",
+      "turn": "turn2",
+      "type": "\n      [A_REFLET",
+      "endTime": 468.872,
+      "startTime": 468.2
+    },
+    {
+      "text": "(...) [/A_REFLET]",
+      "turn": "turn2",
+      "type": "\n      [/A_REFLET]\n",
+      "endTime": 469.481,
+      "startTime": 468.872
+    },
+    {
+      "text": "[HORS_TRAITEMENT] OK, ben écoutez, merci beaucoup",
+      "turn": "turn1",
+      "type": "\n      [HORS_TRAITEMENT",
+      "endTime": 471.325,
+      "startTime": 469.481
+    },
+    {
+      "text": "à votre service",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 471.981,
+      "startTime": 471.325
+    },
+    {
+      "text": "bonne journée, au revoir",
+      "turn": "turn2",
+      "type": "",
+      "endTime": 472.716,
+      "startTime": 471.981
+    },
+    {
+      "text": "bonne fin de journée, au revoir [/HORS_TRAITEMENT]",
+      "turn": "turn1",
+      "type": "\n      [/HORS_TRAITEMENT]\n",
+      "endTime": 473.528,
+      "startTime": 472.716
+    },
+    {
+      "text": "",
+      "turn": "turn2",
+      "type": "",
+      "endTime": null,
+      "startTime": 473.528
+    }
+  ]
+}
