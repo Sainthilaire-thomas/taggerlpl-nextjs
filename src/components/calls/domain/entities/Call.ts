@@ -32,9 +32,8 @@ export class Call {
   hasValidAudio(): boolean {
     return !!this.audioFile && this.audioFile.isValid();
   }
-
   hasValidTranscription(): boolean {
-    return !!this.transcription && this.transcription.isValid();
+    return !!this.transcription; // Simple vérification d'existence
   }
 
   canBeUpgraded(newData: Partial<CallUpgradeData>): UpgradeAnalysis {

@@ -337,6 +337,8 @@ export const CallManagementPage: React.FC = () => {
     lifecycleService, // Service de cycle de vie exposé par le hook
   } = useUnifiedCallManagement();
 
+  // Test à ajouter temporairement dans CallManagementPage
+
   // État local pour les optimisations
   const [activeTab, setActiveTab] = useState<ManagementTab>("overview");
   const [accordionStates, setAccordionStates] = useState<AccordionStates>({});

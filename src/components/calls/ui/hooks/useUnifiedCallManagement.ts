@@ -46,7 +46,7 @@ export interface CallManagementStats {
  */
 export const useUnifiedCallManagement = () => {
   // État principal
-  const [calls, setCalls] = useState<Call[]>([]);
+  const [calls, setCalls] = useState<CallExtended[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCalls, setSelectedCalls] = useState<Set<string>>(new Set());
@@ -306,41 +306,75 @@ export const useUnifiedCallManagement = () => {
   // 🔄 FONCTIONS PRINCIPALES (CORRIGÉES)
   // ============================================================================
 
+  // CORRECTION pour useUnifiedCallManagement.ts - Version optimisée
+
   /**
-   * Chargement des appels avec gestion d'erreur robuste
+   * Chargement des appels avec gestion d'erreur robuste - VERSION CORRIGÉE
+   */
+  /**
+   * Chargement des appels avec gestion d'erreur robuste - VERSION FINALE
+   */
+  /**
+   * Chargement des appels avec gestion d'erreur robuste - VERSION FINALE CORRIGÉE
    */
   const loadCalls = useCallback(async () => {
+    console.log(
+      "🔍 [DEBUG] callRepository methods:",
+      Object.getOwnPropertyNames(Object.getPrototypeOf(callRepository))
+    );
+    console.log(
+      "🔍 [DEBUG] Has getAllCallIds:",
+      typeof callRepository.getAllCallIds
+    );
+    console.log(
+      "🔍 [DEBUG] Has findManyWithWorkflowOptimized:",
+      typeof callRepository.findManyWithWorkflowOptimized
+    );
     try {
       setLoading(true);
       setError(null);
 
       console.log("🔄 [useUnifiedCallManagement] Chargement des appels...");
 
-      // CORRECTION : Utiliser le bon service selon l'architecture DDD
-      const loadedCalls = await callRepository.findAll();
+      // Étape 1 : Récupérer tous les IDs (très rapide)
+      const ids = await callRepository.getAllCallIds();
+      console.log(`📦 IDs récupérés: ${ids.length}`);
+
+      // Étape 2 : Enrichir TOUS les appels EN LOT avec la méthode optimisée
+      const enrichedCalls = await callRepository.findManyWithWorkflowOptimized(
+        ids
+      );
 
       console.log(
-        "✅ [useUnifiedCallManagement] Appels chargés:",
-        loadedCalls.length
+        `✅ [useUnifiedCallManagement] Appels enrichis: ${enrichedCalls.length}`
       );
 
       // Validation des données chargées
-      const validCalls = loadedCalls.filter((call): call is Call => {
+      const validCalls = enrichedCalls.filter((call): call is CallExtended => {
         return call && typeof call.id === "string" && call.id.length > 0;
       });
 
       console.log(
-        "📊 [useUnifiedCallManagement] Appels valides:",
-        validCalls.length
+        `📊 [useUnifiedCallManagement] Appels valides: ${validCalls.length}`
       );
 
       setCalls(validCalls);
 
-      // Si aucun appel n'est trouvé, on log pour debug
+      // Debug spécifique pour l'appel 741
+      const call741 = validCalls.find((call) => call.id === "741");
+      if (call741) {
+        console.log("🎯 DEBUG Call 741 dans loadCalls:", {
+          id: call741.id,
+          type: call741.constructor.name,
+          isTagged: call741.isTagged,
+          preparedForTranscript: call741.preparedForTranscript,
+          isTaggingCall: call741.isTaggingCall,
+          lifecycleStage: call741.getLifecycleStatus().overallStage,
+        });
+      }
+
       if (validCalls.length === 0) {
-        console.warn(
-          "⚠️ [useUnifiedCallManagement] Aucun appel trouvé - vérifiez la base de données"
-        );
+        console.warn("⚠️ [useUnifiedCallManagement] Aucun appel trouvé");
       }
     } catch (error) {
       const errorMessage =
@@ -350,7 +384,7 @@ export const useUnifiedCallManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [callRepository]); // CORRECTION : dépendance corrigée
+  }, [callRepository]);
 
   /**
    * Chargement initial
@@ -360,71 +394,71 @@ export const useUnifiedCallManagement = () => {
   }, [loadCalls]);
 
   // CORRECTION : Ajouter loadCalls aux dépendances des actions workflow
-  useEffect(() => {
-    // Mettre à jour les références aux fonctions qui dépendent de loadCalls
-    workflowActions.prepare = async (call: CallExtended) => {
-      if (!lifecycleService) {
-        return { success: false, message: "Service non disponible" };
-      }
+  // useEffect(() => {
+  //   // Mettre à jour les références aux fonctions qui dépendent de loadCalls
+  //   workflowActions.prepare = async (call: CallExtended) => {
+  //     if (!lifecycleService) {
+  //       return { success: false, message: "Service non disponible" };
+  //     }
 
-      try {
-        const result = await lifecycleService.prepareCall(call);
-        if (result.success) {
-          await loadCalls();
-        }
-        return result;
-      } catch (error) {
-        console.error("Erreur lors de la préparation:", error);
-        return {
-          success: false,
-          message:
-            error instanceof Error ? error.message : "Erreur de préparation",
-        };
-      }
-    };
+  //     try {
+  //       const result = await lifecycleService.prepareCall(call);
+  //       if (result.success) {
+  //         await loadCalls();
+  //       }
+  //       return result;
+  //     } catch (error) {
+  //       console.error("Erreur lors de la préparation:", error);
+  //       return {
+  //         success: false,
+  //         message:
+  //           error instanceof Error ? error.message : "Erreur de préparation",
+  //       };
+  //     }
+  //   };
 
-    workflowActions.select = async (call: CallExtended) => {
-      if (!lifecycleService) {
-        return { success: false, message: "Service non disponible" };
-      }
+  //   workflowActions.select = async (call: CallExtended) => {
+  //     if (!lifecycleService) {
+  //       return { success: false, message: "Service non disponible" };
+  //     }
 
-      try {
-        const result = await lifecycleService.selectCall(call);
-        if (result.success) {
-          await loadCalls();
-        }
-        return result;
-      } catch (error) {
-        console.error("Erreur lors de la sélection:", error);
-        return {
-          success: false,
-          message:
-            error instanceof Error ? error.message : "Erreur de sélection",
-        };
-      }
-    };
+  //     try {
+  //       const result = await lifecycleService.selectCall(call);
+  //       if (result.success) {
+  //         await loadCalls();
+  //       }
+  //       return result;
+  //     } catch (error) {
+  //       console.error("Erreur lors de la sélection:", error);
+  //       return {
+  //         success: false,
+  //         message:
+  //           error instanceof Error ? error.message : "Erreur de sélection",
+  //       };
+  //     }
+  //   };
 
-    workflowActions.unselect = async (call: CallExtended) => {
-      if (!lifecycleService) {
-        return { success: false, message: "Service non disponible" };
-      }
+  //   workflowActions.unselect = async (call: CallExtended) => {
+  //     if (!lifecycleService) {
+  //       return { success: false, message: "Service non disponible" };
+  //     }
 
-      try {
-        const result = await lifecycleService.unselectCall(call);
-        if (result.success) {
-          await loadCalls();
-        }
-        return result;
-      } catch (error) {
-        console.error("Erreur lors de la désélection:", error);
-        return {
-          success: false,
-          message:
-            error instanceof Error ? error.message : "Erreur de désélection",
-        };
-      }
-    };
-  }, [loadCalls, lifecycleService, workflowActions]);
+  //     try {
+  //       const result = await lifecycleService.unselectCall(call);
+  //       if (result.success) {
+  //         await loadCalls();
+  //       }
+  //       return result;
+  //     } catch (error) {
+  //       console.error("Erreur lors de la désélection:", error);
+  //       return {
+  //         success: false,
+  //         message:
+  //           error instanceof Error ? error.message : "Erreur de désélection",
+  //       };
+  //     }
+  //   };
+  // }, [loadCalls, lifecycleService, workflowActions]);
 
   /**
    * Filtrage intelligent des appels

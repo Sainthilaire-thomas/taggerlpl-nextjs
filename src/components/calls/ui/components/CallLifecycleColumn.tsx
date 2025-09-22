@@ -106,6 +106,30 @@ export const CallLifecycleColumn: React.FC<CallLifecycleColumnProps> = ({
   onAction,
   isLoading = false,
 }) => {
+  React.useEffect(() => {
+    if (call.id === "741") {
+      // Debug spécifique pour l'appel 741
+      console.log("🔍 DEBUG Call 741 Lifecycle:", {
+        callId: call.id,
+        // Propriétés de base
+        hasAudio: call.hasValidAudio(),
+        hasTranscription: call.hasValidTranscription(),
+        // Flags de workflow depuis la DB
+        preparedForTranscript: call.preparedForTranscript,
+        isTaggingCall: call.isTaggingCall,
+        isTagged: call.isTagged,
+        // JSON de transcription
+        transcriptionJson: !!call.getTranscription(),
+        // Statut calculé
+        lifecycle: call.getLifecycleStatus(),
+        // Méthodes de calcul
+        canPrepare: call.canPrepare(),
+        canSelect: call.canSelect(),
+        canTag: call.canTag(),
+        canUnselect: call.canUnselect(),
+      });
+    }
+  }, [call]);
   // Obtenir le statut complet du cycle de vie
   const lifecycle = call.getLifecycleStatus();
   const stageConfig = STAGE_CONFIG[lifecycle.overallStage];

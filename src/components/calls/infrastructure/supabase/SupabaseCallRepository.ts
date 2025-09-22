@@ -36,29 +36,28 @@ export class SupabaseCallRepository implements CallRepository {
   // ============================================================================
 
   /**
-   * Vérifie si un appel est présent dans la table turntagged
+   * Version simplifiée de isCallTagged (pour cohérence)
    */
   async isCallTagged(callId: string): Promise<boolean> {
     try {
+      const callIdInt = parseInt(callId, 10);
+
       const { count, error } = await this.sb
         .from("turntagged")
-        .select("*", { count: "exact", head: true })
-        .eq("call_id", callId);
+        .select("call_id", { count: "exact", head: true })
+        .eq("call_id", callIdInt);
 
       if (error) {
-        console.warn(
-          `Erreur lors de la vérification du statut taggé pour ${callId}:`,
-          error
-        );
+        console.error(`❌ Erreur isCallTagged ${callId}:`, error);
         return false;
       }
 
-      return (count || 0) > 0;
+      const isTagged = (count || 0) > 0;
+      console.log(`✅ isCallTagged ${callId}: ${isTagged} (count: ${count})`);
+
+      return isTagged;
     } catch (error) {
-      console.warn(
-        `Erreur lors de la vérification du statut taggé pour ${callId}:`,
-        error
-      );
+      console.error(`💥 Exception isCallTagged ${callId}:`, error);
       return false;
     }
   }
@@ -95,53 +94,132 @@ export class SupabaseCallRepository implements CallRepository {
   }
 
   /**
-   * Récupère plusieurs appels avec leurs informations de workflow
-   * Optimisé pour les performances avec requêtes en parallèle
+   * Vérifie le statut taggé pour plusieurs appels en une seule requête
+   * OPTIMISATION : Évite N requêtes individuelles
    */
-  async findManyWithWorkflow(ids: string[]): Promise<CallExtended[]> {
-    if (ids.length === 0) {
-      return [];
+  /**
+   * Version corrigée de findTaggedStatusForCalls
+   * Le problème était dans la conversion des types
+   */
+  async findTaggedStatusForCalls(
+    callIds: string[]
+  ): Promise<Map<string, boolean>> {
+    console.log(`🔍 findTaggedStatusForCalls pour ${callIds.length} appels`);
+
+    if (callIds.length === 0) {
+      return new Map();
     }
 
     try {
-      // Récupérer les données de base en une seule requête
-      const { data: callsData, error: callsError } = await this.sb
-        .from("call")
+      // Les call_id sont des INTEGERS en base, donc on convertit
+      const callIdsInt = callIds.map((id) => parseInt(id, 10));
+
+      console.log(`🔍 DEBUG - Conversion des IDs:`, {
+        originalSample: callIds.slice(0, 3),
+        convertedSample: callIdsInt.slice(0, 3),
+      });
+
+      // Requête vers la base (avec integers)
+      const { data, error } = await this.sb
+        .from("turntagged")
+        .select("call_id")
+        .in("call_id", callIdsInt);
+
+      if (error) {
+        console.error("❌ Erreur findTaggedStatusForCalls:", error);
+        return new Map();
+      }
+
+      console.log(`📦 Données brutes de la DB:`, {
+        count: data?.length || 0,
+        sampleData: data?.slice(0, 3),
+        dataTypes: data?.slice(0, 2).map((row) => ({
+          call_id: row.call_id,
+          type: typeof row.call_id,
+        })),
+      });
+
+      // CORRECTION CRITIQUE: La DB retourne des integers, mais nous devons
+      // les convertir en strings pour matcher avec les clés de la Map
+      const taggedCallIds = new Set(
+        data?.map((row) => String(row.call_id)) || []
+      );
+
+      console.log(`📋 Set des call_ids taggés:`, {
+        size: taggedCallIds.size,
+        sample: Array.from(taggedCallIds).slice(0, 10),
+        has741: taggedCallIds.has("741"), // Test spécifique pour 741
+      });
+
+      // Créer la Map résultat (clés = strings, comme attendu)
+      const result = new Map<string, boolean>();
+      callIds.forEach((callId) => {
+        const isTagged = taggedCallIds.has(callId); // callId est string, Set contient strings
+        result.set(callId, isTagged);
+
+        // Debug pour les premiers et pour 741
+        if (result.size <= 5 || callId === "741") {
+          console.log(`🎯 Mapping pour ${callId}:`, {
+            callId,
+            isTagged,
+            inSet: taggedCallIds.has(callId),
+          });
+        }
+      });
+
+      const finalTaggedCount = Array.from(result.values()).filter(
+        Boolean
+      ).length;
+      console.log(
+        `✅ findTaggedStatusForCalls FINAL: ${finalTaggedCount}/${callIds.length} appels taggés`
+      );
+
+      return result;
+    } catch (error) {
+      console.error("💥 Exception findTaggedStatusForCalls:", error);
+      return new Map();
+    }
+  }
+
+  /**
+   * Version simplifiée utilisant la vue
+   */
+  async findManyWithWorkflowOptimized(ids: string[]): Promise<CallExtended[]> {
+    console.log(
+      `🚀 findManyWithWorkflowOptimized avec vue - ${ids.length} IDs`
+    );
+
+    if (ids.length === 0) return [];
+
+    try {
+      // UNE SEULE requête utilisant la vue
+      const { data, error } = await this.sb
+        .from("call_with_tagging_status") // Utiliser la vue au lieu de "call"
         .select("*")
         .in("callid", ids);
 
-      if (callsError) {
-        throw new RepositoryError(
-          `Erreur lors de la récupération des appels: ${callsError.message}`
-        );
+      if (error) {
+        throw new RepositoryError(`Erreur avec vue: ${error.message}`);
       }
 
-      if (!callsData || callsData.length === 0) {
-        return [];
-      }
+      if (!data || data.length === 0) return [];
 
-      // Vérifier en parallèle quels appels sont taggés
-      const taggedStatusPromises = callsData.map(async (callData) => {
-        const isTagged = await this.isCallTagged(String(callData.callid));
-        return {
-          callData,
-          isTagged,
-        };
+      // Créer directement les instances CallExtended
+      const calls = data.map((row) => {
+        const isTagged = Boolean(row.is_tagged); // Déjà calculé par la vue
+        console.log(`🎯 Vue - Call ${row.callid}: isTagged=${isTagged}`);
+
+        return CallExtended.fromDatabaseWithWorkflow(row, isTagged);
       });
 
-      const enrichedData = await Promise.all(taggedStatusPromises);
-
-      // Construire les instances CallExtended
-      const calls = enrichedData.map(({ callData, isTagged }) =>
-        CallExtended.fromDatabaseWithWorkflow(callData, isTagged)
+      const taggedCount = calls.filter((call) => call.isTagged).length;
+      console.log(
+        `✅ Vue - Résultat: ${taggedCount}/${calls.length} appels taggés`
       );
 
       return calls;
     } catch (error) {
-      console.error(
-        "Erreur lors de la récupération des appels avec workflow:",
-        error
-      );
+      console.error("❌ Erreur vue:", error);
       throw error;
     }
   }
@@ -214,7 +292,7 @@ export class SupabaseCallRepository implements CallRepository {
 
       // Enrichir avec les informations de workflow
       const callIds = data.map((call) => String(call.callid));
-      return this.findManyWithWorkflow(callIds);
+      return this.findManyWithWorkflowOptimized(callIds);
     } catch (error) {
       console.error(
         "Erreur lors de la récupération des appels de tagging actifs:",
@@ -248,7 +326,7 @@ export class SupabaseCallRepository implements CallRepository {
 
       // Enrichir avec les informations de workflow
       const callIds = data.map((call) => String(call.callid));
-      return this.findManyWithWorkflow(callIds);
+      return this.findManyWithWorkflowOptimized(callIds);
     } catch (error) {
       console.error(
         "Erreur lors de la récupération des appels préparables:",
@@ -565,9 +643,18 @@ export class SupabaseCallRepository implements CallRepository {
           if (row.filepath) {
             acc.withAudio++;
           }
+          // OU MIEUX : Créer un type au début du fichier
+          type OriginStat = { origin: string; count: number };
 
+          // Puis utiliser :
+          const existingOrigin = acc.origins.find(
+            (o: OriginStat) => o.origin === origin
+          );
+          stats.origins.sort(
+            (a: OriginStat, b: OriginStat) => b.count - a.count
+          );
           const origin = row.origine || "Aucune origine";
-          const existingOrigin = acc.origins.find((o) => o.origin === origin);
+
           if (existingOrigin) {
             existingOrigin.count++;
           } else {
@@ -585,7 +672,6 @@ export class SupabaseCallRepository implements CallRepository {
         }
       );
 
-      stats.origins.sort((a, b) => b.count - a.count);
       this.setCachedData(cacheKey, stats);
 
       console.log(
@@ -949,5 +1035,26 @@ export class SupabaseCallRepository implements CallRepository {
     }
 
     return (data as DbCall[]).map(this.mapToCall);
+  }
+
+  /**
+   * Récupère tous les IDs d'appels (méthode optimisée)
+   */
+  async getAllCallIds(): Promise<string[]> {
+    try {
+      const { data, error } = await this.sb
+        .from("call")
+        .select("callid")
+        .order("callid", { ascending: false });
+
+      if (error) {
+        throw new RepositoryError(`Erreur récupération IDs: ${error.message}`);
+      }
+
+      return data?.map((row) => String(row.callid)) || [];
+    } catch (error) {
+      console.error("❌ Erreur getAllCallIds:", error);
+      return [];
+    }
   }
 }
