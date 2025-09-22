@@ -1,18 +1,25 @@
 // src/components/calls/ui/hooks/actions/useCallFlags.ts
 import { useCallback } from "react";
-import type { Call } from "../../../domain/entities/Call";
-import { useCallManagement } from "../../hooks/useCallManagement";
 
-interface Props {
+type CallLike = { id: string };
+
+type Props = {
   reload: () => Promise<void> | void;
-}
+  updateConflictStatus: (
+    id: string,
+    status: "conflictuel" | "non_conflictuel" | "non_supervisé"
+  ) => Promise<void>;
+  updateIsTaggingCall: (id: string, value: boolean) => Promise<void>;
+};
 
-export function useCallFlags({ reload }: Props) {
-  const { updateConflictStatus, updateIsTaggingCall } = useCallManagement();
-
+export function useCallFlags({
+  reload,
+  updateConflictStatus,
+  updateIsTaggingCall,
+}: Props) {
   const setConflictStatus = useCallback(
     async (
-      calls: Call[],
+      calls: CallLike[],
       status: "conflictuel" | "non_conflictuel" | "non_supervisé"
     ) => {
       for (const c of calls) {
@@ -24,7 +31,7 @@ export function useCallFlags({ reload }: Props) {
   );
 
   const setTagging = useCallback(
-    async (calls: Call[], value: boolean) => {
+    async (calls: CallLike[], value: boolean) => {
       for (const c of calls) {
         await updateIsTaggingCall(c.id, value);
       }

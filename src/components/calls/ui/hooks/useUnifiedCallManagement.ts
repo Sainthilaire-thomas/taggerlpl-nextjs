@@ -33,6 +33,12 @@ export interface CallManagementStats {
   selectedCount: number;
 }
 
+export type Filters = {
+  searchKeyword: string;
+  conflictStatus: "all" | "conflictuel" | "non_conflictuel" | "non_supervisé";
+  origin: string;
+};
+
 /**
  * Hook unifié pour la gestion des appels avec architecture DDD
  *
@@ -542,12 +548,9 @@ export const useUnifiedCallManagement = () => {
   const callsByOrigin = useMemo(() => {
     const grouped = filteredCalls.reduce((acc, call) => {
       const origin = call.origin || "Aucune origine";
-      if (!acc[origin]) {
-        acc[origin] = [];
-      }
-      acc[origin].push(call);
+      (acc[origin] ||= []).push(call);
       return acc;
-    }, {} as Record<string, Call[]>);
+    }, {} as Record<string, CallExtended[]>);
 
     console.log(
       "📋 [useUnifiedCallManagement] Groupement par origine:",
@@ -720,6 +723,56 @@ export const useUnifiedCallManagement = () => {
     [calls, callRepository] // CORRECTION : utiliser callRepository directement
   );
 
+  const updateConflictStatus = useCallback(
+    async (
+      id: string,
+      status: "conflictuel" | "non_conflictuel" | "non_supervisé"
+    ) => {
+      try {
+        const call = calls.find((c) => c.id === id);
+        if (!call) return;
+
+        // Si CallExtended a withStatus, on l'utilise. Sinon fallback "copie" (moins élégant).
+        const updated =
+          typeof (call as any).withStatus === "function"
+            ? (call as any).withStatus(status as any)
+            : Object.assign(Object.create(Object.getPrototypeOf(call)), call, {
+                status,
+              });
+
+        await callRepository.update(updated);
+        setCalls((prev) => prev.map((c) => (c.id === id ? updated : c)));
+      } catch (e) {
+        console.error("[updateConflictStatus] échec:", e);
+        throw e;
+      }
+    },
+    [calls, callRepository]
+  );
+
+  const updateIsTaggingCall = useCallback(
+    async (id: string, value: boolean) => {
+      try {
+        const call = calls.find((c) => c.id === id);
+        if (!call) return;
+
+        const updated =
+          typeof (call as any).withTagging === "function"
+            ? (call as any).withTagging(value)
+            : Object.assign(Object.create(Object.getPrototypeOf(call)), call, {
+                isTaggingCall: value,
+              });
+
+        await callRepository.update(updated);
+        setCalls((prev) => prev.map((c) => (c.id === id ? updated : c)));
+      } catch (e) {
+        console.error("[updateIsTaggingCall] échec:", e);
+        throw e;
+      }
+    },
+    [calls, callRepository]
+  );
+
   /**
    * Actions en lot
    */
@@ -865,5 +918,7 @@ export const useUnifiedCallManagement = () => {
       // Méthode pour faire progresser automatiquement
       progress: progressCall,
     },
+    updateConflictStatus,
+    updateIsTaggingCall,
   };
 };

@@ -24,13 +24,24 @@ import {
   CallExtended,
   TaggingWorkflowStage,
 } from "../../domain/entities/CallExtended";
-
+type LifecycleAction = "prepare" | "select" | "unselect" | "tag";
+type PrimaryAction = {
+  key: LifecycleAction;
+  label: string;
+  color: "primary" | "secondary" | "success" | "info";
+  variant: "outlined" | "contained";
+  icon: React.ReactNode;
+  tooltip: string;
+};
 /**
  * Props du composant CallLifecycleColumn
  */
 export interface CallLifecycleColumnProps {
   call: CallExtended;
-  onAction: (action: string, call: CallExtended) => void;
+  onAction: (
+    action: LifecycleAction,
+    call: CallExtended
+  ) => void | Promise<void>;
   isLoading?: boolean;
 }
 
@@ -137,7 +148,7 @@ export const CallLifecycleColumn: React.FC<CallLifecycleColumnProps> = ({
   /**
    * Détermine l'action principale à afficher selon l'état
    */
-  const getPrimaryAction = () => {
+  const getPrimaryAction = (): PrimaryAction | null => {
     if (lifecycle.canPrepare) {
       return {
         key: "prepare",
@@ -184,7 +195,7 @@ export const CallLifecycleColumn: React.FC<CallLifecycleColumnProps> = ({
 
     if (lifecycle.overallStage === TaggingWorkflowStage.TAGGED) {
       return {
-        key: "view",
+        key: "tag",
         label: "Voir",
         color: "info" as const,
         variant: "outlined" as const,
@@ -201,7 +212,7 @@ export const CallLifecycleColumn: React.FC<CallLifecycleColumnProps> = ({
   /**
    * Gère le clic sur un bouton d'action
    */
-  const handleActionClick = (actionKey: string) => {
+  const handleActionClick = (actionKey: LifecycleAction) => {
     if (isLoading) return;
     onAction(actionKey, call);
   };

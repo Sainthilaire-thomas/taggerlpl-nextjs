@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -12,82 +12,107 @@ import {
   InputLabel,
   Button,
   Alert,
-  SelectChangeEvent,
 } from "@mui/material";
 import { useTaggingData } from "@/context/TaggingDataContext";
 import TranscriptLPL from "@/components/TranscriptLPL";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation"; // ✅ ajoute useSearchParams
 import { generateSignedUrl } from "@/components/utils/signedUrls";
 
 export default function NewTaggingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams(); // ✅
   const {
     taggingCalls,
     selectedTaggingCall,
     selectTaggingCall,
     fetchTaggingTranscription,
   } = useTaggingData();
+
   const [selectedCallId, setSelectedCallId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mettre à jour le selectedCallId lorsque selectedTaggingCall change
+  // ✅ DRY: logique de sélection factorisée (réutilisée par l’URL et le Select)
+  const selectById = useCallback(
+    async (callId: string) => {
+      if (!callId) return;
+      setSelectedCallId(callId);
+      setIsLoading(true);
+      try {
+        const selectedCall = taggingCalls.find(
+          (c) => String(c.callid) === String(callId)
+        );
+        if (!selectedCall) {
+          console.warn(
+            "[NewTagging] callId dans l’URL introuvable dans taggingCalls:",
+            callId
+          );
+          return;
+        }
+
+        if (!selectedCall.upload) {
+          // pas d'audio -> on sélectionne quand même
+          selectTaggingCall({
+            ...selectedCall,
+            audiourl: "",
+            is_tagging_call: true,
+            preparedfortranscript: !!selectedCall.preparedfortranscript,
+          });
+        } else if (selectedCall.filepath) {
+          const audioUrl = await generateSignedUrl(selectedCall.filepath);
+          selectTaggingCall({
+            ...selectedCall,
+            audiourl: audioUrl,
+            is_tagging_call: true,
+            preparedfortranscript: !!selectedCall.preparedfortranscript,
+          });
+          await fetchTaggingTranscription(selectedCall.callid);
+        } else {
+          // upload=true mais pas de filepath
+          selectTaggingCall({
+            ...selectedCall,
+            audiourl: "",
+            is_tagging_call: true,
+            preparedfortranscript: !!selectedCall.preparedfortranscript,
+          });
+        }
+      } catch (e) {
+        console.error("[NewTagging] Erreur selectById:", e);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [taggingCalls, selectTaggingCall, fetchTaggingTranscription]
+  );
+
+  // ✅ si un call est déjà en contexte, on aligne l’UI locale
   useEffect(() => {
     if (selectedTaggingCall) {
       setSelectedCallId(selectedTaggingCall.callid);
     }
   }, [selectedTaggingCall]);
 
-  const handleCallChange = async (event: SelectChangeEvent<string>) => {
-    const callId = event.target.value;
-    setSelectedCallId(callId);
-    setIsLoading(true);
+  // ✅ lecture du paramètre d’URL et sélection auto
+  useEffect(() => {
+    const qid = searchParams.get("callId") || searchParams.get("callid"); // tolère callid/callId
+    if (!qid) return;
 
-    try {
-      // Trouver l'appel correspondant
-      const selectedCall = taggingCalls.find((call) => call.callid === callId);
+    // si la liste n’est pas encore chargée, on attend
+    if (!taggingCalls.length) return;
 
-      if (selectedCall) {
-        // Vérifier si l'appel a un fichier audio téléchargé
-        if (!selectedCall.upload) {
-          // Si pas d'audio téléchargé, sélectionner l'appel sans URL audio
-          selectTaggingCall({
-            ...selectedCall,
-            audiourl: "",
-            is_tagging_call: true,
-            preparedfortranscript: false,
-          });
-          console.log("Appel sans audio chargé.");
-        } else if (selectedCall.filepath) {
-          // Générer une URL signée pour l'audio
-          console.log("Génération de l'URL signée pour", selectedCall.filepath);
-          const audioUrl = await generateSignedUrl(selectedCall.filepath);
-
-          // Sélectionner l'appel avec l'URL audio
-          selectTaggingCall({
-            ...selectedCall,
-            audiourl: audioUrl,
-            is_tagging_call: true,
-            preparedfortranscript: false,
-          });
-
-          // Récupérer la transcription
-          await fetchTaggingTranscription(selectedCall.callid);
-          console.log("Audio et transcription chargés avec succès");
-        } else {
-          console.error("L'appel a upload=true mais pas de filepath");
-          selectTaggingCall({
-            ...selectedCall,
-            audiourl: "",
-            is_tagging_call: true,
-            preparedfortranscript: false,
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Erreur lors du chargement de l'appel:", error);
-    } finally {
-      setIsLoading(false);
+    // si déjà le bon call sélectionné, on ne refait rien
+    if (
+      selectedTaggingCall?.callid &&
+      String(selectedTaggingCall.callid) === String(qid)
+    ) {
+      return;
     }
+
+    void selectById(qid);
+  }, [searchParams, taggingCalls, selectedTaggingCall, selectById]);
+
+  const handleCallChange = async (event: any) => {
+    const callId = event.target.value as string;
+    await selectById(callId);
   };
 
   const switchToOldVersion = () => {
@@ -110,7 +135,7 @@ export default function NewTaggingPage() {
         }
       >
         Vous utilisez la nouvelle interface de tagging. Vous pouvez revenir à
-        l'ancienne version à tout moment.
+        l&apos;ancienne version à tout moment.
       </Alert>
 
       <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
