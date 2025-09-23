@@ -10,7 +10,7 @@ import { TranscriptionTransformationService } from "../domain/services/Transcrip
 import { CallFilteringService } from "../domain/services/CallFilteringService";
 
 // ✅ Diarisation
-import { AssemblyAIDiarizationProvider } from "../diarization/AssemblyAIDiarizationProvider";
+import { AssemblyAIDiarizationProvider } from "./diarization/AssemblyAIDiarizationProvider";
 import { DiarizationService } from "../domain/services/DiarizationService";
 import type {
   DiarizationSegment,

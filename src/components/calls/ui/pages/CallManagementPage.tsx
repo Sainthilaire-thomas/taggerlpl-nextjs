@@ -18,6 +18,11 @@ import { SupabaseRelationsRepository } from "../../infrastructure/supabase/Supab
 import { useCallTranscriptionActions } from "../hooks/actions/useCallTranscriptionActions";
 import { useCallAudioActions } from "../hooks/actions/useCallAudioActions";
 import { useCallPreparationActions } from "../hooks/actions/useCallPreparationActions";
+import {
+  TranscriptionProgressComponent,
+  TranscriptionActions,
+  TranscriptionResults,
+} from "@/components/calls/ui/components/transcription/TranscriptionProgress";
 import { useCallFlags } from "../hooks/actions/useCallFlags";
 import { useCallCleanup } from "../hooks/actions/useCallCleanup";
 import { CMHeaderStats } from "../sections/CMHeaderStats";

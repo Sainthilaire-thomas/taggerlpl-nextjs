@@ -1,189 +1,323 @@
 // src/lib/config/transcriptionConfig.ts
 
 /**
- * Configuration centralisée pour le système de transcription automatique
- * Gère les paramètres OpenAI, limites, retry, et monitoring
+ * Configuration centralisée pour la transcription automatique
  */
-
-export const transcriptionConfig = {
+export interface TranscriptionConfig {
   openai: {
-    apiKey: process.env.OPENAI_API_KEY!,
+    apiKey: string;
+    baseURL: string;
+    organization?: string;
+  };
+  assemblyAI: {
+    apiKey: string;
+    baseURL: string;
+  };
+  processing: {
+    maxFileSizeMB: number;
+    timeoutMs: number;
+    retryAttempts: number;
+    retryDelayMs: number;
+    defaultLanguage: string;
+  };
+  diarization: {
+    timeoutMs: number;
+    pollIntervalMs: number;
+    maxSpeakers: number;
+    alignmentTolerance: number;
+  };
+  batch: {
+    maxConcurrent: number;
+    pauseBetweenMs: number;
+    chunkSize: number;
+  };
+  monitoring: {
+    costMonitoringEnabled: boolean;
+    costAlertThreshold: number;
+    detailedMetricsEnabled: boolean;
+  };
+  features: {
+    autoTranscriptionEnabled: boolean;
+    autoDiarizationEnabled: boolean;
+    batchProcessingEnabled: boolean;
+    resultsCachingEnabled: boolean;
+  };
+}
+
+/**
+ * Configuration par défaut basée sur les variables d'environnement
+ */
+export const transcriptionConfig: TranscriptionConfig = {
+  openai: {
+    apiKey: process.env.OPENAI_API_KEY || "",
     baseURL: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
     organization: process.env.OPENAI_ORGANIZATION,
-    project: process.env.OPENAI_PROJECT,
   },
-
-  limits: {
+  assemblyAI: {
+    apiKey: process.env.ASSEMBLYAI_API_KEY || "",
+    baseURL: process.env.ASSEMBLYAI_BASE_URL || "https://api.assemblyai.com/v2",
+  },
+  processing: {
     maxFileSizeMB: parseInt(
       process.env.TRANSCRIPTION_MAX_FILE_SIZE_MB || "100"
     ),
-    timeoutMs: parseInt(process.env.TRANSCRIPTION_TIMEOUT_MS || "300000"), // 5 minutes
+    timeoutMs: parseInt(process.env.TRANSCRIPTION_TIMEOUT_MS || "300000"), // 5 min
     retryAttempts: parseInt(process.env.TRANSCRIPTION_RETRY_ATTEMPTS || "3"),
-    batchSize: parseInt(process.env.TRANSCRIPTION_BATCH_SIZE || "5"),
-    rateLimitDelay: parseInt(
-      process.env.TRANSCRIPTION_RATE_LIMIT_DELAY || "1000"
-    ), // 1 seconde
+    retryDelayMs: parseInt(process.env.TRANSCRIPTION_RETRY_DELAY_MS || "1000"),
+    defaultLanguage: process.env.TRANSCRIPTION_DEFAULT_LANGUAGE || "fr",
   },
-
-  whisper: {
-    model: "whisper-1",
-    language: "fr",
-    response_format: "verbose_json" as const,
-    temperature: 0.0, // Déterministe
-    // Formats supportés par Whisper
-    supportedFormats: [
-      "mp3",
-      "mp4",
-      "mpeg",
-      "mpga",
-      "m4a",
-      "wav",
-      "webm",
-      "flac",
-      "ogg",
-    ],
+  diarization: {
+    timeoutMs: parseInt(process.env.DIARIZATION_TIMEOUT_MS || "480000"), // 8 min
+    pollIntervalMs: parseInt(
+      process.env.DIARIZATION_POLL_INTERVAL_MS || "2000"
+    ),
+    maxSpeakers: parseInt(process.env.DIARIZATION_MAX_SPEAKERS || "5"),
+    alignmentTolerance: parseFloat(
+      process.env.DIARIZATION_ALIGNMENT_TOLERANCE || "0.2"
+    ),
   },
-
-  costs: {
-    // Prix OpenAI Whisper au 2024 : $0.006 par minute
-    pricePerMinute: 0.006,
-    currency: "USD",
+  batch: {
+    maxConcurrent: parseInt(process.env.BATCH_MAX_CONCURRENT || "3"),
+    pauseBetweenMs: parseInt(process.env.BATCH_PAUSE_BETWEEN_MS || "2000"),
+    chunkSize: parseInt(process.env.BATCH_CHUNK_SIZE || "5"),
   },
-
   monitoring: {
-    enableMetrics: process.env.NODE_ENV === "production",
-    enableDetailedLogs: process.env.NODE_ENV === "development",
-    logLevel: process.env.TRANSCRIPTION_LOG_LEVEL || "info",
+    costMonitoringEnabled: process.env.COST_MONITORING_ENABLED !== "false",
+    costAlertThreshold: parseFloat(process.env.COST_ALERT_THRESHOLD || "10.0"),
+    detailedMetricsEnabled: process.env.METRICS_DETAILED_ENABLED !== "false",
   },
-} as const;
-
-/**
- * Validation de la configuration au démarrage
- * Lance une erreur si la configuration est invalide
- */
-export function validateTranscriptionConfig(): void {
-  const { openai, limits } = transcriptionConfig;
-
-  // Validation API Key OpenAI
-  if (!openai.apiKey) {
-    throw new Error(
-      "❌ OPENAI_API_KEY is required but not provided. Please set it in your environment variables."
-    );
-  }
-
-  if (!openai.apiKey.startsWith("sk-")) {
-    throw new Error(
-      '❌ OPENAI_API_KEY must start with "sk-". Please check your API key format.'
-    );
-  }
-
-  // Validation limites
-  if (limits.maxFileSizeMB <= 0 || limits.maxFileSizeMB > 500) {
-    throw new Error(
-      "❌ TRANSCRIPTION_MAX_FILE_SIZE_MB must be between 1 and 500 MB"
-    );
-  }
-
-  if (limits.timeoutMs < 30000 || limits.timeoutMs > 600000) {
-    throw new Error(
-      "❌ TRANSCRIPTION_TIMEOUT_MS must be between 30 seconds and 10 minutes"
-    );
-  }
-
-  if (limits.retryAttempts < 0 || limits.retryAttempts > 5) {
-    throw new Error("❌ TRANSCRIPTION_RETRY_ATTEMPTS must be between 0 and 5");
-  }
-
-  console.log("✅ Transcription configuration validated successfully");
-
-  // Log de la configuration en développement
-  if (transcriptionConfig.monitoring.enableDetailedLogs) {
-    console.log("📋 Transcription Config:", {
-      model: transcriptionConfig.whisper.model,
-      language: transcriptionConfig.whisper.language,
-      maxFileSize: `${limits.maxFileSizeMB}MB`,
-      timeout: `${limits.timeoutMs / 1000}s`,
-      retryAttempts: limits.retryAttempts,
-      batchSize: limits.batchSize,
-    });
-  }
-}
-
-/**
- * Types pour la configuration
- */
-export type TranscriptionConfig = typeof transcriptionConfig;
-
-export interface AudioMetadata {
-  size: number;
-  type: string;
-  url: string;
-  duration?: number;
-  filename?: string;
-}
-
-export interface TranscriptionMetrics {
-  totalRequests: number;
-  successfulRequests: number;
-  failedRequests: number;
-  totalMinutesProcessed: number;
-  totalCost: number;
-  averageProcessingTime: number;
-  successRate: number;
-  lastUpdated: Date;
-}
-
-export class TranscriptionError extends Error {
-  constructor(
-    message: string,
-    public code: string = "TRANSCRIPTION_ERROR",
-    public originalError?: Error
-  ) {
-    super(message);
-    this.name = "TranscriptionError";
-  }
-}
-
-/**
- * Calcul du coût estimé basé sur la durée
- */
-export function calculateCost(durationSeconds: number): number {
-  const minutes = Math.ceil(durationSeconds / 60);
-  return minutes * transcriptionConfig.costs.pricePerMinute;
-}
-
-/**
- * Vérifie si un format audio est supporté
- */
-export function isSupportedAudioFormat(filename: string): boolean {
-  // Toujours une string (évite le 'string | undefined')
-  const extension = filename.split(".").pop()?.toLowerCase() ?? "";
-
-  // On “dessertit” le type tuple en simple string[] pour includes()
-  const formats = transcriptionConfig.whisper
-    .supportedFormats as readonly string[];
-
-  return extension !== "" && (formats as readonly string[]).includes(extension);
-}
-
-/**
- * Génère un nom de fichier sécurisé
- */
-export function sanitizeFilename(filename: string): string {
-  return filename
-    .replace(/[^a-zA-Z0-9.-]/g, "_")
-    .replace(/_{2,}/g, "_")
-    .substring(0, 100); // Limite la longueur
-}
-
-// (ex) src/lib/config/transcriptionConfig.ts
-export const diarizationConfig = {
-  assemblyAI: {
-    baseURL: process.env.ASSEMBLYAI_BASE_URL ?? "https://api.assemblyai.com/v2",
-    apiKey: process.env.ASSEMBLYAI_API_KEY ?? "",
-    // réglages polling
-    pollIntervalMs: 2000,
-    timeoutMs: 8 * 60 * 1000, // 8 minutes
-    languageCode: "fr", // par défaut FR
+  features: {
+    autoTranscriptionEnabled:
+      process.env.FEATURE_AUTO_TRANSCRIPTION_ENABLED !== "false",
+    autoDiarizationEnabled:
+      process.env.FEATURE_AUTO_DIARIZATION_ENABLED !== "false",
+    batchProcessingEnabled:
+      process.env.FEATURE_BATCH_PROCESSING_ENABLED !== "false",
+    resultsCachingEnabled:
+      process.env.FEATURE_RESULTS_CACHING_ENABLED !== "false",
   },
 };
+
+/**
+ * Validation de la configuration
+ */
+export const validateTranscriptionConfig = (): {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+} => {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Validation obligatoire
+  if (!transcriptionConfig.openai.apiKey) {
+    errors.push("OPENAI_API_KEY is required");
+  } else if (!transcriptionConfig.openai.apiKey.startsWith("sk-")) {
+    errors.push("OPENAI_API_KEY must start with sk-");
+  }
+
+  if (!transcriptionConfig.assemblyAI.apiKey) {
+    errors.push("ASSEMBLYAI_API_KEY is required");
+  }
+
+  // Validation des URLs
+  try {
+    new URL(transcriptionConfig.openai.baseURL);
+  } catch {
+    errors.push("OPENAI_BASE_URL must be a valid URL");
+  }
+
+  try {
+    new URL(transcriptionConfig.assemblyAI.baseURL);
+  } catch {
+    errors.push("ASSEMBLYAI_BASE_URL must be a valid URL");
+  }
+
+  // Validation des valeurs numériques
+  if (
+    transcriptionConfig.processing.maxFileSizeMB <= 0 ||
+    transcriptionConfig.processing.maxFileSizeMB > 500
+  ) {
+    warnings.push(
+      "TRANSCRIPTION_MAX_FILE_SIZE_MB should be between 1 and 500 MB"
+    );
+  }
+
+  if (
+    transcriptionConfig.batch.maxConcurrent <= 0 ||
+    transcriptionConfig.batch.maxConcurrent > 10
+  ) {
+    warnings.push("BATCH_MAX_CONCURRENT should be between 1 and 10");
+  }
+
+  if (
+    transcriptionConfig.diarization.alignmentTolerance < 0 ||
+    transcriptionConfig.diarization.alignmentTolerance > 1
+  ) {
+    warnings.push(
+      "DIARIZATION_ALIGNMENT_TOLERANCE should be between 0 and 1 second"
+    );
+  }
+
+  // Warnings pour configuration par défaut
+  if (transcriptionConfig.processing.timeoutMs < 60000) {
+    warnings.push("TRANSCRIPTION_TIMEOUT_MS is very low (< 1 minute)");
+  }
+
+  if (transcriptionConfig.monitoring.costAlertThreshold <= 0) {
+    warnings.push("COST_ALERT_THRESHOLD should be positive");
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings,
+  };
+};
+
+/**
+ * Helper pour obtenir la configuration complète avec validation
+ */
+export const getValidatedTranscriptionConfig = (): TranscriptionConfig => {
+  const validation = validateTranscriptionConfig();
+
+  if (!validation.isValid) {
+    console.error("❌ Transcription configuration errors:", validation.errors);
+    throw new Error(
+      `Invalid transcription configuration: ${validation.errors.join(", ")}`
+    );
+  }
+
+  if (validation.warnings.length > 0) {
+    console.warn(
+      "⚠️ Transcription configuration warnings:",
+      validation.warnings
+    );
+  }
+
+  return transcriptionConfig;
+};
+
+/**
+ * Helper pour vérifier les feature flags
+ */
+export const isTranscriptionFeatureEnabled = (
+  feature: keyof TranscriptionConfig["features"]
+): boolean => {
+  return transcriptionConfig.features[feature];
+};
+
+/**
+ * Helper pour calculer les coûts estimés
+ */
+export const calculateEstimatedCosts = (
+  durationMinutes: number,
+  mode: "whisper" | "assemblyai" | "complete"
+) => {
+  const whisperCostPerMinute = 0.006;
+  const assemblyAICostPerMinute = 0.00065;
+
+  let totalCost = 0;
+  let breakdown = {};
+
+  if (mode === "whisper" || mode === "complete") {
+    const whisperCost = durationMinutes * whisperCostPerMinute;
+    totalCost += whisperCost;
+    breakdown = { ...breakdown, whisper: whisperCost };
+  }
+
+  if (mode === "assemblyai" || mode === "complete") {
+    const assemblyAICost = durationMinutes * assemblyAICostPerMinute;
+    totalCost += assemblyAICost;
+    breakdown = { ...breakdown, assemblyAI: assemblyAICost };
+  }
+
+  return {
+    totalCost: Number(totalCost.toFixed(4)),
+    breakdown,
+    costPerMinute: Number((totalCost / durationMinutes).toFixed(4)),
+  };
+};
+
+/**
+ * Helper pour monitoring des coûts
+ */
+export const shouldAlertForCost = (currentCost: number): boolean => {
+  return (
+    transcriptionConfig.monitoring.costMonitoringEnabled &&
+    currentCost >= transcriptionConfig.monitoring.costAlertThreshold
+  );
+};
+
+/**
+ * Configuration de développement (pour tests)
+ */
+export const createDevTranscriptionConfig = (
+  overrides: Partial<TranscriptionConfig> = {}
+): TranscriptionConfig => {
+  return {
+    ...transcriptionConfig,
+    openai: {
+      apiKey: "sk-test-dev-key",
+      baseURL: "https://api.openai.com/v1",
+      ...overrides.openai,
+    },
+    assemblyAI: {
+      apiKey: "test-assemblyai-key",
+      baseURL: "https://api.assemblyai.com/v2",
+      ...overrides.assemblyAI,
+    },
+    batch: {
+      maxConcurrent: 1, // Plus conservateur en dev
+      pauseBetweenMs: 3000,
+      chunkSize: 2,
+      ...overrides.batch,
+    },
+    monitoring: {
+      costMonitoringEnabled: true,
+      costAlertThreshold: 1.0, // Plus bas en dev
+      detailedMetricsEnabled: true,
+      ...overrides.monitoring,
+    },
+    ...overrides,
+  };
+};
+
+/**
+ * Configuration de production (pour déploiement)
+ */
+export const createProdTranscriptionConfig = (): TranscriptionConfig => {
+  const validation = validateTranscriptionConfig();
+
+  if (!validation.isValid) {
+    throw new Error(
+      `Production configuration invalid: ${validation.errors.join(", ")}`
+    );
+  }
+
+  // En production, on s'assure que certaines valeurs sont optimales
+  return {
+    ...transcriptionConfig,
+    batch: {
+      ...transcriptionConfig.batch,
+      maxConcurrent: Math.min(transcriptionConfig.batch.maxConcurrent, 5), // Limite production
+    },
+    monitoring: {
+      ...transcriptionConfig.monitoring,
+      costMonitoringEnabled: true, // Forcé en production
+      detailedMetricsEnabled: true, // Forcé en production
+    },
+  };
+};
+
+/**
+ * Export des constantes utiles
+ */
+export const TRANSCRIPTION_CONSTANTS = {
+  WHISPER_COST_PER_MINUTE: 0.006,
+  ASSEMBLYAI_COST_PER_MINUTE: 0.00065,
+  MAX_AUDIO_DURATION_SECONDS: 25 * 60, // 25 minutes (limite OpenAI)
+  SUPPORTED_AUDIO_FORMATS: ["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm"],
+  DEFAULT_SPEAKER_LABELS: ["turn1", "turn2", "turn3", "turn4", "turn5"],
+  ALIGNMENT_TOLERANCE_RANGE: [0.1, 0.5], // Secondes
+} as const;
