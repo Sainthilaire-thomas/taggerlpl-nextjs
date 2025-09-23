@@ -1,72 +1,76 @@
-// src/components/calls/ui/sections/CMServiceTabs.tsx
-import { Tabs, Tab } from "@mui/material";
-import {
-  Assessment,
-  Description,
-  AudioFile,
-  Build,
-  Flag,
-  CleaningServices,
-} from "@mui/icons-material";
+// src/components/calls/ui/sections/CMServiceTabs.tsx - AVEC ONGLET TRANSCRIPTION
 
+import React from "react";
+import { Tabs, Tab, Box } from "@mui/material";
+
+// ✅ TYPES ÉTENDUS AVEC TRANSCRIPTION
 export type ManagementTab =
   | "overview"
-  | "transcription"
+  | "transcription" // ✅ NOUVEAU ONGLET
   | "audio"
   | "preparation"
   | "flags"
   | "cleanup";
 
+interface CMServiceTabsProps {
+  value: ManagementTab;
+  onChange: (tab: ManagementTab) => void;
+  loading?: boolean;
+}
+
 export function CMServiceTabs({
   value,
   onChange,
-}: {
-  value: ManagementTab;
-  onChange: (t: ManagementTab) => void;
-}) {
+  loading = false,
+}: CMServiceTabsProps) {
+  const handleChange = (
+    _event: React.SyntheticEvent,
+    newValue: ManagementTab
+  ) => {
+    onChange(newValue);
+  };
+
   return (
-    <Tabs
-      value={value}
-      onChange={(_, t) => onChange(t)}
-      variant="scrollable"
-      scrollButtons="auto"
-    >
-      <Tab
-        value="overview"
-        label="Vue d'ensemble"
-        icon={<Assessment />}
-        iconPosition="start"
-      />
-      <Tab
-        value="transcription"
-        label="Transcription"
-        icon={<Description />}
-        iconPosition="start"
-      />
-      <Tab
-        value="audio"
-        label="Audio"
-        icon={<AudioFile />}
-        iconPosition="start"
-      />
-      <Tab
-        value="preparation"
-        label="Préparation"
-        icon={<Build />}
-        iconPosition="start"
-      />
-      <Tab
-        value="flags"
-        label="Flags & Statuts"
-        icon={<Flag />}
-        iconPosition="start"
-      />
-      <Tab
-        value="cleanup"
-        label="Nettoyage"
-        icon={<CleaningServices />}
-        iconPosition="start"
-      />
-    </Tabs>
+    <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+      <Tabs
+        value={value}
+        onChange={handleChange}
+        variant="scrollable"
+        scrollButtons="auto"
+        allowScrollButtonsMobile
+        sx={{
+          "& .MuiTab-root": {
+            minWidth: 120,
+            fontSize: "0.875rem",
+            fontWeight: 500,
+          },
+          "& .MuiTab-root.Mui-selected": {
+            fontWeight: 700,
+          },
+        }}
+      >
+        {/* Onglet Vue d'ensemble */}
+        <Tab label="📊 Vue d'ensemble" value="overview" disabled={loading} />
+
+        {/* ✅ NOUVEAU : Onglet Transcription */}
+        <Tab
+          label="🎙️ Transcription"
+          value="transcription"
+          disabled={loading}
+        />
+
+        {/* Onglet Audio */}
+        <Tab label="🔊 Audio" value="audio" disabled={loading} />
+
+        {/* Onglet Préparation */}
+        <Tab label="📋 Préparation" value="preparation" disabled={loading} />
+
+        {/* Onglet Flags */}
+        <Tab label="🏷️ Flags" value="flags" disabled={loading} />
+
+        {/* Onglet Nettoyage */}
+        <Tab label="🧹 Nettoyage" value="cleanup" disabled={loading} />
+      </Tabs>
+    </Box>
   );
 }

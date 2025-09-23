@@ -3,13 +3,18 @@
 import OpenAI from "openai";
 import {
   transcriptionConfig,
+  TRANSCRIPTION_CONSTANTS,
+} from "@/lib/config/transcriptionConfig";
+
+// ✅ Imports DDD (types/exceptions/utils partagés)
+import {
   AudioMetadata,
   TranscriptionMetrics,
-  TranscriptionError,
-  calculateCost,
-  isSupportedAudioFormat,
-  sanitizeFilename,
-} from "@/lib/config/transcriptionConfig";
+} from "@/components/calls/shared/types/TranscriptionTypes";
+import { TranscriptionError } from "@/components/calls/shared/exceptions/TranscriptionExceptions";
+import { calculateCost } from "@/components/calls/shared/utils/cost";
+import { isSupportedAudioFormat } from "@/components/calls/shared/utils/audioFormat";
+import { sanitizeFilename } from "@/components/calls/shared/utils/filename";
 
 /**
  * Options pour la transcription Whisper
@@ -20,6 +25,17 @@ export interface OpenAIWhisperOptions {
   temperature?: number;
   prompt?: string; // Contexte optionnel pour améliorer la précision
 }
+
+/**
+ * Valeurs par défaut si l'appelant ne précise rien.
+ * Ajuste `model` si tu utilises un autre modèle (ex: "gpt-4o-transcribe").
+ */
+const DEFAULT_WHISPER = {
+  model: "whisper-1",
+  language: transcriptionConfig.processing.defaultLanguage || "fr",
+  response_format: "json",
+  temperature: 0 as number,
+};
 
 /**
  * Réponse détaillée de l'API Whisper
@@ -62,11 +78,10 @@ export class OpenAIWhisperProvider {
   // Accumulateur interne pour le temps total (ms) — non exposé dans TranscriptionMetrics
   private totalProcessingMs = 0;
 
-  // ⚠️ Type explicite sur TranscriptionMetrics
   private metrics: TranscriptionMetrics;
 
   constructor(apiKey?: string, baseUrl?: string) {
-    // ✅ Lis la clé au runtime
+    // Lis la clé au runtime
     const key = apiKey ?? process.env.OPENAI_API_KEY ?? "";
     if (!key) {
       throw new Error("OPENAI_API_KEY is required");
@@ -87,7 +102,7 @@ export class OpenAIWhisperProvider {
 
     this.openai = new OpenAI(openaiConfig);
 
-    // 🧮 Initialisation des métriques (sans totalProcessingTime)
+    // Initialisation des métriques
     this.metrics = {
       totalRequests: 0,
       successfulRequests: 0,
@@ -192,11 +207,11 @@ export class OpenAIWhisperProvider {
       }
 
       const maxSizeBytes =
-        transcriptionConfig.limits.maxFileSizeMB * 1024 * 1024;
+        transcriptionConfig.processing.maxFileSizeMB * 1024 * 1024;
       if (size > maxSizeBytes) {
         throw new TranscriptionError(
           `Audio file too large: ${Math.round(size / 1024 / 1024)}MB (max: ${
-            transcriptionConfig.limits.maxFileSizeMB
+            transcriptionConfig.processing.maxFileSizeMB
           }MB)`,
           "FILE_TOO_LARGE"
         );
@@ -222,8 +237,8 @@ export class OpenAIWhisperProvider {
     metadata: AudioMetadata
   ): Promise<File> {
     let lastError: Error | null = null;
-    const { retryAttempts, timeoutMs, rateLimitDelay } =
-      transcriptionConfig.limits;
+    const { retryAttempts, timeoutMs, retryDelayMs } =
+      transcriptionConfig.processing;
 
     for (let attempt = 1; attempt <= retryAttempts; attempt++) {
       try {
@@ -257,11 +272,10 @@ export class OpenAIWhisperProvider {
         lastError = error as Error;
 
         if (attempt < retryAttempts) {
-          const baseDelay = Math.pow(2, attempt) * rateLimitDelay;
+          const baseDelay = Math.pow(2, attempt) * retryDelayMs;
           const jitter = Math.random() * 0.1 * baseDelay;
           const delay = baseDelay + jitter;
 
-          // ✅ typo fix: retrying
           console.warn(
             `⚠️ Download failed (attempt ${attempt}), retrying in ${Math.round(
               delay
@@ -287,7 +301,7 @@ export class OpenAIWhisperProvider {
   private async validateAudioFormat(file: File): Promise<void> {
     if (!isSupportedAudioFormat(file.name)) {
       const supportedFormats =
-        transcriptionConfig.whisper.supportedFormats.join(", ");
+        TRANSCRIPTION_CONSTANTS.SUPPORTED_AUDIO_FORMATS.join(", ");
       throw new TranscriptionError(
         `Unsupported audio format. Supported formats: ${supportedFormats}`,
         "UNSUPPORTED_FORMAT"
@@ -304,11 +318,10 @@ export class OpenAIWhisperProvider {
   ): Promise<any> {
     try {
       const whisperOptions = {
-        model: options.model ?? transcriptionConfig.whisper.model,
-        language: options.language ?? transcriptionConfig.whisper.language,
-        response_format: transcriptionConfig.whisper.response_format,
-        temperature:
-          options.temperature ?? transcriptionConfig.whisper.temperature,
+        model: options.model ?? DEFAULT_WHISPER.model,
+        language: options.language ?? DEFAULT_WHISPER.language,
+        response_format: DEFAULT_WHISPER.response_format,
+        temperature: options.temperature ?? DEFAULT_WHISPER.temperature,
         ...(options.prompt ? { prompt: options.prompt } : {}),
       };
 
@@ -360,7 +373,7 @@ export class OpenAIWhisperProvider {
 
       const response: WhisperResponse = {
         text: String(rawResponse.text).trim(),
-        language: rawResponse.language || "fr",
+        language: rawResponse.language || DEFAULT_WHISPER.language,
         duration: rawResponse.duration || 0,
         segments: rawResponse.segments || [],
         words: this.extractWordsFromSegments(rawResponse.segments || []),

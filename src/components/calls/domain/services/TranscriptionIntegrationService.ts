@@ -35,6 +35,27 @@ export interface TranscriptionJobResult {
   };
 }
 
+// Types pour les étapes (permet d'ajouter .error sans erreur TS)
+type StageStatus = { success: boolean; duration: number; error?: string };
+
+type StagesMap = {
+  download: StageStatus;
+  transcription: StageStatus;
+  diarization: StageStatus;
+  alignment: StageStatus;
+  validation: StageStatus;
+};
+
+// Helper : récupère une fin de mot en secondes, quel que soit le shape réel
+function getWordEndSec(w: any): number {
+  // essaie plusieurs conventions possibles
+  if (typeof w?.end === "number") return w.end;
+  if (typeof w?.endSec === "number") return w.endSec;
+  if (typeof w?.offsetEnd === "number") return w.offsetEnd;
+  if (typeof w?.start === "number" && typeof w?.duration === "number")
+    return w.start + w.duration;
+  return 0;
+}
 export interface BatchTranscriptionResult {
   totalJobs: number;
   successfulJobs: number;
@@ -117,7 +138,7 @@ export class TranscriptionIntegrationService {
     let speakerCount = 0;
 
     // Tracking détaillé des étapes
-    const stages = {
+    const stages: StagesMap = {
       download: { success: false, duration: 0 },
       transcription: { success: false, duration: 0 },
       diarization: { success: false, duration: 0 },
@@ -125,6 +146,7 @@ export class TranscriptionIntegrationService {
       validation: { success: false, duration: 0 },
     };
 
+    let transcription: TranscriptionJson = { words: [], meta: {} };
     try {
       console.log(`🎙️ Starting ${mode} for call ${callId}`);
 
@@ -157,7 +179,6 @@ export class TranscriptionIntegrationService {
       // ==================================================================================
       // ÉTAPE 2 : TRANSCRIPTION ASR (si nécessaire)
       // ==================================================================================
-      let transcription: TranscriptionJson;
 
       if (mode === "transcription-only" || mode === "complete") {
         console.log(`📡 Transcribing audio with OpenAI Whisper...`);
@@ -178,13 +199,16 @@ export class TranscriptionIntegrationService {
           source: "asr:auto",
         });
 
-        audioDuration = whisperResponse.duration;
-        wordCount = transcription.words.length;
+        audioDuration =
+          transcription.words.length > 0
+            ? Math.max(...transcription.words.map((w) => getWordEndSec(w)))
+            : 0;
 
         stages.transcription = {
           success: true,
           duration: Date.now() - transcriptionStart,
         };
+        wordCount = transcription.words.length;
 
         console.log(
           `✅ Transcription completed: ${wordCount} words, ${audioDuration}s`
@@ -209,7 +233,7 @@ export class TranscriptionIntegrationService {
         // Estimation durée depuis les mots
         audioDuration =
           transcription.words.length > 0
-            ? Math.max(...transcription.words.map((w) => w.end))
+            ? Math.max(...transcription.words.map((w) => getWordEndSec(w)))
             : 0;
 
         stages.transcription = { success: true, duration: 0 }; // Existante

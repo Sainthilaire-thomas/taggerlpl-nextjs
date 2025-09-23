@@ -1,14 +1,19 @@
-// src/components/calls/hooks/useCallTranscriptionActions.ts - VERSION ENRICHIE
+// src/components/calls/ui/hooks/actions/useCallTranscriptionActions.ts - CORRECTION POUR VRAIS SERVICES
 
-import { useCallback, useState } from "react";
-import { Call } from "../shared/types/CallTypes";
-import { createServices } from "../infrastructure/ServiceFactory";
-import {
+import { useCallback, useState, useMemo } from "react";
+import { Call } from "../../../domain/entities/Call";
+import { CallExtended } from "../../../domain/entities/CallExtended";
+import { createServices } from "../../../infrastructure/ServiceFactory";
+import { TranscriptionIntegrationService } from "../../../domain/services/TranscriptionIntegrationService";
+import type {
   TranscriptionJobResult,
   BatchTranscriptionResult,
   TranscriptionMode,
-} from "../domain/services/TranscriptionIntegrationService";
-import { isTranscriptionFeatureEnabled } from "@/lib/config/transcriptionConfig";
+} from "../../../domain/services/TranscriptionIntegrationService";
+
+// ============================================================================
+// TYPES EXISTANTS (conservés de votre version)
+// ============================================================================
 
 export interface TranscriptionProgress {
   callId: string;
@@ -35,17 +40,17 @@ export interface BatchProgress {
   isRunning: boolean;
 }
 
-/**
- * Hook enrichi pour la gestion de la transcription automatique
- *
- * Nouveautés par rapport à votre version actuelle :
- * - Support des 3 modes de transcription
- * - Suivi en temps réel du progrès
- * - Gestion des erreurs granulaire
- * - Métriques et coûts détaillés
- * - Feature flags pour l'activation
- */
-export function useCallTranscriptionActions() {
+export interface UseCallTranscriptionActionsProps {
+  reload: () => Promise<void>;
+}
+
+// ============================================================================
+// HOOK CORRIGÉ AVEC VRAIS SERVICES
+// ============================================================================
+
+export function useCallTranscriptionActions({
+  reload,
+}: UseCallTranscriptionActionsProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [batchProgress, setBatchProgress] = useState<BatchProgress | null>(
     null
@@ -53,272 +58,282 @@ export function useCallTranscriptionActions() {
   const [currentProgress, setCurrentProgress] =
     useState<TranscriptionProgress | null>(null);
 
-  // Services de transcription
-  const services = createServices();
-  const transcriptionService = services.transcriptionIntegrationService;
+  // ✅ CORRECTION : Utiliser les VRAIS services au lieu des mocks
+  const services = useMemo(() => createServices(), []);
+  const transcriptionService = useMemo(() => {
+    return new TranscriptionIntegrationService(
+      services.callRepository,
+      services.storageRepository
+    );
+  }, [services]);
 
   // ============================================================================
-  // ACTIONS DE TRANSCRIPTION INDIVIDUELLES
+  // HELPERS POUR LA PROGRESSION UI
+  // ============================================================================
+
+  const updateProgress = useCallback(
+    (callId: string, update: Partial<TranscriptionProgress>) => {
+      setCurrentProgress((prev) =>
+        prev?.callId === callId ? { ...prev, ...update } : prev
+      );
+    },
+    []
+  );
+
+  const startProgressSimulation = useCallback(
+    (callId: string, mode: TranscriptionMode): NodeJS.Timeout => {
+      let progress = 0;
+      const stages = getStagesForMode(mode);
+      let currentStageIndex = 0;
+
+      return setInterval(() => {
+        progress += Math.random() * 10;
+        if (progress > 90) progress = 90; // Ne jamais atteindre 100 avant la fin
+
+        const currentStage =
+          stages[currentStageIndex] || stages[stages.length - 1];
+        if (progress > (currentStageIndex + 1) * (90 / stages.length)) {
+          currentStageIndex = Math.min(
+            currentStageIndex + 1,
+            stages.length - 1
+          );
+        }
+
+        updateProgress(callId, {
+          progress: Math.min(progress, 90),
+          stage: currentStage,
+        });
+      }, 1500);
+    },
+    [updateProgress]
+  );
+
+  // ============================================================================
+  // ✅ ACTIONS CORRIGÉES AVEC VRAIS SERVICES
   // ============================================================================
 
   /**
-   * ✅ NOUVEAU : Transcription complète (ASR + Diarisation)
+   * ✅ CORRECTION : Transcription complète avec VRAIS services
    */
   const transcribeCallComplete = useCallback(
-    async (call: Call): Promise<TranscriptionJobResult> => {
-      if (
-        !isTranscriptionFeatureEnabled("autoTranscriptionEnabled") ||
-        !isTranscriptionFeatureEnabled("autoDiarizationEnabled")
-      ) {
-        throw new Error("Complete transcription feature is disabled");
-      }
+    async (calls: Call[]): Promise<void> => {
+      if (calls.length === 0) return;
 
       setIsProcessing(true);
-      setCurrentProgress({
-        callId: call.id,
-        status: "pending",
-        progress: 0,
-        stage: "Initializing...",
-      });
+      console.log(`🚀 Transcription complète de ${calls.length} appels`);
 
       try {
-        console.log(`🚀 Starting complete transcription for call ${call.id}`);
-
-        // Simulation du progrès (vous pourriez l'améliorer avec des events)
-        const progressUpdater = startProgressSimulation(call.id, "complete");
-
-        const result = await transcriptionService.transcribeComplete(call.id);
-
-        clearInterval(progressUpdater);
-
-        if (result.success) {
+        for (const call of calls) {
           setCurrentProgress({
             callId: call.id,
-            status: "completed",
-            progress: 100,
-            stage: `Completed: ${result.metrics.wordCount} words, ${result.metrics.speakerCount} speakers`,
-          });
-        } else {
-          setCurrentProgress({
-            callId: call.id,
-            status: "error",
+            status: "pending",
             progress: 0,
-            stage: "Failed",
-            error: result.error,
+            stage: "Initialisation...",
           });
+
+          const progressInterval = startProgressSimulation(call.id, "complete");
+
+          try {
+            // ✅ UTILISER LE VRAI SERVICE au lieu du mock
+            const result = await transcriptionService.transcribeComplete(
+              call.id
+            );
+
+            clearInterval(progressInterval);
+
+            if (result.success) {
+              setCurrentProgress({
+                callId: call.id,
+                status: "completed",
+                progress: 100,
+                stage: `Terminé: ${result.metrics.wordCount} mots, ${result.metrics.speakerCount} speakers`,
+              });
+            } else {
+              setCurrentProgress({
+                callId: call.id,
+                status: "error",
+                progress: 0,
+                stage: "Échec",
+                error: result.error,
+              });
+            }
+          } catch (error) {
+            clearInterval(progressInterval);
+            setCurrentProgress({
+              callId: call.id,
+              status: "error",
+              progress: 0,
+              stage: "Erreur",
+              error: error instanceof Error ? error.message : "Erreur inconnue",
+            });
+          }
         }
 
-        return result;
-      } catch (error) {
-        console.error("❌ Complete transcription failed:", error);
-        setCurrentProgress({
-          callId: call.id,
-          status: "error",
-          progress: 0,
-          stage: "Failed",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
-        throw error;
+        await reload();
       } finally {
         setIsProcessing(false);
       }
     },
-    [transcriptionService]
+    [transcriptionService, startProgressSimulation, reload]
   );
 
   /**
-   * Transcription ASR seulement (votre version actuelle conservée et enrichie)
+   * ✅ CORRECTION : Transcription ASR seulement
    */
   const transcribeCallOnly = useCallback(
-    async (call: Call): Promise<TranscriptionJobResult> => {
-      if (!isTranscriptionFeatureEnabled("autoTranscriptionEnabled")) {
-        throw new Error("Auto transcription feature is disabled");
-      }
+    async (calls: Call[]): Promise<void> => {
+      if (calls.length === 0) return;
 
       setIsProcessing(true);
-      setCurrentProgress({
-        callId: call.id,
-        status: "transcribing",
-        progress: 0,
-        stage: "Starting ASR transcription...",
-      });
+      console.log(`🎙️ Transcription ASR de ${calls.length} appels`);
 
       try {
-        const progressUpdater = startProgressSimulation(
-          call.id,
-          "transcription-only"
-        );
-        const result = await transcriptionService.transcribeOnly(call.id);
-        clearInterval(progressUpdater);
-
-        if (result.success) {
+        for (const call of calls) {
           setCurrentProgress({
             callId: call.id,
-            status: "completed",
-            progress: 100,
-            stage: `Transcribed: ${result.metrics.wordCount} words`,
-          });
-        } else {
-          setCurrentProgress({
-            callId: call.id,
-            status: "error",
+            status: "transcribing",
             progress: 0,
-            stage: "Failed",
-            error: result.error,
+            stage: "Transcription audio...",
           });
+
+          const progressInterval = startProgressSimulation(
+            call.id,
+            "transcription-only"
+          );
+
+          try {
+            // ✅ UTILISER LE VRAI SERVICE
+            const result = await transcriptionService.transcribeOnly(call.id);
+
+            clearInterval(progressInterval);
+
+            if (result.success) {
+              setCurrentProgress({
+                callId: call.id,
+                status: "completed",
+                progress: 100,
+                stage: `Transcrit: ${result.metrics.wordCount} mots`,
+              });
+            } else {
+              setCurrentProgress({
+                callId: call.id,
+                status: "error",
+                progress: 0,
+                stage: "Échec",
+                error: result.error,
+              });
+            }
+          } catch (error) {
+            clearInterval(progressInterval);
+            setCurrentProgress({
+              callId: call.id,
+              status: "error",
+              progress: 0,
+              stage: "Erreur",
+              error: error instanceof Error ? error.message : "Erreur inconnue",
+            });
+          }
         }
 
-        return result;
-      } catch (error) {
-        console.error("❌ ASR transcription failed:", error);
-        setCurrentProgress({
-          callId: call.id,
-          status: "error",
-          progress: 0,
-          stage: "Failed",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
-        throw error;
+        await reload();
       } finally {
         setIsProcessing(false);
       }
     },
-    [transcriptionService]
+    [transcriptionService, startProgressSimulation, reload]
   );
 
   /**
-   * ✅ NOUVEAU : Diarisation sur transcription existante
+   * ✅ CORRECTION : Diarisation seulement
    */
   const diarizeExistingCall = useCallback(
-    async (call: Call): Promise<TranscriptionJobResult> => {
-      if (!isTranscriptionFeatureEnabled("autoDiarizationEnabled")) {
-        throw new Error("Auto diarization feature is disabled");
-      }
+    async (calls: Call[]): Promise<void> => {
+      if (calls.length === 0) return;
 
       setIsProcessing(true);
-      setCurrentProgress({
-        callId: call.id,
-        status: "diarizing",
-        progress: 0,
-        stage: "Starting speaker separation...",
-      });
+      console.log(`👥 Diarisation de ${calls.length} appels`);
 
       try {
-        const progressUpdater = startProgressSimulation(
-          call.id,
-          "diarization-only"
-        );
-        const result = await transcriptionService.diarizeExisting(call.id);
-        clearInterval(progressUpdater);
+        for (const call of calls) {
+          // Vérifier qu'il y a une transcription
+          if (!call.hasValidTranscription()) {
+            setCurrentProgress({
+              callId: call.id,
+              status: "error",
+              progress: 0,
+              stage: "Erreur",
+              error: "Transcription requise pour la diarisation",
+            });
+            continue;
+          }
 
-        if (result.success) {
           setCurrentProgress({
             callId: call.id,
-            status: "completed",
-            progress: 100,
-            stage: `Diarized: ${result.metrics.speakerCount} speakers identified`,
-          });
-        } else {
-          setCurrentProgress({
-            callId: call.id,
-            status: "error",
+            status: "diarizing",
             progress: 0,
-            stage: "Failed",
-            error: result.error,
+            stage: "Séparation des locuteurs...",
           });
+
+          const progressInterval = startProgressSimulation(
+            call.id,
+            "diarization-only"
+          );
+
+          try {
+            // ✅ UTILISER LE VRAI SERVICE
+            const result = await transcriptionService.diarizeExisting(call.id);
+
+            clearInterval(progressInterval);
+
+            if (result.success) {
+              setCurrentProgress({
+                callId: call.id,
+                status: "completed",
+                progress: 100,
+                stage: `Diarisé: ${result.metrics.speakerCount} locuteurs identifiés`,
+              });
+            } else {
+              setCurrentProgress({
+                callId: call.id,
+                status: "error",
+                progress: 0,
+                stage: "Échec",
+                error: result.error,
+              });
+            }
+          } catch (error) {
+            clearInterval(progressInterval);
+            setCurrentProgress({
+              callId: call.id,
+              status: "error",
+              progress: 0,
+              stage: "Erreur",
+              error: error instanceof Error ? error.message : "Erreur inconnue",
+            });
+          }
         }
 
-        return result;
-      } catch (error) {
-        console.error("❌ Diarization failed:", error);
-        setCurrentProgress({
-          callId: call.id,
-          status: "error",
-          progress: 0,
-          stage: "Failed",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
-        throw error;
+        await reload();
       } finally {
         setIsProcessing(false);
       }
     },
-    [transcriptionService]
+    [transcriptionService, startProgressSimulation, reload]
   );
 
-  // ============================================================================
-  // ACTIONS DE TRANSCRIPTION EN LOT
-  // ============================================================================
-
   /**
-   * ✅ ENRICHISSEMENT : Transcription en lot avec modes flexibles
+   * ✅ CORRECTION : Traitement par lot avec VRAIS services
    */
   const transcribeBatch = useCallback(
     async (
-      calls: Call[],
-      options: {
-        mode?: TranscriptionMode;
-        maxConcurrent?: number;
-        estimateOnly?: boolean;
-      } = {}
-    ): Promise<BatchTranscriptionResult> => {
-      const {
-        mode = "complete",
-        maxConcurrent = 3,
-        estimateOnly = false,
-      } = options;
-
-      if (!isTranscriptionFeatureEnabled("batchProcessingEnabled")) {
-        throw new Error("Batch processing feature is disabled");
-      }
-
-      // Validation des feature flags selon le mode
-      if (mode === "complete" || mode === "transcription-only") {
-        if (!isTranscriptionFeatureEnabled("autoTranscriptionEnabled")) {
-          throw new Error("Auto transcription feature is disabled");
-        }
-      }
-      if (mode === "complete" || mode === "diarization-only") {
-        if (!isTranscriptionFeatureEnabled("autoDiarizationEnabled")) {
-          throw new Error("Auto diarization feature is disabled");
-        }
-      }
-
-      // Estimation des coûts et du temps
-      const totalDurationMinutes =
-        calls.reduce((sum, call) => {
-          return sum + (call.duree || 300); // Estimation 5 min si pas de durée
-        }, 0) / 60;
-
-      const estimatedCost = calculateBatchCost(totalDurationMinutes, mode);
-      const estimatedTimeMinutes = Math.ceil(totalDurationMinutes * 0.4); // ~40% de la durée audio
-
-      console.log(
-        `📊 Batch estimation: ${
-          calls.length
-        } calls, ~${totalDurationMinutes.toFixed(
-          1
-        )} min audio, cost: $${estimatedCost.toFixed(
-          4
-        )}, time: ~${estimatedTimeMinutes} min`
-      );
-
-      if (estimateOnly) {
-        return {
-          totalJobs: calls.length,
-          successfulJobs: 0,
-          failedJobs: 0,
-          results: [],
-          totalCost: estimatedCost,
-          totalProcessingTime: estimatedTimeMinutes * 60 * 1000,
-          averageProcessingTime:
-            (estimatedTimeMinutes * 60 * 1000) / calls.length,
-        };
-      }
+      callIds: string[],
+      mode: TranscriptionMode = "complete"
+    ): Promise<BatchTranscriptionResult | null> => {
+      if (callIds.length === 0) return null;
 
       setIsProcessing(true);
       setBatchProgress({
-        totalCalls: calls.length,
+        totalCalls: callIds.length,
         completedCalls: 0,
         results: [],
         totalCost: 0,
@@ -327,18 +342,21 @@ export function useCallTranscriptionActions() {
       });
 
       try {
-        const callIds = calls.map((c) => c.id);
+        console.log(
+          `🔄 Traitement par lot: ${callIds.length} appels (${mode})`
+        );
 
+        // ✅ UTILISER LE VRAI SERVICE avec callback de progression
         const result = await transcriptionService.transcribeBatch(callIds, {
           mode,
-          maxConcurrent,
-          pauseBetweenBatches: 2000,
-          onProgress: (completed, total, current) => {
+          maxConcurrent: 2,
+          pauseBetweenBatches: 1500,
+          onProgress: (completed, total, currentResult) => {
             setBatchProgress((prev) => {
               if (!prev) return null;
 
-              const results = current
-                ? [...prev.results, current]
+              const results = currentResult
+                ? [...prev.results, currentResult]
                 : prev.results;
               const totalCost = results.reduce(
                 (sum, r) => sum + r.metrics.totalCost,
@@ -358,15 +376,15 @@ export function useCallTranscriptionActions() {
                 results,
                 totalCost,
                 averageTimePerCall,
-                currentCall: current
+                currentCall: currentResult
                   ? {
-                      callId: current.callId,
-                      status: current.success ? "completed" : "error",
+                      callId: currentResult.callId,
+                      status: currentResult.success ? "completed" : "error",
                       progress: 100,
-                      stage: current.success
-                        ? `Completed: ${current.metrics.wordCount} words`
-                        : `Failed: ${current.error}`,
-                      error: current.error,
+                      stage: currentResult.success
+                        ? `Terminé: ${currentResult.metrics.wordCount} mots`
+                        : `Échec: ${currentResult.error}`,
+                      error: currentResult.error,
                     }
                   : undefined,
               };
@@ -377,10 +395,11 @@ export function useCallTranscriptionActions() {
         setBatchProgress((prev) =>
           prev ? { ...prev, isRunning: false } : null
         );
+        await reload();
 
         return result;
       } catch (error) {
-        console.error("❌ Batch transcription failed:", error);
+        console.error("❌ Traitement par lot échoué:", error);
         setBatchProgress((prev) =>
           prev ? { ...prev, isRunning: false } : null
         );
@@ -389,39 +408,98 @@ export function useCallTranscriptionActions() {
         setIsProcessing(false);
       }
     },
-    [transcriptionService]
+    [transcriptionService, reload]
   );
 
   // ============================================================================
-  // ACTIONS DE MONITORING
+  // ✅ VALIDATION EXISTANTE (conservée)
   // ============================================================================
 
-  /**
-   * ✅ NOUVEAU : Récupération des métriques
-   */
-  const getTranscriptionMetrics = useCallback(async () => {
-    try {
-      return await transcriptionService.getProvidersMetrics();
-    } catch (error) {
-      console.error("❌ Failed to get transcription metrics:", error);
-      throw error;
-    }
-  }, [transcriptionService]);
+  const validateTranscriptions = useCallback(
+    async (calls: Call[]): Promise<void> => {
+      if (calls.length === 0) return;
 
-  /**
-   * ✅ NOUVEAU : Health check
-   */
-  const checkTranscriptionHealth = useCallback(async () => {
-    try {
-      return await transcriptionService.healthCheck();
-    } catch (error) {
-      console.error("❌ Health check failed:", error);
-      throw error;
-    }
-  }, [transcriptionService]);
+      setIsProcessing(true);
+      console.log(`✅ Validation de ${calls.length} transcriptions`);
+
+      try {
+        const { transcriptionTransformationService } = services;
+
+        for (const call of calls) {
+          if (!call.hasValidTranscription()) {
+            setCurrentProgress({
+              callId: call.id,
+              status: "error",
+              progress: 0,
+              stage: "Aucune transcription à valider",
+              error: "Aucune transcription trouvée",
+            });
+            continue;
+          }
+
+          setCurrentProgress({
+            callId: call.id,
+            status: "aligning",
+            progress: 50,
+            stage: "Validation et transformation...",
+          });
+
+          try {
+            const transcriptionData = call.getTranscription();
+            const result =
+              await transcriptionTransformationService.transformJsonToWords(
+                call.id,
+                transcriptionData
+              );
+
+            if (result.success) {
+              // tolérant à plusieurs shapes de résultat
+              const totalWords =
+                (result as any)?.stats?.totalWords ??
+                (result as any)?.totalWords ??
+                (Array.isArray((result as any)?.words)
+                  ? (result as any).words.length
+                  : undefined) ??
+                (Array.isArray((result as any)?.transcription?.words)
+                  ? (result as any).transcription.words.length
+                  : 0);
+
+              setCurrentProgress({
+                callId: call.id,
+                status: "completed",
+                progress: 100,
+                stage: `Validé: ${totalWords} mots transformés`,
+              });
+            } else {
+              setCurrentProgress({
+                callId: call.id,
+                status: "error",
+                progress: 0,
+                stage: "Validation échouée",
+                error: result.error || "Erreur de validation",
+              });
+            }
+          } catch (error) {
+            setCurrentProgress({
+              callId: call.id,
+              status: "error",
+              progress: 0,
+              stage: "Erreur de validation",
+              error: error instanceof Error ? error.message : "Erreur inconnue",
+            });
+          }
+        }
+
+        await reload();
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [services, reload]
+  );
 
   // ============================================================================
-  // ACTIONS UTILITAIRES
+  // UTILITAIRES ET HELPERS
   // ============================================================================
 
   const resetProgress = useCallback(() => {
@@ -430,100 +508,44 @@ export function useCallTranscriptionActions() {
   }, []);
 
   const cancelBatch = useCallback(() => {
-    // TODO: Implémenter l'annulation de batch
-    console.warn("⚠️ Batch cancellation not yet implemented");
+    console.warn("⚠️ Annulation de batch pas encore implémentée");
     setBatchProgress((prev) => (prev ? { ...prev, isRunning: false } : null));
     setIsProcessing(false);
   }, []);
 
-  // ============================================================================
-  // HELPERS PRIVÉS
-  // ============================================================================
+  const calculateBatchEstimate = useCallback(
+    (calls: Call[], mode: TranscriptionMode = "complete") => {
+      const totalMinutes =
+        calls.reduce((sum, call) => {
+          // Utiliser duree si disponible, sinon estimer 5 minutes
+          const durationSeconds =
+            call instanceof CallExtended ? (call as any).duree || 300 : 300;
+          return sum + durationSeconds;
+        }, 0) / 60;
 
-  /**
-   * Simulation du progrès pour l'UI (à améliorer avec de vrais events)
-   */
-  function startProgressSimulation(
-    callId: string,
-    mode: TranscriptionMode
-  ): NodeJS.Timeout {
-    let progress = 0;
-    const stages = getStagesForMode(mode);
-    let currentStageIndex = 0;
+      const whisperCost = totalMinutes * 0.006;
+      const assemblyAICost = totalMinutes * 0.00065;
 
-    return setInterval(() => {
-      progress += Math.random() * 15; // Progression variable
-      if (progress > 95) progress = 95; // Ne jamais atteindre 100 avant la fin
-
-      const currentStage =
-        stages[currentStageIndex] || stages[stages.length - 1];
-
-      if (progress > (currentStageIndex + 1) * (100 / stages.length)) {
-        currentStageIndex = Math.min(currentStageIndex + 1, stages.length - 1);
+      let estimatedCost = 0;
+      if (mode === "transcription-only") {
+        estimatedCost = whisperCost;
+      } else if (mode === "diarization-only") {
+        estimatedCost = assemblyAICost;
+      } else if (mode === "complete") {
+        estimatedCost = whisperCost + assemblyAICost;
       }
 
-      setCurrentProgress((prev) =>
-        prev
-          ? {
-              ...prev,
-              progress: Math.min(progress, 95),
-              stage: currentStage,
-            }
-          : null
-      );
-    }, 2000);
-  }
-
-  function getStagesForMode(mode: TranscriptionMode): string[] {
-    switch (mode) {
-      case "transcription-only":
-        return [
-          "Preparing audio...",
-          "Transcribing with Whisper...",
-          "Normalizing text...",
-          "Validating...",
-        ];
-      case "diarization-only":
-        return [
-          "Loading transcription...",
-          "Analyzing speakers...",
-          "Aligning segments...",
-          "Updating data...",
-        ];
-      case "complete":
-        return [
-          "Preparing audio...",
-          "Transcribing with Whisper...",
-          "Analyzing speakers...",
-          "Aligning transcription...",
-          "Validating results...",
-        ];
-      default:
-        return ["Processing..."];
-    }
-  }
-
-  function calculateBatchCost(
-    totalMinutes: number,
-    mode: TranscriptionMode
-  ): number {
-    const whisperCostPerMin = 0.006;
-    const assemblyAICostPerMin = 0.00065;
-
-    let cost = 0;
-    if (mode === "transcription-only") {
-      cost = totalMinutes * whisperCostPerMin;
-    } else if (mode === "diarization-only") {
-      cost = totalMinutes * assemblyAICostPerMin;
-    } else if (mode === "complete") {
-      cost = totalMinutes * (whisperCostPerMin + assemblyAICostPerMin);
-    }
-
-    return cost;
-  }
+      return {
+        estimatedCost,
+        estimatedTimeMinutes: Math.ceil(totalMinutes * 0.4), // ~40% du temps audio
+        totalAudioMinutes: totalMinutes,
+      };
+    },
+    []
+  );
 
   // ============================================================================
-  // RETOUR DU HOOK
+  // RETURN - INTERFACE COMPATIBLE AVEC VOS COMPOSANTS
   // ============================================================================
 
   return {
@@ -532,42 +554,54 @@ export function useCallTranscriptionActions() {
     currentProgress,
     batchProgress,
 
-    // Actions individuelles
+    // Actions principales (noms adaptés à vos composants existants)
     transcribeCallComplete,
     transcribeCallOnly,
     diarizeExistingCall,
+    validateTranscriptions,
 
-    // Actions en lot
+    // Actions par lot
     transcribeBatch,
-
-    // Monitoring
-    getTranscriptionMetrics,
-    checkTranscriptionHealth,
 
     // Utilitaires
     resetProgress,
     cancelBatch,
+    calculateBatchEstimate,
 
     // Helpers pour l'UI
-    isFeatureEnabled: isTranscriptionFeatureEnabled,
-    calculateBatchEstimate: (
-      calls: Call[],
-      mode: TranscriptionMode = "complete"
-    ) => {
-      const totalMinutes =
-        calls.reduce((sum, call) => sum + (call.duree || 300), 0) / 60;
-      return {
-        estimatedCost: calculateBatchCost(totalMinutes, mode),
-        estimatedTimeMinutes: Math.ceil(totalMinutes * 0.4),
-        totalAudioMinutes: totalMinutes,
-      };
-    },
+    progress: currentProgress, // Alias pour compatibilité avec TranscriptionProgress.tsx
   };
 }
 
-/**
- * Type pour l'export du hook
- */
-export type UseCallTranscriptionActionsReturn = ReturnType<
-  typeof useCallTranscriptionActions
->;
+// ============================================================================
+// HELPERS PRIVÉS
+// ============================================================================
+
+function getStagesForMode(mode: TranscriptionMode): string[] {
+  switch (mode) {
+    case "transcription-only":
+      return [
+        "Préparation audio...",
+        "Transcription OpenAI...",
+        "Normalisation...",
+        "Validation...",
+      ];
+    case "diarization-only":
+      return [
+        "Chargement transcription...",
+        "Analyse AssemblyAI...",
+        "Alignement segments...",
+        "Mise à jour...",
+      ];
+    case "complete":
+      return [
+        "Préparation audio...",
+        "Transcription OpenAI...",
+        "Analyse locuteurs...",
+        "Alignement temporal...",
+        "Validation finale...",
+      ];
+    default:
+      return ["Traitement..."];
+  }
+}

@@ -38,9 +38,9 @@ export class CallsServiceFactory {
   private transcriptionTransformationService: TranscriptionTransformationService;
   private callFilteringService: CallFilteringService;
 
-  // ✅ Diarisation
-  private diarizationProvider: AssemblyAIDiarizationProvider;
-  private diarizationService: DiarizationService;
+  // ✅ Diarisation (déclaration avec types optionnels)
+  private diarizationProvider?: AssemblyAIDiarizationProvider;
+  private diarizationService?: DiarizationService;
 
   private constructor() {
     // Initialisation des repositories
@@ -59,12 +59,29 @@ export class CallsServiceFactory {
       new TranscriptionTransformationService();
     this.callFilteringService = new CallFilteringService();
 
-    // ✅ Diarisation: provider + service
-    this.diarizationProvider = new AssemblyAIDiarizationProvider(
-      process.env.ASSEMBLYAI_API_KEY,
-      process.env.ASSEMBLYAI_BASE_URL
-    );
-    this.diarizationService = new DiarizationService(this.diarizationProvider);
+    // ❌ SUPPRESSION de l'initialisation automatique de la diarisation
+    // Les services de diarisation seront initialisés à la demande
+  }
+
+  // ✅ Méthode d'initialisation lazy pour la diarisation
+  private initializeDiarizationServices(): void {
+    if (!this.diarizationProvider && process.env.ASSEMBLYAI_API_KEY) {
+      try {
+        this.diarizationProvider = new AssemblyAIDiarizationProvider(
+          process.env.ASSEMBLYAI_API_KEY,
+          process.env.ASSEMBLYAI_BASE_URL
+        );
+        this.diarizationService = new DiarizationService(
+          this.diarizationProvider
+        );
+        console.log("✅ Services de diarisation initialisés");
+      } catch (error) {
+        console.warn("⚠️ Échec initialisation diarisation:", error);
+        // Réinitialiser en cas d'erreur
+        this.diarizationProvider = undefined;
+        this.diarizationService = undefined;
+      }
+    }
   }
 
   public static getInstance(): CallsServiceFactory {
@@ -109,13 +126,15 @@ export class CallsServiceFactory {
     return this.storageRepository;
   }
 
-  // ✅ Diarisation
-  getDiarizationService(): DiarizationService {
-    return this.diarizationService;
+  // ✅ Getters avec initialisation lazy
+  getDiarizationService(): DiarizationService | null {
+    this.initializeDiarizationServices();
+    return this.diarizationService || null;
   }
 
-  getDiarizationProvider(): AssemblyAIDiarizationProvider {
-    return this.diarizationProvider;
+  getDiarizationProvider(): AssemblyAIDiarizationProvider | null {
+    this.initializeDiarizationServices();
+    return this.diarizationProvider || null;
   }
 
   // ============================================================================
@@ -127,8 +146,8 @@ export class CallsServiceFactory {
       this.transcriptionTransformationService;
     const callFilteringService = this.callFilteringService;
 
-    // ✅ Diarisation (raccourcis)
-    const diarization = this.diarizationService;
+    // ✅ Diarisation conditionnelle
+    const diarization = this.getDiarizationService();
 
     return {
       // Services exposés
@@ -136,30 +155,32 @@ export class CallsServiceFactory {
       transformation: transcriptionTransformationService,
       repository: callRepository,
 
-      // ✅ Expose la diarisation pour l’UI
-      diarization: {
-        inferSpeakers: (
-          audioUrl: string,
-          opts?: {
-            languageCode?: string;
-            timeoutMs?: number;
-            pollIntervalMs?: number;
-          }
-        ) => diarization.inferSegments(audioUrl, opts),
+      // ✅ Expose la diarisation pour l'UI (avec vérification)
+      diarization: diarization
+        ? {
+            inferSpeakers: (
+              audioUrl: string,
+              opts?: {
+                languageCode?: string;
+                timeoutMs?: number;
+                pollIntervalMs?: number;
+              }
+            ) => diarization.inferSegments(audioUrl, opts),
 
-        assignTurns: (words: Word[], segments: DiarizationSegment[]) =>
-          diarization.assignTurnsToWords(words, segments),
+            assignTurns: (words: Word[], segments: DiarizationSegment[]) =>
+              diarization.assignTurnsToWords(words, segments),
 
-        diarizeWords: (
-          audioUrl: string,
-          words: Word[],
-          opts?: {
-            languageCode?: string;
-            timeoutMs?: number;
-            pollIntervalMs?: number;
+            diarizeWords: (
+              audioUrl: string,
+              words: Word[],
+              opts?: {
+                languageCode?: string;
+                timeoutMs?: number;
+                pollIntervalMs?: number;
+              }
+            ) => diarization.diarizeWords(audioUrl, words, opts),
           }
-        ) => diarization.diarizeWords(audioUrl, words, opts),
-      },
+        : null, // null si diarisation non disponible
 
       // Actions composées existantes
       async findPreparableCalls() {
@@ -244,8 +265,8 @@ export class CallsServiceFactory {
           transcriptionTransformationService:
             !!this.transcriptionTransformationService,
           callFilteringService: !!this.callFilteringService,
-          // ✅
-          diarizationService: !!this.diarizationService,
+          // ✅ Vérification conditionnelle
+          diarizationService: !!this.getDiarizationService(),
         },
       };
     } catch (error) {
@@ -269,8 +290,12 @@ export class CallsServiceFactory {
 export const createServices = () => {
   const factory = CallsServiceFactory.getInstance();
 
+  // Services de diarisation conditionnels
+  const diarizationService = factory.getDiarizationService(); // Peut être null
+  const diarizationProvider = factory.getDiarizationProvider(); // Peut être null
+
   return {
-    // Services principaux
+    // Services principaux (toujours disponibles)
     callService: factory.getCallService(),
     duplicateService: factory.getDuplicateService(),
     storageService: factory.getStorageService(),
@@ -285,9 +310,12 @@ export const createServices = () => {
     callRepository: factory.getCallRepository(),
     storageRepository: factory.getStorageRepository(),
 
-    // ✅ Diarisation
-    diarizationService: factory.getDiarizationService(),
-    diarizationProvider: factory.getDiarizationProvider(),
+    // ✅ Services optionnels (peuvent être null)
+    diarizationService,
+    diarizationProvider,
+
+    // ✅ Flag pour savoir si la diarisation est disponible
+    isDiarizationAvailable: diarizationService !== null,
 
     // Service composé principal
     callPreparationService: factory.createCallPreparationService(),

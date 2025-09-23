@@ -2,33 +2,30 @@
 
 import type { TranscriptionMetadata } from "./CommonTypes";
 
-/**
- * Tour de parole typé (optionnel, à activer si tu veux verrouiller "turn1" | "turn2" | ...).
- * Sinon garde string simple.
- */
 // export type WordTurn = `turn${number}`;
-export type WordTurn = string; // plus souple pour commencer
+export type WordTurn = string;
 
-/** Un mot aligné temporellement (grain minimal que tu utilises partout) */
 export type Word = {
   text: string;
   startTime: number; // secondes
   endTime: number; // secondes
-  turn?: WordTurn; // ex: "turn1" | "turn2"
-  type?: string; // marqueur interne (début/fin de balise, etc.) - facultatif
+  turn?: WordTurn;
+  type?: string;
 };
 
-/**
- * Métadonnées de transcription :
- * - On repart de ton TranscriptionMetadata existant,
- * - On autorise des champs internes additionnels (version, createdAt, source, durationSec).
- */
 export type TranscriptionMeta = TranscriptionMetadata & {
   version?: string;
   createdAt?: string; // ISO
-  source?: "asr:auto" | "edited"; // provenance (ASR OpenAI ou édition Humaine)
+  source?: "asr:auto" | "edited";
   durationSec?: number;
-  language?: string; // override explicite si besoin (ex: "fr-FR")
+  language?: string;
+
+  // Champs utilisés par le service d’intégration
+  speakerCount?: number;
+  diarizationProvider?: string;
+  transcriptionProvider?: string;
+  alignmentTolerance?: number;
+  processedAt?: string;
 };
 
 /** JSON stocké en DB dans call.transcription */
@@ -41,7 +38,7 @@ export type TranscriptionJson = {
 export type DiarizationSegment = {
   start: number; // secondes
   end: number; // secondes
-  speaker: WordTurn; // "turn1" | "turn2" | ...
+  speaker: WordTurn;
 };
 
 /** Résultat renvoyé par les workflows (utile côté UI) */
@@ -49,3 +46,21 @@ export type TranscriptionResult = {
   callId: string;
   transcription: TranscriptionJson;
 };
+
+export type AudioMetadata = {
+  size: number;
+  type: string;
+  url: string;
+  filename: string;
+};
+
+export interface TranscriptionMetrics {
+  totalRequests: number;
+  successfulRequests: number;
+  failedRequests: number;
+  totalMinutesProcessed: number; // minutes d'audio
+  averageProcessingTime: number; // ms
+  successRate: number; // 0..1
+  totalCost: number; // $
+  lastUpdated: Date;
+}

@@ -1,4 +1,5 @@
-// src/components/calls/ui/pages/CallManagementPage.tsx
+// src/components/calls/ui/pages/CallManagementPage.tsx - VERSION FINALE AVEC TRANSCRIPTION
+
 import {
   Box,
   Card,
@@ -18,11 +19,14 @@ import { SupabaseRelationsRepository } from "../../infrastructure/supabase/Supab
 import { useCallTranscriptionActions } from "../hooks/actions/useCallTranscriptionActions";
 import { useCallAudioActions } from "../hooks/actions/useCallAudioActions";
 import { useCallPreparationActions } from "../hooks/actions/useCallPreparationActions";
+
+// ✅ IMPORT DES COMPOSANTS DE TRANSCRIPTION
 import {
   TranscriptionProgressComponent,
   TranscriptionActions,
   TranscriptionResults,
-} from "@/components/calls/ui/components/transcription/TranscriptionProgress";
+} from "../components/transcription/TranscriptionProgress";
+
 import { useCallFlags } from "../hooks/actions/useCallFlags";
 import { useCallCleanup } from "../hooks/actions/useCallCleanup";
 import { CMHeaderStats } from "../sections/CMHeaderStats";
@@ -68,6 +72,7 @@ export function CallManagementPage() {
     { service: relationsService }
   );
 
+  // ✅ HOOKS D'ACTIONS AVEC TRANSCRIPTION ENRICHIE
   const transcription = useCallTranscriptionActions({ reload: loadCalls });
   const audio = useCallAudioActions({ reload: loadCalls });
   const preparation = useCallPreparationActions({ reload: loadCalls });
@@ -88,6 +93,46 @@ export function CallManagementPage() {
     useAccordionsLazyData(callsByOrigin);
 
   const [activeTab, setActiveTab] = useState<ManagementTab>("overview");
+
+  // ✅ NOUVEAUX HANDLERS POUR LA TRANSCRIPTION
+  const handleTranscribeComplete = useCallback(
+    async (callIds: string[]) => {
+      const callsToTranscribe = selectedCallObjects.filter((call) =>
+        callIds.includes(call.id)
+      );
+      await transcription.transcribeCallComplete(callsToTranscribe);
+    },
+    [selectedCallObjects, transcription]
+  );
+
+  const handleTranscribeOnly = useCallback(
+    async (callIds: string[]) => {
+      const callsToTranscribe = selectedCallObjects.filter((call) =>
+        callIds.includes(call.id)
+      );
+      await transcription.transcribeCallOnly(callsToTranscribe);
+    },
+    [selectedCallObjects, transcription]
+  );
+
+  const handleDiarizeOnly = useCallback(
+    async (callIds: string[]) => {
+      const callsToTranscribe = selectedCallObjects.filter((call) =>
+        callIds.includes(call.id)
+      );
+      await transcription.diarizeExistingCall(callsToTranscribe);
+    },
+    [selectedCallObjects, transcription]
+  );
+
+  // ✅ CALCUL DES ESTIMATIONS POUR L'UI
+  const transcriptionEstimates = useMemo(() => {
+    if (selectedCallObjects.length === 0) return null;
+    return transcription.calculateBatchEstimate(
+      selectedCallObjects,
+      "complete"
+    );
+  }, [selectedCallObjects, transcription]);
 
   const renderRelationStatus = useCallback(
     (callId: string) => {
@@ -158,23 +203,78 @@ export function CallManagementPage() {
         </CardContent>
       </Card>
 
+      {/* ✅ NOUVEAU : ZONE DE PROGRESSION TRANSCRIPTION */}
+      {(transcription.isProcessing ||
+        transcription.currentProgress ||
+        transcription.batchProgress) && (
+        <Card sx={{ mb: 2 }} variant="outlined">
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              🎙️ Progression Transcription
+            </Typography>
+
+            {/* Progression individuelle */}
+            <TranscriptionProgressComponent
+              progress={transcription.currentProgress || undefined} // ✅ CORRECTION: null → undefined
+              batchProgress={transcription.batchProgress || undefined} // ✅ CORRECTION: null → undefined
+              onCancel={transcription.resetProgress}
+              compact={false}
+            />
+          </CardContent>
+        </Card>
+      )}
+
       <Card sx={{ mb: 2 }} variant="outlined">
         <CardContent>
-          <CMActionsBar
-            activeTab={activeTab}
-            hasSelection={hasSelection}
-            selectedCount={selectedCalls.size}
-            loadCalls={loadCalls}
-            loading={loading}
-            transcription={transcription}
-            audio={audio}
-            preparation={preparation}
-            flags={flags}
-            cleanup={cleanup}
-            selectedCallObjects={selectedCallObjects}
-          />
+          {/* ✅ ACTIONSBAR AVEC TRANSCRIPTION INTÉGRÉE */}
+          {activeTab === "transcription" ? (
+            <Box>
+              <Typography variant="h6" gutterBottom>
+                🎙️ Actions de Transcription Automatique
+              </Typography>
+
+              {/* Composant d'actions de transcription */}
+              <TranscriptionActions
+                selectedCalls={Array.from(selectedCalls)}
+                onTranscribeComplete={handleTranscribeComplete}
+                onTranscribeOnly={handleTranscribeOnly}
+                onDiarizeOnly={handleDiarizeOnly}
+                isProcessing={transcription.isProcessing}
+                disabled={loading}
+                showEstimates={true}
+                estimates={transcriptionEstimates || undefined} // ✅ CORRECTION: null → undefined
+              />
+            </Box>
+          ) : (
+            <CMActionsBar
+              activeTab={activeTab}
+              hasSelection={hasSelection}
+              selectedCount={selectedCalls.size}
+              loadCalls={loadCalls}
+              loading={loading}
+              transcription={transcription}
+              audio={audio}
+              preparation={preparation}
+              flags={flags}
+              cleanup={cleanup}
+              selectedCallObjects={selectedCallObjects}
+            />
+          )}
         </CardContent>
       </Card>
+
+      {/* ✅ NOUVEAU : RÉSULTATS DE TRANSCRIPTION */}
+      {transcription.batchProgress?.results &&
+        transcription.batchProgress.results.length > 0 && (
+          <Card sx={{ mb: 2 }}>
+            <CardContent>
+              <TranscriptionResults
+                results={transcription.batchProgress.results}
+                compact={false}
+              />
+            </CardContent>
+          </Card>
+        )}
 
       {Object.keys(callsByOrigin).length > 0 ? (
         <CMOriginAccordions
@@ -200,6 +300,34 @@ export function CallManagementPage() {
             ? "🔭 Aucun appel trouvé"
             : "🔍 Aucun résultat avec ces filtres"}
         </Alert>
+      )}
+
+      {/* ✅ NOUVEAU : ZONE D'AIDE TRANSCRIPTION */}
+      {activeTab === "transcription" && !hasSelection && (
+        <Card sx={{ mt: 2 }}>
+          <CardContent>
+            <Alert severity="info">
+              <Typography variant="body2">
+                <strong>💡 Guide de Transcription Automatique</strong>
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                1. <strong>Sélectionnez</strong> des appels avec fichiers audio
+                <br />
+                2. <strong>Choisissez</strong> le type de traitement :<br />•{" "}
+                <strong>Pipeline Complet</strong> : Transcription + Séparation
+                locuteurs (recommandé)
+                <br />• <strong>ASR Seulement</strong> : Transcription texte
+                uniquement
+                <br />• <strong>Diarisation</strong> : Ajout des locuteurs sur
+                transcription existante
+                <br />
+                3. <strong>Suivez</strong> le progrès en temps réel
+                <br />
+                4. <strong>Validez</strong> les résultats avant utilisation
+              </Typography>
+            </Alert>
+          </CardContent>
+        </Card>
       )}
     </Box>
   );
