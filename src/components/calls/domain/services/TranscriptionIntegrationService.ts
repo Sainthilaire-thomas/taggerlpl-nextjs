@@ -1,16 +1,14 @@
 // src/components/calls/domain/services/TranscriptionIntegrationService.ts
 
-import {
-  OpenAIWhisperProvider,
-  WhisperResponse,
-} from "../../infrastructure/asr/OpenAIWhisperProvider";
-import { AssemblyAIDiarizationProvider } from "../../infrastructure/diarization/AssemblyAIDiarizationProvider";
 import { TranscriptionASRService } from "./TranscriptionASRService";
 import { DiarizationService } from "./DiarizationService";
 import { CallRepository } from "../repositories/CallRepository";
 import { StorageRepository } from "../repositories/StorageRepository";
 import { TranscriptionJson } from "../../shared/types/TranscriptionTypes";
 import { validateTranscriptionConfig } from "@/lib/config/transcriptionConfig";
+import type { WhisperResponse } from "../../infrastructure/asr/OpenAIWhisperProvider";
+import { TranscriptionApiClient } from "../../infrastructure/api/TranscriptionApiClient";
+import { DiarizationApiClient } from "../../infrastructure/api/DiarizationApiClient";
 
 export interface TranscriptionJobResult {
   success: boolean;
@@ -82,8 +80,8 @@ export type TranscriptionMode =
  * - Gestion des erreurs granulaire
  */
 export class TranscriptionIntegrationService {
-  private readonly whisperProvider: OpenAIWhisperProvider;
-  private readonly assemblyAIProvider: AssemblyAIDiarizationProvider;
+  private readonly transcriptionClient: TranscriptionApiClient;
+  private readonly diarizationClient: DiarizationApiClient;
   private readonly asrService: TranscriptionASRService;
   private readonly diarizationService: DiarizationService;
 
@@ -94,10 +92,12 @@ export class TranscriptionIntegrationService {
     // Validation config au démarrage
     validateTranscriptionConfig();
 
-    this.whisperProvider = new OpenAIWhisperProvider();
-    this.assemblyAIProvider = new AssemblyAIDiarizationProvider();
+    this.transcriptionClient = new TranscriptionApiClient(
+      "/api/calls/transcription"
+    );
+    this.diarizationClient = new DiarizationApiClient("/api/calls/diarization");
     this.asrService = new TranscriptionASRService();
-    this.diarizationService = new DiarizationService(this.assemblyAIProvider);
+    this.diarizationService = new DiarizationService(this.diarizationClient);
 
     console.log(
       "🚀 Enhanced TranscriptionIntegrationService initialized with diarization"
@@ -184,12 +184,12 @@ export class TranscriptionIntegrationService {
         console.log(`📡 Transcribing audio with OpenAI Whisper...`);
         const transcriptionStart = Date.now();
 
-        const whisperResponse = await this.whisperProvider.transcribeAudio(
+        const whisperResponse = await this.transcriptionClient.transcribeAudio(
           signedUrl,
           {
             prompt: this.generateContextPrompt(call),
             language: "fr",
-            temperature: 0.0, // Maximiser la cohérence
+            temperature: 0.0,
           }
         );
 
@@ -246,12 +246,12 @@ export class TranscriptionIntegrationService {
         console.log(`👥 Inferring speakers with AssemblyAI...`);
         const diarizationStart = Date.now();
 
-        const diarizationSegments = await this.assemblyAIProvider.inferSpeakers(
+        const diarizationSegments = await this.diarizationClient.inferSpeakers(
           signedUrl,
           {
             languageCode: "fr",
-            timeoutMs: 10 * 60 * 1000, // 10 minutes
-            pollIntervalMs: 3000, // 3 secondes
+            timeoutMs: 10 * 60 * 1000,
+            pollIntervalMs: 3000,
           }
         );
 
@@ -538,8 +538,8 @@ export class TranscriptionIntegrationService {
    * ✅ NOUVELLE MÉTHODE : Statistiques globales des providers
    */
   async getProvidersMetrics() {
-    const whisperMetrics = this.whisperProvider.getMetrics();
-    const assemblyAIMetrics = this.assemblyAIProvider.getMetrics();
+    const whisperMetrics = await this.transcriptionClient.getMetrics();
+    const assemblyAIMetrics = await this.diarizationClient.getMetrics();
 
     return {
       whisper: whisperMetrics,
@@ -636,8 +636,8 @@ export class TranscriptionIntegrationService {
     try {
       // Tests en parallèle
       const [whisperHealth, assemblyAIHealth] = await Promise.allSettled([
-        Promise.resolve({ status: "healthy" }), // TODO: Ping OpenAI API
-        this.assemblyAIProvider.healthCheck(),
+        this.transcriptionClient.healthCheck(),
+        this.diarizationClient.healthCheck(),
       ]);
 
       const providers = {
@@ -693,8 +693,8 @@ export class TranscriptionIntegrationService {
     );
 
     // Reset métriques des providers
-    this.whisperProvider.resetMetrics();
-    this.assemblyAIProvider.resetMetrics();
+    this.transcriptionClient.resetMetrics();
+    this.diarizationClient.resetMetrics();
   }
 }
 

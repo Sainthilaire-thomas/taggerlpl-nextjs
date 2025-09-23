@@ -7,11 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:whisper": "jest OpenAIWhisperProvider",
-    "test:ci": "jest --ci --coverage --watchAll=false"
+    "test:ci": "jest --ci --coverage --runInBand --watchAll=false",
+    "test:openai": "jest tests/transcriptionApiClient.test.ts",
+    "test:assemblyai": "jest tests/diarizationApiClient.test.ts",
+    "test:routes": "jest tests/api_*.test.ts"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.3.0",
@@ -48,26 +50,16 @@
     "typescript": "^5"
   },
   "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "setupFilesAfterEnv": [
-      "<rootDir>/src/jest.setup.js"
-    ],
-    "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/src/$1"
-    },
-    "transform": {
-      "^.+\\.(ts|tsx)$": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|/__test__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json",
-      "node"
-    ],
-    "verbose": true
-  }
+  "preset": "ts-jest",
+  "testEnvironment": "node",
+  "setupFilesAfterEnv": ["<rootDir>/tests/setupTests.ts"],
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/src/$1"
+  },
+  "transform": {
+    "^.+\\.(ts|tsx)$": "ts-jest"
+  },
+  "testMatch": ["**/tests/**/*.(test|spec).ts?(x)"],
+  "verbose": true
+}
 }

@@ -6,11 +6,9 @@ import { TranscriptionJson, TranscriptionResult } from "../../shared/types";
 import { CallRepository } from "../repositories/CallRepository";
 import { StorageRepository } from "../repositories/StorageRepository";
 import { TranscriptionASRService } from "../services/TranscriptionASRService";
-import {
-  OpenAIWhisperProvider,
-  OpenAIWhisperOptions,
-} from "../../infrastructure/asr/OpenAIWhisperProvider";
-import { IDiarizationProvider } from "../../infrastructure/diarization/ExternalDiarizationProvider";
+import type { OpenAIWhisperOptions } from "../../infrastructure/asr/OpenAIWhisperProvider";
+import { TranscriptionApiClient } from "../../infrastructure/api/TranscriptionApiClient";
+import { DiarizationApiClient } from "../../infrastructure/api/DiarizationApiClient";
 
 // Helper: résout une URL exploitable par les providers (si c'est déjà http(s) on garde tel quel,
 // sinon on génère une URL signée depuis le storage)
@@ -29,11 +27,11 @@ const getAudioRef = (call: any): string | undefined =>
 
 export class TranscriptionASRWorkflow {
   constructor(
-    private readonly callRepo: CallRepository,
-    private readonly storageRepo: StorageRepository,
-    private readonly asrProvider: OpenAIWhisperProvider,
-    private readonly diarProvider: IDiarizationProvider,
-    private readonly service: TranscriptionASRService
+    private callRepo: CallRepository,
+    private storageRepo: StorageRepository,
+    private service: TranscriptionASRService,
+    private whisper: TranscriptionApiClient,
+    private diarizer: DiarizationApiClient
   ) {}
 
   /** Étape 1: Transcription via OpenAI + normalisation */
@@ -48,7 +46,7 @@ export class TranscriptionASRWorkflow {
     if (!audioRef) throw new Error(`Call ${callId} sans audio`);
 
     const signed = await resolveSignedUrl(this.storageRepo, String(audioRef)); // ← generateSignedUrl sous le capot
-    const raw = await this.asrProvider.transcribeAudio(signed, asrOptions);
+    const raw = await this.whisper.transcribeAudio(signed, asrOptions);
 
     const normalized: TranscriptionJson = this.service.normalize(raw, {
       language: asrOptions.language ?? "fr-FR",
@@ -78,7 +76,7 @@ export class TranscriptionASRWorkflow {
     }
 
     const signed = await resolveSignedUrl(this.storageRepo, String(audioRef)); // ← generateSignedUrl
-    const diarSegments = await this.diarProvider.inferSpeakers(signed);
+    const diarSegments = await this.diarizer.inferSpeakers(signed);
 
     const updatedWords = this.service.assignTurns(
       [...current.words],

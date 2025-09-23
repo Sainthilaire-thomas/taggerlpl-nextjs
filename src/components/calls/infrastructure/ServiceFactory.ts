@@ -1,4 +1,4 @@
-// src/components/calls/infrastructure/ServiceFactory.ts - VERSION AVEC DIARISATION
+// src/components/calls/infrastructure/ServiceFactory.ts - VERSION REFACTORÉE (API CÔTÉ SERVEUR)
 
 import { SupabaseCallRepository } from "./supabase/SupabaseCallRepository";
 import { SupabaseStorageRepository } from "./supabase/SupabaseStorageRepository";
@@ -9,8 +9,12 @@ import { StorageService } from "../domain/services/StorageService";
 import { TranscriptionTransformationService } from "../domain/services/TranscriptionTransformationService";
 import { CallFilteringService } from "../domain/services/CallFilteringService";
 
-// ✅ Diarisation
-import { AssemblyAIDiarizationProvider } from "./diarization/AssemblyAIDiarizationProvider";
+// ✅ NOUVEAUX IMPORTS - Clients API sécurisés
+import { TranscriptionApiClient } from "./api/TranscriptionApiClient";
+import { DiarizationApiClient } from "./api/DiarizationApiClient";
+import { CallsApiClient } from "./api/CallsApiClient";
+
+// ✅ Import du service de diarisation (interface reste identique)
 import { DiarizationService } from "../domain/services/DiarizationService";
 import type {
   DiarizationSegment,
@@ -20,8 +24,10 @@ import type {
 /**
  * Factory pour créer et configurer tous les services DDD
  *
- * Pattern Singleton + Dependency Injection
- * Centralise la création des services avec leurs dépendances
+ * VERSION REFACTORÉE :
+ * - OpenAI/AssemblyAI déplacés côté serveur (API routes)
+ * - Clients API sécurisés côté client
+ * - Interface domain/UI inchangée (principe DDD)
  */
 export class CallsServiceFactory {
   private static instance: CallsServiceFactory;
@@ -38,11 +44,17 @@ export class CallsServiceFactory {
   private transcriptionTransformationService: TranscriptionTransformationService;
   private callFilteringService: CallFilteringService;
 
-  // ✅ Diarisation (déclaration avec types optionnels)
-  private diarizationProvider?: AssemblyAIDiarizationProvider;
-  private diarizationService?: DiarizationService;
+  // ✅ NOUVEAUX SERVICES API SÉCURISÉS
+  private transcriptionApiClient: TranscriptionApiClient;
+  private diarizationApiClient: DiarizationApiClient;
+  private callsApiClient: CallsApiClient;
+  private diarizationService: DiarizationService;
 
   private constructor() {
+    console.log(
+      "🏭 [ServiceFactory] Initializing DDD services with secure API clients..."
+    );
+
     // Initialisation des repositories
     this.callRepository = new SupabaseCallRepository();
     this.storageRepository = new SupabaseStorageRepository();
@@ -59,29 +71,17 @@ export class CallsServiceFactory {
       new TranscriptionTransformationService();
     this.callFilteringService = new CallFilteringService();
 
-    // ❌ SUPPRESSION de l'initialisation automatique de la diarisation
-    // Les services de diarisation seront initialisés à la demande
-  }
+    // ✅ INITIALISATION DES NOUVEAUX CLIENTS API SÉCURISÉS
+    this.transcriptionApiClient = new TranscriptionApiClient();
+    this.diarizationApiClient = new DiarizationApiClient();
+    this.callsApiClient = new CallsApiClient();
 
-  // ✅ Méthode d'initialisation lazy pour la diarisation
-  private initializeDiarizationServices(): void {
-    if (!this.diarizationProvider && process.env.ASSEMBLYAI_API_KEY) {
-      try {
-        this.diarizationProvider = new AssemblyAIDiarizationProvider(
-          process.env.ASSEMBLYAI_API_KEY,
-          process.env.ASSEMBLYAI_BASE_URL
-        );
-        this.diarizationService = new DiarizationService(
-          this.diarizationProvider
-        );
-        console.log("✅ Services de diarisation initialisés");
-      } catch (error) {
-        console.warn("⚠️ Échec initialisation diarisation:", error);
-        // Réinitialiser en cas d'erreur
-        this.diarizationProvider = undefined;
-        this.diarizationService = undefined;
-      }
-    }
+    // ✅ INITIALISATION DU SERVICE DE DIARISATION (interface identique, implémentation changée)
+    this.diarizationService = new DiarizationService(this.diarizationApiClient);
+
+    console.log(
+      "✅ [ServiceFactory] All services initialized with secure API architecture"
+    );
   }
 
   public static getInstance(): CallsServiceFactory {
@@ -92,8 +92,9 @@ export class CallsServiceFactory {
   }
 
   // ============================================================================
-  // GETTERS POUR LES SERVICES
+  // GETTERS POUR LES SERVICES (interfaces identiques)
   // ============================================================================
+
   getCallService(): CallService {
     return this.callService;
   }
@@ -126,63 +127,119 @@ export class CallsServiceFactory {
     return this.storageRepository;
   }
 
-  // ✅ Getters avec initialisation lazy
-  getDiarizationService(): DiarizationService | null {
-    this.initializeDiarizationServices();
-    return this.diarizationService || null;
+  // ✅ NOUVEAUX GETTERS - APIS SÉCURISÉES
+
+  /**
+   * Retourne le client de transcription API (remplace OpenAIWhisperProvider)
+   * Interface identique pour l'UI/Domain
+   */
+  getTranscriptionClient(): TranscriptionApiClient {
+    return this.transcriptionApiClient;
   }
 
-  getDiarizationProvider(): AssemblyAIDiarizationProvider | null {
-    this.initializeDiarizationServices();
-    return this.diarizationProvider || null;
+  /**
+   * Retourne le client de diarisation API (remplace AssemblyAIDiarizationProvider)
+   * Interface identique pour l'UI/Domain
+   */
+  getDiarizationClient(): DiarizationApiClient {
+    return this.diarizationApiClient;
+  }
+
+  /**
+   * Retourne le service de diarisation (interface identique)
+   * ARCHITECTURE: Service Domain → ApiClient → API Route → Provider (serveur)
+   */
+  getDiarizationService(): DiarizationService {
+    return this.diarizationService;
+  }
+
+  /**
+   * Retourne le client principal pour statistiques et monitoring
+   */
+  getCallsApiClient(): CallsApiClient {
+    return this.callsApiClient;
   }
 
   // ============================================================================
-  // SERVICE COMPOSÉ POUR CALLPREPARATIONPAGE
+  // ✅ SERVICE COMPOSÉ POUR CALLPREPARATIONPAGE (interface préservée)
   // ============================================================================
+
   createCallPreparationService() {
     const callRepository = this.callRepository;
     const transcriptionTransformationService =
       this.transcriptionTransformationService;
     const callFilteringService = this.callFilteringService;
 
-    // ✅ Diarisation conditionnelle
-    const diarization = this.getDiarizationService();
+    // ✅ Diarisation via API sécurisée (interface identique pour l'UI)
+    const diarization = this.diarizationService;
 
     return {
-      // Services exposés
+      // Services exposés (identiques)
       filtering: callFilteringService,
       transformation: transcriptionTransformationService,
       repository: callRepository,
 
-      // ✅ Expose la diarisation pour l'UI (avec vérification)
-      diarization: diarization
-        ? {
-            inferSpeakers: (
-              audioUrl: string,
-              opts?: {
-                languageCode?: string;
-                timeoutMs?: number;
-                pollIntervalMs?: number;
-              }
-            ) => diarization.inferSegments(audioUrl, opts),
-
-            assignTurns: (words: Word[], segments: DiarizationSegment[]) =>
-              diarization.assignTurnsToWords(words, segments),
-
-            diarizeWords: (
-              audioUrl: string,
-              words: Word[],
-              opts?: {
-                languageCode?: string;
-                timeoutMs?: number;
-                pollIntervalMs?: number;
-              }
-            ) => diarization.diarizeWords(audioUrl, words, opts),
+      // ✅ DIARISATION VIA API SÉCURISÉE
+      // L'interface reste identique pour l'UI, mais utilise maintenant les API routes
+      diarization: {
+        /**
+         * Infère les segments de speakers via API serveur sécurisée
+         */
+        inferSpeakers: (
+          audioUrl: string,
+          opts?: {
+            languageCode?: string;
+            timeoutMs?: number;
+            pollIntervalMs?: number;
           }
-        : null, // null si diarisation non disponible
+        ) => diarization.inferSegments(audioUrl, opts),
 
-      // Actions composées existantes
+        /**
+         * Assigne les tours de parole via l'API client
+         */
+        assignTurns: (words: Word[], segments: DiarizationSegment[]) =>
+          diarization.assignTurnsToWords(words, segments),
+
+        diarizeWords: (
+          audioUrl: string,
+          words: Word[],
+          opts?: {
+            languageCode?: string;
+            timeoutMs?: number;
+            pollIntervalMs?: number;
+          }
+        ) => diarization.diarizeWords(audioUrl, words, opts),
+      },
+
+      // ✅ TRANSCRIPTION VIA API SÉCURISÉE
+      // Nouvelle fonctionnalité exposée via l'interface composée
+      transcription: {
+        /**
+         * Transcrit un fichier audio via API serveur sécurisée
+         */
+        transcribeAudio: (
+          audioUrl: string,
+          options?: {
+            model?: string;
+            language?: string;
+            temperature?: number;
+            prompt?: string;
+          }
+        ) => this.transcriptionApiClient.transcribeAudio(audioUrl, options),
+
+        /**
+         * Transcription en lot
+         */
+        transcribeBatch: (
+          requests: Array<{
+            callId: string;
+            audioUrl: string;
+            options?: any;
+          }>
+        ) => this.transcriptionApiClient.transcribeBatch(requests),
+      },
+
+      // Actions composées existantes (identiques)
       async findPreparableCalls() {
         return callRepository.findCallsForPreparation();
       },
@@ -235,24 +292,120 @@ export class CallsServiceFactory {
   }
 
   // ============================================================================
-  // CONFIGURATION ET MONITORING
+  // ✅ NOUVEAUX SERVICES DE MONITORING ET STATISTIQUES
   // ============================================================================
+
+  /**
+   * Service composé pour monitoring et métriques
+   */
+  createMonitoringService() {
+    // ✅ capture des clients pour éviter le this “perdu”
+    const tx = this.transcriptionApiClient;
+    const dz = this.diarizationApiClient;
+    const calls = this.callsApiClient;
+
+    return {
+      // Statistiques de transcription
+      async getTranscriptionMetrics() {
+        return tx.getMetrics();
+      },
+
+      // Statistiques de diarisation
+      async getDiarizationMetrics() {
+        return dz.getMetrics();
+      },
+
+      // Statistiques globales
+      async getGlobalStats(params?: {
+        operations?: ("transcription" | "diarization")[];
+        timeframe?: { startDate?: string; endDate?: string };
+        groupBy?: "day" | "week" | "month" | "origin";
+      }) {
+        return calls.getStats(params || {});
+      },
+
+      // Résumé des coûts
+      async getCostSummary() {
+        return calls.getCostSummary();
+      },
+
+      // Health check des services
+      async getServicesHealth() {
+        const [callsHealth, transcriptionHealth, diarizationHealth] =
+          await Promise.all([
+            calls.getServicesHealth(),
+            tx.healthCheck(),
+            dz.healthCheck(),
+          ]);
+
+        return {
+          calls: callsHealth,
+          transcription: transcriptionHealth,
+          diarization: diarizationHealth,
+          overall:
+            callsHealth.overall === "healthy" &&
+            transcriptionHealth.status === "healthy" &&
+            diarizationHealth.status === "healthy"
+              ? "healthy"
+              : "degraded",
+        };
+      },
+
+      // Séries temporelles pour graphiques
+      async getTimeSeries(
+        groupBy: "day" | "week" | "month" | "origin" = "day",
+        operations: ("transcription" | "diarization")[] = [
+          "transcription",
+          "diarization",
+        ]
+      ) {
+        return calls.getTimeSeries(groupBy, operations);
+      },
+    };
+  }
+
+  // ============================================================================
+  // CONFIGURATION ET MONITORING (enrichi)
+  // ============================================================================
+
   configure(config: {
     enableDebugLogs?: boolean;
     batchSize?: number;
     cacheTimeout?: number;
+    // ✅ Nouveaux paramètres API
+    apiTimeout?: number;
+    apiRetries?: number;
   }) {
-    console.log("Configuration des services DDD:", config);
+    console.log("🔧 [ServiceFactory] Configuration des services DDD:", config);
+
+    // TODO: Appliquer la configuration aux clients API si nécessaire
+    // this.transcriptionApiClient.configure(config);
+    // this.diarizationApiClient.configure(config);
   }
 
   async getServicesHealth(): Promise<{
     callRepository: boolean;
     storageRepository: boolean;
     services: Record<string, boolean>;
+    // ✅ Nouveaux services API
+    apiServices: {
+      transcription: "healthy" | "unhealthy";
+      diarization: "healthy" | "unhealthy";
+      calls: "healthy" | "degraded" | "unhealthy";
+    };
   }> {
     try {
+      // Health check des repositories existants
       const callRepoHealth =
         (await this.callRepository.exists("test")) !== undefined;
+
+      // ✅ Health check des nouveaux services API
+      const [transcriptionHealth, diarizationHealth, callsHealth] =
+        await Promise.allSettled([
+          this.transcriptionApiClient.healthCheck(),
+          this.diarizationApiClient.healthCheck(),
+          this.callsApiClient.getServicesHealth(),
+        ]);
 
       return {
         callRepository: callRepoHealth,
@@ -265,16 +418,35 @@ export class CallsServiceFactory {
           transcriptionTransformationService:
             !!this.transcriptionTransformationService,
           callFilteringService: !!this.callFilteringService,
-          // ✅ Vérification conditionnelle
-          diarizationService: !!this.getDiarizationService(),
+          diarizationService: !!this.diarizationService,
+        },
+        // ✅ Nouveaux services API
+        apiServices: {
+          transcription:
+            transcriptionHealth.status === "fulfilled"
+              ? transcriptionHealth.value.status
+              : "unhealthy",
+          diarization:
+            diarizationHealth.status === "fulfilled"
+              ? diarizationHealth.value.status
+              : "unhealthy",
+          calls:
+            callsHealth.status === "fulfilled"
+              ? callsHealth.value.overall
+              : "unhealthy",
         },
       };
     } catch (error) {
-      console.warn("Erreur health check services:", error);
+      console.warn("⚠️ [ServiceFactory] Erreur health check services:", error);
       return {
         callRepository: false,
         storageRepository: false,
         services: {},
+        apiServices: {
+          transcription: "unhealthy",
+          diarization: "unhealthy",
+          calls: "unhealthy",
+        },
       };
     }
   }
@@ -285,42 +457,71 @@ export class CallsServiceFactory {
 }
 
 // ============================================================================
-// FONCTION HELPER PRINCIPALE
+// ✅ FONCTION HELPER PRINCIPALE (interface préservée + nouveautés)
 // ============================================================================
+
 export const createServices = () => {
   const factory = CallsServiceFactory.getInstance();
 
-  // Services de diarisation conditionnels
-  const diarizationService = factory.getDiarizationService(); // Peut être null
-  const diarizationProvider = factory.getDiarizationProvider(); // Peut être null
-
   return {
-    // Services principaux (toujours disponibles)
+    // ✅ Services principaux (interfaces identiques)
     callService: factory.getCallService(),
     duplicateService: factory.getDuplicateService(),
     storageService: factory.getStorageService(),
     validationService: factory.getValidationService(),
 
-    // Nouveaux services
+    // Services de transformation (identiques)
     transcriptionTransformationService:
       factory.getTranscriptionTransformationService(),
     callFilteringService: factory.getCallFilteringService(),
 
-    // Repositories
+    // Repositories (identiques)
     callRepository: factory.getCallRepository(),
     storageRepository: factory.getStorageRepository(),
 
-    // ✅ Services optionnels (peuvent être null)
-    diarizationService,
-    diarizationProvider,
+    // ✅ NOUVEAUX SERVICES API SÉCURISÉS
+    transcriptionClient: factory.getTranscriptionClient(),
+    diarizationClient: factory.getDiarizationClient(),
+    diarizationService: factory.getDiarizationService(),
+    callsApiClient: factory.getCallsApiClient(),
 
-    // ✅ Flag pour savoir si la diarisation est disponible
-    isDiarizationAvailable: diarizationService !== null,
+    // ✅ Flags de disponibilité (toujours true maintenant car API routes)
+    isTranscriptionAvailable: true,
+    isDiarizationAvailable: true,
 
-    // Service composé principal
+    // ✅ Services composés
     callPreparationService: factory.createCallPreparationService(),
+    monitoringService: factory.createMonitoringService(),
 
     // Factory pour accès avancé
     factory: factory,
   };
+};
+
+// ============================================================================
+// ✅ RÉTROCOMPATIBILITÉ (pour transition douce)
+// ============================================================================
+
+/**
+ * @deprecated Utilisez transcriptionClient à la place
+ * Maintenu pour compatibilité pendant la transition
+ */
+export const getTranscriptionProvider = () => {
+  console.warn(
+    "⚠️ getTranscriptionProvider() is deprecated. Use transcriptionClient instead."
+  );
+  const factory = CallsServiceFactory.getInstance();
+  return factory.getTranscriptionClient();
+};
+
+/**
+ * @deprecated Utilisez diarizationClient à la place
+ * Maintenu pour compatibilité pendant la transition
+ */
+export const getDiarizationProvider = () => {
+  console.warn(
+    "⚠️ getDiarizationProvider() is deprecated. Use diarizationClient instead."
+  );
+  const factory = CallsServiceFactory.getInstance();
+  return factory.getDiarizationClient();
 };

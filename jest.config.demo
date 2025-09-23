@@ -1,0 +1,28 @@
+import type { Config } from "jest";
+
+const config: Config = {
+  preset: "ts-jest",
+  testEnvironment: "node", // par défaut; tu peux surcharger par fichier avec @jest-environment jsdom
+  rootDir: ".",
+  testMatch: ["**/tests/**/*.(test|spec).ts?(x)"],
+
+  // Permet d'importer avec "@/..."
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
+  },
+
+  // Setup commun (mocks, polyfills…)
+  setupFilesAfterEnv: ["<rootDir>/tests/setupTests.ts"],
+
+  // Transpile TS via ts-jest
+  transform: {
+    "^.+\\.(ts|tsx)$": "ts-jest",
+  },
+
+  // Pour avoir des logs plus détaillés
+  verbose: true,
+  // clearMocks = true est implicite quand tu utilises jest.fn(); tu peux l’activer si tu veux un reset auto.
+  // clearMocks: true,
+};
+
+export default config;
