@@ -1,4 +1,4 @@
-// src/components/calls/infrastructure/ServiceFactory.ts - VERSION PROPRE
+// src/components/calls/infrastructure/ServiceFactory.ts - VERSION AVEC DIARISATION
 
 import { SupabaseCallRepository } from "./supabase/SupabaseCallRepository";
 import { SupabaseStorageRepository } from "./supabase/SupabaseStorageRepository";
@@ -8,6 +8,14 @@ import { DuplicateService } from "../domain/services/DuplicateService";
 import { StorageService } from "../domain/services/StorageService";
 import { TranscriptionTransformationService } from "../domain/services/TranscriptionTransformationService";
 import { CallFilteringService } from "../domain/services/CallFilteringService";
+
+// ✅ Diarisation
+import { AssemblyAIDiarizationProvider } from "../diarization/AssemblyAIDiarizationProvider";
+import { DiarizationService } from "../domain/services/DiarizationService";
+import type {
+  DiarizationSegment,
+  Word,
+} from "../shared/types/TranscriptionTypes";
 
 /**
  * Factory pour créer et configurer tous les services DDD
@@ -30,6 +38,10 @@ export class CallsServiceFactory {
   private transcriptionTransformationService: TranscriptionTransformationService;
   private callFilteringService: CallFilteringService;
 
+  // ✅ Diarisation
+  private diarizationProvider: AssemblyAIDiarizationProvider;
+  private diarizationService: DiarizationService;
+
   private constructor() {
     // Initialisation des repositories
     this.callRepository = new SupabaseCallRepository();
@@ -46,6 +58,13 @@ export class CallsServiceFactory {
     this.transcriptionTransformationService =
       new TranscriptionTransformationService();
     this.callFilteringService = new CallFilteringService();
+
+    // ✅ Diarisation: provider + service
+    this.diarizationProvider = new AssemblyAIDiarizationProvider(
+      process.env.ASSEMBLYAI_API_KEY,
+      process.env.ASSEMBLYAI_BASE_URL
+    );
+    this.diarizationService = new DiarizationService(this.diarizationProvider);
   }
 
   public static getInstance(): CallsServiceFactory {
@@ -58,7 +77,6 @@ export class CallsServiceFactory {
   // ============================================================================
   // GETTERS POUR LES SERVICES
   // ============================================================================
-
   getCallService(): CallService {
     return this.callService;
   }
@@ -91,15 +109,26 @@ export class CallsServiceFactory {
     return this.storageRepository;
   }
 
+  // ✅ Diarisation
+  getDiarizationService(): DiarizationService {
+    return this.diarizationService;
+  }
+
+  getDiarizationProvider(): AssemblyAIDiarizationProvider {
+    return this.diarizationProvider;
+  }
+
   // ============================================================================
   // SERVICE COMPOSÉ POUR CALLPREPARATIONPAGE
   // ============================================================================
-
   createCallPreparationService() {
     const callRepository = this.callRepository;
     const transcriptionTransformationService =
       this.transcriptionTransformationService;
     const callFilteringService = this.callFilteringService;
+
+    // ✅ Diarisation (raccourcis)
+    const diarization = this.diarizationService;
 
     return {
       // Services exposés
@@ -107,7 +136,32 @@ export class CallsServiceFactory {
       transformation: transcriptionTransformationService,
       repository: callRepository,
 
-      // Actions composées
+      // ✅ Expose la diarisation pour l’UI
+      diarization: {
+        inferSpeakers: (
+          audioUrl: string,
+          opts?: {
+            languageCode?: string;
+            timeoutMs?: number;
+            pollIntervalMs?: number;
+          }
+        ) => diarization.inferSegments(audioUrl, opts),
+
+        assignTurns: (words: Word[], segments: DiarizationSegment[]) =>
+          diarization.assignTurnsToWords(words, segments),
+
+        diarizeWords: (
+          audioUrl: string,
+          words: Word[],
+          opts?: {
+            languageCode?: string;
+            timeoutMs?: number;
+            pollIntervalMs?: number;
+          }
+        ) => diarization.diarizeWords(audioUrl, words, opts),
+      },
+
+      // Actions composées existantes
       async findPreparableCalls() {
         return callRepository.findCallsForPreparation();
       },
@@ -162,7 +216,6 @@ export class CallsServiceFactory {
   // ============================================================================
   // CONFIGURATION ET MONITORING
   // ============================================================================
-
   configure(config: {
     enableDebugLogs?: boolean;
     batchSize?: number;
@@ -191,6 +244,8 @@ export class CallsServiceFactory {
           transcriptionTransformationService:
             !!this.transcriptionTransformationService,
           callFilteringService: !!this.callFilteringService,
+          // ✅
+          diarizationService: !!this.diarizationService,
         },
       };
     } catch (error) {
@@ -211,11 +266,6 @@ export class CallsServiceFactory {
 // ============================================================================
 // FONCTION HELPER PRINCIPALE
 // ============================================================================
-
-/**
- * Fonction helper pour créer tous les services
- * Compatible avec l'interface existante
- */
 export const createServices = () => {
   const factory = CallsServiceFactory.getInstance();
 
@@ -234,6 +284,10 @@ export const createServices = () => {
     // Repositories
     callRepository: factory.getCallRepository(),
     storageRepository: factory.getStorageRepository(),
+
+    // ✅ Diarisation
+    diarizationService: factory.getDiarizationService(),
+    diarizationProvider: factory.getDiarizationProvider(),
 
     // Service composé principal
     callPreparationService: factory.createCallPreparationService(),
