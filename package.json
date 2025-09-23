@@ -25,6 +25,7 @@
     "@mui/x-tree-view": "^8.0.0",
     "@supabase/supabase-js": "^2.49.4",
     "@types/jspdf": "^2.0.0",
+    "assemblyai": "^4.16.1",
     "echarts": "^5.6.0",
     "jspdf": "^3.0.1",
     "next": "15.3.1",
@@ -50,16 +51,20 @@
     "typescript": "^5"
   },
   "jest": {
-  "preset": "ts-jest",
-  "testEnvironment": "node",
-  "setupFilesAfterEnv": ["<rootDir>/tests/setupTests.ts"],
-  "moduleNameMapper": {
-    "^@/(.*)$": "<rootDir>/src/$1"
-  },
-  "transform": {
-    "^.+\\.(ts|tsx)$": "ts-jest"
-  },
-  "testMatch": ["**/tests/**/*.(test|spec).ts?(x)"],
-  "verbose": true
-}
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setupTests.ts"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    },
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "testMatch": [
+      "**/tests/**/*.(test|spec).ts?(x)"
+    ],
+    "verbose": true
+  }
 }

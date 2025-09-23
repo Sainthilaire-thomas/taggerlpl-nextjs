@@ -28,9 +28,18 @@ export type TranscriptionMeta = TranscriptionMetadata & {
   processedAt?: string;
 };
 
+export type AsrSegment = {
+  id: string; // "seg_0001"
+  start: number; // secondes
+  end: number; // secondes
+  text: string; // join des words
+  words: Word[]; // mêmes Word (startTime/endTime)
+};
+
 /** JSON stocké en DB dans call.transcription */
 export type TranscriptionJson = {
   words: Word[];
+  segments?: AsrSegment[]; // ✅ nouveau, optionnel (back-compat)
   meta?: TranscriptionMeta;
 };
 
