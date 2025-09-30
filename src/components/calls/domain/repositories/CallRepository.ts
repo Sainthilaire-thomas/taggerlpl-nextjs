@@ -67,4 +67,8 @@ export interface CallRepository {
    * Vérifie si un appel avec cet ID existe
    */
   exists(id: string): Promise<boolean>;
+  /**
+   * Sauvegarde atomiquement le JSON de transcription (colonne jsonb).
+   */
+  saveTranscriptionJson(callId: string, json: unknown): Promise<void>;
 }

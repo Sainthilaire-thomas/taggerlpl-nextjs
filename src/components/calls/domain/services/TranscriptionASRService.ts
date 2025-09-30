@@ -1,307 +1,709 @@
-/**
- * Service métier: normalisation ASR → words[], diarisation → assignTurns,
- * édition (split/merge/reassign/insertTag), validation.
- */
+// src/components/calls/domain/services/TranscriptionASRService.ts
+// Service rénové qui gère les segments OpenAI pour synchronisation avec diarisation
 
 import {
   Word,
   TranscriptionJson,
   DiarizationSegment,
-  AsrSegment,
+  TranscriptionSegment,
 } from "../../shared/types/TranscriptionTypes";
 
-/** Options internes de segmentation (découpe en segments courts) */
-type SegmenterOptions = {
-  maxDurSec?: number; // durée max d’un segment (défaut 20s)
-  maxWords?: number; // nb max de mots (défaut 60)
-  maxGapSec?: number; // silence déclencheur (défaut 0.8s)
-  minDurSec?: number; // éviter les micro-segments (défaut 3s)
+// Types spécifiques aux réponses OpenAI avec segments
+interface OpenAIWord {
+  word: string;
+  start: number;
+  end: number;
+}
+
+interface OpenAISegment {
+  id: number;
+  start: number;
+  end: number;
+  text: string;
+  words?: OpenAIWord[];
+}
+
+interface OpenAIResponse {
+  text: string;
+  language: string;
+  duration: number;
+  segments: OpenAISegment[];
+  words?: OpenAIWord[];
+}
+
+/** Options de normalisation */
+type NormalizationOptions = {
+  maxSegmentDuration?: number; // durée max d'un segment (défaut 20s)
+  minSegmentWords?: number; // nb min de mots par segment (défaut 5)
+  maxSegmentWords?: number; // nb max de mots par segment (défaut 60)
+  language?: string;
+  source?: "asr:auto" | "edited";
 };
 
 export class TranscriptionASRService {
-  /** Mappe le JSON "verbose" OpenAI vers ton format { words[] } + { segments[] } */
+  /**
+   * Normalisation principale : OpenAI segments → format standardisé
+   * NOUVEAUTÉ: Gère les segments OpenAI directement pour la synchronisation
+   */
   normalize(
-    rawOpenAI: any,
-    opts?: { language?: string; source?: "asr:auto" | "edited" }
+    rawOpenAI: OpenAIResponse,
+    opts?: NormalizationOptions
   ): TranscriptionJson {
-    // 1) Extraction robuste des mots depuis le JSON OpenAI (ou fallback)
-    const words: Word[] = this.extractWordsFromOpenAI(rawOpenAI);
-
-    // 2) Tri (sécurité)
-    words.sort((a, b) => a.startTime - b.startTime);
-
-    // 3) Métadonnées
-    const lastEnd = words.length > 0 ? words[words.length - 1].endTime : 0;
-    const durationFromRaw =
-      typeof rawOpenAI?.duration === "number"
-        ? Number(rawOpenAI.duration)
-        : undefined;
-    const durationSec =
-      typeof durationFromRaw === "number" && isFinite(durationFromRaw)
-        ? durationFromRaw
-        : lastEnd;
-
-    const meta = {
-      version: "1.0",
-      createdAt: new Date().toISOString(),
-      source: opts?.source ?? "asr:auto",
-      language: opts?.language ?? "fr-FR",
-      durationSec,
+    const options = {
+      maxSegmentDuration: 20,
+      minSegmentWords: 5,
+      maxSegmentWords: 60,
+      language: "fr-FR",
+      source: "asr:auto" as const,
+      ...opts,
     };
 
-    // 4) ✅ Segmentation courte (découpe) à partir des words normalisés
-    const segments = this.segmentWords(words);
+    console.log("🔄 [ASR Service] Normalizing OpenAI response with segments", {
+      totalSegments: rawOpenAI.segments?.length || 0,
+      totalWords: rawOpenAI.words?.length || 0,
+      duration: rawOpenAI.duration,
+    });
 
-    // 5) Retour rétro-compatible (words) + segments pour l’UI/alignement local
+    // 1. Extraction des mots depuis les segments OpenAI
+    const words = this.extractWordsFromSegments(rawOpenAI);
+    console.log(
+      `📝 [ASR Service] Extracted ${words.length} words from segments`
+    );
+
+    // 2. Création des segments ASR optimisés pour la diarisation
+    const segments = this.createOptimizedSegments(rawOpenAI.segments, options);
+    console.log(
+      `📊 [ASR Service] Created ${segments.length} optimized segments`
+    );
+
+    // 3. Métadonnées
+    const meta = {
+      version: "1.1", // Version avec gestion segments
+      createdAt: new Date().toISOString(),
+      source: options.source,
+      language: options.language,
+      durationSec: rawOpenAI.duration,
+      // Métadonnées spécifiques segments
+      originalSegments: rawOpenAI.segments.length,
+      processedSegments: segments.length,
+      averageSegmentDuration:
+        segments.length > 0
+          ? segments.reduce((acc, s) => acc + (s.end - s.start), 0) /
+            segments.length
+          : 0,
+    };
+
+    console.log("✅ [ASR Service] Normalization completed", {
+      words: words.length,
+      segments: segments.length,
+      avgSegmentDuration: meta.averageSegmentDuration.toFixed(1) + "s",
+    });
+
     return { words, segments, meta };
   }
 
-  /** Extraction tolérante aux shapes OpenAI: segments[].words[] ou segments[].text ou text global */
-  private extractWordsFromOpenAI(rawOpenAI: any): Word[] {
-    const out: Word[] = [];
-    const segs = rawOpenAI?.segments ?? [];
+  /**
+   * Extraction des mots depuis les segments OpenAI
+   * Priorité aux mots dans segments, fallback sur mots globaux
+   */
+  private extractWordsFromSegments(response: OpenAIResponse): Word[] {
+    const words: Word[] = [];
 
-    // 1) Cas "segments[].words[]" (idéal)
-    if (Array.isArray(segs) && segs.length > 0) {
-      for (const s of segs) {
-        const w = s?.words ?? [];
-        if (Array.isArray(w) && w.length > 0) {
-          for (const ww of w) {
-            const text = ww?.word ?? ww?.text ?? "";
-            const start = Number(ww?.start ?? s?.start ?? 0);
-            const end = Number(ww?.end ?? s?.end ?? start);
-            if (
-              text &&
-              Number.isFinite(start) &&
-              Number.isFinite(end) &&
-              end > start
-            ) {
-              out.push({ text, startTime: start, endTime: end });
-            }
-          }
-        } else if (typeof s?.text === "string") {
-          // 2) Cas "segment text sans words": on tokenise et on répartit dans [s.start, s.end]
-          const start = Number(s?.start ?? 0);
-          const end = Number(s?.end ?? start);
-          const tokens = s.text.trim().split(/\s+/).filter(Boolean);
-          const dur = Math.max(0, end - start);
-
-          if (tokens.length && dur > 0) {
-            const step = dur / tokens.length;
-            let t = start;
-            for (const tok of tokens) {
-              const next = Math.min(end, t + step);
-              out.push({ text: tok, startTime: t, endTime: next });
-              t = next;
-            }
-          } else if (tokens.length) {
-            // Durée inconnue (0 ou absente) → repli 300ms par token
-            let t = start;
-            for (const tok of tokens) {
-              const next = t + 0.3;
-              out.push({ text: tok, startTime: t, endTime: next });
-              t = next;
-            }
-          }
-        }
-      }
-    } else if (typeof rawOpenAI?.text === "string") {
-      // 3) Cas "text global" sans segments
-      const tokens = rawOpenAI.text.trim().split(/\s+/).filter(Boolean);
-      const durFromRaw = Number(rawOpenAI?.duration);
-      if (tokens.length) {
-        if (Number.isFinite(durFromRaw) && durFromRaw > 0) {
-          const step = durFromRaw / tokens.length;
-          let t = 0;
-          for (const tok of tokens) {
-            const next = Math.min(durFromRaw, t + step);
-            out.push({ text: tok, startTime: t, endTime: next });
-            t = next;
+    if (response.segments && response.segments.length > 0) {
+      // Méthode 1: Mots depuis segments (préférée)
+      for (const segment of response.segments) {
+        if (segment.words && segment.words.length > 0) {
+          for (const word of segment.words) {
+            words.push({
+              text: word.word.trim(),
+              startTime: word.start,
+              endTime: word.end,
+            });
           }
         } else {
-          // Repli : 300ms par token
-          let t = 0;
-          for (const tok of tokens) {
-            const next = t + 0.3;
-            out.push({ text: tok, startTime: t, endTime: next });
-            t = next;
+          // Fallback: tokeniser le texte du segment
+          const tokens = segment.text.trim().split(/\s+/).filter(Boolean);
+          const segmentDuration = segment.end - segment.start;
+          const wordDuration = segmentDuration / Math.max(tokens.length, 1);
+
+          let currentTime = segment.start;
+          for (const token of tokens) {
+            words.push({
+              text: token,
+              startTime: currentTime,
+              endTime: Math.min(segment.end, currentTime + wordDuration),
+            });
+            currentTime += wordDuration;
           }
         }
       }
-    }
-
-    // Tri
-    out.sort((a, b) => a.startTime - b.startTime);
-    return out;
-  }
-
-  /** Segmente les mots en blocs courts (durée, nombre de mots, silences) */
-  private segmentWords(words: Word[], opts?: SegmenterOptions): AsrSegment[] {
-    const {
-      maxDurSec = 20,
-      maxWords = 60,
-      maxGapSec = 0.8,
-      minDurSec = 3,
-    } = opts ?? {};
-
-    const segs: AsrSegment[] = [];
-    if (!Array.isArray(words) || words.length === 0) return segs;
-
-    let cur: Word[] = [];
-    let segStart = words[0].startTime;
-
-    const flush = () => {
-      if (!cur.length) return;
-      const start = cur[0].startTime;
-      const end = cur[cur.length - 1].endTime;
-      const dur = end - start;
-
-      if (dur < minDurSec && segs.length > 0) {
-        // Fusion avec le précédent si trop court
-        const prev = segs[segs.length - 1];
-        const merged = [...prev.words, ...cur];
-        segs[segs.length - 1] = {
-          ...prev,
-          end: merged[merged.length - 1].endTime,
-          text: merged.map((w) => w.text).join(" "),
-          words: merged,
-        };
-      } else {
-        segs.push({
-          id: `seg_${String(segs.length + 1).padStart(4, "0")}`,
-          start,
-          end,
-          text: cur.map((w) => w.text).join(" "),
-          words: cur,
+    } else if (response.words && response.words.length > 0) {
+      // Méthode 2: Mots globaux (si pas de segments)
+      for (const word of response.words) {
+        words.push({
+          text: word.word.trim(),
+          startTime: word.start,
+          endTime: word.end,
         });
       }
-      cur = [];
-    };
+    } else {
+      // Méthode 3: Fallback complet sur le texte
+      console.warn(
+        "⚠️ [ASR Service] No segments or words, using text fallback"
+      );
+      const tokens = response.text.trim().split(/\s+/).filter(Boolean);
+      const totalDuration = response.duration || 0;
+      const wordDuration = totalDuration / Math.max(tokens.length, 1);
 
-    for (let i = 0; i < words.length; i++) {
-      const w = words[i];
-      const last = cur[cur.length - 1];
-      const gap = last ? w.startTime - last.endTime : 0;
-      const durIfAdd = w.endTime - segStart;
-
-      const shouldCut =
-        (last && gap > maxGapSec) ||
-        cur.length >= maxWords ||
-        durIfAdd > maxDurSec;
-
-      if (shouldCut) {
-        flush();
-        segStart = w.startTime;
-      }
-      cur.push(w);
-    }
-    flush();
-
-    return segs;
-  }
-
-  /** Affecte un 'turn' à chaque mot en fonction des segments de diarisation (rapide) */
-  assignTurns(words: Word[], diar: DiarizationSegment[]): Word[] {
-    if (!Array.isArray(words) || !Array.isArray(diar)) return words;
-
-    // Avance simultanée
-    let segIdx = 0;
-    const diarSorted = [...diar].sort((a, b) => a.start - b.start);
-
-    for (const w of words) {
-      while (
-        segIdx < diarSorted.length - 1 &&
-        w.startTime >= diarSorted[segIdx].end
-      ) {
-        segIdx++;
-      }
-      const seg = diarSorted[segIdx];
-
-      if (seg && w.endTime > seg.start && w.startTime < seg.end) {
-        // chevauchement → on assigne le speaker de seg
-        w.turn = seg.speaker;
-      } else {
-        // si pas de segment couvrant, laisser vide (ou hériter du précédent si tu préfères)
-        if (!w.turn) w.turn = undefined;
+      let currentTime = 0;
+      for (const token of tokens) {
+        words.push({
+          text: token,
+          startTime: currentTime,
+          endTime: Math.min(totalDuration, currentTime + wordDuration),
+        });
+        currentTime += wordDuration;
       }
     }
+
+    // Tri et validation
+    words.sort((a, b) => a.startTime - b.startTime);
+
+    console.log("📝 [ASR Service] Words extraction:", {
+      totalWords: words.length,
+      timespan:
+        words.length > 0
+          ? `${words[0].startTime.toFixed(1)}s - ${words[
+              words.length - 1
+            ].endTime.toFixed(1)}s`
+          : "empty",
+    });
 
     return words;
   }
 
   /**
-   * Variante d’alignement plus robuste :
-   * - Choisit, pour chaque mot, le locuteur avec le MAX d’overlap relatif (≥ minOverlapRatio)
-   * - Option d’inertie pour éviter des bascules trop fréquentes
+   * Création de segments ASR optimisés pour la synchronisation
+   * - Respecte les segments OpenAI naturels
+   * - Évite de couper au milieu des mots
+   * - Optimise pour l'alignement temporel avec diarisation
    */
-  assignTurnsOverlap(
-    words: Word[],
-    diar: DiarizationSegment[],
-    opts?: { minOverlapRatio?: number; inertia?: boolean }
-  ): Word[] {
-    if (!Array.isArray(words) || !Array.isArray(diar)) return words;
-    const MINR = opts?.minOverlapRatio ?? 0.2; // 20% du mot doit chevaucher un segment
-    const inertia = opts?.inertia ?? true;
+  private createOptimizedSegments(
+    openaiSegments: OpenAISegment[],
+    options: Required<NormalizationOptions>
+  ): TranscriptionSegment[] {
+    if (!openaiSegments || openaiSegments.length === 0) {
+      return [];
+    }
 
-    const diarSorted = [...diar].sort((a, b) => a.start - b.start);
-    let j = 0;
-    let lastTurn: string | undefined;
+    const segments: TranscriptionSegment[] = [];
+    let segmentCounter = 1;
 
-    for (const w of words) {
-      // placer j sur le premier segment susceptible de chevaucher w
-      while (j < diarSorted.length && diarSorted[j].end <= w.startTime) j++;
+    for (const openaiSegment of openaiSegments) {
+      // Vérification des contraintes
+      const segmentDuration = openaiSegment.end - openaiSegment.start;
+      const wordCount =
+        openaiSegment.words?.length ||
+        this.estimateWordCount(openaiSegment.text);
 
-      let bestSpk: string | undefined;
-      let bestOv = 0;
-
-      for (
-        let k = j;
-        k < diarSorted.length && diarSorted[k].start < w.endTime;
-        k++
+      if (
+        segmentDuration <= options.maxSegmentDuration &&
+        wordCount <= options.maxSegmentWords
       ) {
-        const s = diarSorted[k];
-        const ov = Math.max(
-          0,
-          Math.min(w.endTime, s.end) - Math.max(w.startTime, s.start)
-        );
-        if (ov > bestOv) {
-          bestOv = ov;
-          bestSpk = s.speaker;
+        // Segment OK tel quel
+        segments.push(this.createAsrSegment(openaiSegment, segmentCounter++));
+      } else {
+        // Segment trop long → subdivision
+        const subSegments = this.subdivideSegment(openaiSegment, options);
+        for (const subSegment of subSegments) {
+          segments.push(this.createAsrSegment(subSegment, segmentCounter++));
+        }
+      }
+    }
+
+    console.log("🔧 [ASR Service] Segment optimization:", {
+      originalCount: openaiSegments.length,
+      optimizedCount: segments.length,
+      avgDuration:
+        segments.length > 0
+          ? (
+              segments.reduce((acc, s) => acc + (s.end - s.start), 0) /
+              segments.length
+            ).toFixed(1) + "s"
+          : "N/A",
+    });
+
+    return segments;
+  }
+
+  /**
+   * Subdivision d'un segment trop long
+   */
+  private subdivideSegment(
+    segment: OpenAISegment,
+    options: Required<NormalizationOptions>
+  ): OpenAISegment[] {
+    const subSegments: OpenAISegment[] = [];
+
+    if (segment.words && segment.words.length > 0) {
+      // Subdivision basée sur les mots
+      let currentWords: OpenAIWord[] = [];
+      let currentStart = segment.start;
+
+      for (const word of segment.words) {
+        currentWords.push(word);
+
+        const currentDuration = word.end - currentStart;
+        const shouldSplit =
+          currentWords.length >= options.maxSegmentWords ||
+          currentDuration >= options.maxSegmentDuration;
+
+        if (shouldSplit && currentWords.length >= options.minSegmentWords) {
+          subSegments.push({
+            id: segment.id,
+            start: currentStart,
+            end: word.end,
+            text: currentWords.map((w) => w.word).join(" "),
+            words: currentWords,
+          });
+
+          currentWords = [];
+          currentStart = word.end;
         }
       }
 
-      const dur = Math.max(0.001, w.endTime - w.startTime);
-      if (bestSpk && bestOv / dur >= MINR) {
-        w.turn = bestSpk;
-        lastTurn = w.turn;
-      } else if (inertia && lastTurn) {
-        w.turn = lastTurn;
-      } else {
-        w.turn = undefined;
+      // Segment final si mots restants
+      if (currentWords.length > 0) {
+        subSegments.push({
+          id: segment.id,
+          start: currentStart,
+          end: segment.end,
+          text: currentWords.map((w) => w.word).join(" "),
+          words: currentWords,
+        });
+      }
+    } else {
+      // Subdivision temporelle simple (pas de mots disponibles)
+      const duration = segment.end - segment.start;
+      const numSubSegments = Math.ceil(duration / options.maxSegmentDuration);
+      const subDuration = duration / numSubSegments;
+
+      for (let i = 0; i < numSubSegments; i++) {
+        const start = segment.start + i * subDuration;
+        const end = Math.min(segment.end, start + subDuration);
+
+        subSegments.push({
+          id: segment.id,
+          start,
+          end,
+          text: segment.text, // On garde le texte complet (approximation)
+          words: undefined,
+        });
       }
     }
+
+    return subSegments;
+  }
+
+  /**
+   * Création d'un AsrSegment depuis un OpenAISegment
+   */
+  private createAsrSegment(
+    openaiSegment: OpenAISegment,
+    counter: number
+  ): TranscriptionSegment {
+    const words: Word[] = [];
+
+    if (openaiSegment.words) {
+      for (const word of openaiSegment.words) {
+        words.push({
+          text: word.word.trim(),
+          startTime: word.start,
+          endTime: word.end,
+        });
+      }
+    }
+
+    return {
+      id: `seg_${String(counter).padStart(4, "0")}`,
+      start: openaiSegment.start,
+      end: openaiSegment.end,
+      text: openaiSegment.text.trim(),
+      words,
+    };
+  }
+
+  /**
+   * Estimation du nombre de mots depuis un texte
+   */
+  private estimateWordCount(text: string): number {
+    return text.trim().split(/\s+/).filter(Boolean).length;
+  }
+
+  /**
+   * Assignation des tours aux mots basée sur la diarisation
+   * AMÉLIORATION: Alignement optimisé avec les segments ASR
+   */
+  assignTurns(
+    words: Word[],
+    diarizationSegments: DiarizationSegment[]
+  ): Word[] {
+    if (!Array.isArray(words) || !Array.isArray(diarizationSegments)) {
+      return words;
+    }
+
+    console.log("🎭 [ASR Service] Assigning speaker turns", {
+      words: words.length,
+      diarizationSegments: diarizationSegments.length,
+      speakers: [...new Set(diarizationSegments.map((s) => s.speaker))],
+    });
+
+    const diarSorted = [...diarizationSegments].sort(
+      (a, b) => a.start - b.start
+    );
+    let segmentIndex = 0;
+
+    for (const word of words) {
+      // Avancer vers le segment approprié
+      while (
+        segmentIndex < diarSorted.length - 1 &&
+        word.startTime >= diarSorted[segmentIndex].end
+      ) {
+        segmentIndex++;
+      }
+
+      const currentSegment = diarSorted[segmentIndex];
+
+      // Vérification de chevauchement avec tolérance
+      if (currentSegment && this.isWordInSegment(word, currentSegment)) {
+        word.turn = currentSegment.speaker;
+      } else {
+        // Chercher le segment avec le meilleur chevauchement
+        const bestMatch = this.findBestDiarizationMatch(word, diarSorted);
+        word.turn = bestMatch?.speaker;
+      }
+    }
+
+    // Statistiques d'assignation
+    const assignedWords = words.filter((w) => w.turn);
+    const turnDistribution = words.reduce((acc, w) => {
+      if (w.turn) {
+        acc[w.turn] = (acc[w.turn] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+
+    console.log("✅ [ASR Service] Turn assignment completed", {
+      assignedWords: assignedWords.length,
+      totalWords: words.length,
+      coverage: `${((assignedWords.length / words.length) * 100).toFixed(1)}%`,
+      turnDistribution,
+    });
+
     return words;
   }
 
-  /** Réassigne un turn sur un intervalle de temps [t1, t2] */
-  reassignTurn(words: Word[], t1: number, t2: number, toTurn: string): Word[] {
-    const [a, b] = t1 <= t2 ? [t1, t2] : [t2, t1];
-    return words.map((w) => {
-      if (w.endTime <= a || w.startTime >= b) return w; // hors intervalle
-      return { ...w, turn: toTurn };
-    });
+  /**
+   * Vérification si un mot chevauche avec un segment de diarisation
+   */
+  private isWordInSegment(
+    word: Word,
+    segment: DiarizationSegment,
+    tolerance: number = 0.1
+  ): boolean {
+    const wordCenter = (word.startTime + word.endTime) / 2;
+    const segmentStart = segment.start - tolerance;
+    const segmentEnd = segment.end + tolerance;
+
+    return wordCenter >= segmentStart && wordCenter <= segmentEnd;
   }
 
-  /** Split logique au temps t (entre mots) : on choisit le pivot de frontière le plus proche */
+  /**
+   * Recherche du meilleur match de diarisation pour un mot
+   */
+  private findBestDiarizationMatch(
+    word: Word,
+    segments: DiarizationSegment[]
+  ): DiarizationSegment | undefined {
+    let bestMatch: DiarizationSegment | undefined;
+    let bestOverlap = 0;
+
+    for (const segment of segments) {
+      const overlap = this.calculateOverlap(word, segment);
+      if (overlap > bestOverlap) {
+        bestOverlap = overlap;
+        bestMatch = segment;
+      }
+    }
+
+    return bestOverlap > 0.1 ? bestMatch : undefined; // Seuil minimum 10%
+  }
+
+  /**
+   * Calcul du chevauchement entre un mot et un segment
+   */
+  private calculateOverlap(word: Word, segment: DiarizationSegment): number {
+    const overlapStart = Math.max(word.startTime, segment.start);
+    const overlapEnd = Math.min(word.endTime, segment.end);
+    const overlapDuration = Math.max(0, overlapEnd - overlapStart);
+    const wordDuration = word.endTime - word.startTime;
+
+    return wordDuration > 0 ? overlapDuration / wordDuration : 0;
+  }
+
+  /**
+   * Assignation avancée avec gestion de conflits et inertie
+   */
+  assignTurnsOverlap(
+    words: Word[],
+    diarizationSegments: DiarizationSegment[],
+    opts?: {
+      minOverlapRatio?: number;
+      inertia?: boolean;
+      conflictResolution?: "confidence" | "duration" | "speaker_consistency";
+    }
+  ): Word[] {
+    const options = {
+      minOverlapRatio: 0.2,
+      inertia: true,
+      conflictResolution: "confidence" as const,
+      ...opts,
+    };
+
+    console.log(
+      "🔧 [ASR Service] Advanced turn assignment with overlap analysis",
+      {
+        words: words.length,
+        segments: diarizationSegments.length,
+        options,
+      }
+    );
+
+    const diarSorted = [...diarizationSegments].sort(
+      (a, b) => a.start - b.start
+    );
+    let lastTurn: string | undefined;
+    let conflicts = 0;
+
+    for (const word of words) {
+      const candidates = this.findDiarizationCandidates(word, diarSorted);
+
+      if (candidates.length === 0) {
+        // Aucun candidat → utiliser l'inertie si activée
+        if (options.inertia && lastTurn) {
+          word.turn = lastTurn;
+        }
+        continue;
+      }
+
+      if (candidates.length === 1) {
+        // Un seul candidat → assignation simple
+        const candidate = candidates[0];
+        if (candidate.overlap >= options.minOverlapRatio) {
+          word.turn = candidate.speaker;
+          lastTurn = word.turn;
+        } else if (options.inertia && lastTurn) {
+          word.turn = lastTurn;
+        }
+        continue;
+      }
+
+      // Plusieurs candidats → résolution de conflit
+      conflicts++;
+      const winner = this.resolveConflict(
+        candidates,
+        options.conflictResolution
+      );
+      if (winner && winner.overlap >= options.minOverlapRatio) {
+        word.turn = winner.speaker;
+        lastTurn = word.turn;
+      } else if (options.inertia && lastTurn) {
+        word.turn = lastTurn;
+      }
+    }
+
+    console.log("🎭 [ASR Service] Advanced assignment completed", {
+      conflicts,
+      conflictRate: `${((conflicts / words.length) * 100).toFixed(1)}%`,
+    });
+
+    return words;
+  }
+
+  /**
+   * Recherche des candidats de diarisation pour un mot
+   */
+  private findDiarizationCandidates(
+    word: Word,
+    segments: DiarizationSegment[]
+  ): Array<{ speaker: string; overlap: number; confidence?: number }> {
+    const candidates = [];
+
+    for (const segment of segments) {
+      const overlap = this.calculateOverlap(word, segment);
+      if (overlap > 0) {
+        candidates.push({
+          speaker: segment.speaker,
+          overlap,
+          confidence: segment.confidence,
+        });
+      }
+    }
+
+    return candidates.sort((a, b) => b.overlap - a.overlap);
+  }
+
+  /**
+   * Résolution de conflit entre plusieurs candidats
+   */
+  private resolveConflict(
+    candidates: Array<{
+      speaker: string;
+      overlap: number;
+      confidence?: number;
+    }>,
+    strategy: "confidence" | "duration" | "speaker_consistency"
+  ): { speaker: string; overlap: number; confidence?: number } | undefined {
+    switch (strategy) {
+      case "confidence":
+        return candidates.reduce((best, candidate) => {
+          const bestConf = best.confidence || 0;
+          const candConf = candidate.confidence || 0;
+          return candConf > bestConf ? candidate : best;
+        });
+
+      case "duration":
+        return candidates[0]; // Déjà trié par overlap décroissant
+
+      case "speaker_consistency":
+        // Préférer les speakers déjà vus (implémentation simplifiée)
+        return candidates[0];
+
+      default:
+        return candidates[0];
+    }
+  }
+
+  /**
+   * Validation globale avec métriques détaillées
+   */
+  validateAll(words: Word[]): {
+    ok: boolean;
+    warnings: string[];
+    metrics: {
+      totalWords: number;
+      wordsWithTurns: number;
+      turnCoverage: number;
+      speakerCount: number;
+      averageWordDuration: number;
+      temporalConsistency: number;
+    };
+  } {
+    const warnings: string[] = [];
+
+    if (!Array.isArray(words) || words.length === 0) {
+      return {
+        ok: false,
+        warnings: ["Aucun mot dans la transcription."],
+        metrics: {
+          totalWords: 0,
+          wordsWithTurns: 0,
+          turnCoverage: 0,
+          speakerCount: 0,
+          averageWordDuration: 0,
+          temporalConsistency: 0,
+        },
+      };
+    }
+
+    // Validation temporelle
+    let temporalErrors = 0;
+    for (let i = 0; i < words.length - 1; i++) {
+      if (words[i].startTime > words[i + 1].startTime) {
+        temporalErrors++;
+        if (warnings.length < 5) {
+          // Limiter les warnings
+          warnings.push(`Ordre temporel non croissant à l'index ${i}.`);
+        }
+      }
+      if (words[i].endTime < words[i].startTime) {
+        temporalErrors++;
+        if (warnings.length < 5) {
+          warnings.push(`Durée négative détectée à l'index ${i}.`);
+        }
+      }
+    }
+
+    // Métriques
+    const wordsWithTurns = words.filter((w) => w.turn).length;
+    const turnCoverage = (wordsWithTurns / words.length) * 100;
+    const speakers = new Set(words.map((w) => w.turn).filter(Boolean));
+    const avgDuration =
+      words.reduce((acc, w) => acc + (w.endTime - w.startTime), 0) /
+      words.length;
+    const temporalConsistency = Math.max(
+      0,
+      100 - (temporalErrors / words.length) * 100
+    );
+
+    // Warnings sur les métriques
+    if (turnCoverage < 80) {
+      warnings.push(`Couverture des tours faible: ${turnCoverage.toFixed(1)}%`);
+    }
+
+    if (speakers.size < 2) {
+      warnings.push("Moins de 2 locuteurs détectés après diarisation");
+    }
+
+    const metrics = {
+      totalWords: words.length,
+      wordsWithTurns,
+      turnCoverage,
+      speakerCount: speakers.size,
+      averageWordDuration: avgDuration,
+      temporalConsistency,
+    };
+
+    console.log("✅ [ASR Service] Validation completed", {
+      ok: warnings.length === 0,
+      warningCount: warnings.length,
+      metrics,
+    });
+
+    return {
+      ok: warnings.length === 0,
+      warnings,
+      metrics,
+    };
+  }
+
+  /**
+   * Utilitaires de manipulation (inchangés mais avec meilleur logging)
+   */
+  reassignTurn(words: Word[], t1: number, t2: number, toTurn: string): Word[] {
+    const [a, b] = t1 <= t2 ? [t1, t2] : [t2, t1];
+    let modified = 0;
+
+    const result = words.map((w) => {
+      if (w.endTime <= a || w.startTime >= b) return w;
+      modified++;
+      return { ...w, turn: toTurn };
+    });
+
+    console.log(
+      `🔧 [ASR Service] Reassigned ${modified} words to ${toTurn} in range [${a}s, ${b}s]`
+    );
+    return result;
+  }
+
   splitAt(words: Word[], t: number): Word[] {
-    if (!Number.isFinite(t)) return words;
+    if (!Number.isFinite(t) || words.length === 0) return words;
 
     const first = words[0];
     const last = words[words.length - 1];
-    if (!first || !last || t <= first.startTime || t >= last.endTime)
-      return words;
+    if (t <= first.startTime || t >= last.endTime) return words;
 
-    // Cherche la frontière entre mots la plus proche de t (ne coupe pas un mot)
+    // Recherche de la frontière optimale
     let bestIdx = -1;
     let bestDist = Number.POSITIVE_INFINITY;
 
@@ -314,23 +716,22 @@ export class TranscriptionASRService {
       }
     }
 
-    // Ici, on ne modifie pas réellement le tableau (split "logique" pour l’UI).
-    // Si tu veux matérialiser un marker, tu peux insérer un mot fantôme ici.
+    console.log(
+      `✂️ [ASR Service] Split point identified at word ${bestIdx + 1} (${
+        words[bestIdx]?.endTime
+      }s vs target ${t}s)`
+    );
+
+    // Dans une vraie implémentation, on pourrait insérer un marqueur ici
     return words;
   }
 
-  /** Merge logique entre t1 et t2 (ne modifie pas les mots; utile pour l’UI/segments) */
-  mergeRange(words: Word[], _t1: number, _t2: number): Word[] {
-    // Rien à faire au grain du mot ; le merge se fait au niveau "segments".
-    return words;
-  }
-
-  /** Insère des balises analytiques dans text + synchronise le champ type si besoin */
   insertTag(words: Word[], t1: number, t2: number, tagName: string): Word[] {
     const [a, b] = t1 <= t2 ? [t1, t2] : [t2, t1];
     let started = false;
+    let tagged = 0;
 
-    return words.map((w) => {
+    const result = words.map((w) => {
       const inRange = !(w.endTime <= a || w.startTime >= b);
       let text = w.text;
 
@@ -339,41 +740,18 @@ export class TranscriptionASRService {
           text = `[${tagName}] ${text}`;
           started = true;
         }
+        tagged++;
       } else if (started) {
-        // fermer la balise au premier mot après la fin
         text = `${text} [/${tagName}]`;
         started = false;
       }
 
       return { ...w, text };
     });
-  }
 
-  /** Validation globale: temps, tours, balises (simplifiée) */
-  validateAll(words: Word[]): { ok: boolean; warnings: string[] } {
-    const warnings: string[] = [];
-    if (!Array.isArray(words) || words.length === 0) {
-      return { ok: false, warnings: ["Aucun mot dans la transcription."] };
-    }
-
-    // Ordre temporel + durées
-    for (let i = 0; i < words.length - 1; i++) {
-      if (words[i].startTime > words[i + 1].startTime) {
-        warnings.push(`Ordre temporel non croissant à l'index ${i}.`);
-        break;
-      }
-      if (words[i].endTime < words[i].startTime) {
-        warnings.push(`Durée négative détectée à l'index ${i}.`);
-        break;
-      }
-    }
-
-    // Tours manquants (si diarisation effectuée en amont)
-    const missingTurns = words.some((w) => typeof w.turn === "undefined");
-    if (missingTurns) {
-      warnings.push("Certains mots n'ont pas de 'turn' après diarisation.");
-    }
-
-    return { ok: warnings.length === 0, warnings };
+    console.log(
+      `🏷️ [ASR Service] Tagged ${tagged} words with [${tagName}] in range [${a}s, ${b}s]`
+    );
+    return result;
   }
 }

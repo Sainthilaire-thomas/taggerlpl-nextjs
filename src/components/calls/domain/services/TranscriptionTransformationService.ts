@@ -213,56 +213,59 @@ export class TranscriptionTransformationService {
   /**
    * Parse et valide les mots de la transcription JSON
    */
+  /**
+   * Parse et valide les mots de la transcription JSON
+   * ✅ CORRIGÉ: Utilise uniquement les colonnes existantes dans la table word
+   */
   private parseAndValidateWords(json: any, transcriptId: string): any[] {
     return json.words.map((wordData: any, index: number) => {
       // Normalisation des propriétés (compatibilité multiple formats)
-      const text = wordData.text || wordData.word || "";
+      const text = wordData.text || wordData.word || `[mot_${index}]`;
       const startTime = Number(wordData.startTime || wordData.start_time || 0);
-      const endTime = Number(wordData.endTime || wordData.end_time || 0);
-      const speaker = wordData.speaker || "unknown";
-      const turn = wordData.turn || null;
-      const confidence = wordData.confidence || null;
+      const endTime = Number(
+        wordData.endTime || wordData.end_time || startTime + 0.1
+      );
 
-      // Validation via l'entité TranscriptionWord
-      try {
-        const wordEntity = new TranscriptionWord(
-          text,
-          startTime,
-          endTime,
-          speaker,
-          turn,
-          confidence
+      // ✅ CORRECTION: Utiliser 'turn' depuis les données (speaker sera dérivé côté UI)
+      const turn = wordData.turn || wordData.speaker || "unknown";
+      const type = wordData.type || null;
+
+      // ✅ CORRECTION: Gestion robuste des timestamps invalides
+      let cleanStartTime = Math.max(0, startTime);
+      let cleanEndTime = Math.max(startTime + 0.1, endTime);
+
+      // Si endTime <= startTime, corriger automatiquement
+      if (cleanEndTime <= cleanStartTime) {
+        cleanEndTime = cleanStartTime + 0.1;
+        console.warn(
+          `⚠️ Mot ${index}: endTime corrigé (${endTime} -> ${cleanEndTime})`
         );
-
-        // Conversion au format base de données
-        return {
-          transcriptid: transcriptId,
-          word: text,
-          startTime,
-          endTime,
-          speaker,
-          turn,
-          confidence,
-          // Propriétés techniques
-          text, // Alias pour compatibilité
-          index: index,
-        };
-      } catch (error) {
-        console.warn(`⚠️ Mot invalide à l'index ${index}:`, error);
-
-        // Fallback avec valeurs par défaut
-        return {
-          transcriptid: transcriptId,
-          word: text || `[mot_${index}]`,
-          startTime: Math.max(0, startTime),
-          endTime: Math.max(startTime + 0.1, endTime),
-          speaker: speaker || "unknown",
-          turn: turn,
-          confidence: confidence,
-          text: text || `[mot_${index}]`,
-          index: index,
-        };
       }
+
+      // Validation simple mais tolérante
+      const isValid =
+        text &&
+        typeof cleanStartTime === "number" &&
+        typeof cleanEndTime === "number";
+
+      if (!isValid) {
+        console.warn(`⚠️ Mot invalide à l'index ${index}:`, {
+          text,
+          startTime: cleanStartTime,
+          endTime: cleanEndTime,
+          turn,
+        });
+      }
+
+      // Conversion au format base de données (colonnes exactes de la table)
+      return {
+        transcriptid: transcriptId,
+        text: text,
+        startTime: cleanStartTime,
+        endTime: cleanEndTime,
+        turn: turn,
+        type: type,
+      };
     });
   }
 
@@ -272,23 +275,30 @@ export class TranscriptionTransformationService {
   private validateWordStructure(word: any, index: number): string[] {
     const errors: string[] = [];
 
+    // Validation du texte (requis)
     if (!word.text && !word.word) {
       errors.push(`Mot ${index}: texte manquant`);
     }
 
-    if (typeof word.startTime !== "number" || word.startTime < 0) {
-      errors.push(`Mot ${index}: startTime invalide`);
+    // Validation des timestamps (plus tolérante)
+    if (typeof word.startTime !== "number") {
+      errors.push(`Mot ${index}: startTime doit être un nombre`);
+    } else if (word.startTime < 0) {
+      // Juste un warning, pas une erreur bloquante
+      console.warn(`⚠️ Mot ${index}: startTime négatif (${word.startTime})`);
     }
 
-    if (
-      typeof word.endTime !== "number" ||
-      word.endTime <= (word.startTime || 0)
-    ) {
-      errors.push(`Mot ${index}: endTime invalide`);
+    if (typeof word.endTime !== "number") {
+      errors.push(`Mot ${index}: endTime doit être un nombre`);
     }
+    // ✅ SUPPRIMÉ la validation stricte endTime > startTime
+    // La correction se fait maintenant dans parseAndValidateWords
 
-    if (!word.speaker) {
-      errors.push(`Mot ${index}: speaker manquant`);
+    // Validation du turn (optionnel mais recommandé)
+    if (!word.turn && !word.speaker) {
+      console.warn(
+        `⚠️ Mot ${index}: aucun locuteur défini (turn ou speaker manquant)`
+      );
     }
 
     return errors;

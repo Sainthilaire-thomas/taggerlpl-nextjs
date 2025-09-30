@@ -24,6 +24,14 @@ type DbCall = {
   audiourl?: string | null;
   // Pas de created_at/updated_at dans votre schéma
 };
+// 🔒 Alias unique pour tous les "changes" d'update
+type UpdateChanges = Partial<Call> & {
+  preparedfortranscript?: boolean;
+  is_tagging_call?: boolean;
+  transcription?: unknown;
+  audioFile?: AudioFile;
+  origin?: string;
+};
 
 export class SupabaseCallRepository implements CallRepository {
   private cache = new Map<string, { data: Call[]; timestamp: number }>();
@@ -207,7 +215,6 @@ export class SupabaseCallRepository implements CallRepository {
       // Créer directement les instances CallExtended
       const calls = data.map((row) => {
         const isTagged = Boolean(row.is_tagged); // Déjà calculé par la vue
-        console.log(`🎯 Vue - Call ${row.callid}: isTagged=${isTagged}`);
 
         return CallExtended.fromDatabaseWithWorkflow(row, isTagged);
       });
@@ -388,23 +395,10 @@ export class SupabaseCallRepository implements CallRepository {
    * Version surchargée de update pour supporter CallExtended et les flags de workflow
    */
   async update(call: Call): Promise<void>;
-  async update(
-    id: string,
-    changes: Partial<
-      Call & {
-        preparedfortranscript?: boolean;
-        is_tagging_call?: boolean;
-      }
-    >
-  ): Promise<void>;
+  async update(id: string, changes: UpdateChanges): Promise<void>;
   async update(
     callOrId: Call | string,
-    changes?: Partial<
-      Call & {
-        preparedfortranscript?: boolean;
-        is_tagging_call?: boolean;
-      }
-    >
+    changes?: UpdateChanges
   ): Promise<void> {
     if (typeof callOrId !== "string") {
       const call = callOrId;
@@ -442,7 +436,7 @@ export class SupabaseCallRepository implements CallRepository {
 
     // Version avec ID et changes partiels
     const id = callOrId;
-    const payload = this.mapPartialCallToDb(changes ?? {});
+    const payload = this.mapPartialCallToDb(changes ?? ({} as UpdateChanges));
     if (Object.keys(payload).length === 0) return;
 
     const { error } = await this.sb
@@ -460,12 +454,7 @@ export class SupabaseCallRepository implements CallRepository {
    * Version enrichie de mapPartialCallToDb pour supporter les nouveaux champs
    */
   private mapPartialCallToDb(
-    changes: Partial<
-      Call & {
-        preparedfortranscript?: boolean;
-        is_tagging_call?: boolean;
-      }
-    >
+    changes: UpdateChanges = {} as UpdateChanges
   ): Partial<DbCall> {
     const out: Partial<DbCall> = {};
 
@@ -482,15 +471,18 @@ export class SupabaseCallRepository implements CallRepository {
     }
 
     const txAny = (changes as any).transcription as unknown | undefined;
-    if (txAny !== undefined) out.transcription = txAny ?? null;
+    if (txAny !== undefined) {
+      // on pousse tel quel (Supabase gère le cast → jsonb)
+      out.transcription = txAny ?? null;
+    }
 
     // NOUVEAU : Support des flags de workflow
-    if ("preparedfortranscript" in changes) {
-      out.preparedfortranscript = Boolean(changes.preparedfortranscript);
-    }
-    if ("is_tagging_call" in changes) {
-      out.is_tagging_call = Boolean(changes.is_tagging_call);
-    }
+    if ("preparedfortranscript" in changes)
+      out.preparedfortranscript = Boolean(
+        (changes as UpdateChanges).preparedfortranscript
+      );
+    if ("is_tagging_call" in changes)
+      out.is_tagging_call = Boolean((changes as UpdateChanges).is_tagging_call);
 
     return out;
   }
@@ -1055,6 +1047,47 @@ export class SupabaseCallRepository implements CallRepository {
     } catch (error) {
       console.error("❌ Erreur getAllCallIds:", error);
       return [];
+    }
+  }
+
+  /**
+   * Écrit directement le JSON compact de transcription (colonne jsonb).
+   * Robuste, log minimal, et erreurs explicites.
+   */
+  async saveTranscriptionJson(callId: string, json: unknown): Promise<void> {
+    if (!callId)
+      throw new RepositoryError("saveTranscriptionJson: callId is required");
+    if (!json || typeof json !== "object") {
+      throw new RepositoryError(
+        "saveTranscriptionJson: json payload must be an object"
+      );
+    }
+
+    // Log léger pour diagnostiquer sans noyer les logs
+    try {
+      const wordsLen = Array.isArray((json as any).words)
+        ? (json as any).words.length
+        : "n/a";
+      const segsLen = Array.isArray((json as any).segments)
+        ? (json as any).segments.length
+        : 0;
+      // eslint-disable-next-line no-console
+      console.log("📤 saveTranscriptionJson", { callId, wordsLen, segsLen });
+    } catch {
+      /* noop */
+    }
+
+    const { error } = await this.sb
+      .from("call")
+      .update({ transcription: json }) // ← colonne jsonb requise côté DB
+      .eq("callid", callId);
+
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.error("❌ saveTranscriptionJson error", error);
+      throw new RepositoryError(
+        `Failed to save transcription JSON: ${error.message}`
+      );
     }
   }
 }
