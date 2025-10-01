@@ -1,335 +1,104 @@
-﻿# Architecture AlgorithmLab
+﻿
+# 📄 `README.md`
 
-**Vue d'ensemble du système de validation scientifique**
+<pre class="overflow-visible!" data-start="216" data-end="3000"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-markdown"><span><span># Architecture AlgorithmLab</span><span>
+
+</span><span>## 🎯 Objectif</span><span>
+Cette section décrit l’</span><span>**architecture interne d’AlgorithmLab**</span><span>, le framework de validation scientifique.  
+Elle explique comment sont organisés les algorithmes, les composants UI et le système de types, ainsi que les choix de conception (design patterns, flux de données).
 
 ---
 
-## 🎯 Vision globale
+</span><span>## 📚 Contenu</span><span>
+
+</span><span>### Vision globale</span><span>
+</span><span>-</span><span></span><span>**[Architecture Overview</span><span>](</span><span>../README.md</span><span>)** – Vue d’ensemble du projet
+</span><span>-</span><span></span><span>**[Data Flow</span><span>](</span><span>data-flow.md</span><span>)** – Flux de données de bout en bout
+</span><span>-</span><span></span><span>**[Design Patterns</span><span>](</span><span>design-patterns.md</span><span>)** – Patterns utilisés (Strategy, Adapter, Factory, Observer)
+</span><span>-</span><span></span><span>**[Type System</span><span>](</span><span>type-system.md</span><span>)** – Hiérarchie des types (core, algorithms, UI, utils)
+
+</span><span>### Branches d’implémentation</span><span>
+</span><span>-</span><span></span><span>**[Branche Algorithmes</span><span>](</span><span>branche-algorithms.md</span><span>)** – Organisation des calculateurs/classificateurs X/Y/M1/M2/M3
+</span><span>-</span><span></span><span>**[Branche Components Level 0</span><span>](</span><span>branche-components-level0.md</span><span>)** – Validation inter-annotateurs (Gold Standard)
+</span><span>-</span><span></span><span>**[Branche Components Level 1</span><span>](</span><span>branche-components-level1.md</span><span>)** – Validation technique (tests et comparaisons d’algorithmes)
+</span><span>-</span><span></span><span>**[Branche Components Level 2 Shared</span><span>](</span><span>branche-components-level2-shared.md</span><span>)** – Validation scientifique (tests d’hypothèses)
+
+---
+
+</span><span>## 🏗️ Vue d’ensemble de l’architecture</span><span>
+
 ```mermaid
 graph TB
     subgraph "📥 INPUT"
         DATA[Données conversationnelles<br/>Tours de parole]
     end
-    
+  
     subgraph "🧪 ALGORITHMES"
-        direction LR
         X_ALGO[Classificateurs X<br/>Stratégies conseiller]
         Y_ALGO[Classificateurs Y<br/>Réactions client]
         M1_ALGO[Calculateurs M1<br/>Densité verbes]
         M2_ALGO[Classificateurs M2<br/>Alignement]
         M3_ALGO[Calculateurs M3<br/>Charge cognitive]
     end
-    
+  
     subgraph "🔄 ADAPTATEUR UNIVERSEL"
         ADAPTER[createUniversalAlgorithm<br/>Interface unifiée]
     end
-    
+  
     subgraph "📊 TYPES CORE"
         TYPES[ValidationTypes<br/>AlgorithmTypes<br/>UITypes]
     end
-    
+  
     subgraph "🖥️ INTERFACE UI"
-        direction LR
         RESULTS[ResultsPanel<br/>Tableau résultats]
         METRICS[MetricsPanel<br/>Accuracy/MAE/Kappa]
         ANNOT[AnnotationList<br/>Annotations expertes]
         FINETUNE[FineTuningDialog<br/>Amélioration IA]
     end
-    
+  
     subgraph "📈 OUTPUT"
         VALID[Rapport de validation<br/>Métriques scientifiques]
     end
-    
+  
     DATA --> X_ALGO
     DATA --> Y_ALGO
     DATA --> M1_ALGO
     DATA --> M2_ALGO
     DATA --> M3_ALGO
-    
+  
     X_ALGO --> ADAPTER
     Y_ALGO --> ADAPTER
     M1_ALGO --> ADAPTER
     M2_ALGO --> ADAPTER
     M3_ALGO --> ADAPTER
-    
+  
     ADAPTER --> TYPES
     TYPES --> RESULTS
     TYPES --> METRICS
     RESULTS --> ANNOT
     RESULTS --> FINETUNE
-    
+  
     METRICS --> VALID
     ANNOT --> VALID
-    
+  
     style DATA fill:#e3f2fd
     style ADAPTER fill:#fff9c4
     style TYPES fill:#f3e5f5
     style VALID fill:#e8f5e9
+</span></span></code></div></div></pre>
 
-🏗️ Composants principaux
-1. Système de types (types/)
-Rôle : Contrats unifiés entre algorithmes et UI
-types/
-├── algorithms/     # BaseAlgorithm, UniversalAlgorithm
-├── core/          # Variables, Validation, Calculations
-├── ui/            # ResultsPanel, MetricsPanel props
-└── utils/         # Normalizers, Converters
-→ Documentation détaillée
-→ ADR-001 : Pourquoi ce choix ?
+---
 
-2. Algorithmes (algorithms/level1/)
-Rôle : Implémentations des 5 variables (X/Y/M1/M2/M3)
-algorithms/level1/
-├── XClassifiers/       # Classification stratégies conseiller
-├── YClassifiers/       # Classification réactions client
-├── M1Calculators/      # Calcul densité verbes action
-├── M2Calculators/      # Classification alignement
-├── M3Calculators/      # Calcul charge cognitive
-└── shared/
-    ├── AlgorithmRegistry.ts
-    └── UniversalAdapter.ts
-Pattern : Strategy + Adapter
-→ Design patterns
-→ ADR-002 : Adaptateur universel
+## ✅ Points clés
 
-3. Interface utilisateur (components/Level1/)
-Rôle : Visualisation résultats, annotations, métriques
-components/Level1/
-├── Level1Interface.tsx        # Navigation principale
-├── TechnicalBenchmark.tsx     # Comparaison algorithmes
-├── algorithms/                # Tests par variable
-│   ├── BaseAlgorithmTesting.tsx
-│   ├── XClassifiers/
-│   ├── YClassifiers/
-│   ├── M1Calculators/
-│   ├── M2Calculators/
-│   └── M3Calculators/
-└── shared/results/
-    ├── base/
-    │   ├── ResultsPanel.tsx   # ⭐ Composant principal
-    │   ├── MetricsPanel.tsx
-    │   ├── RunPanel.tsx
-    │   └── extraColumns.tsx   # Colonnes dynamiques
-    └── ResultsSample/
-        ├── components/
-        │   ├── AnnotationList.tsx
-        │   ├── ResultsTableBody.tsx
-        │   └── FineTuningDialog/
-        └── hooks/
-Pattern : Factory (colonnes dynamiques)
-→ ADR-003 : Dispatch métriques
+* **Séparation stricte** : Core / Algorithms / UI / Utils.
+* **Adaptateur universel** : tous les algorithmes passent par `createUniversalAlgorithm`.
+* **Résultats dynamiques** : colonnes & métriques adaptées à la variable (X/Y/M1/M2/M3).
+* **Types centralisés** : source de vérité unique dans `types/`.
+* **Extensibilité** : ajouter un nouvel algorithme n’impacte pas le reste du framework.
 
-🔄 Flux de données (bout en bout)
-mermaidsequenceDiagram
-    participant User as 👤 Utilisateur
-    participant UI as 🖥️ BaseAlgorithmTesting
-    participant Registry as 📚 AlgorithmRegistry
-    participant Adapter as 🔄 Universal Adapter
-    participant Algo as 🧪 M1Calculator
-    participant Results as 📊 ResultsPanel
-    
-    User->>UI: Sélectionne "M1ActionVerbCounter"
-    UI->>Registry: algorithmRegistry.get("M1ActionVerbCounter")
-    Registry-->>UI: UniversalAlgorithm
-    
-    User->>UI: Clique "Lancer test" (n=100)
-    UI->>Adapter: classify(verbatim)
-    Adapter->>Algo: run({ text: "..." })
-    Algo-->>Adapter: { prediction, confidence, details }
-    Adapter-->>UI: UniversalResult[]
-    
-    UI->>Results: <ResultsPanel results={...} targetKind="M1" />
-    Results->>Results: buildExtraColumnsForTarget("M1")
-    Results->>Results: MetricsPanel (dispatch numérique)
-    Results-->>User: Affichage tableau + métriques
-→ Flux détaillé
+---
 
-🎨 Patterns de conception
-Strategy Pattern (Algorithmes)
-typescript// Interface commune
-interface BaseAlgorithm<TInput, TOutput> {
-  run(input: TInput): Promise<TOutput>;
-  describe(): AlgorithmDescriptor;
-}
+→ Prochaine étape : [02-CORE-CONCEPTS]()
 
-// Implémentations concrètes
-class M1ActionVerbCounter implements BaseAlgorithm<M1Input, M1Details> { }
-class RegexXClassifier implements BaseAlgorithm<XInput, XDetails> { }
-Avantage : Ajouter un nouvel algorithme sans toucher au reste du code
-
-Adapter Pattern (Unification)
-typescript// Adaptateur universel
-function createUniversalAlgorithm<TInput, TDetails>(
-  calculator: BaseCalculator<TInput, TDetails>,
-  target: VariableTarget,
-  config?: { type, supportsBatch, ... }
-): UniversalAlgorithm
-
-// Avant (hétérogène)
-m1.run({ text: "..." })        // → CalculationResult<M1Details>
-x.classify("...")               // → ClassificationResult
-
-// Après (unifié via adapter)
-universal.run("...")            // → UniversalResult
-universal.classify("...")       // → UniversalResult
-Avantage : Interface unique pour l'UI, quelle que soit la variable
-→ ADR-002 : Justification
-
-Factory Pattern (Colonnes dynamiques)
-typescript// Factory : génère automatiquement les bonnes colonnes
-function buildExtraColumnsForTarget(kind: TargetKind): ExtraColumn[] {
-  switch (kind) {
-    case "X": return buildXColumns();      // Famille, Évidences
-    case "Y": return buildYColumns();      // Famille, Évidences
-    case "M1": return m1Columns;           // Densité, Verbes trouvés
-    case "M2": return m2Columns;           // Valeur, Échelle
-    case "M3": return m3Columns;           // Durée, Unité
-  }
-}
-
-// Utilisation dans ResultsPanel
-<ResultsTableBody extraColumns={buildExtraColumnsForTarget("M1")} />
-Avantage : Colonnes adaptées automatiquement selon la variable
-→ API extraColumns
-
-Observer Pattern (Annotations)
-typescript// Context partagé pour annotations temps réel
-const { addAnnotation, updateAnnotation, deleteAnnotation } = useTaggingData();
-
-// Composant observe les changements
-<AnnotationList
-  turnId={142}
-  onAnnotationChange={handleUpdate} // Observer
-/>
-Avantage : Mises à jour en temps réel, collaboration multi-utilisateurs
-→ ADR-004 : Système d'annotations
-
-📊 Hiérarchie des types
-mermaidgraph TB
-    subgraph "CORE"
-        VAR[Variables<br/>X/Y/M1/M2/M3]
-        CALC[Calculations<br/>Input/Output]
-        VALID[Validation<br/>Metrics/Results]
-    end
-    
-    subgraph "ALGORITHMS"
-        BASE[BaseAlgorithm<br/>Interface générique]
-        UNIV[UniversalAlgorithm<br/>Interface unifiée]
-        DESC[AlgorithmDescriptor<br/>Métadonnées]
-    end
-    
-    subgraph "UI"
-        PANEL[ResultsPanelProps]
-        METRICS[MetricsPanelProps]
-        DISPLAY[DisplayConfig]
-    end
-    
-    subgraph "UTILS"
-        NORM[Normalizers<br/>normalizeXLabel...]
-        CONV[Converters<br/>toUniversalResult...]
-    end
-    
-    VAR --> CALC
-    CALC --> VALID
-    
-    VALID --> BASE
-    BASE --> UNIV
-    UNIV --> DESC
-    
-    VALID --> PANEL
-    PANEL --> METRICS
-    METRICS --> DISPLAY
-    
-    VALID --> CONV
-    CONV --> NORM
-    
-    style CORE fill:#e3f2fd
-    style ALGORITHMS fill:#fff9c4
-    style UI fill:#f3e5f5
-    style UTILS fill:#e8f5e9
-→ Documentation types
-
-🔐 Règles d'architecture (IMPORTANTES)
-✅ À FAIRE
-
-UI consomme CORE, jamais l'inverse
-ALGORITHMS consomme CORE, pas UI
-UTILS est transversal mais pur (pas de React/MUI)
-Tous les algos passent par l'adaptateur universel
-Types centralisés dans types/
-
-❌ À ÉVITER
-
-Importer UI dans ALGORITHMS ou CORE
-Importer React/MUI dans UTILS
-Créer des wrappers spécifiques (wrapX, wrapY, etc.)
-Types dupliqués entre modules
-Logique métier dans les composants UI
-
-→ Checklist de validation
-
-🎯 Points d'entrée par cas d'usage
-👨‍💻 Je veux créer un algorithme M1
-typescript// 1. Créer la classe
-class MyM1 extends BaseM1Calculator { }
-
-// 2. Enregistrer
-const universal = createUniversalAlgorithm(new MyM1(), "M1");
-algorithmRegistry.register("MyM1", universal);
-
-// 3. Utiliser dans UI
-<BaseAlgorithmTesting target="M1" defaultClassifier="MyM1" />
-→ Tutorial complet
-
-🖥️ Je veux afficher des résultats
-typescript<ResultsPanel
-  results={validationResults}
-  targetKind="M1"  // Dispatch automatique métriques numériques
-  classifierLabel="M1 Counter v1.0"
-/>
-→ API ResultsPanel
-
-📊 Je veux comparer plusieurs algorithmes
-typescript<TechnicalBenchmark
-  benchmarkResults={[
-    { algorithmName: "M1ActionVerbCounter", metrics: {...} },
-    { algorithmName: "RegexM1Calculator", metrics: {...} },
-  ]}
-/>
-→ API TechnicalBenchmark
-
-🏷️ Je veux des colonnes personnalisées
-typescriptconst customColumns: ExtraColumn[] = [
-  {
-    id: "custom-col",
-    header: "Ma colonne",
-    render: (row) => <Chip label={row.metadata?.myField} />
-  }
-];
-
-<ResultsPanel extraColumns={customColumns} />
-→ API ExtraColumns
-
-📚 Ressources complémentaires
-Documentation
-
-Design Patterns détaillés
-Flux de données complet
-Système de types
-
-Décisions d'architecture
-
-ADR-001 : Types centralisés
-ADR-002 : Adaptateur universel
-ADR-003 : Dispatch métriques
-ADR-004 : Annotations expertes
-
-Guides
-
-Ajouter un algorithme
-Créer un composant UI
-Troubleshooting
-
-
-⏱️ Temps de lecture : ~15 minutes
-🎯 Prochaine étape : Design Patterns détaillés
+<style>#mermaid-1759313139993{font-family:sans-serif;font-size:16px;fill:#333;}#mermaid-1759313139993 .error-icon{fill:#552222;}#mermaid-1759313139993 .error-text{fill:#552222;stroke:#552222;}#mermaid-1759313139993 .edge-thickness-normal{stroke-width:2px;}#mermaid-1759313139993 .edge-thickness-thick{stroke-width:3.5px;}#mermaid-1759313139993 .edge-pattern-solid{stroke-dasharray:0;}#mermaid-1759313139993 .edge-pattern-dashed{stroke-dasharray:3;}#mermaid-1759313139993 .edge-pattern-dotted{stroke-dasharray:2;}#mermaid-1759313139993 .marker{fill:#333333;}#mermaid-1759313139993 .marker.cross{stroke:#333333;}#mermaid-1759313139993 svg{font-family:sans-serif;font-size:16px;}#mermaid-1759313139993 .label{font-family:sans-serif;color:#333;}#mermaid-1759313139993 .label text{fill:#333;}#mermaid-1759313139993 .node rect,#mermaid-1759313139993 .node circle,#mermaid-1759313139993 .node ellipse,#mermaid-1759313139993 .node polygon,#mermaid-1759313139993 .node path{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#mermaid-1759313139993 .node .label{text-align:center;}#mermaid-1759313139993 .node.clickable{cursor:pointer;}#mermaid-1759313139993 .arrowheadPath{fill:#333333;}#mermaid-1759313139993 .edgePath .path{stroke:#333333;stroke-width:1.5px;}#mermaid-1759313139993 .flowchart-link{stroke:#333333;fill:none;}#mermaid-1759313139993 .edgeLabel{background-color:#e8e8e8;text-align:center;}#mermaid-1759313139993 .edgeLabel rect{opacity:0.5;background-color:#e8e8e8;fill:#e8e8e8;}#mermaid-1759313139993 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#mermaid-1759313139993 .cluster text{fill:#333;}#mermaid-1759313139993 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:sans-serif;font-size:12px;background:hsl(80,100%,96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#mermaid-1759313139993:root{--mermaid-font-family:sans-serif;}#mermaid-1759313139993:root{--mermaid-alt-font-family:sans-serif;}#mermaid-1759313139993 flowchart{fill:apa;}</style>

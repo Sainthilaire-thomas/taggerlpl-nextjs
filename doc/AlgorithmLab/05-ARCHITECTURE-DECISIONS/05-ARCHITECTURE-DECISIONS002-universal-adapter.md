@@ -1,30 +1,48 @@
 ﻿
-ADR-002 : 
-Status: Active
-Date: Janvier 2025
-Décideurs: Équipe AlgorithmLab
-Contexte
-[TODO: Description du problème/situation]
-Décision
-[TODO: Solution choisie]
-Conséquences
-Positives
+# ADR-002 : Adaptateur universel
 
-Avantage 1
-Avantage 2
+**Status**: Active
+**Date**: Janvier 2025
+**Décideurs**: Équipe AlgorithmLab
 
-Négatives
+## Contexte
 
-Contrainte 1
-Contrainte 2
+Plusieurs algorithmes cohabitent (regex, spaCy, LLM). Chacun expose ses propres signatures (`classify`, `predict`, etc.), rendant difficile :
 
-Alternatives considérées
+- l’orchestration dans les hooks,
+- la comparaison des résultats,
+- l’intégration UI.
 
-Alternative 1 : Description
-Alternative 2 : Description
+## Décision
 
-Références
+Créer un **adaptateur universel** (`UniversalAlgorithm`) pour standardiser :
 
-Documentation liée
+- `run(input) → { prediction, confidence, metadata }`
+- `runBatch(inputs[])`
+- `describe() → AlgorithmMetadata`
+- `validateConfig()`
 
-→ Retour ADRs
+Un wrapper est prévu pour les implémentations legacy, mais l’interface universelle est la norme.
+
+## Conséquences
+
+### Positives
+
+- Comparaison multi-algorithmes simplifiée.
+- UI et métriques unifiées sur un même contrat.
+- Ajout de nouveaux algos facilité.
+
+### Négatives
+
+- Légère surcouche de code (adapters).
+- Perte potentielle de certaines spécificités (ex. formats custom).
+
+## Alternatives considérées
+
+- **Laisser chaque algo exposer sa propre API** : complexité élevée pour la maintenance.
+- **Convertir tous les algorithmes directement au format universel** : migration lourde, pas progressive.
+
+## Références
+
+- [BaseAlgorithm](../04-API-REFERENCE/algorithms/base-algorithm.md)
+- [AlgorithmRegistry](../04-API-REFERENCE/algorithms/algorithm-registry.md)

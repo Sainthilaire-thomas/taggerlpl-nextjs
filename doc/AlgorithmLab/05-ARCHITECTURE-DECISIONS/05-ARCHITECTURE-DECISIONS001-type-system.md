@@ -1,30 +1,45 @@
 ﻿
-ADR-001 : 
-Status: Active
-Date: Janvier 2025
-Décideurs: Équipe AlgorithmLab
-Contexte
-[TODO: Description du problème/situation]
-Décision
-[TODO: Solution choisie]
-Conséquences
-Positives
+# ADR-001 : Système de types centralisé
 
-Avantage 1
-Avantage 2
+**Status**: Active
+**Date**: Janvier 2025
+**Décideurs**: Équipe AlgorithmLab
 
-Négatives
+## Contexte
 
-Contrainte 1
-Contrainte 2
+Initialement, les types étaient dispersés dans différents modules (composants, hooks, algorithmes).Cela engendrait :
 
-Alternatives considérées
+- des duplications de définitions,
+- des incohérences entre modules,
+- une difficulté à documenter et maintenir les signatures.
 
-Alternative 1 : Description
-Alternative 2 : Description
+## Décision
 
-Références
+Mettre en place un **système de types centralisé** dans le répertoire `types/`, découpé par domaine fonctionnel :
 
-Documentation liée
+- `types/core` → structures fondamentales (metrics, gold standard, erreurs),
+- `types/algorithms` → contrats algorithmes (BaseAlgorithm, résultats, metadata),
+- `types/ui` → props pour composants UI.
 
-→ Retour ADRs
+## Conséquences
+
+### Positives
+
+- Source unique de vérité pour les définitions.
+- Cohérence garantie entre algorithmes, hooks et composants UI.
+- Documentation TypeDoc facilitée.
+
+### Négatives
+
+- Migration initiale coûteuse (refactor des imports).
+- Risque de dépendances circulaires si l’organisation est mal respectée.
+
+## Alternatives considérées
+
+- **Définir les types localement par module** : trop fragmenté et sujet à incohérences.
+- **Génération automatique complète à partir du code** : peu lisible et pas aligné avec les concepts métier.
+
+## Références
+
+- [04-API-REFERENCE/types](../04-API-REFERENCE/types/)
+- [01-ARCHITECTURE/type-system.md](../01-ARCHITECTURE/type-system.md)

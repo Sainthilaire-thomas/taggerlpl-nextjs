@@ -6,20 +6,7 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |   3-create-ui-types.sh
 |   4-create-utils-types.sh
 |   5-create-main-index.sh
-|   ALGORIHTMLAB_3LEVEL.MD
-|   ALGORIHTMLAB_NEW_ARBO.MD
 |   algorithm-lab-imports.txt
-|   ALGORITHMLAB_DONNEES_ANALYSEES.MD
-|   ALGORITHMLAB_FINETUNING.MD
-|   ALGORITHMLAB_FLUX_LNCER_TEST.MD
-|   ALGORITHMLAB_FLUX_M2.MD
-|   ALGORITHMLAB_MIGRATION.MD
-|   ALGORITHMLAB_MIG_PHASE1.MD
-|   ALGORITHMLAB_MultiClassifiers.MD
-|   ALGORITHMLAB_QUIFAITQUOI.MD
-|   ALGORITHMLAB_RESULTS.MD
-|   ALGORITHMLAB_RESULTSPANEL.MD
-|   LGORITHMLAB_NORM_INPUT_ALGO.MD
 |   
 +---algorithms
 |   \---level1
@@ -56,7 +43,7 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |       |           m2-utils.ts
 |       |           
 |       +---M3Algorithms
-|       |   |   PauseM3Calculator.tsx
+|       |   |   PausesM3Calculator.tsx
 |       |   |   
 |       |   \---shared
 |       |           BaseM3Calculator.ts
@@ -69,12 +56,12 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |       |       ClassifierRegistry.ts
 |       |       index.ts
 |       |       initializeAlgorithms.ts
-|       |       legacyAdapters.ts
 |       |       PerformanceMetrics.ts
 |       |       
 |       +---XAlgorithms
 |       |   |   index.ts
 |       |   |   OpenAI3TXClassifier.ts
+|       |   |   OpenAIXClassifier copy.ts
 |       |   |   OpenAIXClassifier.ts
 |       |   |   RegexXClassifier.ts
 |       |   |   SpacyXClassifier.ts
@@ -240,6 +227,8 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |   |       branche-components-level1.md
 |   |       branche-components-level2-shared.md
 |   |       decisions.md
+|   |       dhl.pdf
+|   |       requete-turntagged-verification.md
 |   |       
 |   +---modules
 |   |   |   template-module.md
@@ -252,18 +241,37 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |   |   |   \---Level1
 |   |   +---level2
 |   |   \---shared
+|   +---old_docs
+|   |       ALGORIHTMLAB_3LEVEL.MD
+|   |       ALGORIHTMLAB_NEW_ARBO.MD
+|   |       ALGORITHMLAB_DONNEES_ANALYSEES.MD
+|   |       ALGORITHMLAB_FINETUNING.MD
+|   |       ALGORITHMLAB_FLUX_LNCER_TEST.MD
+|   |       ALGORITHMLAB_FLUX_M2.MD
+|   |       ALGORITHMLAB_MIGRATION.MD
+|   |       ALGORITHMLAB_MIG_PHASE1.MD
+|   |       ALGORITHMLAB_MultiClassifiers.MD
+|   |       ALGORITHMLAB_QUIFAITQUOI.MD
+|   |       ALGORITHMLAB_RESULTS.MD
+|   |       ALGORITHMLAB_RESULTSPANEL.MD
+|   |       
 |   +---sessions
 |   |       2025-01-15-setup-documentation.md
 |   |       2025-09-04-normalisation-types.md
 |   |       2025-09-04-setup-M2.md
 |   |       2025-09-06-migration-types.md
 |   |       2025-09-08-migration-XYM1M2M2-nouvelle interface.md
+|   |       2025-09-11-fin-migration.MD
+|   |       2025-09-11-normalisation-chargement-corpus.MD
+|   |       2029-09-13-tuning-openAIX.md
 |   |       template-session.md
+|   |       tuning-openAI.json
 |   |       
 |   \---types
 |           referencetypes.md
 |           
 +---hooks
+|   |   normalizeUniversalToTV.ts
 |   |   useClassifierConfiguration.ts
 |   |   useClassifierStatus.ts
 |   |   useLevel0Validation.ts
@@ -272,11 +280,6 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |   |   useWorkflowManagement.ts
 |   |   
 |   \---level1
-|           useM1AlgorithmTesting.ts
-|           useM2AlgorithmTesting.ts
-|           useM3AlgorithmTesting.ts
-|           useXAlgorithmTesting.ts
-|           
 +---types
 |   |   enrichir les types.md
 |   |   index.ts
@@ -315,7 +318,9 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |   |       
 |   \---utils
 |           converters.ts
+|           corpusFilters.ts
 |           index.ts
+|           inputPreparation.ts
 |           normalizers.ts
 |           
 \---utils
