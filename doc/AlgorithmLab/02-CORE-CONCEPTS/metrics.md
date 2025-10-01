@@ -47,10 +47,10 @@ function calculateAccuracy(results: ValidationResult[]): number {
 
 **Interprétation** :
 
-- **0.95+ (95%)** : Excellent
-- **0.85-0.94** : Très bon
-- **0.70-0.84** : Acceptable
-- **< 0.70** : Insuffisant
+* **0.95+ (95%)** : Excellent
+* **0.85-0.94** : Très bon
+* **0.70-0.84** : Acceptable
+* **< 0.70** : Insuffisant
 
 **Exemple** :
 
@@ -63,8 +63,8 @@ function calculateAccuracy(results: ValidationResult[]): number {
 
 **Limitations** :
 
-- ⚠️ Peu fiable avec des **classes déséquilibrées**
-- Exemple : Si 95% des tours sont "EXPLICATION", un algorithme qui prédit toujours "EXPLICATION" aura 95% d'accuracy mais sera inutile
+* ⚠️ Peu fiable avec des **classes déséquilibrées**
+* Exemple : Si 95% des tours sont "EXPLICATION", un algorithme qui prédit toujours "EXPLICATION" aura 95% d'accuracy mais sera inutile
 
 ---
 
@@ -99,8 +99,8 @@ function calculatePrecision(
 
 **Interprétation** :
 
-- **Haute précision** : Peu de faux positifs (on ne se trompe pas quand on prédit cette classe)
-- **Basse précision** : Beaucoup de faux positifs (on sur-prédit cette classe)
+* **Haute précision** : Peu de faux positifs (on ne se trompe pas quand on prédit cette classe)
+* **Basse précision** : Beaucoup de faux positifs (on sur-prédit cette classe)
 
 **Exemple pour X = "ENGAGEMENT"** :
 
@@ -113,8 +113,8 @@ function calculatePrecision(
 
 **Cas d'usage** :
 
-- Prioritaire quand les **faux positifs coûtent cher**
-- Exemple : Un algo qui détecte "ENGAGEMENT" doit être précis pour ne pas créer de fausses promesses d'action
+* Prioritaire quand les **faux positifs coûtent cher**
+* Exemple : Un algo qui détecte "ENGAGEMENT" doit être précis pour ne pas créer de fausses promesses d'action
 
 ---
 
@@ -149,8 +149,8 @@ function calculateRecall(
 
 **Interprétation** :
 
-- **Haut rappel** : Peu de faux négatifs (on détecte bien tous les cas de cette classe)
-- **Bas rappel** : Beaucoup de faux négatifs (on rate des cas importants)
+* **Haut rappel** : Peu de faux négatifs (on détecte bien tous les cas de cette classe)
+* **Bas rappel** : Beaucoup de faux négatifs (on rate des cas importants)
 
 **Exemple pour X = "ENGAGEMENT"** :
 
@@ -163,8 +163,8 @@ function calculateRecall(
 
 **Cas d'usage** :
 
-- Prioritaire quand les **faux négatifs coûtent cher**
-- Exemple : Un algo qui détecte "CLIENT_NEGATIF" doit avoir un haut rappel pour ne pas rater des signaux d'insatisfaction
+* Prioritaire quand les **faux négatifs coûtent cher**
+* Exemple : Un algo qui détecte "CLIENT_NEGATIF" doit avoir un haut rappel pour ne pas rater des signaux d'insatisfaction
 
 ---
 
@@ -206,9 +206,9 @@ function calculateF1PerClass(
 
 **Interprétation** :
 
-- **F1 = 1.0** : Precision et Recall parfaits
-- **F1 = 0.0** : Aucune détection correcte
-- **F1 élevé** : Bon équilibre entre faux positifs et faux négatifs
+* **F1 = 1.0** : Precision et Recall parfaits
+* **F1 = 0.0** : Aucune détection correcte
+* **F1 élevé** : Bon équilibre entre faux positifs et faux négatifs
 
 **Exemple** :
 
@@ -221,14 +221,14 @@ function calculateF1PerClass(
 
 **Seuils recommandés** :
 
-- **F1 > 0.85** : Excellent
-- **F1 = 0.70-0.84** : Bon
-- **F1 < 0.70** : À améliorer
+* **F1 > 0.85** : Excellent
+* **F1 = 0.70-0.84** : Bon
+* **F1 < 0.70** : À améliorer
 
 **Usage dans AlgorithmLab** :
 
-- Métrique principale pour comparer les algorithmes X/Y/M2
-- Calculée par classe puis moyennée (macro-average)
+* Métrique principale pour comparer les algorithmes X/Y/M2
+* Calculée par classe puis moyennée (macro-average)
 
 ---
 
@@ -294,11 +294,11 @@ function calculateCohenKappa(results: ValidationResult[]): number {
 
 **Interprétation (Landis & Koch, 1977)** :
 
-- **κ > 0.80** : Accord quasi-parfait
-- **κ = 0.61-0.80** : Accord substantiel
-- **κ = 0.41-0.60** : Accord modéré
-- **κ = 0.21-0.40** : Accord faible
-- **κ < 0.20** : Accord léger à nul
+* **κ > 0.80** : Accord quasi-parfait
+* **κ = 0.61-0.80** : Accord substantiel
+* **κ = 0.41-0.60** : Accord modéré
+* **κ = 0.21-0.40** : Accord faible
+* **κ < 0.20** : Accord léger à nul
 
 **Exemple** :
 
@@ -312,9 +312,9 @@ function calculateCohenKappa(results: ValidationResult[]): number {
 
 **Usage dans AlgorithmLab** :
 
-- **Level 0** : Mesurer l'accord inter-annotateur
-- **Level 1** : Valider la cohérence algorithme vs gold standard
-- **Seuil minimal** : κ > 0.70 pour publication scientifique
+* **Level 0** : Mesurer l'accord inter-annotateur
+* **Level 1** : Valider la cohérence algorithme vs gold standard
+* **Seuil minimal** : κ > 0.70 pour publication scientifique
 
 ---
 
@@ -375,10 +375,10 @@ function buildConfusionMatrix(
 
 **Lecture** :
 
-- **Diagonale** : Classifications correctes
-- **Hors diagonale** : Erreurs (confusions)
-- **Ligne** : Ce que l'algo a prédit
-- **Colonne** : La vraie classe (gold standard)
+* **Diagonale** : Classifications correctes
+* **Hors diagonale** : Erreurs (confusions)
+* **Ligne** : Ce que l'algo a prédit
+* **Colonne** : La vraie classe (gold standard)
 
 **Exemple d'analyse** :
 
@@ -439,21 +439,21 @@ const mae = calculateMAE(m1Results);
 
 **Interprétation** :
 
-- **MAE faible** : Prédictions proches de la réalité
-- **MAE = 0** : Prédictions parfaites
-- **Unité** : Même unité que la variable (ex: verbes/100 tokens pour M1)
+* **MAE faible** : Prédictions proches de la réalité
+* **MAE = 0** : Prédictions parfaites
+* **Unité** : Même unité que la variable (ex: verbes/100 tokens pour M1)
 
 **Seuils pour M1 (densité de verbes)** :
 
-- **MAE < 3** : Excellent
-- **MAE = 3-5** : Bon
-- **MAE > 5** : À améliorer
+* **MAE < 3** : Excellent
+* **MAE = 3-5** : Bon
+* **MAE > 5** : À améliorer
 
 **Avantages** :
 
-- ✅ Facile à interpréter (même unité que les données)
-- ✅ Robuste aux outliers (pas de carré)
-- ✅ Pénalise uniformément toutes les erreurs
+* ✅ Facile à interpréter (même unité que les données)
+* ✅ Robuste aux outliers (pas de carré)
+* ✅ Pénalise uniformément toutes les erreurs
 
 ---
 
@@ -494,9 +494,9 @@ const rmse = calculateRMSE(m3Results);
 
 **Interprétation** :
 
-- **RMSE > MAE** : Il y a des erreurs importantes (outliers)
-- **RMSE ≈ MAE** : Erreurs homogènes
-- **Unité** : Même unité que la variable
+* **RMSE > MAE** : Il y a des erreurs importantes (outliers)
+* **RMSE ≈ MAE** : Erreurs homogènes
+* **Unité** : Même unité que la variable
 
 **Comparaison MAE vs RMSE** :
 
@@ -510,9 +510,9 @@ const rmse = calculateRMSE(m3Results);
 
 **Seuils pour M3 (charge cognitive [0-1])** :
 
-- **RMSE < 0.10** : Excellent
-- **RMSE = 0.10-0.20** : Bon
-- **RMSE > 0.20** : À améliorer
+* **RMSE < 0.10** : Excellent
+* **RMSE = 0.10-0.20** : Bon
+* **RMSE > 0.20** : À améliorer
 
 ---
 
@@ -568,16 +568,16 @@ const r2 = calculateR2(results);
 
 **Interprétation** :
 
-- **R² = 1.0** : Prédictions parfaites
-- **R² = 0.8-0.99** : Très bon modèle
-- **R² = 0.5-0.79** : Modèle acceptable
-- **R² < 0.5** : Modèle peu prédictif
-- **R² < 0** : Modèle pire qu'une simple moyenne
+* **R² = 1.0** : Prédictions parfaites
+* **R² = 0.8-0.99** : Très bon modèle
+* **R² = 0.5-0.79** : Modèle acceptable
+* **R² < 0.5** : Modèle peu prédictif
+* **R² < 0** : Modèle pire qu'une simple moyenne
 
 **Usage** :
 
-- Compare la performance de l'algo vs une baseline naïve (moyenne)
-- Utile pour M1/M3 où on veut prédire des valeurs continues
+* Compare la performance de l'algo vs une baseline naïve (moyenne)
+* Utile pour M1/M3 où on veut prédire des valeurs continues
 
 ---
 
@@ -620,12 +620,12 @@ function calculatePearsonCorrelation(results: NumericalResult[]): number {
 
 **Interprétation** :
 
-- **r = 1** : Corrélation parfaite positive
-- **r = 0** : Aucune corrélation linéaire
-- **r = -1** : Corrélation parfaite négative (inverse)
-- **|r| > 0.7** : Forte corrélation
-- **|r| = 0.4-0.7** : Corrélation modérée
-- **|r| < 0.4** : Faible corrélation
+* **r = 1** : Corrélation parfaite positive
+* **r = 0** : Aucune corrélation linéaire
+* **r = -1** : Corrélation parfaite négative (inverse)
+* **|r| > 0.7** : Forte corrélation
+* **|r| = 0.4-0.7** : Corrélation modérée
+* **|r| < 0.4** : Faible corrélation
 
 **4.2 Corrélation de Spearman (rang)**
 
@@ -678,7 +678,7 @@ function calculateMetrics(
         kappa: calculateCohenKappa(results),
         confusionMatrix: buildConfusionMatrix(results)
       };
-    
+  
     case "M1":
     case "M3":
       // Métriques numériques
@@ -758,14 +758,591 @@ console.log(`R²: ${metrics.r2.toFixed(3)}`);
 
 ---
 
-## 📚 Ressources complémentaires
+## 🎓 Guide d'interprétation avancée
 
-- **[Variables](variables.md)** - X/Y/M1/M2/M3 expliquées
-- **[Algorithmes](algorithms.md)** - Classification vs Calcul
-- **[Niveaux de validation](validation-levels.md)** - Level 0/1/2
-- **[API MetricsPanel](../04-API-REFERENCE/components/metrics-panel.md)**
+### Analyser une matrice de confusion
+
+**Identifier les confusions systématiques** :
+
+> **TODO** : Ajouter des exemples réels de matrices de confusion issues de vos tests
+>
+> * Inclure au moins 3 matrices réelles (X, Y, M2)
+> * Annoter les patterns de confusion les plus fréquents
+> * Expliquer les causes probables de chaque confusion
+
+**Ligne forte hors diagonale** = Sur-prédiction d'une classe
+
+```typescript
+// Exemple à compléter avec vos données
+// ENGAGEMENT prédit souvent alors que c'est OUVERTURE
+// → Vérifier les patterns "je vais..." vs "vous allez..."
+```
+
+**Colonne forte hors diagonale** = Sous-détection d'une classe
+
+```typescript
+// Exemple à compléter avec vos données
+// REFLET_VOUS raté et classé comme EXPLICATION
+// → Améliorer la détection des reformulations
+```
 
 ---
 
-⏱️ **Temps de lecture** : ~20 minutes
-🎯 **Prochaine étape** : [Niveaux de validation](validation-levels.md)
+### Trade-offs Precision vs Recall
+
+**Quand optimiser la Precision** :
+
+> **TODO** : Documenter les cas d'usage spécifiques à votre domaine
+>
+> * Quelles classes nécessitent une haute précision ?
+> * Quel impact business si faux positifs ?
+> * Exemples concrets de décisions basées sur la précision
+
+**Quand optimiser le Recall** :
+
+> **TODO** : Documenter les cas où le rappel est critique
+>
+> * Quelles classes ne doivent pas être ratées ?
+> * Quel impact si faux négatifs ?
+> * Exemples de situations où rater une détection est problématique
+
+---
+
+### Diagnostic des erreurs MAE/RMSE
+
+**Si RMSE >> MAE** :
+
+```typescript
+// Présence d'outliers importants
+// TODO : Ajouter méthode de détection des outliers
+// TODO : Documenter stratégies de gestion des outliers
+```
+
+**Si RMSE ≈ MAE** :
+
+```typescript
+// Erreurs homogènes = algorithme stable
+// TODO : Définir seuil acceptable pour votre domaine
+```
+
+---
+
+## 📊 Visualisations
+
+> **TODO** : Section complète à développer
+
+### Graphiques de performance
+
+**Graphiques nécessaires** :
+
+* [ ] Heatmap de matrice de confusion (avec annotations)
+* [ ] Scatter plot R² (valeurs prédites vs réelles)
+* [ ] Box plot des erreurs par catégorie
+* [ ] Courbes Precision-Recall par classe
+* [ ] Distribution des erreurs (histogramme MAE/RMSE)
+* [ ] Évolution temporelle des métriques
+
+**TODO** : Créer composants React pour chaque visualisation
+
+* Utiliser Recharts ou D3.js
+* Intégrer dans MetricsPanel
+* Support mode dark/light
+
+### Distribution des erreurs (M1/M3)
+
+```typescript
+// TODO : Implémenter composant ErrorDistribution
+interface ErrorDistributionProps {
+  results: NumericalResult[];
+  targetKind: "M1" | "M3";
+  bins?: number; // Nombre de barres histogramme
+}
+
+// Exemple de sortie attendue :
+// - Histogramme des erreurs absolues
+// - Ligne médiane pour identifier outliers
+// - Annotations des seuils (MAE, RMSE)
+```
+
+### Heatmap matrice de confusion
+
+```typescript
+// TODO : Implémenter composant ConfusionMatrixHeatmap
+interface ConfusionMatrixHeatmapProps {
+  matrix: ConfusionMatrix;
+  targetKind: "X" | "Y" | "M2";
+  highlightThreshold?: number; // Seuil pour highlighter confusions
+}
+
+// Fonctionnalités attendues :
+// - Couleurs graduées selon fréquence
+// - Tooltips avec pourcentages
+// - Export PNG/SVG
+```
+
+---
+
+## ❓ FAQ Métriques
+
+### Questions générales
+
+**Q : Mon accuracy est à 0.90 mais mon Kappa à 0.55, pourquoi ?**
+
+R : Classes  **déséquilibrées** . L'accuracy est trompeuse car elle ne corrige pas l'accord dû au hasard.
+
+> **TODO** : Ajouter exemple concret de votre corpus
+>
+> * Montrer distribution réelle des classes
+> * Calculer l'accord attendu par hasard
+> * Expliquer pourquoi Kappa est plus fiable
+
+**Q : MAE vs RMSE, lequel utiliser pour M1 ?**
+
+R :
+
+* **MAE** si vous voulez une métrique robuste aux outliers
+* **RMSE** si vous voulez pénaliser fortement les grandes erreurs
+* **Les deux** pour avoir une vue complète
+
+> **TODO** : Documenter votre choix pour M1 et M3
+>
+> * Quelle métrique privilégiez-vous et pourquoi ?
+> * Exemples de décisions prises grâce à MAE/RMSE
+
+**Q : Quelle est la différence entre F1-Score macro et micro ?**
+
+R :
+
+* **Macro** : Moyenne simple des F1 par classe (toutes les classes ont le même poids)
+* **Micro** : Calcul global sur l'ensemble (favorise les classes majoritaires)
+
+```typescript
+// Macro F1 (implémenté dans AlgorithmLab)
+const f1Macro = Object.values(f1PerClass).reduce((sum, f1) => sum + f1, 0) / 
+                Object.keys(f1PerClass).length;
+
+// TODO : Ajouter implémentation Micro F1 si nécessaire
+```
+
+---
+
+### Questions sur les classifications (X, Y, M2)
+
+**Q : Comment améliorer le F1-Score d'une catégorie spécifique ?**
+
+R : Diagnostic en 3 étapes :
+
+1. **Analyser Precision et Recall** séparément
+2. **Identifier le problème** :
+   * Precision faible → trop de faux positifs → patterns trop larges
+   * Recall faible → trop de faux négatifs → patterns trop stricts
+3. **Appliquer la correction** appropriée
+
+> **TODO** : Créer guide de diagnostic pas-à-pas
+>
+> * Arbres de décision pour diagnostiquer
+> * Exemples de corrections réussies
+> * Checklist d'amélioration
+
+**Q : Pourquoi ENGAGEMENT et OUVERTURE sont souvent confondus ?**
+
+> **TODO** : Analyser vos confusions réelles
+>
+> * Extraire exemples typiques de confusion
+> * Identifier les patterns ambigus ("je vais..." vs "vous allez...")
+> * Proposer règles de désambiguïsation
+
+**Q : Mon algorithme X a 0.87 d'accuracy mais rate systématiquement REFLET_ACQ, que faire ?**
+
+R : REFLET_ACQ est souvent **sous-représenté** dans le corpus.
+
+Solutions :
+
+1. **Oversampling** : Dupliquer exemples REFLET_ACQ dans le training set
+2. **Poids de classe** : Pénaliser davantage les erreurs sur REFLET_ACQ
+3. **Seuil adaptatif** : Baisser le seuil de détection pour cette classe
+
+> **TODO** : Documenter stratégies testées
+>
+> * Quelle approche a fonctionné ?
+> * Impact sur les autres métriques ?
+
+---
+
+### Questions sur les métriques numériques (M1, M3)
+
+**Q : Mon R² est négatif, est-ce normal ?**
+
+R :  **Non** , cela signifie que votre modèle est  **pire qu'une simple moyenne** .
+
+Causes possibles :
+
+* Algorithme non entraîné correctement
+* Features non pertinentes
+* Overfitting sur set d'entraînement
+
+> **TODO** : Documenter cas où cela s'est produit
+>
+> * Quelle était la cause ?
+> * Comment l'avez-vous corrigé ?
+
+**Q : MAE de 2.5 pour M1, est-ce acceptable ?**
+
+R :  **Oui** , c'est excellent (< 3). Cela signifie que votre algorithme se trompe en moyenne de 2.5 verbes/100 tokens.
+
+Contexte :
+
+* Densité moyenne M1 ≈ 20-25 verbes/100 tokens
+* Erreur relative : 2.5/22.5 ≈ 11%
+
+> **TODO** : Établir contexte de votre corpus
+>
+> * Quelle est la densité moyenne réelle ?
+> * Quelle erreur relative maximale acceptable ?
+
+**Q : Corrélation Pearson vs Spearman, laquelle choisir ?**
+
+R :
+
+* **Pearson** : Relation linéaire uniquement
+* **Spearman** : Toute relation monotone (plus robuste)
+
+Utilisez **Spearman** si :
+
+* Présence d'outliers
+* Relation non strictement linéaire
+* Données ordinales
+
+> **TODO** : Tester sur vos données M1/M3
+>
+> * Comparer Pearson vs Spearman
+> * Documenter différences observées
+
+---
+
+## 🎯 Benchmarks de référence
+
+> **TODO** : Section critique à compléter avec vos résultats réels
+
+### Baselines attendues par algorithme
+
+**Classification X (Stratégies conseiller)** :
+
+| Algorithme          | Type       | Accuracy | F1 macro | Kappa | Temps (ms) | Notes            |
+| ------------------- | ---------- | -------- | -------- | ----- | ---------- | ---------------- |
+| RegexXClassifier    | rule-based | ?        | ?        | ?     | ?          | Baseline simple  |
+| OpenAIXClassifier   | llm        | ?        | ?        | ?     | ?          | State-of-the-art |
+| OpenAI3TXClassifier | llm        | ?        | ?        | ?     | ?          | Avec contexte    |
+
+> **TODO** : Remplir ce tableau avec vos résultats réels sur un test set standard
+>
+> * Définir un test set de référence (ex: 200 samples)
+> * Lancer tous les algos disponibles
+> * Documenter conditions de test
+
+**Classification Y (Réactions client)** :
+
+| Algorithme       | Type       | Accuracy | F1 macro | Kappa | Temps (ms) | Notes                 |
+| ---------------- | ---------- | -------- | -------- | ----- | ---------- | --------------------- |
+| RegexYClassifier | rule-based | ?        | ?        | ?     | ?          | Baseline dictionnaire |
+
+> **TODO** : Compléter avec résultats Y
+
+**Calcul M1 (Densité verbes d'action)** :
+
+| Algorithme | Type | MAE | RMSE | R² | Temps (ms) | Notes |
+|------------|------|-----|------|----|-----------||-------|
+| M1ActionVerbCounter | metric | ? | ? | ? | ? | Avec lemmatisation |
+| RegexM1Calculator | rule-based | ? | ? | ? | ? | Patterns simples |
+
+> **TODO** : Compléter avec résultats M1
+
+**Calcul M3 (Charge cognitive)** :
+
+| Algorithme | Type | MAE | RMSE | R² | Temps (ms) | Notes |
+|------------|------|-----|------|----|-----------||-------|
+| PausesM3Calculator | metric | ? | ? | ? | ? | Hésitations + pauses |
+
+> **TODO** : Compléter avec résultats M3
+
+---
+
+### Performance cible par niveau de validation
+
+**Level 1 (Validation algorithmes)** :
+
+> **TODO** : Définir seuils minimaux pour production
+>
+> * Quels seuils pour considérer un algo "production-ready" ?
+> * Différencier seuils par criticité de la variable
+
+| Variable | Métrique primaire | Seuil minimal | Seuil excellent | Notes                |
+| -------- | ------------------ | ------------- | --------------- | -------------------- |
+| X        | F1 macro           | ?             | ?               | Critique pour thèse |
+| Y        | F1 macro           | ?             | ?               | Moins critique       |
+| M1       | MAE                | ?             | ?               | Métrique continue   |
+| M2       | F1 macro           | ?             | ?               | Expérimental        |
+| M3       | MAE                | ?             | ?               | Expérimental        |
+
+---
+
+## 🛠️ Guide d'optimisation des algorithmes
+
+> **TODO** : Section pratique à développer
+
+### Améliorer un classificateur (X, Y, M2)
+
+**Étape 1 : Diagnostic**
+
+```typescript
+// TODO : Créer fonction de diagnostic automatique
+function diagnoseClassifier(results: ValidationResult[]): DiagnosticReport {
+  // Analyse :
+  // - Classes avec F1 < 0.70
+  // - Confusions fréquentes (>10% d'une classe)
+  // - Déséquilibre du dataset
+  // - Variabilité inter-annotateurs
+  
+  return {
+    weakClasses: [], // Classes à améliorer
+    confusions: [],  // Paires fréquemment confondues
+    recommendations: [] // Actions concrètes
+  };
+}
+```
+
+**Étape 2 : Stratégies d'amélioration**
+
+| Problème               | Stratégie                  | Exemple |
+| ----------------------- | --------------------------- | ------- |
+| Precision faible        | Resserrer patterns          | ?       |
+| Recall faible           | Élargir patterns           | ?       |
+| Confusion X↔Y          | Ajouter règle de priorité | ?       |
+| Classe déséquilibrée | Oversampling / Pondération | ?       |
+
+> **TODO** : Documenter cas réels
+>
+> * Quelle stratégie a fonctionné pour quel problème ?
+> * Avant/après des métriques
+
+**Étape 3 : Validation itérative**
+
+```typescript
+// TODO : Définir processus d'amélioration
+// 1. Baseline actuelle
+// 2. Hypothèse d'amélioration
+// 3. Implémentation
+// 4. Test sur validation set
+// 5. Si amélioration > seuil → déployer
+```
+
+---
+
+### Améliorer un calculateur (M1, M3)
+
+**Étape 1 : Analyse des erreurs**
+
+```typescript
+// TODO : Créer fonction d'analyse d'erreurs
+function analyzeNumericalErrors(results: NumericalResult[]): ErrorAnalysis {
+  // Analyse :
+  // - Distribution des erreurs (normale ? bimodale ?)
+  // - Outliers (erreurs > 2×MAE)
+  // - Biais systématique (sur/sous-estimation)
+  // - Corrélation erreur-valeur réelle
+  
+  return {
+    errorDistribution: {},
+    outliers: [],
+    systematicBias: 0,
+    recommendations: []
+  };
+}
+```
+
+**Étape 2 : Stratégies de réduction d'erreur**
+
+| Problème MAE/RMSE  | Cause probable           | Solution |
+| ------------------- | ------------------------ | -------- |
+| Erreurs uniformes   | Dictionnaire incomplet   | ?        |
+| Outliers fréquents | Cas edge non gérés     | ?        |
+| Biais systématique | Normalisation incorrecte | ?        |
+| R² faible          | Features non pertinentes | ?        |
+
+> **TODO** : Documenter améliorations réussies
+>
+> * Quel problème spécifique ?
+> * Quelle solution implémentée ?
+> * Gain quantifié (avant/après)
+
+---
+
+## 📐 Métriques composites et personnalisées
+
+> **TODO** : Section avancée optionnelle
+
+### Score composite de performance
+
+```typescript
+// TODO : Définir votre score composite
+function calculateCompositeScore(metrics: Metrics): number {
+  // Exemple : pondération personnalisée
+  if ('accuracy' in metrics) {
+    // Classification : 60% F1 + 40% Kappa
+    return 0.6 * metrics.f1Macro + 0.4 * metrics.kappa;
+  } else {
+    // Numérique : 60% R² + 40% (1 - MAE/max)
+    return 0.6 * metrics.r2 + 0.4 * (1 - metrics.mae / 10);
+  }
+}
+```
+
+> **TODO** : Définir votre propre formule
+>
+> * Quels critères sont prioritaires ?
+> * Quelles pondérations ?
+> * Valider sur plusieurs algorithmes
+
+---
+
+### Métriques métier spécifiques
+
+> **TODO** : Créer métriques adaptées à votre domaine
+
+**Exemple : Taux de détection des conflits escaladés**
+
+```typescript
+// Pour Y : combien de CLIENT_NEGATIF détectés sur vrais négatifs graves ?
+interface ConflictDetectionMetrics {
+  severeNegativeRecall: number; // Rappel sur cas graves
+  falseAlarmRate: number; // Faux positifs sur cas neutres
+  avgResponseTime: number; // Latence de détection
+}
+```
+
+**Exemple : Coût moyen d'erreur**
+
+```typescript
+// Pondération business des erreurs
+const errorCosts = {
+  missedENGAGEMENT: 10, // Rater un engagement = grave
+  falseENGAGEMENT: 3,   // Faux engagement = moins grave
+  // ...
+};
+
+function calculateBusinessCost(results: ValidationResult[]): number {
+  // TODO : Implémenter calcul de coût métier
+  return results.reduce((cost, r) => {
+    if (r.predicted !== r.goldStandard) {
+      return cost + errorCosts[`${r.predicted}_${r.goldStandard}`] || 1;
+    }
+    return cost;
+  }, 0);
+}
+```
+
+---
+
+## 🔬 Tests statistiques avancés
+
+> **TODO** : Section pour Level 2 (tests d'hypothèses)
+
+### Tests de significativité
+
+**Comparer deux algorithmes** :
+
+```typescript
+// TODO : Implémenter test de McNemar pour classifications
+function mcnemarTest(
+  results1: ValidationResult[],
+  results2: ValidationResult[]
+): {
+  statistic: number;
+  pValue: number;
+  significant: boolean;
+} {
+  // Test si différence entre algo1 et algo2 est significative
+}
+
+// TODO : Implémenter test t apparié pour métriques numériques
+function pairedTTest(
+  errors1: number[],
+  errors2: number[]
+): StatTestResult {
+  // Test si MAE1 ≠ MAE2 significativement
+}
+```
+
+---
+
+### Intervalles de confiance
+
+```typescript
+// TODO : Calculer intervalles de confiance (bootstrap)
+function calculateConfidenceInterval(
+  results: ValidationResult[],
+  metric: MetricType,
+  confidence: number = 0.95,
+  nBootstrap: number = 1000
+): { lower: number; upper: number } {
+  // Bootstrap pour estimer IC
+}
+```
+
+> **TODO** : Intégrer dans MetricsPanel
+>
+> * Afficher IC pour chaque métrique
+> * Visualiser avec barres d'erreur
+
+---
+
+## 📚 Ressources complémentaires
+
+* **[Variables](https://claude.ai/chat/variables.md)** - X/Y/M1/M2/M3 expliquées
+* **[Algorithmes](https://claude.ai/chat/algorithms.md)** - Classification vs Calcul
+* **[Niveaux de validation](https://claude.ai/chat/validation-levels.md)** - Level 0/1/2
+* **[API MetricsPanel](https://claude.ai/04-API-REFERENCE/components/metrics-panel.md)**
+
+---
+
+## 🎯 Checklist avant production
+
+> **TODO** : Personnaliser selon vos critères
+
+### Pour un classificateur (X, Y, M2)
+
+* [ ] Accuracy > 0.85 sur test set
+* [ ] Kappa > 0.70 (accord substantiel)
+* [ ] F1-Score > 0.75 pour toutes les classes critiques
+* [ ] Pas de confusion > 15% entre deux classes
+* [ ] Temps de traitement < 100ms par sample
+* [ ] Testé sur minimum 200 samples
+* [ ] Validé sur plusieurs domaines/origines
+* [ ] Documentation des cas limites
+* [ ] Code review et tests unitaires
+
+### Pour un calculateur (M1, M3)
+
+* [ ] MAE < seuil défini (3 pour M1, 0.08 pour M3)
+* [ ] RMSE < 1.5×MAE (pas trop d'outliers)
+* [ ] R² > 0.85 (bon pouvoir prédictif)
+* [ ] Corrélation > 0.80
+* [ ] Pas de biais systématique (over/under-estimation)
+* [ ] Temps de traitement < 50ms par sample
+* [ ] Testé sur minimum 200 samples
+* [ ] Validé sur plage complète de valeurs
+* [ ] Gestion des cas edge (texte vide, très court/long)
+* [ ] Documentation des limites
+
+---
+
+⏱️ **Temps de lecture** : ~25 minutes
+🎯 **Prochaine étape** : [Niveaux de validation](https://claude.ai/chat/validation-levels.md)
+
+**🚧 État de la documentation** :
+
+* ✅ Formules et implémentations complètes
+* ✅ Exemples d'utilisation
+* ⚠️ TODO : Benchmarks réels à compléter
+* ⚠️ TODO : Visualisations à créer
+* ⚠️ TODO : Guide d'optimisation à enrichir avec cas réels
