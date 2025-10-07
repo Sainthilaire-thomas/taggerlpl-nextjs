@@ -361,3 +361,75 @@ export function createValidationConfig(
     },
   };
 }
+
+// ========================================================================
+// GESTION DES VERSIONS ALGORITHMES
+// ========================================================================
+
+
+export type AlgorithmVersionId = string; // ex: "v2.3.1-openai-gpt4"
+
+export interface AlgorithmVersionMetadata {
+  version_id: AlgorithmVersionId;
+  version_name: string;
+  created_at: string;
+  is_active: boolean;
+  deprecated: boolean;
+  description?: string;
+  changelog?: string;
+
+  // ✅ Ajouter les propriétés pour M1
+  m1_key?: string;
+  m1_version?: string;
+  m1_config?: Record<string, any>;
+
+  // ✅ Ajouter les propriétés pour M2
+  m2_key?: string;
+  m2_version?: string;
+  m2_config?: Record<string, any>;
+
+  // ✅ Ajouter les propriétés pour M3
+  m3_key?: string;
+  m3_version?: string;
+  m3_config?: Record<string, any>;
+
+  // Optionnel : pour X et Y si vous en avez besoin
+  x_key?: string;
+  x_version?: string;
+  x_config?: Record<string, any>;
+
+  y_key?: string;
+  y_version?: string;
+  y_config?: Record<string, any>;
+
+  // Métriques Level1
+  level1_metrics?: Level1ValidationMetrics;
+}
+
+export interface VariableConfig {
+  key: string; // classifier key dans le registry
+  version: string; // version interne de l'algo
+  config: Record<string, any>; // hyperparamètres
+}
+
+export interface Level1ValidationMetrics {
+  // Pour X/Y (classification)
+  accuracy?: number;
+  precision?: Record<string, number>; // par label
+  recall?: Record<string, number>;
+  f1?: Record<string, number>;
+  kappa?: number;
+  confusion_matrix?: Record<string, Record<string, number>>;
+  
+  // Pour M1/M2/M3 (numériques)
+  mae?: number;
+  rmse?: number;
+  r2?: number;
+  pearson_r?: number;
+  bias?: number;
+  
+  // Métadonnées
+  sample_size: number;
+  test_date: string;
+  gold_standard_version?: string;
+}

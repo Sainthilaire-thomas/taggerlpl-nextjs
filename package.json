@@ -13,7 +13,8 @@
     "test:ci": "jest --ci --coverage --runInBand --watchAll=false",
     "test:openai": "jest tests/transcriptionApiClient.test.ts",
     "test:assemblyai": "jest tests/diarizationApiClient.test.ts",
-    "test:routes": "jest tests/api_*.test.ts"
+    "test:routes": "jest tests/api_*.test.ts",
+    "precompute:h2": "tsx scripts/precompute-h2-results.ts"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.3.0",
@@ -42,12 +43,14 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@welldone-software/why-did-you-render": "^10.0.1",
+    "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "15.3.1",
     "jest": "^29.5.0",
     "jest-environment-jsdom": "^29.5.0",
     "tailwindcss": "^4",
     "ts-jest": "^29.1.0",
+    "tsx": "^4.20.6",
     "typescript": "^5"
   },
   "jest": {

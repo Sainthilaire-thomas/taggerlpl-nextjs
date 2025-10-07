@@ -99,6 +99,8 @@ export interface AlgorithmMetadata {
   family?: string;
   evidences?: string[];
   topProbs?: { label: string; prob: number }[];
+   config?: Record<string, any>;
+  parameters?: Record<string, any>;
 }
 
 // ========================================================================
