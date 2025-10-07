@@ -115,6 +115,7 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |   |   |       ClassifierConfiguration.tsx
 |   |   |       CrossValidation.tsx
 |   |   |       EnsembleTuning.tsx
+|   |   |       VersionComparator.tsx
 |   |   |       
 |   |   +---individual
 |   |   |   |   ConfusionMatrix.tsx
@@ -129,6 +130,8 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |   |   |           
 |   |   \---shared
 |   |       \---results
+|   |           |   VersionSelector.tsx
+|   |           |   
 |   |           +---base
 |   |           |   |   extraColumns.tsx
 |   |           |   |   MetricsPanel.classification.tsx
@@ -272,11 +275,13 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |           
 +---hooks
 |   |   normalizeUniversalToTV.ts
+|   |   useAlgorithmVersioning.ts
 |   |   useClassifierConfiguration.ts
 |   |   useClassifierStatus.ts
 |   |   useLevel0Validation.ts
 |   |   useLevel1Testing.ts
 |   |   useMultiAlgorithmComparison.ts
+|   |   usePostValidationVersioning.ts
 |   |   useWorkflowManagement.ts
 |   |   
 |   \---level1
@@ -325,4 +330,5 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |           
 \---utils
         metricsCalculation.ts
+        versionGenerator.ts
         
