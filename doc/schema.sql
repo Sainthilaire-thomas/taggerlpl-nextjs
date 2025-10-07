@@ -62,6 +62,12 @@ CREATE TABLE public.algorithm_version_registry (
   level1_metrics jsonb,
   description text,
   changelog text,
+  x_key text,
+  x_version text,
+  x_config jsonb,
+  y_key text,
+  y_version text,
+  y_config jsonb,
   CONSTRAINT algorithm_version_registry_pkey PRIMARY KEY (version_id)
 );
 CREATE TABLE public.avatars (

@@ -1,7 +1,4 @@
-//**Localisation** : `src/app/(protected)/analysis/components/AlgorithmLab/hooks/useH2Data.ts`
-
-//**Objectif** : Hook pour charger les données depuis `h2_analysis_pairs`
-
+// src/app/(protected)/analysis/components/AlgorithmLab/hooks/useH2Data.ts
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
@@ -55,14 +52,16 @@ export interface H2AnalysisPair {
   computation_status?: 'computed' | 'error' | 'pending';
 }
 
-export const useH2Data = (filters?: {
+export interface UseH2DataFilters {
   algorithmVersion?: string;
   computationStatus?: 'computed' | 'error' | 'pending';
   minPairs?: number;
-}) => {
-  const [h2Pairs, setH2Pairs] = useState([]);
+}
+
+export const useH2Data = (filters?: UseH2DataFilters) => {
+  const [h2Pairs, setH2Pairs] = useState<H2AnalysisPair[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchH2Pairs = async () => {
@@ -88,9 +87,19 @@ export const useH2Data = (filters?: {
         
         setH2Pairs(data || []);
         setError(null);
+        
+        console.log(`✅ useH2Data: ${data?.length || 0} paires chargées`);
+        
+        // Debug des annotations
+        const withAnnotations = (data || []).filter(
+          (pair: H2AnalysisPair) => Array.isArray(pair.annotations) && pair.annotations.length > 0
+        );
+        console.log(`📝 ${withAnnotations.length} paires avec annotations`);
+        
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erreur chargement H2');
-        console.error('Erreur useH2Data:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Erreur chargement H2';
+        setError(errorMessage);
+        console.error('❌ Erreur useH2Data:', err);
       } finally {
         setLoading(false);
       }

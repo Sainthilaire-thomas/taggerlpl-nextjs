@@ -78,6 +78,12 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
   const [versionDescription, setVersionDescription] = React.useState("");
   const [changelog, setChangelog] = React.useState("");
 
+  // --- 🆕 ÉTAT H2 UPDATE PROGRESS ---
+  const [h2UpdateProgress, setH2UpdateProgress] = React.useState<{
+    current: number;
+    total: number;
+  } | null>(null);
+
   // --- HOOKS EXISTANTS ---
   const level1Testing = useLevel1Testing();
 
@@ -85,7 +91,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
   const { 
     setActiveVersion, 
     loadVersion, 
-    updateVersionMetadata // ✅ FIX 1 : Import de la fonction manquante
+    updateVersionMetadata
   } = useAlgorithmVersioning();
   
   const { captureVersionAfterTest } = usePostValidationVersioning();
@@ -146,7 +152,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     return typeof pairsCount === "number" ? pairsCount : dataCount;
   }, [level1Testing]);
 
-  // --- 🆕 VALIDATION AVEC CAPTURE AUTO DE VERSION ---
+  // --- 🆕 VALIDATION AVEC CAPTURE AUTO DE VERSION + UPDATE H2 ---
   const runValidation = React.useCallback(async () => {
     if (!validateAlgorithm || !selectedModelId) return;
 
@@ -154,11 +160,31 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     setTestResults([]);
     setIsRunning(true);
     setCapturedVersionId(undefined);
+    setH2UpdateProgress(null); // 🆕 Reset progression
 
     try {
       // Validation existante
       const results = await validateAlgorithm(selectedModelId, sampleSize);
       setTestResults(results as TVValidationResultCore[]);
+
+      // 🆕 UPDATE H2 avec progression
+      console.log(`📝 Mise à jour H2 pour ${results.length} résultats...`);
+      
+      const updateStats = await level1Testing.updateH2WithResultsBatch(
+        results,
+        selectedModelId,
+        `v${meta.version ?? '1.0.0'}`,
+        (current, total) => {
+          setH2UpdateProgress({ current, total });
+          console.log(`📊 Progression H2: ${current}/${total} paires`);
+        }
+      );
+
+      console.log(`✅ Update H2 terminé:`, updateStats);
+      console.log(`   - ${updateStats.success} succès`);
+      console.log(`   - ${updateStats.errors} erreurs`);
+      
+      setH2UpdateProgress(null); // Reset progression
 
       // 🆕 Capture automatique de la version après test réussi
       const newVersionId = await captureVersionAfterTest(
@@ -182,6 +208,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     } catch (e: any) {
       console.error("❌ Validation error:", e);
       setError(e?.message || "Erreur inconnue");
+      setH2UpdateProgress(null); // Reset en cas d'erreur
     } finally {
       setIsRunning(false);
     }
@@ -193,6 +220,8 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     sampleSize,
     target,
     captureVersionAfterTest,
+    level1Testing,
+    meta.version,
   ]);
 
   // --- 🆕 ENRICHISSEMENT VERSION CAPTURÉE ---
@@ -220,12 +249,10 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
   };
 
   // --- 🆕 CHARGEMENT D'UNE VERSION EXISTANTE ---
-  // ✅ FIX 2 : Accès type-safe aux propriétés de version
   const handleLoadVersion = async (versionId: AlgorithmVersionId) => {
     try {
       const version = await loadVersion(versionId);
       
-      // 🔧 Accès type-safe selon targetKind
       const targetKey = target.toLowerCase() as 'm1' | 'm2' | 'm3';
       
       let varConfig: { 
@@ -234,7 +261,6 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
         config: Record<string, any> 
       } | undefined;
       
-      // Switch exhaustif pour accès sûr
       switch (targetKey) {
         case 'm1':
           varConfig = version.m1_key ? {
@@ -258,7 +284,6 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
           } : undefined;
           break;
         default:
-          // Pour X et Y, adapter selon votre schéma BDD
           console.warn(`Target ${target} : chargement version non implémenté`);
           varConfig = undefined;
       }
@@ -284,8 +309,6 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     try {
       await setActiveVersion(capturedVersionId);
       console.log(`✅ Version activée: ${capturedVersionId}`);
-      
-      // Feedback visuel
       alert(`Version ${capturedVersionId} définie comme active !`);
     } catch (err) {
       console.error("❌ Erreur activation version:", err);
@@ -403,6 +426,28 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
         domainLabel={domainLabel}
         supportsBatch={supportsBatch}
       />
+
+      {/* 🆕 BARRE DE PROGRESSION H2 UPDATE */}
+      {h2UpdateProgress && (
+        <Box sx={{ mt: -2, mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            📝 Mise à jour h2_analysis_pairs: {h2UpdateProgress.current} / {h2UpdateProgress.total} paires
+          </Typography>
+          <LinearProgress
+            variant="determinate"
+            value={(h2UpdateProgress.current / h2UpdateProgress.total) * 100}
+            sx={{ 
+              height: 8,
+              borderRadius: 4,
+              bgcolor: 'action.hover',
+              '& .MuiLinearProgress-bar': {
+                borderRadius: 4,
+                bgcolor: 'success.main',
+              }
+            }}
+          />
+        </Box>
+      )}
 
       {/* PROGRESS (existant) */}
       {isRunning && (
