@@ -1,4 +1,4 @@
-{
+﻿{
   "compilerOptions": {
     "baseUrl": ".",
     "target": "ES2017",
@@ -21,6 +21,9 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
+      "@/types": ["./src/types"],
+      "@/types/*": ["./src/types/*"],
+      "@/lib/*": ["./src/lib/*"],
       "@/algorithms/*": [
         "./src/app/(protected)/analysis/components/AlgorithmLab/algorithms/*"
       ],
@@ -41,7 +44,7 @@
     "node_modules",
     ".next",
     "out",
-    // Exclusions des anciens répertoires
+    // Exclusions des anciens rÃ©pertoires
     "src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/individual/**/*",
     "src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/comparison/**/*",
     "src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/clientclassifiers/RegexClientClassifier.ts",

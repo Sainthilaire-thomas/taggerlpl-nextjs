@@ -15,3 +15,6 @@ export * from './turn';
 
 // Transcription entities
 export * from './transcription';
+
+// H2 analysis entities
+export * from './h2.entities';
