@@ -14,8 +14,10 @@
     "test:openai": "jest tests/transcriptionApiClient.test.ts",
     "test:assemblyai": "jest tests/diarizationApiClient.test.ts",
     "test:routes": "jest tests/api_*.test.ts",
-    "precompute:h2": "tsx scripts/precompute-h2-results.ts"
-  },
+    "precompute:h2": "tsx scripts/precompute-h2-results.ts",
+    "generate:types": "pwsh -ExecutionPolicy Bypass -File ./scripts/generate-types.ps1"
+}
+  ,
   "dependencies": {
     "@auth0/auth0-react": "^2.3.0",
     "@emotion/react": "^11.14.0",

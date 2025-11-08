@@ -97,6 +97,29 @@
         "panel": "dedicated",
         "clear": true
       }
+    },
+    {
+      "label": "Generate Supabase Types",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/generate-types.ps1"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": true,
+        "echo": true,
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "group": "build",
+      "detail": "Generate database.types.ts from Supabase schema"
     }
   ]
 }
