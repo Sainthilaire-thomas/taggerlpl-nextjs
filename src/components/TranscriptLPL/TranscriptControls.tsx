@@ -7,6 +7,7 @@ import {
   Chip,
   Tooltip,
   Alert,
+  Stack,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
@@ -22,6 +23,20 @@ interface ExtendedTranscriptControlsProps extends TranscriptControlsProps {
   callId: string;
 }
 
+interface ExtendedRelationsStatus extends RelationsStatus {
+  contextDepth?: {
+    prev4: number;
+    prev3: number;
+    prev2: number;
+    prev1: number;
+    next1: number;
+    next2: number;
+    next3: number;
+    next4: number;
+  };
+  avgContextDepth?: number;
+}
+
 const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
   fontSize,
   setFontSize,
@@ -32,11 +47,10 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
   const { calculateAllNextTurnTags, getRelationsStatus } = useTaggingData();
   const [calculating, setCalculating] = useState(false);
   const [lastResult, setLastResult] = useState<number | null>(null);
-  const [relationsStatus, setRelationsStatus] =
-    useState<RelationsStatus | null>(null);
+  const [relationsStatus, setRelationsStatus] = useState<ExtendedRelationsStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
 
-  // Vérifier le statut des relations au chargement du composant
+  // Vérifier le statut des relations au chargement
   useEffect(() => {
     if (callId) {
       checkCurrentStatus();
@@ -49,6 +63,9 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
     setStatusLoading(true);
     try {
       const status = await getRelationsStatus(callId);
+      
+      // TODO: Ajouter un appel RPC pour récupérer la profondeur du contexte
+      // Pour l'instant, on utilise le status basique
       setRelationsStatus(status);
     } catch (error) {
       console.error("Erreur lors de la vérification du statut:", error);
@@ -60,7 +77,7 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
   const handleCalculateRelations = async () => {
     setCalculating(true);
     try {
-      console.log("Calcul des relations pour l'appel:", callId);
+      console.log("🚀 Calcul des relations étendues pour l'appel:", callId);
       const updatedCount = await calculateAllNextTurnTags(callId);
       setLastResult(updatedCount);
 
@@ -79,7 +96,6 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
     }
   };
 
-  // Fonction pour obtenir l'icône et la couleur selon le statut
   const getStatusDisplay = () => {
     if (statusLoading) {
       return {
@@ -99,8 +115,7 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
       };
     }
 
-    const { isCalculated, completenessPercent, missingRelations, totalTags } =
-      relationsStatus;
+    const { isCalculated, completenessPercent, missingRelations, totalTags } = relationsStatus;
 
     if (isCalculated) {
       return {
@@ -108,7 +123,7 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
         label: `Relations à jour (${completenessPercent.toFixed(1)}%)`,
         color: "success" as const,
         severity: "success" as const,
-        details: `${totalTags} tags analysés`,
+        details: `${totalTags} tags analysés - Contexte étendu (prev4→next4)`,
       };
     } else if (completenessPercent > 50) {
       return {
@@ -197,19 +212,16 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
           onClick={handleCalculateRelations}
           disabled={calculating || statusLoading}
           sx={{
-            minWidth: "160px",
+            minWidth: "200px",
             opacity: calculating ? 0.7 : 1,
           }}
         >
-          {calculating ? "Calcul..." : "Calculer Relations"}
+          {calculating ? "Calcul en cours..." : "Calculer Relations Étendues"}
         </Button>
 
         {/* Chip de statut des relations */}
         <Tooltip
-          title={
-            statusDisplay.details ||
-            "Cliquez sur 'Calculer Relations' pour plus d'infos"
-          }
+          title={statusDisplay.details || "Cliquez sur 'Calculer Relations' pour plus d'infos"}
           placement="top"
         >
           <Chip
@@ -219,7 +231,7 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
             color={statusDisplay.color}
             variant="outlined"
             sx={{
-              minWidth: "180px",
+              minWidth: "200px",
               cursor: "help",
             }}
           />
@@ -254,13 +266,27 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
         >
           {relationsStatus.missingRelations > 0 && (
             <>
-              <strong>
-                {relationsStatus.missingRelations} relations manquantes
-              </strong>{" "}
-              sur {relationsStatus.totalTags} tags. Les relations permettent
-              d'analyser les enchaînements conversationnels.
+              <strong>{relationsStatus.missingRelations} relations manquantes</strong> sur{" "}
+              {relationsStatus.totalTags} tags. Les relations permettent d'analyser les
+              enchaînements conversationnels avec un contexte étendu (prev4→next4).
             </>
           )}
+        </Alert>
+      )}
+
+      {/* Info sur le contexte étendu si calculé */}
+      {relationsStatus?.isCalculated && (
+        <Alert severity="success" sx={{ mt: 1 }}>
+          <Stack spacing={0.5}>
+            <Typography variant="body2">
+              ✅ Contexte étendu calculé : <strong>prev4, prev3, prev2, prev1</strong> et{" "}
+              <strong>next1, next2, next3, next4</strong>
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              8 tours de contexte par tag pour une analyse approfondie des enchaînements
+              conversationnels
+            </Typography>
+          </Stack>
         </Alert>
       )}
     </Box>

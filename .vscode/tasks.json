@@ -2,6 +2,49 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Generate Project Tree",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/generate-tree-simple.ps1"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
+      "label": "Generate Full Structure Report",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/generate-structure-report.ps1"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    },
+    {
       "label": "Dump AlgorithmLab Tree",
       "type": "process",
       "command": "cmd",
@@ -19,72 +62,6 @@
       ],
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
-    },
-    {
-      "label": "Generate Full Project Tree",
-      "type": "process",
-      "command": "cmd",
-      "args": [
-        "/c",
-        "if not exist \"docs\" mkdir \"docs\" && tree /F /A > \"docs\\project_tree.txt\" 2>nul & echo Project tree generated in docs\\project_tree.txt & exit /b 0"
-      ],
-      "options": { "cwd": "${workspaceFolder}" },
-      "problemMatcher": [],
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "clear": true
-      }
-    },
-    {
-      "label": "Generate Src Tree Only",
-      "type": "process",
-      "command": "cmd",
-      "args": [
-        "/c",
-        "if not exist \"docs\" mkdir \"docs\" && tree /F /A \".\\src\" > \"docs\\src_tree.txt\" 2>nul & echo Source tree generated in docs\\src_tree.txt & exit /b 0"
-      ],
-      "options": { "cwd": "${workspaceFolder}" },
-      "problemMatcher": [],
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "clear": true
-      }
-    },
-    {
-      "label": "Generate Calls DDD Tree",
-      "type": "process",
-      "command": "cmd",
-      "args": [
-        "/c",
-        "if not exist \"docs\" mkdir \"docs\" && tree /F /A \".\\src\\components\\calls\" > \"docs\\calls_ddd_tree.txt\" 2>nul & echo Calls DDD architecture tree generated in docs\\calls_ddd_tree.txt & exit /b 0"
-      ],
-      "options": { "cwd": "${workspaceFolder}" },
-      "problemMatcher": [],
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "clear": true
-      }
-    },
-    {
-      "label": "Generate All Trees",
-      "dependsOn": [
-        "Generate Full Project Tree",
-        "Generate Src Tree Only",
-        "Generate Calls DDD Tree"
-      ],
-      "dependsOrder": "sequence",
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "clear": true
-      }
     },
     {
       "label": "AlgorithmLab: Update Types Doc",

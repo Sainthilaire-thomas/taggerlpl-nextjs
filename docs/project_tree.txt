@@ -1,0 +1,888 @@
+﻿ARBORESCENCE PROJET TAGGERLPL
+================================================================================
+
+.env.local
+algorithmlab_tree.txt
+algorithm-lab-imports.txt
+erreurs-par-fichier.txt
+eslint.config.mjs
+jest.config.demo
+next.config.ts
+next-env.d.ts
+package.json
+package-lock.json
+postcss.config.mjs
+README copy.md
+README.md
+tsconfig.algorithmlab.json
+tsconfig.json
+|-- .vscode/
+|   |-- settings.json
+|   +-- tasks.json
+|-- doc/
+|   |-- AlgorithmLab/
+|   |   |-- 00-QUICKSTART/
+|   |   |   +-- 00-QUICKSTART.md
+|   |   |-- 01-ARCHITECTURE/
+|   |   |   |-- ​branche-components-level0.md
+|   |   |   |-- branche-algorithms.md
+|   |   |   |-- branche-components-level1.md
+|   |   |   |-- branche-components-level2-shared.md
+|   |   |   |-- data-flow.md
+|   |   |   |-- design-patterns.md
+|   |   |   |-- README.md
+|   |   |   +-- type-system.md
+|   |   |-- 02-CORE-CONCEPTS/
+|   |   |   |-- algorithms.md
+|   |   |   |-- metrics.md
+|   |   |   |-- README.md
+|   |   |   |-- validation-levels.md
+|   |   |   +-- variables.md
+|   |   |-- 03-DEVELOPER-GUIDES/
+|   |   |   |-- 03-DEVELOPER-GUIDESadd-new-algorithm.md
+|   |   |   |-- 03-DEVELOPER-GUIDEScreate-ui-component.md
+|   |   |   |-- 03-DEVELOPER-GUIDESextend-metrics.md
+|   |   |   |-- 03-DEVELOPER-GUIDESfine-tuning-pipeline.md
+|   |   |   |-- 03-DEVELOPER-GUIDESintegrate-llm.md
+|   |   |   +-- README.md
+|   |   |-- 04-API-REFERENCE/
+|   |   |   |-- algorithms/
+|   |   |   |   |-- algorithmsbase-algorithm.md
+|   |   |   |   |-- algorithmsregistry.md
+|   |   |   |   |-- algorithmsuniversal-adapter.md
+|   |   |   |   +-- initialize-algorithms.md
+|   |   |   |-- components/
+|   |   |   |   |-- componentsannotation-list.md
+|   |   |   |   |-- componentsextra-columns.md
+|   |   |   |   |-- componentsmetrics-panel.md
+|   |   |   |   |-- componentsresults-panel.md
+|   |   |   |   +-- run-panel.md
+|   |   |   |-- types/
+|   |   |   |   |-- README.md
+|   |   |   |   |-- typesalgorithms.md
+|   |   |   |   |-- typescore.md
+|   |   |   |   +-- typesui.md
+|   |   |   |-- utils/
+|   |   |   |   |-- utilsconverters.md
+|   |   |   |   |-- utilscorpus-filters.md
+|   |   |   |   |-- utilsinput-preparation.md
+|   |   |   |   +-- utilsnormalizers.md
+|   |   |   +-- README.md
+|   |   |-- 05-ARCHITECTURE-DECISIONS/
+|   |   |   |-- 05-ARCHITECTURE-DECISIONS001-type-system.md
+|   |   |   |-- 05-ARCHITECTURE-DECISIONS002-universal-adapter.md
+|   |   |   |-- 05-ARCHITECTURE-DECISIONS003-metrics-dispatch.md
+|   |   |   |-- 05-ARCHITECTURE-DECISIONS004-annotation-system.md
+|   |   |   +-- README.md
+|   |   |-- 06-MAINTENANCE/
+|   |   |   |-- 06-MAINTENANCEtesting-strategy.md
+|   |   |   |-- 06-MAINTENANCEtroubleshooting.md
+|   |   |   |-- migration-guideslegacy-to-modern.md
+|   |   |   |-- migration-guidesv1-to-v2.md
+|   |   |   +-- README.md
+|   |   |-- 07-GENERATED/
+|   |   |   |-- api.gitkeep
+|   |   |   |-- component-tree.gitkeep
+|   |   |   +-- README.md
+|   |   +-- README.md
+|   |-- level1/
+|   |   |-- doc_h2_analysis_pairs.md
+|   |   |-- level1_utilisation_h2_analysis_pairs.md
+|   |   |-- level1-creation-synchronisation-h2_analysis_pairs.md
+|   |   |-- migration_vers_id_turn.md
+|   |   |-- script_qualite_h2_analysis_pairs.md
+|   |   |-- ui-gestion-version-algo.md
+|   |   +-- versioning-level1.md
+|   |-- MEP-level2/
+|   |   |-- level2-bilan-H1-H2.md
+|   |   |-- level2-guide-implementaiton-H2.md
+|   |   |-- level2-implementationH2-avec-vue.md
+|   |   |-- level2-integration-resultsLevel1.md
+|   |   |-- level2-preparation-vue-matérialisée-H2.md
+|   |   |-- level2-specifications-techniques-H2.md
+|   |   |-- level2-stockage-essais-overlay-vue-H2.md
+|   |   +-- llevel2-implementationH2-a-partir-h2_analysis_pair.md
+|   |-- Flux-donnees-taggerLPL.md
+|   +-- schema.sql
+|-- docs/
+|   |-- calls/
+|   |   |-- architecture-transcription.md
+|   |   |-- avancement-roadmap-trasncription-diarization-23sep.md
+|   |   |-- cycle-de-vie-appel.md
+|   |   |-- doc-calls-DDD.md
+|   |   |-- doc-calls-legacy.md
+|   |   |-- refactoring_api_route.md
+|   |   |-- roadmap-transcription-diarization.md
+|   |   |-- test-asr.md
+|   |   |-- transcription.json
+|   |   +-- transcriptionauto.md
+|   |-- calls_ddd_tree.txt
+|   |-- complete_project_tree.txt
+|   +-- project_tree.txt
+|-- migration/
+|   |-- audit/
+|   |   |-- accurate-transformation-rules.json
+|   |   |-- comprehensive-types-audit.json
+|   |   |-- detected-import-patterns.txt
+|   |   |-- imports-transformation-completed.json
+|   |   |-- missing-types-analysis.json
+|   |   +-- types-discovery.log
+|   +-- scripts/
+|       |-- 1-analyze-missing-types.mjs
+|       |-- 2-enrich-target-structure.mjs
+|       |-- 3-transform-imports.mjs
+|       |-- 4-validate-migration.mjs
+|       |-- apply-accurate-transformations.mjs
+|       |-- audit-algorithmlab-types.mjs
+|       |-- audit-algorithmlab-types.sh
+|       |-- fix-typescript-errors.mjs
+|       |-- generate-accurate-transformation-rules.mjs
+|       |-- generate-intelligent-rules.sh
+|       |-- run-complete-migration.mjs
+|       +-- validate-migration-readiness.sh
+|-- public/
+|   |-- file.svg
+|   |-- globe.svg
+|   |-- next.svg
+|   |-- vercel.svg
+|   +-- window.svg
+|-- scripts/
+|   |-- generate-structure-report.ps1
+|   |-- generate-tree.ps1
+|   |-- generate-tree-simple.ps1
+|   |-- gen-types-doc.mjs
+|   +-- precompute-h2-results.ts
+|-- serverSpacy/
+|   |-- installation.txt
+|   |-- requirements.txt
+|   +-- spacy_api_server.py
+|-- src/
+|   |-- __test__/
+|   |   +-- smoke.test.ts
+|   |-- app/
+|   |   |-- (protected)/
+|   |   |   |-- analysis/
+|   |   |   |   |-- components/
+|   |   |   |   |   |-- AlgorithmLab/
+|   |   |   |   |   |   |-- algorithms/
+|   |   |   |   |   |   |   +-- level1/
+|   |   |   |   |   |   |       |-- clientclassifiers/
+|   |   |   |   |   |   |       |   +-- RegexClientClassifier.ts
+|   |   |   |   |   |   |       |-- conseillerclassifiers/
+|   |   |   |   |   |   |       |   |-- CustomClassifier.ts
+|   |   |   |   |   |   |       |   |-- EnsembleConseillerClassifier.ts
+|   |   |   |   |   |   |       |   |-- HuggingFaceConseillerClassifier.ts
+|   |   |   |   |   |   |       |   |-- index.ts
+|   |   |   |   |   |   |       |   |-- MistralConseillerClassifier.ts
+|   |   |   |   |   |   |       |   |-- OpenAI3TConseillerClassifier.tsx
+|   |   |   |   |   |   |       |   |-- OpenAIConseillerClassifier.ts
+|   |   |   |   |   |   |       |   |-- ProxyOpenAIConseillerClassifier.ts
+|   |   |   |   |   |   |       |   |-- RegexConseillerClassifier copy.ts
+|   |   |   |   |   |   |       |   |-- RegexConseillerClassifier.ts
+|   |   |   |   |   |   |       |   +-- SpacyConseillerClassifier.ts
+|   |   |   |   |   |   |       |-- M1Algorithms/
+|   |   |   |   |   |   |       |   |-- shared/
+|   |   |   |   |   |   |       |   |   +-- BaseM1Calculator.ts
+|   |   |   |   |   |   |       |   |-- M1ActionVerbCounter.ts
+|   |   |   |   |   |   |       |   +-- RegexM1Calculator.ts
+|   |   |   |   |   |   |       |-- M2Algorithms/
+|   |   |   |   |   |   |       |   |-- shared/
+|   |   |   |   |   |   |       |   |   |-- BaseM2Calculator.ts
+|   |   |   |   |   |   |       |   |   +-- m2-utils.ts
+|   |   |   |   |   |   |       |   |-- M2CompositeAlignmentCalculator.ts
+|   |   |   |   |   |   |       |   |-- M2LexicalAlignmentCalculator.ts
+|   |   |   |   |   |   |       |   +-- M2SemanticAlignmentCalculator.ts
+|   |   |   |   |   |   |       |-- M3Algorithms/
+|   |   |   |   |   |   |       |   |-- shared/
+|   |   |   |   |   |   |       |   |   +-- BaseM3Calculator.ts
+|   |   |   |   |   |   |       |   +-- PausesM3Calculator.tsx
+|   |   |   |   |   |   |       |-- shared/
+|   |   |   |   |   |   |       |   |-- AlgorithmRegistry.ts
+|   |   |   |   |   |   |       |   |-- BaseAlgorithm.ts
+|   |   |   |   |   |   |       |   |-- BaseClassifier.ts
+|   |   |   |   |   |   |       |   |-- ClassifierComparator.ts
+|   |   |   |   |   |   |       |   |-- ClassifierRegistry.ts
+|   |   |   |   |   |   |       |   |-- index.ts
+|   |   |   |   |   |   |       |   |-- initializeAlgorithms.ts
+|   |   |   |   |   |   |       |   +-- PerformanceMetrics.ts
+|   |   |   |   |   |   |       |-- XAlgorithms/
+|   |   |   |   |   |   |       |   |-- shared/
+|   |   |   |   |   |   |       |   |   +-- BaseXClassifier.ts
+|   |   |   |   |   |   |       |   |-- index.ts
+|   |   |   |   |   |   |       |   |-- OpenAI3TXClassifier.ts
+|   |   |   |   |   |   |       |   |-- OpenAIXClassifier copy.ts
+|   |   |   |   |   |   |       |   |-- OpenAIXClassifier.ts
+|   |   |   |   |   |   |       |   |-- RegexXClassifier.ts
+|   |   |   |   |   |   |       |   +-- SpacyXClassifier.ts
+|   |   |   |   |   |   |       +-- YAlgorithms/
+|   |   |   |   |   |   |           |-- shared/
+|   |   |   |   |   |   |           |   +-- BaseYClassifier.ts
+|   |   |   |   |   |   |           |-- index.ts
+|   |   |   |   |   |   |           +-- RegexYClassifier.ts
+|   |   |   |   |   |   |-- components/
+|   |   |   |   |   |   |   |-- Level0/
+|   |   |   |   |   |   |   |   +-- InterAnnotatorAgreement.tsx
+|   |   |   |   |   |   |   |-- Level1/
+|   |   |   |   |   |   |   |   |-- algorithms/
+|   |   |   |   |   |   |   |   |   |-- M1Calculators/
+|   |   |   |   |   |   |   |   |   |   |-- M1AlgorithmTesting.tsx
+|   |   |   |   |   |   |   |   |   |   +-- M1ValidationInterface.tsx
+|   |   |   |   |   |   |   |   |   |-- M2Calculators/
+|   |   |   |   |   |   |   |   |   |   +-- M2ValidationInterface.tsx
+|   |   |   |   |   |   |   |   |   |-- M3Calculators/
+|   |   |   |   |   |   |   |   |   |   +-- M3ValidationInterface.tsx
+|   |   |   |   |   |   |   |   |   |-- shared/
+|   |   |   |   |   |   |   |   |   |   +-- classification/
+|   |   |   |   |   |   |   |   |   |       +-- ClassificationValidationTable.tsx
+|   |   |   |   |   |   |   |   |   |-- XClassifiers/
+|   |   |   |   |   |   |   |   |   |   |-- XAlgorithmTesting.tsx
+|   |   |   |   |   |   |   |   |   |   +-- XValidationInterface.tsx
+|   |   |   |   |   |   |   |   |   |-- YClassifiers/
+|   |   |   |   |   |   |   |   |   |   |-- YAlgorithmTesting.tsx
+|   |   |   |   |   |   |   |   |   |   +-- YValidationInterface.tsx
+|   |   |   |   |   |   |   |   |   +-- BaseAlgorithmTesting.tsx
+|   |   |   |   |   |   |   |   |-- comparison/
+|   |   |   |   |   |   |   |   |   |-- AlgorithmComparison.tsx
+|   |   |   |   |   |   |   |   |   |-- ClassifierConfiguration.tsx
+|   |   |   |   |   |   |   |   |   |-- CrossValidation.tsx
+|   |   |   |   |   |   |   |   |   |-- EnsembleTuning.tsx
+|   |   |   |   |   |   |   |   |   +-- VersionComparator.tsx
+|   |   |   |   |   |   |   |   |-- individual/
+|   |   |   |   |   |   |   |   |   |-- TechnicalValidation/
+|   |   |   |   |   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   |   |   |   |-- TechnicalValidation.tsx
+|   |   |   |   |   |   |   |   |   |   +-- TECHNICALVALIDATION_MIG.MD
+|   |   |   |   |   |   |   |   |   |-- ConfusionMatrix.tsx
+|   |   |   |   |   |   |   |   |   |-- EnhancedErrorAnalysis.tsx
+|   |   |   |   |   |   |   |   |   |-- ParameterOptimization.tsx
+|   |   |   |   |   |   |   |   |   +-- TechnicalValidationFixed.tsx
+|   |   |   |   |   |   |   |   |-- shared/
+|   |   |   |   |   |   |   |   |   +-- results/
+|   |   |   |   |   |   |   |   |       |-- base/
+|   |   |   |   |   |   |   |   |       |   |-- ResultsSample/
+|   |   |   |   |   |   |   |   |       |   |   |-- components/
+|   |   |   |   |   |   |   |   |       |   |   |   |-- FineTuningDialog/
+|   |   |   |   |   |   |   |   |       |   |   |   |   |-- hooks/
+|   |   |   |   |   |   |   |   |       |   |   |   |   |   +-- useFineTuningExtractor.ts
+|   |   |   |   |   |   |   |   |       |   |   |   |   |-- FineTuningAnalyzer.tsx
+|   |   |   |   |   |   |   |   |       |   |   |   |   |-- FineTuningDialog.tsx
+|   |   |   |   |   |   |   |   |       |   |   |   |   |-- FineTuningExtractor.tsx
+|   |   |   |   |   |   |   |   |       |   |   |   |   |-- FineTuningFormatter.tsx
+|   |   |   |   |   |   |   |   |       |   |   |   |   |-- FineTuningMetrics.tsx
+|   |   |   |   |   |   |   |   |       |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   |   |       |   |   |   |   +-- types.ts
+|   |   |   |   |   |   |   |   |       |   |   |   |-- AnnotationList.tsx
+|   |   |   |   |   |   |   |   |       |   |   |   |-- CommentDialog.tsx
+|   |   |   |   |   |   |   |   |       |   |   |   |-- ResultsFilters.tsx
+|   |   |   |   |   |   |   |   |       |   |   |   |-- ResultsTableBody.tsx
+|   |   |   |   |   |   |   |   |       |   |   |   |-- ResultsTableHeader.tsx
+|   |   |   |   |   |   |   |   |       |   |   |   |-- ResultsTableRow.tsx
+|   |   |   |   |   |   |   |   |       |   |   |   +-- ToneLine.tsx
+|   |   |   |   |   |   |   |   |       |   |   |-- hooks/
+|   |   |   |   |   |   |   |   |       |   |   |   |-- useCommentManagement.ts
+|   |   |   |   |   |   |   |   |       |   |   |   |-- useFineTuningData.ts
+|   |   |   |   |   |   |   |   |       |   |   |   |-- useResultsFiltering.ts
+|   |   |   |   |   |   |   |   |       |   |   |   +-- useResultsPagination.ts
+|   |   |   |   |   |   |   |   |       |   |   |-- utils/
+|   |   |   |   |   |   |   |   |       |   |   |   |-- constants.ts
+|   |   |   |   |   |   |   |   |       |   |   |   |-- dataFormating.ts
+|   |   |   |   |   |   |   |   |       |   |   |   +-- errorAnalysis.tsx
+|   |   |   |   |   |   |   |   |       |   |   |-- index.ts
+|   |   |   |   |   |   |   |   |       |   |   |-- ResultsPanel.tsx
+|   |   |   |   |   |   |   |   |       |   |   |-- ResultsSample.tsx
+|   |   |   |   |   |   |   |   |       |   |   +-- types.ts
+|   |   |   |   |   |   |   |   |       |   |-- extraColumns.tsx
+|   |   |   |   |   |   |   |   |       |   |-- MetricsPanel.classification.tsx
+|   |   |   |   |   |   |   |   |       |   |-- MetricsPanel.numeric.tsx
+|   |   |   |   |   |   |   |   |       |   |-- MetricsPanel.tsx
+|   |   |   |   |   |   |   |   |       |   |-- ResultsTableBase.tsx
+|   |   |   |   |   |   |   |   |       |   +-- RunPanel.tsx
+|   |   |   |   |   |   |   |   |       |-- m/
+|   |   |   |   |   |   |   |   |       |   +-- ResultsTableM1.tsx
+|   |   |   |   |   |   |   |   |       |-- x/
+|   |   |   |   |   |   |   |   |       |   +-- ResultsTableX.tsx
+|   |   |   |   |   |   |   |   |       +-- VersionSelector.tsx
+|   |   |   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   |   |-- Level1Interface.tsx
+|   |   |   |   |   |   |   |   +-- TechnicalBenchmark.tsx
+|   |   |   |   |   |   |   |-- Level2/
+|   |   |   |   |   |   |   |   |-- config/
+|   |   |   |   |   |   |   |   |   +-- hypotheses.ts
+|   |   |   |   |   |   |   |   |-- hooks/
+|   |   |   |   |   |   |   |   |   +-- useH1Analysis.ts
+|   |   |   |   |   |   |   |   |-- hypothesis/
+|   |   |   |   |   |   |   |   |   |-- H2AlignmentValidation.tsx
+|   |   |   |   |   |   |   |   |   +-- H3ApplicationValidation.tsx
+|   |   |   |   |   |   |   |   |-- shared/
+|   |   |   |   |   |   |   |   |   |-- DataProcessing.ts
+|   |   |   |   |   |   |   |   |   |-- stats.ts
+|   |   |   |   |   |   |   |   |   +-- types.ts
+|   |   |   |   |   |   |   |   |-- validation/
+|   |   |   |   |   |   |   |   |   |-- StatisticalSummary.tsx
+|   |   |   |   |   |   |   |   |   +-- StatisticalTestsPanel.tsx
+|   |   |   |   |   |   |   |   |-- CHAPITRE3.MD
+|   |   |   |   |   |   |   |   |-- EVOLUTION_LEVEL2.MD
+|   |   |   |   |   |   |   |   |-- Level2Interface.tsx
+|   |   |   |   |   |   |   |   +-- README_THESE_MEDIATION.MD
+|   |   |   |   |   |   |   +-- shared/
+|   |   |   |   |   |   |       |-- AlgorithmLabInterface.tsx
+|   |   |   |   |   |   |       |-- ClassifierSelector.tsx
+|   |   |   |   |   |   |       |-- NavigationTabs.tsx
+|   |   |   |   |   |   |       +-- PerformanceDashBoard.tsx
+|   |   |   |   |   |   |-- docs/
+|   |   |   |   |   |   |   |-- .ai-context/
+|   |   |   |   |   |   |   |   |-- architectural-decisions.md
+|   |   |   |   |   |   |   |   |-- coding-patterns.md
+|   |   |   |   |   |   |   |   |-- module-relationships.md
+|   |   |   |   |   |   |   |   +-- project-context.md
+|   |   |   |   |   |   |   |-- architecture/
+|   |   |   |   |   |   |   |   |-- branche-algorithmes.md
+|   |   |   |   |   |   |   |   |-- branche-components-level0.md
+|   |   |   |   |   |   |   |   |-- branche-components-level1.md
+|   |   |   |   |   |   |   |   |-- branche-components-level2-shared.md
+|   |   |   |   |   |   |   |   |-- decisions.md
+|   |   |   |   |   |   |   |   |-- dhl.pdf
+|   |   |   |   |   |   |   |   +-- requete-turntagged-verification.md
+|   |   |   |   |   |   |   |-- modules/
+|   |   |   |   |   |   |   |   |-- level1/
+|   |   |   |   |   |   |   |   |   |-- Level1.shared.results.md
+|   |   |   |   |   |   |   |   |   +-- m1-algorithms.md
+|   |   |   |   |   |   |   |   +-- template-module.md
+|   |   |   |   |   |   |   |-- old_docs/
+|   |   |   |   |   |   |   |   |-- ALGORIHTMLAB_3LEVEL.MD
+|   |   |   |   |   |   |   |   |-- ALGORIHTMLAB_NEW_ARBO.MD
+|   |   |   |   |   |   |   |   |-- ALGORITHMLAB_DONNEES_ANALYSEES.MD
+|   |   |   |   |   |   |   |   |-- ALGORITHMLAB_FINETUNING.MD
+|   |   |   |   |   |   |   |   |-- ALGORITHMLAB_FLUX_LNCER_TEST.MD
+|   |   |   |   |   |   |   |   |-- ALGORITHMLAB_FLUX_M2.MD
+|   |   |   |   |   |   |   |   |-- ALGORITHMLAB_MIG_PHASE1.MD
+|   |   |   |   |   |   |   |   |-- ALGORITHMLAB_MIGRATION.MD
+|   |   |   |   |   |   |   |   |-- ALGORITHMLAB_MultiClassifiers.MD
+|   |   |   |   |   |   |   |   |-- ALGORITHMLAB_QUIFAITQUOI.MD
+|   |   |   |   |   |   |   |   |-- ALGORITHMLAB_RESULTS.MD
+|   |   |   |   |   |   |   |   +-- ALGORITHMLAB_RESULTSPANEL.MD
+|   |   |   |   |   |   |   |-- sessions/
+|   |   |   |   |   |   |   |   |-- 2025-01-15-setup-documentation.md
+|   |   |   |   |   |   |   |   |-- 2025-09-04-normalisation-types.md
+|   |   |   |   |   |   |   |   |-- 2025-09-04-setup-M2.md
+|   |   |   |   |   |   |   |   |-- 2025-09-06-migration-types.md
+|   |   |   |   |   |   |   |   |-- 2025-09-08-migration-XYM1M2M2-nouvelle interface.md
+|   |   |   |   |   |   |   |   |-- 2025-09-11-fin-migration.MD
+|   |   |   |   |   |   |   |   |-- 2025-09-11-normalisation-chargement-corpus.MD
+|   |   |   |   |   |   |   |   |-- 2029-09-13-tuning-openAIX.md
+|   |   |   |   |   |   |   |   |-- template-session.md
+|   |   |   |   |   |   |   |   +-- tuning-openAI.json
+|   |   |   |   |   |   |   |-- types/
+|   |   |   |   |   |   |   |   +-- referencetypes.md
+|   |   |   |   |   |   |   +-- README.md
+|   |   |   |   |   |   |-- hooks/
+|   |   |   |   |   |   |   |-- normalizeUniversalToTV.ts
+|   |   |   |   |   |   |   |-- useAlgorithmVersioning.ts
+|   |   |   |   |   |   |   |-- useClassifierConfiguration.ts
+|   |   |   |   |   |   |   |-- useClassifierStatus.ts
+|   |   |   |   |   |   |   |-- useH2Data.ts
+|   |   |   |   |   |   |   |-- useLevel0Validation.ts
+|   |   |   |   |   |   |   |-- useLevel1Testing.ts
+|   |   |   |   |   |   |   |-- useMultiAlgorithmComparison.ts
+|   |   |   |   |   |   |   |-- usePostValidationVersioning.ts
+|   |   |   |   |   |   |   +-- useWorkflowManagement.ts
+|   |   |   |   |   |   |-- types/
+|   |   |   |   |   |   |   |-- algorithms/
+|   |   |   |   |   |   |   |   |-- base.ts
+|   |   |   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   |   +-- universal-adapter.ts
+|   |   |   |   |   |   |   |-- core/
+|   |   |   |   |   |   |   |   |-- calculations.ts
+|   |   |   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   |   |-- level0.ts
+|   |   |   |   |   |   |   |   |-- validation.ts
+|   |   |   |   |   |   |   |   +-- variables.ts
+|   |   |   |   |   |   |   |-- legacy/
+|   |   |   |   |   |   |   |   +-- README.md
+|   |   |   |   |   |   |   |-- ui/
+|   |   |   |   |   |   |   |   |-- components.ts
+|   |   |   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   |   +-- validation.ts
+|   |   |   |   |   |   |   |-- utils/
+|   |   |   |   |   |   |   |   |-- converters.ts
+|   |   |   |   |   |   |   |   |-- corpusFilters.ts
+|   |   |   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   |   |-- inputPreparation.ts
+|   |   |   |   |   |   |   |   +-- normalizers.ts
+|   |   |   |   |   |   |   |-- enrichir les types.md
+|   |   |   |   |   |   |   |-- h2Types.ts
+|   |   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   |-- Level0Types.ts
+|   |   |   |   |   |   |   |-- Level1Types.ts
+|   |   |   |   |   |   |   |-- normalizers.ts
+|   |   |   |   |   |   |   |-- referencetypes.md
+|   |   |   |   |   |   |   |-- SharedTypes.ts
+|   |   |   |   |   |   |   |-- ThesisVariables.m1.ts
+|   |   |   |   |   |   |   |-- ThesisVariables.m2.ts
+|   |   |   |   |   |   |   |-- ThesisVariables.m3.ts
+|   |   |   |   |   |   |   |-- ThesisVariables.ts
+|   |   |   |   |   |   |   |-- ThesisVariables.x.ts
+|   |   |   |   |   |   |   |-- ThesisVariables.y.ts
+|   |   |   |   |   |   |   +-- ValidationTypes.ts
+|   |   |   |   |   |   |-- utils/
+|   |   |   |   |   |   |   |-- metricsCalculation.ts
+|   |   |   |   |   |   |   +-- versionGenerator.ts
+|   |   |   |   |   |   |-- 1-create-core-types.sh
+|   |   |   |   |   |   |-- 2-create-algorithms-types.sh
+|   |   |   |   |   |   |-- 3-create-ui-types.sh
+|   |   |   |   |   |   |-- 4-create-utils-types.sh
+|   |   |   |   |   |   |-- 5-create-main-index.sh
+|   |   |   |   |   |   +-- algorithm-lab-imports.txt
+|   |   |   |   |   |-- cognitive-metrics/
+|   |   |   |   |   |   |-- components/
+|   |   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   |-- indicatorCard.tsx
+|   |   |   |   |   |   |   +-- MetricBox.tsx
+|   |   |   |   |   |   |-- hooks/
+|   |   |   |   |   |   |   |-- useCognitiveMetrics.ts
+|   |   |   |   |   |   |   +-- useCognitiveMetricsByFamily.ts
+|   |   |   |   |   |   |-- indicators/
+|   |   |   |   |   |   |   +-- FluiditeCognitiveIndicator/
+|   |   |   |   |   |   |       |-- algorithms/
+|   |   |   |   |   |   |       |   |-- BasicFluidityAlgorithm.ts
+|   |   |   |   |   |   |       |   +-- NeuronMirrorAlgorithm.ts
+|   |   |   |   |   |   |       |-- hooks/
+|   |   |   |   |   |   |       |   +-- useFluiditeCognitive.ts
+|   |   |   |   |   |   |       |-- FluiditeCognitiveIndicator.ts
+|   |   |   |   |   |   |       |-- FluiditeCognitiveInterface.tsx
+|   |   |   |   |   |   |       +-- index.ts
+|   |   |   |   |   |   |-- migration/
+|   |   |   |   |   |   |   |-- adaptUseCognitiveMetrics.ts
+|   |   |   |   |   |   |   +-- CognitiveMetricsMigration.tsx
+|   |   |   |   |   |   |-- CognitiveMetrics.tsx
+|   |   |   |   |   |   |-- CognitiveMetricsRegistry.tsx
+|   |   |   |   |   |   |-- indicatorData.ts
+|   |   |   |   |   |   |-- README.MD
+|   |   |   |   |   |   +-- types.ts
+|   |   |   |   |   |-- li-metrics/
+|   |   |   |   |   |   |-- indicators/
+|   |   |   |   |   |   |   |-- CommonGroundIndicator/
+|   |   |   |   |   |   |   |   +-- index.ts
+|   |   |   |   |   |   |   +-- FeedbackAlignementIndicator/
+|   |   |   |   |   |   |       |-- algorithms/
+|   |   |   |   |   |   |       |   |-- BasicAlignmentAlgorithm.ts
+|   |   |   |   |   |   |       |   |-- ConversationalPatternAlgorithm.ts
+|   |   |   |   |   |   |       |   |-- extrait.JSON
+|   |   |   |   |   |   |       |   |-- extrait_simplifie.JSON
+|   |   |   |   |   |   |       |   |-- index.ts
+|   |   |   |   |   |   |       |   |-- SentimentEnhancedAlgorithm.ts
+|   |   |   |   |   |   |       |   +-- SequentialPatternAlgorithm.ts
+|   |   |   |   |   |   |       |-- components/
+|   |   |   |   |   |   |       |   |-- algorithm-specific/
+|   |   |   |   |   |   |       |   |   |-- BasicAlgorithmControl.tsx
+|   |   |   |   |   |   |       |   |   |-- ComparisonControls.tsx
+|   |   |   |   |   |   |       |   |   +-- LICAAlgorithmControl.tsx
+|   |   |   |   |   |   |       |   +-- tabs/
+|   |   |   |   |   |   |       |       |-- AlgorithmLabTab/
+|   |   |   |   |   |   |       |       |   |-- hooks/
+|   |   |   |   |   |   |       |       |   |   +-- useAlgorithmTesting.ts
+|   |   |   |   |   |   |       |       |   |-- ALGORITHMLABTAB.MD
+|   |   |   |   |   |   |       |       |   |-- AlgorithmLabTab.tsx
+|   |   |   |   |   |   |       |       |   |-- index.ts
+|   |   |   |   |   |   |       |       |   |-- PHASE1MVP.MD
+|   |   |   |   |   |   |       |       |   +-- types.ts
+|   |   |   |   |   |   |       |       |-- BasicAlgorithmTab.tsx
+|   |   |   |   |   |   |       |       |-- ComparisonTab.tsx
+|   |   |   |   |   |   |       |       |-- LICAAlgorithmTab copy.tsx
+|   |   |   |   |   |   |       |       |-- LICAAlgorithmTab.tsx
+|   |   |   |   |   |   |       |       |-- LICADetailedInterface.tsx
+|   |   |   |   |   |   |       |       |-- TabContainer.tsx
+|   |   |   |   |   |   |       |       +-- types.ts
+|   |   |   |   |   |   |       |-- hooks/
+|   |   |   |   |   |   |       |   |-- index.ts
+|   |   |   |   |   |   |       |   |-- useFeedbackAlignmentAnnotation.ts
+|   |   |   |   |   |   |       |   +-- useFeedbackAlignmentMetrics.ts
+|   |   |   |   |   |   |       |-- FeedbackAlignmentIndicator.tsx
+|   |   |   |   |   |   |       |-- FeedbackAlignmentInterface.tsx
+|   |   |   |   |   |   |       |-- index.ts
+|   |   |   |   |   |   |       +-- types.ts
+|   |   |   |   |   |   +-- LinguisticInteractionalMetrics.tsx
+|   |   |   |   |   |-- metrics-framework/
+|   |   |   |   |   |   |-- components/
+|   |   |   |   |   |   |   +-- MetricsDashBoard.tsx
+|   |   |   |   |   |   |-- core/
+|   |   |   |   |   |   |   |-- strategies/
+|   |   |   |   |   |   |   |   +-- BaseAlgorithmStrategy.ts
+|   |   |   |   |   |   |   |-- types/
+|   |   |   |   |   |   |   |   +-- base.ts
+|   |   |   |   |   |   |   |-- BaseIndicator.ts
+|   |   |   |   |   |   |   +-- MetricsRegistry.ts
+|   |   |   |   |   |   |-- hooks/
+|   |   |   |   |   |   |   +-- useMetricsEngine.ts
+|   |   |   |   |   |   +-- index.ts
+|   |   |   |   |   |-- shared/
+|   |   |   |   |   |   |-- atoms/
+|   |   |   |   |   |   |   |-- AlgorithmChip.tsx
+|   |   |   |   |   |   |   |-- AlgorithmDetailDialog.tsx
+|   |   |   |   |   |   |   |-- ColorLegend.tsx
+|   |   |   |   |   |   |   |-- HypothesisCard.tsx
+|   |   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   |-- IndicatorHeader.tsx
+|   |   |   |   |   |   |   |-- MetricCard.tsx
+|   |   |   |   |   |   |   |-- ResponsiveGrid.tsx
+|   |   |   |   |   |   |   |-- ScientificReferenceCard.tsx
+|   |   |   |   |   |   |   |-- ScoreChip.tsx
+|   |   |   |   |   |   |   +-- types.ts
+|   |   |   |   |   |   |-- hooks/
+|   |   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   |-- useAlgorithmDialog.ts
+|   |   |   |   |   |   |   +-- useScientificReferences.ts
+|   |   |   |   |   |   |-- molecules/
+|   |   |   |   |   |   |   |-- AlgorithmLogicExplanation.tsx
+|   |   |   |   |   |   |   |-- AlgorithmSelector.tsx
+|   |   |   |   |   |   |   |-- FamilyMetricsCard.tsx
+|   |   |   |   |   |   |   |-- HypothesisValidation.tsx
+|   |   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   |-- ResultsTable.tsx
+|   |   |   |   |   |   |   +-- types.ts
+|   |   |   |   |   |   +-- index.ts
+|   |   |   |   |   |-- AlgorithmLab - Raccourci.lnk
+|   |   |   |   |   |-- algorithms - Raccourci.lnk
+|   |   |   |   |   |-- ANALYSIS_README.MD
+|   |   |   |   |   |-- ANALYSYS_ARBORESCENCE.MD
+|   |   |   |   |   |-- DebugFunnel.tsx
+|   |   |   |   |   |-- ImprovedGlobalMetrics.tsx
+|   |   |   |   |   |-- InsightCard.tsx
+|   |   |   |   |   |-- PositiveReactionsChart.tsx
+|   |   |   |   |   |-- SimpleUnifiedMetricsInterface.tsx
+|   |   |   |   |   |-- StrategyAnalysisContainer.tsx
+|   |   |   |   |   |-- StrategyStatsTable.tsx
+|   |   |   |   |   |-- TagTemporalAnalysis.tsx
+|   |   |   |   |   |-- TestFrameworkIntegration.tsx
+|   |   |   |   |   |-- TestMigration.tsx
+|   |   |   |   |   +-- UnifiedMetricsInterface.tsx
+|   |   |   |   |-- hooks/
+|   |   |   |   |   |-- useStrategyStats.tsx
+|   |   |   |   |   +-- useTemporalAnalysis.tsx
+|   |   |   |   |-- page.tsx
+|   |   |   |   +-- types.ts
+|   |   |   |-- calls/
+|   |   |   |   |-- page.legacy.tsx
+|   |   |   |   |-- page.tsx
+|   |   |   |   |-- README.MD
+|   |   |   |   +-- README_PREPARATION.MD
+|   |   |   |-- dashboard/
+|   |   |   |   +-- page.tsx
+|   |   |   |-- new-tagging/
+|   |   |   |   +-- page.tsx
+|   |   |   |-- shared/
+|   |   |   |   +-- TurnWithContext.tsx
+|   |   |   |-- supervision/
+|   |   |   |   |-- components/
+|   |   |   |   |   |-- index.ts
+|   |   |   |   |   |-- ProcessingModal.tsx
+|   |   |   |   |   |-- SupervisionFilters.tsx
+|   |   |   |   |   |-- SupervisionStats.tsx
+|   |   |   |   |   |-- SupervisionTable.tsx
+|   |   |   |   |   +-- TaggingModal.tsx
+|   |   |   |   |-- hooks/
+|   |   |   |   |   |-- index.ts
+|   |   |   |   |   |-- useProcessingJobs.ts
+|   |   |   |   |   |-- useSupervisionData.ts
+|   |   |   |   |   +-- useSupervisionFilters.ts
+|   |   |   |   |-- types/
+|   |   |   |   |   +-- index.ts
+|   |   |   |   |-- utils/
+|   |   |   |   |   |-- callProcessingService.ts
+|   |   |   |   |   |-- dataHelpers.ts
+|   |   |   |   |   |-- formatters.ts
+|   |   |   |   |   +-- index.ts
+|   |   |   |   |-- page.tsx
+|   |   |   |   +-- README.MD
+|   |   |   |-- tagging/
+|   |   |   |   |-- ClientTaggerPage.tsx
+|   |   |   |   |-- layout.tsx
+|   |   |   |   +-- page.tsx
+|   |   |   |-- tags/
+|   |   |   |   |-- components/
+|   |   |   |   |   |-- TagExplorer.tsx
+|   |   |   |   |   |-- TagManager.tsx
+|   |   |   |   |   +-- TagUsageStats.tsx
+|   |   |   |   +-- page.tsx
+|   |   |   |-- AlgorithmLab - Raccourci.lnk
+|   |   |   +-- layout.tsx
+|   |   |-- api/
+|   |   |   |-- algolab/
+|   |   |   |   |-- classifiers/
+|   |   |   |   |   |-- [name]/
+|   |   |   |   |   |   +-- route.ts
+|   |   |   |   |   +-- route.ts
+|   |   |   |   +-- classify/
+|   |   |   |       +-- route.tsx
+|   |   |   |-- calls/
+|   |   |   |   |-- diarize/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- transcribe/
+|   |   |   |   |   +-- route.ts
+|   |   |   |   |-- old_diarize.ts
+|   |   |   |   |-- old_transcribe.ts
+|   |   |   |   |-- prepare-batch.ts
+|   |   |   |   +-- stats.ts
+|   |   |   +-- zoho/
+|   |   |       |-- auth/
+|   |   |       |   +-- route.tsx
+|   |   |       |-- callback/
+|   |   |       |   +-- route.tsx
+|   |   |       |-- download/
+|   |   |       |   +-- route.tsx
+|   |   |       +-- files/
+|   |   |           +-- route.tsx
+|   |   |-- login/
+|   |   |   +-- page.tsx
+|   |   |-- favicon.ico
+|   |   |-- globals.css
+|   |   |-- layout.tsx
+|   |   |-- metadata.tsx
+|   |   |-- page.tsx
+|   |   |-- README_TAGGER.MD
+|   |   +-- SPEC_ANALYSIS.MD
+|   |-- components/
+|   |   |-- auth/
+|   |   |   |-- ProtectedRoute.tsx
+|   |   |   +-- ZohoAuthHandler.tsx
+|   |   |-- CallListUnprepared/
+|   |   |   |-- components/
+|   |   |   |   |-- AdvancedFilters.tsx
+|   |   |   |   |-- BulkOriginEditBar.tsx
+|   |   |   |   |-- CallContentDialog.tsx
+|   |   |   |   |-- CallsAccordion.tsx
+|   |   |   |   |-- CallTableRow.tsx
+|   |   |   |   |-- EmptyStateMessage.tsx
+|   |   |   |   |-- GlobalStatsCard.tsx
+|   |   |   |   +-- OriginEditableCell.tsx
+|   |   |   |-- hooks/
+|   |   |   |   |-- useCallActions.ts
+|   |   |   |   |-- useCallFilters.ts
+|   |   |   |   |-- useCallsData.ts
+|   |   |   |   |-- useComplementActions.ts
+|   |   |   |   |-- useOriginEdit.ts
+|   |   |   |   |-- useOriginEditOptimized.ts
+|   |   |   |   +-- usePerformanceDebug.ts
+|   |   |   |-- CallListUnprepared.tsx
+|   |   |   |-- constants.ts
+|   |   |   |-- index.ts
+|   |   |   |-- PerformanceTest.tsx
+|   |   |   |-- README_CallListUnprepared.md
+|   |   |   |-- README_CallListUnprepared_Performances.md
+|   |   |   |-- types.ts
+|   |   |   +-- utils.ts
+|   |   |-- calls/
+|   |   |   |-- CallTableList/
+|   |   |   |   |-- hooks/
+|   |   |   |   |   |-- useBulkActions.tsx
+|   |   |   |   |   +-- useOptimizedCallData.tsx
+|   |   |   |   |-- BulkActionsToolbar.tsx
+|   |   |   |   |-- CallTableFilters.tsx
+|   |   |   |   |-- CallTableList.tsx
+|   |   |   |   |-- CallTableRow.tsx
+|   |   |   |   |-- index.ts
+|   |   |   |   |-- MobileCallCard.tsx
+|   |   |   |   |-- types.ts
+|   |   |   |   +-- utils.ts
+|   |   |   |-- domain/
+|   |   |   |   |-- entities/
+|   |   |   |   |   |-- AudioFile.ts
+|   |   |   |   |   |-- Call.ts
+|   |   |   |   |   |-- CallExtended.ts
+|   |   |   |   |   |-- index.ts
+|   |   |   |   |   |-- Transcription.ts
+|   |   |   |   |   +-- TranscriptionWord.ts
+|   |   |   |   |-- repositories/
+|   |   |   |   |   |-- CallRepository.ts
+|   |   |   |   |   |-- index.ts
+|   |   |   |   |   |-- RelationsRepository.ts
+|   |   |   |   |   +-- StorageRepository.ts
+|   |   |   |   |-- services/
+|   |   |   |   |   |-- CallFilteringService.ts
+|   |   |   |   |   |-- CallLifecycleService.ts
+|   |   |   |   |   |-- CallRelationsService.ts
+|   |   |   |   |   |-- CallService.ts
+|   |   |   |   |   |-- DiarizationService.ts
+|   |   |   |   |   |-- DuplicateService.ts
+|   |   |   |   |   |-- index.ts
+|   |   |   |   |   |-- RelationsService.ts
+|   |   |   |   |   |-- StorageService.ts
+|   |   |   |   |   |-- TranscriptionASRService.ts
+|   |   |   |   |   |-- TranscriptionIntegrationService.ts
+|   |   |   |   |   |-- TranscriptionTransformationService.ts
+|   |   |   |   |   +-- ValidationService.ts
+|   |   |   |   |-- workflows/
+|   |   |   |   |   |-- BulkPreparationWorkflow.ts
+|   |   |   |   |   |-- ImportWorkflow.ts
+|   |   |   |   |   |-- index.ts
+|   |   |   |   |   +-- TranscriptionASRWorkflow.ts
+|   |   |   |   +-- index.ts
+|   |   |   |-- infrastructure/
+|   |   |   |   |-- api/
+|   |   |   |   |   |-- BaseApiClient.ts
+|   |   |   |   |   |-- CallsApiClient.ts
+|   |   |   |   |   |-- DiarizationApiClient.ts
+|   |   |   |   |   +-- TranscriptionApiClient.ts
+|   |   |   |   |-- asr/
+|   |   |   |   |   |-- --tests--/
+|   |   |   |   |   |   +-- OpenAIWhisperProvider.test.ts
+|   |   |   |   |   +-- OpenAIWhisperProvider.ts
+|   |   |   |   |-- diarization/
+|   |   |   |   |   |-- __test__/
+|   |   |   |   |   |   +-- AssemblyAIDiarizationProvider.test.ts
+|   |   |   |   |   |-- AssemblyAIDiarizationProvider.ts
+|   |   |   |   |   +-- ExternalDiarizationProvider.ts
+|   |   |   |   |-- supabase/
+|   |   |   |   |   |-- index.ts
+|   |   |   |   |   |-- SupabaseCallRepository.ts
+|   |   |   |   |   |-- SupabaseRelationsRepository.ts
+|   |   |   |   |   +-- SupabaseStorageRepository.ts
+|   |   |   |   +-- ServiceFactory.ts
+|   |   |   |-- shared/
+|   |   |   |   |-- config/
+|   |   |   |   |   +-- CallsConfig.ts
+|   |   |   |   |-- exceptions/
+|   |   |   |   |   |-- DomainExceptions.ts
+|   |   |   |   |   +-- TranscriptionExceptions.ts
+|   |   |   |   |-- types/
+|   |   |   |   |   |-- CallStatus.ts
+|   |   |   |   |   |-- CommonTypes.ts
+|   |   |   |   |   |-- index.ts
+|   |   |   |   |   +-- TranscriptionTypes.ts
+|   |   |   |   +-- utils/
+|   |   |   |       |-- audioFormat.ts
+|   |   |   |       |-- cost.ts
+|   |   |   |       +-- filename.ts
+|   |   |   |-- --test--/
+|   |   |   |   +-- DomainTest.ts
+|   |   |   |-- ui/
+|   |   |   |   |-- components/
+|   |   |   |   |   |-- transcription/
+|   |   |   |   |   |   +-- TranscriptionProgress.tsx
+|   |   |   |   |   |-- CallLifecycleColumn.tsx
+|   |   |   |   |   |-- DebugCallLoading.tsx
+|   |   |   |   |   |-- DuplicateResolutionDialog.tsx
+|   |   |   |   |   |-- ImportForm.tsx
+|   |   |   |   |   |-- ImportProgress.tsx
+|   |   |   |   |   |-- ImportSuccessDialog.tsx
+|   |   |   |   |   |-- index.ts
+|   |   |   |   |   +-- VirtualizedCallTable.tsx
+|   |   |   |   |-- hooks/
+|   |   |   |   |   |-- actions/
+|   |   |   |   |   |   |-- useCallAudioActions.ts
+|   |   |   |   |   |   |-- useCallCleanup.ts
+|   |   |   |   |   |   |-- useCallFlags.ts
+|   |   |   |   |   |   |-- useCallPreparationActions.ts
+|   |   |   |   |   |   +-- useCallTranscriptionActions.ts
+|   |   |   |   |   |-- useAccordionsLazyData.ts
+|   |   |   |   |   |-- useCallImport.ts
+|   |   |   |   |   |-- useCallManagement.ts
+|   |   |   |   |   |-- useCallPreparation.ts
+|   |   |   |   |   |-- useCallStatistics.ts
+|   |   |   |   |   |-- useLifecycleActions.ts
+|   |   |   |   |   |-- useRelationsNextTurn.ts
+|   |   |   |   |   |-- useStorageService.ts
+|   |   |   |   |   +-- useUnifiedCallManagement.ts
+|   |   |   |   |-- pages/
+|   |   |   |   |   |-- CallImportPage.tsx
+|   |   |   |   |   |-- CallManagementPage copy.tsx
+|   |   |   |   |   +-- CallManagementPage.tsx
+|   |   |   |   +-- sections/
+|   |   |   |       |-- CMActionsBar.tsx
+|   |   |   |       |-- CMFiltersBar.tsx
+|   |   |   |       |-- CMHeaderStats.tsx
+|   |   |   |       |-- CMOriginAccordions.tsx
+|   |   |   |       +-- CMServiceTabs.tsx
+|   |   |   |-- CallImporter.tsx
+|   |   |   |-- CallList.tsx
+|   |   |   |-- CallPreparation.tsx
+|   |   |   |-- CallTableList_old.tsx
+|   |   |   |-- ComplementActionButtons.tsx
+|   |   |   |-- DuplicateDialog.tsx
+|   |   |   +-- TranscriptionUploadModal.tsx
+|   |   |-- layout/
+|   |   |   +-- GlobalNavbar.tsx
+|   |   |-- SimpleWorkdriveExplorer/
+|   |   |   |-- components/
+|   |   |   |   |-- AuthPrompt.tsx
+|   |   |   |   |-- FileList.tsx
+|   |   |   |   |-- FileSelectionSummary.tsx
+|   |   |   |   |-- NavigationControls.tsx
+|   |   |   |   |-- Notifications.tsx
+|   |   |   |   |-- SearchBar.tsx
+|   |   |   |   |-- SearchDebug.tsx
+|   |   |   |   +-- SearchResults.tsx
+|   |   |   |-- hooks/
+|   |   |   |   |-- useWorkdriveDuplicateCheck.ts
+|   |   |   |   |-- useWorkdriveFiles.tsx
+|   |   |   |   +-- useWorkdriveSearch.tsx
+|   |   |   |-- utils/
+|   |   |   |   |-- authHelpers.tsx
+|   |   |   |   +-- fileHelpers.tsx
+|   |   |   |-- index.tsx
+|   |   |   +-- types.tsx
+|   |   |-- TranscriptLPL/
+|   |   |   |-- hooks/
+|   |   |   |   |-- useRelationStatus.ts
+|   |   |   |   |-- useTaggingLogic.tsx
+|   |   |   |   +-- useTranscriptAudio.tsx
+|   |   |   |-- index.tsx
+|   |   |   |-- README.md
+|   |   |   |-- TagSidePanel.tsx
+|   |   |   |-- TranscriptAudioPlayer.tsx
+|   |   |   |-- TranscriptControls.tsx
+|   |   |   |-- TranscriptHeader.tsx
+|   |   |   |-- TranscriptText.tsx
+|   |   |   +-- types.tsx
+|   |   |-- utils/
+|   |   |   |-- callApiUtils.tsx
+|   |   |   |-- callTypeGuards.ts
+|   |   |   |-- deleteCallCompletely.ts
+|   |   |   |-- duplicateManager.ts
+|   |   |   |-- fetchWorkDriveTree.tsx
+|   |   |   |-- iconUtils.tsx
+|   |   |   |-- removeCallUpload.tsx
+|   |   |   |-- signedUrls.tsx
+|   |   |   |-- transcriptionProcessor.tsx
+|   |   |   |-- updateCallOrigine.tsx
+|   |   |   +-- validateTranscriptionJSON.ts
+|   |   |-- ArrivalTable.tsx
+|   |   |-- AudioList.tsx
+|   |   |-- AudioUploadModal.tsx
+|   |   |-- AuthButton.tsx
+|   |   |-- AuthStatus.tsx
+|   |   |-- CallUploaderTaggerLPL.tsx
+|   |   |-- DeleteConfirmationDialog.tsx
+|   |   |-- DepartureTable.tsx
+|   |   |-- FilterInput.tsx
+|   |   |-- FolderTreeView.tsx
+|   |   |-- SimpleWorkdriveExplorer_old.tsx
+|   |   |-- SnackBarManager.tsx
+|   |   |-- TagAnalysisGraph.tsx
+|   |   |-- TagAnalysisReport.tsx
+|   |   |-- TagEditor.tsx
+|   |   |-- TaggerLPL.tsx
+|   |   |-- TagHistoryView.tsx
+|   |   |-- TagSelector.tsx
+|   |   |-- TagStats.tsx
+|   |   |-- TagTreeView.tsx
+|   |   |-- TurnTagEditor.tsx
+|   |   +-- TurnTaggedTable.tsx
+|   |-- context/
+|   |   |-- SupabaseContext.tsx
+|   |   |-- TaggingDataContext.tsx
+|   |   |-- ThemeContext.tsx
+|   |   +-- ZohoContext.tsx
+|   |-- lib/
+|   |   |-- config/
+|   |   |   |-- assemblyAIConfig.ts
+|   |   |   +-- transcriptionConfig.ts
+|   |   +-- supabaseClient.tsx
+|   |-- types/
+|   |   +-- common.tsx
+|   |-- jest.setup.js
+|   +-- supabaseClient_old.tsx
++-- tests/
+    |-- diarizationApiClient.test.ts
+    |-- setupTests.ts
+    +-- transcriptionApiClient.test.ts

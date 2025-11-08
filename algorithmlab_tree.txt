@@ -278,6 +278,7 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |   |   useAlgorithmVersioning.ts
 |   |   useClassifierConfiguration.ts
 |   |   useClassifierStatus.ts
+|   |   useH2Data.ts
 |   |   useLevel0Validation.ts
 |   |   useLevel1Testing.ts
 |   |   useMultiAlgorithmComparison.ts
@@ -287,6 +288,7 @@ C:\USERS\THOMA\ONEDRIVE\SONEAR 2025\TAGGERLPL-NEXTJS\SRC\APP\(PROTECTED)\ANALYSI
 |   \---level1
 +---types
 |   |   enrichir les types.md
+|   |   h2Types.ts
 |   |   index.ts
 |   |   Level0Types.ts
 |   |   Level1Types.ts

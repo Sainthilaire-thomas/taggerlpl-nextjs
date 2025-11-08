@@ -1044,145 +1044,53 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
   }
 
   // Fonction calculateAllNextTurnTags corrigée (lignes ~520)
-  // ✅ VERSION SIMPLIFIÉE ET CORRECTE du calcul next_turn_tag
-  const calculateAllNextTurnTags = useCallback(
-    async (callId: string): Promise<number> => {
-      if (!supabase) {
-        console.warn("Supabase not available");
+  // ✅ NOUVELLE VERSION : Appel de la fonction RPC calculate_turn_relations
+const calculateAllNextTurnTags = useCallback(
+  async (callId: string): Promise<number> => {
+    if (!supabase) {
+      console.warn("Supabase not available");
+      return 0;
+    }
+
+    try {
+      console.log("=== CALCUL RELATIONS ÉTENDUES (RPC) ===");
+      console.log("Call ID:", callId);
+
+      // ✅ Appeler la fonction RPC avec call_id en INTEGER
+      const { data, error } = await supabase.rpc('calculate_turn_relations', {
+        p_call_id: parseInt(callId, 10) // Cast en INTEGER
+      });
+
+      if (error) {
+        console.error("❌ Erreur calcul relations:", error);
+        throw error;
+      }
+
+      const result = data?.[0];
+      
+      if (!result) {
+        console.warn("⚠️ Aucun résultat retourné par la fonction");
         return 0;
       }
 
-      try {
-        console.log("=== CALCUL NEXT_TURN_TAG SIMPLIFIÉ ===");
-        console.log("Call ID:", callId);
+      console.log(`✅ ${result.updated_count} tours mis à jour`);
+      console.log(`📊 ${result.total_turns} tours traités`);
+      console.log(`⏱️ ${result.execution_time_ms}ms`);
 
-        // 1. Récupérer les tags valides de lpltag
-        const { data: validTags, error: validTagsError } = await supabase
-          .from("lpltag")
-          .select("label")
-          .not("label", "is", null);
-
-        if (validTagsError) {
-          console.error("Erreur récupération tags valides:", validTagsError);
-          return 0;
-        }
-
-        const validTagLabels = new Set(
-          validTags?.map((tag) => tag.label) || []
-        );
-        console.log(`📋 ${validTagLabels.size} tags valides dans lpltag`);
-
-        // 2. Récupérer TOUS les tags triés par temps (ordre chronologique strict)
-        const { data: allTags, error: tagsError } = await supabase
-          .from("turntagged")
-          .select("id, start_time, end_time, tag, speaker, next_turn_tag")
-          .eq("call_id", callId)
-          .order("start_time", { ascending: true })
-          .order("id", { ascending: true }); // Tri secondaire pour stabilité
-
-        if (tagsError) {
-          console.error("Erreur récupération tags:", tagsError);
-          return 0;
-        }
-
-        if (!allTags || allTags.length === 0) {
-          console.log("Aucun tag trouvé pour cet appel");
-          return 0;
-        }
-
-        console.log(`Traitement de ${allTags.length} tags`);
-
-        let updatedCount = 0;
-        let rejectedCount = 0;
-
-        // 3. ✅ LOGIQUE SIMPLE : pour chaque tag, trouver le prochain tag d'un speaker différent
-        for (let i = 0; i < allTags.length; i++) {
-          const currentTag = allTags[i];
-
-          console.log(
-            `\n🔍 Tag ${i + 1}/${allTags.length}: ${currentTag.id} (${
-              currentTag.start_time
-            }s) - ${currentTag.tag} [${currentTag.speaker}]`
-          );
-
-          // Chercher le PROCHAIN tag d'un speaker différent
-          let nextTurnTag = null;
-          let nextTagFound = null;
-
-          for (let j = i + 1; j < allTags.length; j++) {
-            const candidateTag = allTags[j];
-
-            // ✅ CONDITION SIMPLE : speaker différent
-            if (candidateTag.speaker !== currentTag.speaker) {
-              console.log(
-                `   → Candidat trouvé: ${candidateTag.id} (${candidateTag.start_time}s) - ${candidateTag.tag} [${candidateTag.speaker}]`
-              );
-
-              // Valider que le tag existe dans lpltag
-              if (validTagLabels.has(candidateTag.tag)) {
-                nextTurnTag = candidateTag.tag;
-                nextTagFound = candidateTag;
-                console.log(`   ✅ Next turn validé: "${nextTurnTag}"`);
-                break; // Prendre le PREMIER trouvé (le plus proche chronologiquement)
-              } else {
-                console.log(
-                  `   🚫 Tag "${candidateTag.tag}" rejeté (pas dans lpltag)`
-                );
-                rejectedCount++;
-              }
-            }
-          }
-
-          if (!nextTagFound) {
-            console.log(
-              `   ❌ Aucun next turn trouvé (fin de conversation ou même speaker)`
-            );
-          }
-
-          // 4. Mettre à jour SEULEMENT si différent de l'existant
-          if (currentTag.next_turn_tag !== nextTurnTag) {
-            console.log(
-              `   🔄 Mise à jour: "${currentTag.next_turn_tag}" → "${nextTurnTag}"`
-            );
-
-            const { error: updateError } = await supabase
-              .from("turntagged")
-              .update({ next_turn_tag: nextTurnTag })
-              .eq("id", currentTag.id);
-
-            if (updateError) {
-              console.error(
-                `   ❌ Erreur mise à jour tag ${currentTag.id}:`,
-                updateError
-              );
-            } else {
-              console.log(`   ✅ Tag ${currentTag.id} mis à jour avec succès`);
-              updatedCount++;
-            }
-          } else {
-            console.log(`   ⏸️ Pas de changement nécessaire`);
-          }
-        }
-
-        console.log(`\n=== RÉSULTATS FINAUX ===`);
-        console.log(`✅ ${updatedCount} tags mis à jour`);
-        console.log(`🚫 ${rejectedCount} tags rejetés (invalides)`);
-        console.log(`⏸️ ${allTags.length - updatedCount} tags inchangés`);
-
-        // 5. Rafraîchir l'état local si des changements
-        if (updatedCount > 0) {
-          console.log("🔄 Rafraîchissement de l'état local...");
-          await fetchTaggedTurns(callId);
-        }
-
-        return updatedCount;
-      } catch (err) {
-        console.error("❌ Erreur dans calculateAllNextTurnTags:", err);
-        return 0;
+      // Rafraîchir l'état local si des changements
+      if (result.updated_count > 0) {
+        console.log("🔄 Rafraîchissement de l'état local...");
+        await fetchTaggedTurns(callId);
       }
-    },
-    [supabase, fetchTaggedTurns]
-  );
+
+      return result.updated_count;
+    } catch (err) {
+      console.error("❌ Erreur dans calculateAllNextTurnTags:", err);
+      return 0;
+    }
+  },
+  [supabase, fetchTaggedTurns]
+);
 
   const deleteTurnTag = useCallback(
     async (id: number): Promise<void> => {
