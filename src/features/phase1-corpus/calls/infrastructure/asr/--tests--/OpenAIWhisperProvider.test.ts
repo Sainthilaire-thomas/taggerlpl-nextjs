@@ -1,7 +1,7 @@
 // src/components/calls/infrastructure/asr/--tests--/OpenAIWhisperProvider.test.ts
 
 import { jest } from "@jest/globals";
-import { TranscriptionError } from "@/components/calls/shared/exceptions/TranscriptionExceptions";
+import { TranscriptionError } from "@/features/phase1-corpus/calls/shared/exceptions/TranscriptionExceptions";
 import { transcriptionConfig } from "@/lib/config/transcriptionConfig";
 
 // --- Polyfills simples pour l'environnement de test ---

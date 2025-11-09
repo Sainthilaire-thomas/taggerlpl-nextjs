@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Box, Typography, Button, Paper } from "@mui/material";
 import CallListUnprepared from "../CallListUnprepared";
-import { useCallPreparation } from "@/components/calls/ui/hooks/useCallPreparation";
+import { useCallPreparation } from "@/features/phase1-corpus/calls/ui/hooks/useCallPreparation";
 import SnackbarManager from "../SnackBarManager";
 
 // (optionnel) type minimal local si besoin

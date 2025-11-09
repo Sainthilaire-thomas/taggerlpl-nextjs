@@ -30,10 +30,10 @@ import { useTaggingData } from "@/context/TaggingDataContext";
 import CallListUnprepared from "./CallListUnprepared";
 // ❌ legacy: removeCallUpload (remplacé par useCallManagement)
 // ❌ legacy: signedUrls util (on utilise le hook service)
-import { useCallImport } from "@/components/calls/ui/hooks/useCallImport";
-import { useCallPreparation } from "@/components/calls/ui/hooks/useCallPreparation";
-import { useCallManagement } from "@/components/calls/ui/hooks/useCallManagement";
-import { useStorageService } from "@/components/calls/ui/hooks/useStorageService";
+import { useCallImport } from "@/features/phase1-corpus/calls/ui/hooks/useCallImport";
+import { useCallPreparation } from "@/features/phase1-corpus/calls/ui/hooks/useCallPreparation";
+import { useCallManagement } from "@/features/phase1-corpus/calls/ui/hooks/useCallManagement";
+import { useStorageService } from "@/features/phase1-corpus/calls/ui/hooks/useStorageService";
 import SnackbarManager from "./SnackBarManager";
 import SimpleWorkdriveExplorer from "@/components/SimpleWorkdriveExplorer";
 

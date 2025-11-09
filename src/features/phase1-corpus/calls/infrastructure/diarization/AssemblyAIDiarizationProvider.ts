@@ -1,6 +1,6 @@
 // src/components/calls/infrastructure/diarization/AssemblyAIDiarizationProvider.ts
 
-import type { DiarizationSegment } from "@/components/calls/shared/types/TranscriptionTypes";
+import type { DiarizationSegment } from "@/features/phase1-corpus/calls/shared/types/TranscriptionTypes";
 import {
   assemblyAIConfig,
   validateAssemblyAIConfig,

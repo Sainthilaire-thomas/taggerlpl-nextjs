@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import supabaseClient from "@/lib/supabaseClient";
-import { TranscriptionTransformationService } from "@/components/calls/domain/services/TranscriptionTransformationService";
+import { TranscriptionTransformationService } from "@/features/phase1-corpus/calls/domain/services/TranscriptionTransformationService";
 
 /**
  * Préparation d'un appel pour le tagging.

@@ -10,11 +10,11 @@ import {
 import {
   AudioMetadata,
   TranscriptionMetrics,
-} from "@/components/calls/shared/types/TranscriptionTypes";
-import { TranscriptionError } from "@/components/calls/shared/exceptions/TranscriptionExceptions";
-import { calculateCost } from "@/components/calls/shared/utils/cost";
-import { isSupportedAudioFormat } from "@/components/calls/shared/utils/audioFormat";
-import { sanitizeFilename } from "@/components/calls/shared/utils/filename";
+} from "@/features/phase1-corpus/calls/shared/types/TranscriptionTypes";
+import { TranscriptionError } from "@/features/phase1-corpus/calls/shared/exceptions/TranscriptionExceptions";
+import { calculateCost } from "@/features/phase1-corpus/calls/shared/utils/cost";
+import { isSupportedAudioFormat } from "@/features/phase1-corpus/calls/shared/utils/audioFormat";
+import { sanitizeFilename } from "@/features/phase1-corpus/calls/shared/utils/filename";
 
 /**
  * Options pour la transcription Whisper
