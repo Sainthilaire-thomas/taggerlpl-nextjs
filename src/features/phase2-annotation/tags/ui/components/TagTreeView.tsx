@@ -17,7 +17,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useTheme } from "@mui/material/styles";
 import TagEditor from "@/features/phase2-annotation/tags/ui/components/TagEditor";
 import TagStats from "@/features/phase2-annotation/tags/ui/components/TagStats";
-import TurntaggedTable from "@/components/TurnTaggedTable";
+import TurntaggedTable from "@/features/phase2-annotation/turns/ui/components/TurnTaggedTable";
 import { getFamilyIcon } from "@/components/utils/iconUtils";
 
 // Types (à extraire dans un fichier séparé)
