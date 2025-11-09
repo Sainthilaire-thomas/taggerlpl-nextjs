@@ -14,7 +14,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useZoho } from "@/context/ZohoContext";
 import AudioList from "../AudioList";
-import SimpleWorkdriveExplorer from "@/components/SimpleWorkdriveExplorer";
+import SimpleWorkdriveExplorer from "@/features/phase1-corpus/workdrive";
 import { handleCallSubmission } from "../utils/callApiUtils";
 
 // ✅ Types corrigés pour correspondre exactement à AudioList

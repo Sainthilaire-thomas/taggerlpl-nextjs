@@ -20,7 +20,7 @@ import {
   CloudUpload as UploadIcon,
   Folder as WorkdriveIcon,
 } from "@mui/icons-material";
-import SimpleWorkdriveExplorer from "@/components/SimpleWorkdriveExplorer";
+import SimpleWorkdriveExplorer from "@/features/phase1-corpus/workdrive";
 
 // ✅ Interface pour un appel (réutiliser la même que ComplementActionButtons)
 interface Call {

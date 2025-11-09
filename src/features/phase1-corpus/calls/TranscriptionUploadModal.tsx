@@ -22,7 +22,7 @@ import {
   Folder as WorkdriveIcon,
   Code as JsonIcon,
 } from "@mui/icons-material";
-import SimpleWorkdriveExplorer from "@/components/SimpleWorkdriveExplorer";
+import SimpleWorkdriveExplorer from "@/features/phase1-corpus/workdrive";
 
 // ✅ Interface pour un appel (même que les autres composants)
 interface Call {

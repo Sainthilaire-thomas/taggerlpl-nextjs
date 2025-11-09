@@ -35,7 +35,7 @@ import { useCallPreparation } from "@/features/phase1-corpus/calls/ui/hooks/useC
 import { useCallManagement } from "@/features/phase1-corpus/calls/ui/hooks/useCallManagement";
 import { useStorageService } from "@/features/phase1-corpus/calls/ui/hooks/useStorageService";
 import SnackbarManager from "./SnackBarManager";
-import SimpleWorkdriveExplorer from "@/components/SimpleWorkdriveExplorer";
+import SimpleWorkdriveExplorer from "@/features/phase1-corpus/workdrive";
 
 // Types - Correction pour correspondre au type attendu par AudioList
 interface ZohoFile {

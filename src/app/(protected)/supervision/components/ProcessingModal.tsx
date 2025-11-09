@@ -26,7 +26,7 @@ import { Close, CloudUpload, Build, ExpandMore } from "@mui/icons-material";
 import { ProcessingModalProps, ProcessingJob } from "../types";
 import { useProcessingJobs } from "../hooks/useProcessingJobs";
 import { CallProcessingService } from "../utils/callProcessingService";
-import SimpleWorkdriveExplorer from "@/components/SimpleWorkdriveExplorer";
+import SimpleWorkdriveExplorer from "@/features/phase1-corpus/workdrive";
 
 export const ProcessingModal: React.FC<ProcessingModalProps> = ({
   open,
