@@ -15,7 +15,7 @@ import {
 import { Close } from "@mui/icons-material";
 import { SupervisionTurnTagged } from "../types";
 import { formatTime } from "../utils/formatters";
-import TranscriptLPL from "@/components/TranscriptLPL";
+import TranscriptLPL from "@/features/phase2-annotation/transcript";
 
 interface TaggingModalProps {
   open: boolean;

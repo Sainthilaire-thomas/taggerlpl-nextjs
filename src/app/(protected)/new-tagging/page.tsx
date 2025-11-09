@@ -14,7 +14,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useTaggingData } from "@/context/TaggingDataContext";
-import TranscriptLPL from "@/components/TranscriptLPL";
+import TranscriptLPL from "@/features/phase2-annotation/transcript";
 import { useRouter, useSearchParams } from "next/navigation"; // ✅ ajoute useSearchParams
 import { generateSignedUrl } from "@/components/utils/signedUrls";
 
