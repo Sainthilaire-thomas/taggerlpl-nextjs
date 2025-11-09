@@ -16,6 +16,7 @@ README copy.md
 README.md
 tsconfig.algorithmlab.json
 tsconfig.json
+tsconfig.json.backup
 |-- .vscode/
 |   |-- settings.json
 |   +-- tasks.json
@@ -105,6 +106,12 @@ tsconfig.json
 |   |-- Flux-donnees-taggerLPL.md
 |   +-- schema.sql
 |-- docs/
+|   |-- architecture/
+|   |   |-- ARCHITECTURE_CIBLE_WORKFLOW.md
+|   |   |-- ETAPE_0.5_TYPES_SOLIDIFICATION.md
+|   |   |-- PROPOSITION_RESTRUCTURATION.md
+|   |   |-- README.md
+|   |   +-- SESSION_ARCHITECTURE_REFACTORING.md
 |   |-- calls/
 |   |   |-- architecture-transcription.md
 |   |   |-- avancement-roadmap-trasncription-diarization-23sep.md
@@ -147,9 +154,11 @@ tsconfig.json
 |   |-- vercel.svg
 |   +-- window.svg
 |-- scripts/
+|   |-- complete-step-0-5.ps1
 |   |-- generate-structure-report.ps1
 |   |-- generate-tree.ps1
 |   |-- generate-tree-simple.ps1
+|   |-- generate-types.ps1
 |   |-- gen-types-doc.mjs
 |   +-- precompute-h2-results.ts
 |-- serverSpacy/
@@ -877,9 +886,22 @@ tsconfig.json
 |   |   |-- config/
 |   |   |   |-- assemblyAIConfig.ts
 |   |   |   +-- transcriptionConfig.ts
+|   |   |-- h2/
+|   |   |   |-- h2.converters.ts
+|   |   |   |-- h2.reflet-analysis.ts
+|   |   |   +-- h2.service.ts
 |   |   +-- supabaseClient.tsx
 |   |-- types/
-|   |   +-- common.tsx
+|   |   |-- entities/
+|   |   |   |-- call.ts
+|   |   |   |-- h2.entities.ts
+|   |   |   |-- index.ts
+|   |   |   |-- tag.ts
+|   |   |   |-- transcription.ts
+|   |   |   +-- turn.ts
+|   |   |-- common.tsx
+|   |   |-- database.types.ts
+|   |   +-- index.ts
 |   |-- jest.setup.js
 |   +-- supabaseClient_old.tsx
 +-- tests/
