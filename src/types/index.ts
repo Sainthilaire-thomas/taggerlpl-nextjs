@@ -1,9 +1,9 @@
 ﻿/**
  * Central export point for all types
- * 
+ *
  * Usage:
  *   import { Call, Tag, TurnTagged, Database } from '@/types'
- * 
+ *
  * This provides a single source of truth for all TypeScript types
  * across the TaggerLPL application.
  */
@@ -24,7 +24,21 @@ export * from './entities';
 export * from './common';
 
 // ============================================================================
+// ALGORITHM LAB TYPES
+// ============================================================================
+export * from './algorithm-lab';
+
+// ============================================================================
+// TRANSCRIPT LPL TYPES
+// ============================================================================
+export * from './transcript-lpl';
+
+// ============================================================================
+// WORKDRIVE TYPES
+// ============================================================================
+export * from './workdrive';
+
+// ============================================================================
 // FUTURE EXTENSIONS (Uncomment when created)
 // ============================================================================
 // export * from './ui';              // UI component types
-// export * from './algorithm-lab';   // AlgorithmLab types
