@@ -15,8 +15,8 @@ import { ExpandMore, ChevronRight } from "@mui/icons-material";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import { supabase } from "@/lib/supabaseClient";
 import { useTheme } from "@mui/material/styles";
-import TagEditor from "@/components/TagEditor";
-import TagStats from "@/components/TagStats";
+import TagEditor from "@/features/phase2-annotation/tags/ui/components/TagEditor";
+import TagStats from "@/features/phase2-annotation/tags/ui/components/TagStats";
 import TurntaggedTable from "@/components/TurnTaggedTable";
 import { getFamilyIcon } from "@/components/utils/iconUtils";
 

@@ -8,7 +8,7 @@ import AppLayout from "../layout";
 // 📊 Composants AC existants (conservés)
 import StrategyAnalysisContainer from "./components/StrategyAnalysisContainer";
 import TagAnalysisGraph from "@/components/TagAnalysisGraph";
-import TagStats from "@/components/TagStats";
+import TagStats from "@/features/phase2-annotation/tags/ui/components/TagStats";
 import ImprovedGlobalMetrics from "./components/ImprovedGlobalMetrics";
 import DebugFunnel from "./components/DebugFunnel";
 import TagTemporalAnalysis from "./components/TagTemporalAnalysis";
