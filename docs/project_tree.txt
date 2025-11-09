@@ -109,6 +109,9 @@ tsconfig.json.backup
 |   |-- architecture/
 |   |   |-- ARCHITECTURE_CIBLE_WORKFLOW.md
 |   |   |-- ETAPE_0.5_TYPES_SOLIDIFICATION.md
+|   |   |-- ETAPE_0_5_COMPLETEE.md
+|   |   |-- ETAPE_0_5_COMPLETION_PLAN.md
+|   |   |-- INVENTAIRE_TYPES_EXISTANTS.md
 |   |   |-- PROPOSITION_RESTRUCTURATION.md
 |   |   |-- README.md
 |   |   +-- SESSION_ARCHITECTURE_REFACTORING.md
@@ -892,6 +895,16 @@ tsconfig.json.backup
 |   |   |   +-- h2.service.ts
 |   |   +-- supabaseClient.tsx
 |   |-- types/
+|   |   |-- algorithm-lab/
+|   |   |   |-- h2.ts
+|   |   |   |-- index.ts
+|   |   |   |-- level0.ts
+|   |   |   |-- level1.ts
+|   |   |   |-- shared.ts
+|   |   |   +-- validation.ts
+|   |   |-- analysis/
+|   |   |   |-- index.ts
+|   |   |   +-- types.ts
 |   |   |-- entities/
 |   |   |   |-- call.ts
 |   |   |   |-- h2.entities.ts
@@ -899,6 +912,12 @@ tsconfig.json.backup
 |   |   |   |-- tag.ts
 |   |   |   |-- transcription.ts
 |   |   |   +-- turn.ts
+|   |   |-- transcript-lpl/
+|   |   |   |-- index.ts
+|   |   |   +-- types.ts
+|   |   |-- workdrive/
+|   |   |   |-- index.ts
+|   |   |   +-- types.ts
 |   |   |-- common.tsx
 |   |   |-- database.types.ts
 |   |   +-- index.ts

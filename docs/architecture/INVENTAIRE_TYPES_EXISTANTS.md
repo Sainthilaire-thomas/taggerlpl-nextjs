@@ -1,6 +1,6 @@
 # 📊 INVENTAIRE COMPLET DES TYPES EXISTANTS
 
-**Date:** 2025-11-08  
+**Date:** 2025-11-08
 **Source:** project_tree.txt (911 lignes)
 
 ---
@@ -8,6 +8,7 @@
 ## 🔍 Types AlgorithmLab (Priorité 🔴 HAUTE)
 
 ### Types principaux (5 fichiers)
+
 ```
 Ligne 422: src/app/(protected)/analysis/components/AlgorithmLab/types/h2Types.ts
 Ligne 424: src/app/(protected)/analysis/components/AlgorithmLab/types/Level0Types.ts
@@ -17,6 +18,7 @@ Ligne 435: src/app/(protected)/analysis/components/AlgorithmLab/types/Validation
 ```
 
 ### Types secondaires dispersés (4+ fichiers)
+
 ```
 Ligne 282: AlgorithmLab/components/.../FineTuningDialog/types.ts
 Ligne 302: AlgorithmLab/components/.../ResultsSample/types.ts
@@ -25,6 +27,7 @@ Ligne 470: AlgorithmLab/components/Level2/types.ts
 ```
 
 ### Types dans hooks/utils
+
 ```
 Ligne 497: AlgorithmLab/hooks/.../types.ts
 Ligne 504: AlgorithmLab/hooks/.../types.ts
@@ -44,6 +47,7 @@ Ligne 845: src/components/TranscriptLPL/types.tsx
 ```
 
 **Contenu probable:**
+
 - Types pour tagging (TaggingState, TagSelection)
 - Types pour audio (AudioState, PlaybackState)
 - Types pour transcript (TranscriptSegment, WordTiming)
@@ -60,6 +64,7 @@ Ligne 832: src/components/SimpleWorkdriveExplorer/types.tsx
 ```
 
 **Contenu probable:**
+
 - Types pour fichiers Zoho (WorkdriveFile, WorkdriveFolder)
 - Types pour navigation (NavigationState, BreadcrumbItem)
 - Types pour auth (AuthState, AuthCredentials)
@@ -79,6 +84,7 @@ Ligne 760: src/components/calls/shared/types/TranscriptionTypes.ts
 **Statut:** Déjà bien structuré en DDD, probablement pas besoin de migrer
 
 **Contenu:**
+
 - CallStatus, CallState
 - TranscriptionFormat, TranscriptionSegment
 - Déjà dans une architecture propre
@@ -111,6 +117,7 @@ Ligne 694: src/app/(protected)/analysis/components/H2RelationAnalysis/types.ts
 ### Phase A: AlgorithmLab (45min)
 
 **Fichiers sources:**
+
 1. `h2Types.ts` → analyser et migrer vers `@/types/algorithm-lab/h2.ts`
 2. `Level0Types.ts` → analyser et migrer vers `@/types/algorithm-lab/level0.ts`
 3. `Level1Types.ts` → analyser et migrer vers `@/types/algorithm-lab/level1.ts`
@@ -118,11 +125,13 @@ Ligne 694: src/app/(protected)/analysis/components/H2RelationAnalysis/types.ts
 5. `ValidationTypes.ts` → analyser et migrer vers `@/types/algorithm-lab/validation.ts`
 
 **Fichiers à consolider:**
+
 - Types secondaires (FineTuning, ResultsSample, etc.) → intégrer dans les fichiers appropriés
 - Créer `algorithms.ts` pour types de base consolidés
 - Créer `level2.ts` si nécessaire
 
 **Actions:**
+
 1. Lire chaque fichier source
 2. Comprendre les types et leurs dépendances
 3. Créer la structure consolidée
@@ -132,24 +141,29 @@ Ligne 694: src/app/(protected)/analysis/components/H2RelationAnalysis/types.ts
 ### Phase B: TranscriptLPL (15min)
 
 **Fichier source:**
+
 - `src/components/TranscriptLPL/types.tsx`
 
 **Destination:**
+
 - `src/types/transcript-lpl/types.ts`
 - `src/types/transcript-lpl/index.ts`
 
 ### Phase C: WorkDrive (10min)
 
 **Fichier source:**
+
 - `src/components/SimpleWorkdriveExplorer/types.tsx`
 
 **Destination:**
+
 - `src/types/workdrive/types.ts`
 - `src/types/workdrive/index.ts`
 
 ### Phase D: UI (20min - optionnel)
 
 **Créer de zéro:**
+
 - `src/types/ui/tables.ts`
 - `src/types/ui/filters.ts`
 - `src/types/ui/forms.ts`
@@ -171,12 +185,12 @@ Pour démarrer la migration complète, nous devons:
 
 ## 📊 STATISTIQUES
 
-| Catégorie | Fichiers sources | Fichiers cibles | Impact | Temps |
-|-----------|-----------------|-----------------|---------|-------|
-| AlgorithmLab | ~15 fichiers | 8 fichiers | 150+ imports | 45min |
-| TranscriptLPL | 1 fichier | 2 fichiers | 20+ imports | 15min |
-| WorkDrive | 1 fichier | 2 fichiers | 10+ imports | 10min |
-| UI | 0 (à créer) | 4 fichiers | Variable | 20min |
+| Catégorie      | Fichiers sources       | Fichiers cibles       | Impact                 | Temps          |
+| --------------- | ---------------------- | --------------------- | ---------------------- | -------------- |
+| AlgorithmLab    | ~15 fichiers           | 8 fichiers            | 150+ imports           | 45min          |
+| TranscriptLPL   | 1 fichier              | 2 fichiers            | 20+ imports            | 15min          |
+| WorkDrive       | 1 fichier              | 2 fichiers            | 10+ imports            | 10min          |
+| UI              | 0 (à créer)          | 4 fichiers            | Variable               | 20min          |
 | **TOTAL** | **~17 fichiers** | **16 fichiers** | **180+ imports** | **1h30** |
 
 ---

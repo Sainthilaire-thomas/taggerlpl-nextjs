@@ -1,4 +1,4 @@
-// algorithms/level1/shared/BaseClassifier.ts
+﻿// algorithms/level1/shared/BaseClassifier.ts
 export interface ClassificationResult {
   prediction: string;
   confidence: number;
@@ -24,6 +24,7 @@ export interface ClassifierMetadata {
   categories?: string[];
   configSchema?: Record<string, any>;
   targetDomain?: string;
+  features?: string[];
 }
 
 export abstract class BaseClassifier {
@@ -31,13 +32,14 @@ export abstract class BaseClassifier {
   abstract getMetadata(): ClassifierMetadata;
   abstract validateConfig(): boolean;
 
-  // Méthodes optionnelles pour la configuration
+  // MÃ©thodes optionnelles pour la configuration
   updateConfig?(config: any): void;
   getConfig?(): any;
 
-  // Méthode optionnelle pour les tests de batch
+  // MÃ©thode optionnelle pour les tests de batch
   async batchClassify?(verbatims: string[]): Promise<ClassificationResult[]>;
 
-  // Méthode optionnelle pour les tests de connexion - signature harmonisée
+  // MÃ©thode optionnelle pour les tests de connexion - signature harmonisÃ©e
   async testConnection?(): Promise<boolean | TestConnectionResult>;
 }
+
