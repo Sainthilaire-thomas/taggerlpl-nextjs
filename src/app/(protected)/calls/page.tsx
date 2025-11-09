@@ -17,12 +17,12 @@ import {
 import { CloudUpload, Build, List, Analytics } from "@mui/icons-material";
 
 // Nouveaux composants DDD
-import { CallImportPage } from "../../../components/calls/ui/pages/CallImportPage";
+import { CallImportPage } from "@/features/phase1-corpus/calls/ui/pages/CallImportPage";
 
-import { CallManagementPage } from "../../../components/calls/ui/pages/CallManagementPage";
+import { CallManagementPage } from "@/features/phase1-corpus/calls/ui/pages/CallManagementPage";
 
 // Hook pour les statistiques globales
-import { useCallStatistics } from "../../../components/calls/ui/hooks/useCallStatistics";
+import { useCallStatistics } from "@/features/phase1-corpus/calls/ui/hooks/useCallStatistics";
 
 // Types
 interface TabPanelProps {

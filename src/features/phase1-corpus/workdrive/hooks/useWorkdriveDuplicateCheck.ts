@@ -25,7 +25,7 @@ export const useWorkdriveDuplicateCheck = () => {
 
     try {
       // Import dynamique de votre fonction existante
-      const duplicateManager = await import("../../utils/duplicateManager");
+      const duplicateManager = await import("@/components/utils/duplicateManager");
       const result = await duplicateManager.checkForDuplicates(fileName);
 
       // Mettre à jour le statut

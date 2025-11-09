@@ -17,7 +17,7 @@ import EmptyStateMessage from "./components/EmptyStateMessage";
 import CallContentDialog from "./components/CallContentDialog";
 import BulkOriginEditBar from "./components/BulkOriginEditBar";
 import { AudioUploadModal } from "../AudioUploadModal";
-import { TranscriptionUploadModal } from "../calls/TranscriptionUploadModal";
+import { TranscriptionUploadModal } from "@/features/phase1-corpus/calls/TranscriptionUploadModal";
 import DeleteConfirmationDialog from "../DeleteConfirmationDialog";
 
 const CallListUnprepared: React.FC<CallListUnpreparedProps> = ({

@@ -18,7 +18,7 @@ import AudioFileIcon from "@mui/icons-material/AudioFile";
 import DescriptionIcon from "@mui/icons-material/Description";
 import WarningIcon from "@mui/icons-material/Warning";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { ComplementActionButtons } from "../../calls/ComplementActionButtons";
+import { ComplementActionButtons } from "@/features/phase1-corpus/calls/ComplementActionButtons";
 import OriginEditableCell from "./OriginEditableCell";
 import { Call } from "../types";
 import { getCallActions, getStatusColor, getContentLabel } from "../utils";

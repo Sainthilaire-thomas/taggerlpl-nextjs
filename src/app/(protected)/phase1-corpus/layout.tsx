@@ -8,7 +8,6 @@ interface Phase1LayoutProps {
 export default function Phase1CorpusLayout({ children }: Phase1LayoutProps) {
   return (
     <div>
-      {/* TODO: Ajouter navigation Phase 1 si nécessaire */}
       {children}
     </div>
   );

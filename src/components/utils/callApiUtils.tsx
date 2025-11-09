@@ -1,15 +1,15 @@
 // src/components/utils/callApiUtils.tsx - VERSION DDD FINALE
 
-import { createServices } from "../calls/infrastructure/ServiceFactory";
-import { ImportWorkflow } from "../calls/domain/workflows/ImportWorkflow";
-import { BulkPreparationWorkflow } from "../calls/domain/workflows/BulkPreparationWorkflow";
+import { createServices } from "@/features/phase1-corpus/calls/infrastructure/ServiceFactory";
+import { ImportWorkflow } from "@/features/phase1-corpus/calls/domain/workflows/ImportWorkflow";
+import { BulkPreparationWorkflow } from "@/features/phase1-corpus/calls/domain/workflows/BulkPreparationWorkflow";
 import {
   ImportResult,
   DuplicateDialogData,
   DuplicateAction,
   PreparationResult,
   BulkPreparationResult,
-} from "../calls/shared/types/CommonTypes";
+} from "@/features/phase1-corpus/calls/shared/types/CommonTypes";
 
 // ===== TYPES LEGACY (pour compatibilité) =====
 interface HandleCallSubmissionOptions {
