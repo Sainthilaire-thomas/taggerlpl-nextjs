@@ -39,6 +39,6 @@ export * from './transcript-lpl';
 export * from './workdrive';
 
 // ============================================================================
-// FUTURE EXTENSIONS (Uncomment when created)
+// ANALYSIS TYPES
 // ============================================================================
-// export * from './ui';              // UI component types
+export * from './analysis';
