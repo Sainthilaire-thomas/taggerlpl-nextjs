@@ -1,7 +1,7 @@
 // components/auth/ProtectedRoute.tsx
 "use client";
 
-import { useSupabase } from "@/context/SupabaseContext";
+import { useSupabase } from "@/features/shared/context";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Box, CircularProgress, Typography } from "@mui/material";

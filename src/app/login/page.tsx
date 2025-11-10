@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSupabase } from "@/context/SupabaseContext";
+import { useSupabase } from "@/features/shared/context";
 import { useRouter } from "next/navigation";
 import {
   Container,

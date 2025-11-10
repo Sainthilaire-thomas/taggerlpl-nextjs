@@ -1,13 +1,12 @@
 "use client";
-
 import { ReactNode } from "react";
-import { TaggingDataProvider } from "@/context/TaggingDataContext";
+import { TaggingDataProvider } from "@/features/shared/context";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ZohoProvider } from "@/context/ZohoContext";
 import { ThemeModeProvider } from "@/context/ThemeContext";
 import GlobalNavbar from "@/components/layout/GlobalNavbar";
-import { SupabaseProvider } from "@/context/SupabaseContext";
+import { SupabaseProvider } from "@/features/shared/context";
 
 interface RootLayoutProps {
   children: ReactNode;
@@ -19,24 +18,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <body>
         <AppRouterCacheProvider>
           <SupabaseProvider>
+            <GlobalNavbar />
             <ThemeModeProvider>
-              {/* Le GlobalNavbar peut être conditionnel ou être utilisé 
-                  uniquement pour les pages publiques si nécessaire */}
-              <GlobalNavbar />
-
-              {/* Positionnez le toggle au bon endroit dans votre UI */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: 20,
-                  right: 20,
-                  zIndex: 1300,
-                }}
-              ></div>
-
-              <CssBaseline />
               <ZohoProvider>
-                <TaggingDataProvider>{children}</TaggingDataProvider>
+                <TaggingDataProvider>
+                  <CssBaseline />
+                  {children}
+                </TaggingDataProvider>
               </ZohoProvider>
             </ThemeModeProvider>
           </SupabaseProvider>

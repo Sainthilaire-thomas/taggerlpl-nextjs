@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { AccountCircle, Login } from "@mui/icons-material";
 import Link from "next/link";
-import { useSupabase } from "@/context/SupabaseContext";
+import { useSupabase } from "@/features/shared/context";
 import { User } from "@supabase/supabase-js";
 
 export default function AuthStatus() {

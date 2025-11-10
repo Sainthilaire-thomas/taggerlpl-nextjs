@@ -1,7 +1,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { Box, Typography, Button } from "@mui/material";
-import { useTaggingData } from "@/features/phase2-annotation/shared/context/TaggingDataContext";
+import { useTaggingData } from "@/features/shared/context";
 import TagManager from "@/app/(protected)/tags/components/TagManager";
 
 // Import dynamique pour why-did-you-render (uniquement en développement)

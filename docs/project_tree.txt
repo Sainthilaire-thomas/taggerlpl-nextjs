@@ -12,11 +12,9 @@ next-env.d.ts
 package.json
 package-lock.json
 postcss.config.mjs
-README copy.md
 README.md
 tsconfig.algorithmlab.json
 tsconfig.json
-tsconfig.json.backup
 |-- .vscode/
 |   |-- settings.json
 |   +-- tasks.json
@@ -111,7 +109,9 @@ tsconfig.json.backup
 |   |   |-- ETAPE_0.5_TYPES_SOLIDIFICATION.md
 |   |   |-- ETAPE_0_5_COMPLETEE.md
 |   |   |-- ETAPE_0_5_COMPLETION_PLAN.md
+|   |   |-- ETAPE_3_PHASE2_ANNOTATION_PLAN.md
 |   |   |-- INVENTAIRE_TYPES_EXISTANTS.md
+|   |   |-- POINT_MIGRATION_10_NOV_11h.md
 |   |   |-- PROPOSITION_RESTRUCTURATION.md
 |   |   |-- README.md
 |   |   +-- SESSION_ARCHITECTURE_REFACTORING.md
@@ -189,7 +189,6 @@ tsconfig.json.backup
 |   |   |   |   |   |   |       |   |-- OpenAI3TConseillerClassifier.tsx
 |   |   |   |   |   |   |       |   |-- OpenAIConseillerClassifier.ts
 |   |   |   |   |   |   |       |   |-- ProxyOpenAIConseillerClassifier.ts
-|   |   |   |   |   |   |       |   |-- RegexConseillerClassifier copy.ts
 |   |   |   |   |   |   |       |   |-- RegexConseillerClassifier.ts
 |   |   |   |   |   |   |       |   +-- SpacyConseillerClassifier.ts
 |   |   |   |   |   |   |       |-- M1Algorithms/
@@ -582,6 +581,24 @@ tsconfig.json.backup
 |   |   |   |   +-- page.tsx
 |   |   |   |-- new-tagging/
 |   |   |   |   +-- page.tsx
+|   |   |   |-- phase1-corpus/
+|   |   |   |   |-- import/
+|   |   |   |   |   +-- page.tsx
+|   |   |   |   |-- management/
+|   |   |   |   |   +-- page.tsx
+|   |   |   |   |-- workdrive/
+|   |   |   |   |   +-- page.tsx
+|   |   |   |   +-- layout.tsx
+|   |   |   |-- phase2-annotation/
+|   |   |   |   |-- supervision/
+|   |   |   |   |   +-- page.tsx
+|   |   |   |   |-- tags-management/
+|   |   |   |   |   +-- page.tsx
+|   |   |   |   |-- transcript/
+|   |   |   |   |   +-- [callId]/
+|   |   |   |   |       +-- page.tsx
+|   |   |   |   |-- layout.tsx
+|   |   |   |   +-- page.tsx
 |   |   |   |-- shared/
 |   |   |   |   +-- TurnWithContext.tsx
 |   |   |   |-- supervision/
@@ -606,10 +623,6 @@ tsconfig.json.backup
 |   |   |   |   |   +-- index.ts
 |   |   |   |   |-- page.tsx
 |   |   |   |   +-- README.MD
-|   |   |   |-- tagging/
-|   |   |   |   |-- ClientTaggerPage.tsx
-|   |   |   |   |-- layout.tsx
-|   |   |   |   +-- page.tsx
 |   |   |   |-- tags/
 |   |   |   |   |-- components/
 |   |   |   |   |   |-- TagExplorer.tsx
@@ -683,169 +696,8 @@ tsconfig.json.backup
 |   |   |   |-- README_CallListUnprepared_Performances.md
 |   |   |   |-- types.ts
 |   |   |   +-- utils.ts
-|   |   |-- calls/
-|   |   |   |-- CallTableList/
-|   |   |   |   |-- hooks/
-|   |   |   |   |   |-- useBulkActions.tsx
-|   |   |   |   |   +-- useOptimizedCallData.tsx
-|   |   |   |   |-- BulkActionsToolbar.tsx
-|   |   |   |   |-- CallTableFilters.tsx
-|   |   |   |   |-- CallTableList.tsx
-|   |   |   |   |-- CallTableRow.tsx
-|   |   |   |   |-- index.ts
-|   |   |   |   |-- MobileCallCard.tsx
-|   |   |   |   |-- types.ts
-|   |   |   |   +-- utils.ts
-|   |   |   |-- domain/
-|   |   |   |   |-- entities/
-|   |   |   |   |   |-- AudioFile.ts
-|   |   |   |   |   |-- Call.ts
-|   |   |   |   |   |-- CallExtended.ts
-|   |   |   |   |   |-- index.ts
-|   |   |   |   |   |-- Transcription.ts
-|   |   |   |   |   +-- TranscriptionWord.ts
-|   |   |   |   |-- repositories/
-|   |   |   |   |   |-- CallRepository.ts
-|   |   |   |   |   |-- index.ts
-|   |   |   |   |   |-- RelationsRepository.ts
-|   |   |   |   |   +-- StorageRepository.ts
-|   |   |   |   |-- services/
-|   |   |   |   |   |-- CallFilteringService.ts
-|   |   |   |   |   |-- CallLifecycleService.ts
-|   |   |   |   |   |-- CallRelationsService.ts
-|   |   |   |   |   |-- CallService.ts
-|   |   |   |   |   |-- DiarizationService.ts
-|   |   |   |   |   |-- DuplicateService.ts
-|   |   |   |   |   |-- index.ts
-|   |   |   |   |   |-- RelationsService.ts
-|   |   |   |   |   |-- StorageService.ts
-|   |   |   |   |   |-- TranscriptionASRService.ts
-|   |   |   |   |   |-- TranscriptionIntegrationService.ts
-|   |   |   |   |   |-- TranscriptionTransformationService.ts
-|   |   |   |   |   +-- ValidationService.ts
-|   |   |   |   |-- workflows/
-|   |   |   |   |   |-- BulkPreparationWorkflow.ts
-|   |   |   |   |   |-- ImportWorkflow.ts
-|   |   |   |   |   |-- index.ts
-|   |   |   |   |   +-- TranscriptionASRWorkflow.ts
-|   |   |   |   +-- index.ts
-|   |   |   |-- infrastructure/
-|   |   |   |   |-- api/
-|   |   |   |   |   |-- BaseApiClient.ts
-|   |   |   |   |   |-- CallsApiClient.ts
-|   |   |   |   |   |-- DiarizationApiClient.ts
-|   |   |   |   |   +-- TranscriptionApiClient.ts
-|   |   |   |   |-- asr/
-|   |   |   |   |   |-- --tests--/
-|   |   |   |   |   |   +-- OpenAIWhisperProvider.test.ts
-|   |   |   |   |   +-- OpenAIWhisperProvider.ts
-|   |   |   |   |-- diarization/
-|   |   |   |   |   |-- __test__/
-|   |   |   |   |   |   +-- AssemblyAIDiarizationProvider.test.ts
-|   |   |   |   |   |-- AssemblyAIDiarizationProvider.ts
-|   |   |   |   |   +-- ExternalDiarizationProvider.ts
-|   |   |   |   |-- supabase/
-|   |   |   |   |   |-- index.ts
-|   |   |   |   |   |-- SupabaseCallRepository.ts
-|   |   |   |   |   |-- SupabaseRelationsRepository.ts
-|   |   |   |   |   +-- SupabaseStorageRepository.ts
-|   |   |   |   +-- ServiceFactory.ts
-|   |   |   |-- shared/
-|   |   |   |   |-- config/
-|   |   |   |   |   +-- CallsConfig.ts
-|   |   |   |   |-- exceptions/
-|   |   |   |   |   |-- DomainExceptions.ts
-|   |   |   |   |   +-- TranscriptionExceptions.ts
-|   |   |   |   |-- types/
-|   |   |   |   |   |-- CallStatus.ts
-|   |   |   |   |   |-- CommonTypes.ts
-|   |   |   |   |   |-- index.ts
-|   |   |   |   |   +-- TranscriptionTypes.ts
-|   |   |   |   +-- utils/
-|   |   |   |       |-- audioFormat.ts
-|   |   |   |       |-- cost.ts
-|   |   |   |       +-- filename.ts
-|   |   |   |-- --test--/
-|   |   |   |   +-- DomainTest.ts
-|   |   |   |-- ui/
-|   |   |   |   |-- components/
-|   |   |   |   |   |-- transcription/
-|   |   |   |   |   |   +-- TranscriptionProgress.tsx
-|   |   |   |   |   |-- CallLifecycleColumn.tsx
-|   |   |   |   |   |-- DebugCallLoading.tsx
-|   |   |   |   |   |-- DuplicateResolutionDialog.tsx
-|   |   |   |   |   |-- ImportForm.tsx
-|   |   |   |   |   |-- ImportProgress.tsx
-|   |   |   |   |   |-- ImportSuccessDialog.tsx
-|   |   |   |   |   |-- index.ts
-|   |   |   |   |   +-- VirtualizedCallTable.tsx
-|   |   |   |   |-- hooks/
-|   |   |   |   |   |-- actions/
-|   |   |   |   |   |   |-- useCallAudioActions.ts
-|   |   |   |   |   |   |-- useCallCleanup.ts
-|   |   |   |   |   |   |-- useCallFlags.ts
-|   |   |   |   |   |   |-- useCallPreparationActions.ts
-|   |   |   |   |   |   +-- useCallTranscriptionActions.ts
-|   |   |   |   |   |-- useAccordionsLazyData.ts
-|   |   |   |   |   |-- useCallImport.ts
-|   |   |   |   |   |-- useCallManagement.ts
-|   |   |   |   |   |-- useCallPreparation.ts
-|   |   |   |   |   |-- useCallStatistics.ts
-|   |   |   |   |   |-- useLifecycleActions.ts
-|   |   |   |   |   |-- useRelationsNextTurn.ts
-|   |   |   |   |   |-- useStorageService.ts
-|   |   |   |   |   +-- useUnifiedCallManagement.ts
-|   |   |   |   |-- pages/
-|   |   |   |   |   |-- CallImportPage.tsx
-|   |   |   |   |   |-- CallManagementPage copy.tsx
-|   |   |   |   |   +-- CallManagementPage.tsx
-|   |   |   |   +-- sections/
-|   |   |   |       |-- CMActionsBar.tsx
-|   |   |   |       |-- CMFiltersBar.tsx
-|   |   |   |       |-- CMHeaderStats.tsx
-|   |   |   |       |-- CMOriginAccordions.tsx
-|   |   |   |       +-- CMServiceTabs.tsx
-|   |   |   |-- CallImporter.tsx
-|   |   |   |-- CallList.tsx
-|   |   |   |-- CallPreparation.tsx
-|   |   |   |-- CallTableList_old.tsx
-|   |   |   |-- ComplementActionButtons.tsx
-|   |   |   |-- DuplicateDialog.tsx
-|   |   |   +-- TranscriptionUploadModal.tsx
 |   |   |-- layout/
 |   |   |   +-- GlobalNavbar.tsx
-|   |   |-- SimpleWorkdriveExplorer/
-|   |   |   |-- components/
-|   |   |   |   |-- AuthPrompt.tsx
-|   |   |   |   |-- FileList.tsx
-|   |   |   |   |-- FileSelectionSummary.tsx
-|   |   |   |   |-- NavigationControls.tsx
-|   |   |   |   |-- Notifications.tsx
-|   |   |   |   |-- SearchBar.tsx
-|   |   |   |   |-- SearchDebug.tsx
-|   |   |   |   +-- SearchResults.tsx
-|   |   |   |-- hooks/
-|   |   |   |   |-- useWorkdriveDuplicateCheck.ts
-|   |   |   |   |-- useWorkdriveFiles.tsx
-|   |   |   |   +-- useWorkdriveSearch.tsx
-|   |   |   |-- utils/
-|   |   |   |   |-- authHelpers.tsx
-|   |   |   |   +-- fileHelpers.tsx
-|   |   |   |-- index.tsx
-|   |   |   +-- types.tsx
-|   |   |-- TranscriptLPL/
-|   |   |   |-- hooks/
-|   |   |   |   |-- useRelationStatus.ts
-|   |   |   |   |-- useTaggingLogic.tsx
-|   |   |   |   +-- useTranscriptAudio.tsx
-|   |   |   |-- index.tsx
-|   |   |   |-- README.md
-|   |   |   |-- TagSidePanel.tsx
-|   |   |   |-- TranscriptAudioPlayer.tsx
-|   |   |   |-- TranscriptControls.tsx
-|   |   |   |-- TranscriptHeader.tsx
-|   |   |   |-- TranscriptText.tsx
-|   |   |   +-- types.tsx
 |   |   |-- utils/
 |   |   |   |-- callApiUtils.tsx
 |   |   |   |-- callTypeGuards.ts
@@ -868,23 +720,205 @@ tsconfig.json.backup
 |   |   |-- DepartureTable.tsx
 |   |   |-- FilterInput.tsx
 |   |   |-- FolderTreeView.tsx
-|   |   |-- SimpleWorkdriveExplorer_old.tsx
 |   |   |-- SnackBarManager.tsx
 |   |   |-- TagAnalysisGraph.tsx
 |   |   |-- TagAnalysisReport.tsx
-|   |   |-- TagEditor.tsx
-|   |   |-- TaggerLPL.tsx
-|   |   |-- TagHistoryView.tsx
-|   |   |-- TagSelector.tsx
-|   |   |-- TagStats.tsx
-|   |   |-- TagTreeView.tsx
-|   |   |-- TurnTagEditor.tsx
-|   |   +-- TurnTaggedTable.tsx
+|   |   +-- TaggerLPL.tsx
 |   |-- context/
 |   |   |-- SupabaseContext.tsx
 |   |   |-- TaggingDataContext.tsx
 |   |   |-- ThemeContext.tsx
 |   |   +-- ZohoContext.tsx
+|   |-- features/
+|   |   |-- phase1-corpus/
+|   |   |   |-- calls/
+|   |   |   |   |-- CallTableList/
+|   |   |   |   |   |-- hooks/
+|   |   |   |   |   |   |-- useBulkActions.tsx
+|   |   |   |   |   |   +-- useOptimizedCallData.tsx
+|   |   |   |   |   |-- BulkActionsToolbar.tsx
+|   |   |   |   |   |-- CallTableFilters.tsx
+|   |   |   |   |   |-- CallTableList.tsx
+|   |   |   |   |   |-- CallTableRow.tsx
+|   |   |   |   |   |-- index.ts
+|   |   |   |   |   |-- MobileCallCard.tsx
+|   |   |   |   |   |-- types.ts
+|   |   |   |   |   +-- utils.ts
+|   |   |   |   |-- domain/
+|   |   |   |   |   |-- entities/
+|   |   |   |   |   |   |-- AudioFile.ts
+|   |   |   |   |   |   |-- Call.ts
+|   |   |   |   |   |   |-- CallExtended.ts
+|   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |-- Transcription.ts
+|   |   |   |   |   |   +-- TranscriptionWord.ts
+|   |   |   |   |   |-- repositories/
+|   |   |   |   |   |   |-- CallRepository.ts
+|   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |-- RelationsRepository.ts
+|   |   |   |   |   |   +-- StorageRepository.ts
+|   |   |   |   |   |-- services/
+|   |   |   |   |   |   |-- CallFilteringService.ts
+|   |   |   |   |   |   |-- CallLifecycleService.ts
+|   |   |   |   |   |   |-- CallRelationsService.ts
+|   |   |   |   |   |   |-- CallService.ts
+|   |   |   |   |   |   |-- DiarizationService.ts
+|   |   |   |   |   |   |-- DuplicateService.ts
+|   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |-- RelationsService.ts
+|   |   |   |   |   |   |-- StorageService.ts
+|   |   |   |   |   |   |-- TranscriptionASRService.ts
+|   |   |   |   |   |   |-- TranscriptionIntegrationService.ts
+|   |   |   |   |   |   |-- TranscriptionTransformationService.ts
+|   |   |   |   |   |   +-- ValidationService.ts
+|   |   |   |   |   |-- workflows/
+|   |   |   |   |   |   |-- BulkPreparationWorkflow.ts
+|   |   |   |   |   |   |-- ImportWorkflow.ts
+|   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   +-- TranscriptionASRWorkflow.ts
+|   |   |   |   |   +-- index.ts
+|   |   |   |   |-- infrastructure/
+|   |   |   |   |   |-- api/
+|   |   |   |   |   |   |-- BaseApiClient.ts
+|   |   |   |   |   |   |-- CallsApiClient.ts
+|   |   |   |   |   |   |-- DiarizationApiClient.ts
+|   |   |   |   |   |   +-- TranscriptionApiClient.ts
+|   |   |   |   |   |-- asr/
+|   |   |   |   |   |   |-- --tests--/
+|   |   |   |   |   |   |   +-- OpenAIWhisperProvider.test.ts
+|   |   |   |   |   |   +-- OpenAIWhisperProvider.ts
+|   |   |   |   |   |-- diarization/
+|   |   |   |   |   |   |-- __test__/
+|   |   |   |   |   |   |   +-- AssemblyAIDiarizationProvider.test.ts
+|   |   |   |   |   |   |-- AssemblyAIDiarizationProvider.ts
+|   |   |   |   |   |   +-- ExternalDiarizationProvider.ts
+|   |   |   |   |   |-- supabase/
+|   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |-- SupabaseCallRepository.ts
+|   |   |   |   |   |   |-- SupabaseRelationsRepository.ts
+|   |   |   |   |   |   +-- SupabaseStorageRepository.ts
+|   |   |   |   |   +-- ServiceFactory.ts
+|   |   |   |   |-- shared/
+|   |   |   |   |   |-- config/
+|   |   |   |   |   |   +-- CallsConfig.ts
+|   |   |   |   |   |-- exceptions/
+|   |   |   |   |   |   |-- DomainExceptions.ts
+|   |   |   |   |   |   +-- TranscriptionExceptions.ts
+|   |   |   |   |   |-- types/
+|   |   |   |   |   |   |-- CallStatus.ts
+|   |   |   |   |   |   |-- CommonTypes.ts
+|   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   +-- TranscriptionTypes.ts
+|   |   |   |   |   +-- utils/
+|   |   |   |   |       |-- audioFormat.ts
+|   |   |   |   |       |-- cost.ts
+|   |   |   |   |       +-- filename.ts
+|   |   |   |   |-- --test--/
+|   |   |   |   |   +-- DomainTest.ts
+|   |   |   |   |-- ui/
+|   |   |   |   |   |-- components/
+|   |   |   |   |   |   |-- transcription/
+|   |   |   |   |   |   |   +-- TranscriptionProgress.tsx
+|   |   |   |   |   |   |-- CallLifecycleColumn.tsx
+|   |   |   |   |   |   |-- DebugCallLoading.tsx
+|   |   |   |   |   |   |-- DuplicateResolutionDialog.tsx
+|   |   |   |   |   |   |-- ImportForm.tsx
+|   |   |   |   |   |   |-- ImportProgress.tsx
+|   |   |   |   |   |   |-- ImportSuccessDialog.tsx
+|   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   +-- VirtualizedCallTable.tsx
+|   |   |   |   |   |-- hooks/
+|   |   |   |   |   |   |-- actions/
+|   |   |   |   |   |   |   |-- useCallAudioActions.ts
+|   |   |   |   |   |   |   |-- useCallCleanup.ts
+|   |   |   |   |   |   |   |-- useCallFlags.ts
+|   |   |   |   |   |   |   |-- useCallPreparationActions.ts
+|   |   |   |   |   |   |   +-- useCallTranscriptionActions.ts
+|   |   |   |   |   |   |-- useAccordionsLazyData.ts
+|   |   |   |   |   |   |-- useCallImport.ts
+|   |   |   |   |   |   |-- useCallManagement.ts
+|   |   |   |   |   |   |-- useCallPreparation.ts
+|   |   |   |   |   |   |-- useCallStatistics.ts
+|   |   |   |   |   |   |-- useLifecycleActions.ts
+|   |   |   |   |   |   |-- useRelationsNextTurn.ts
+|   |   |   |   |   |   |-- useStorageService.ts
+|   |   |   |   |   |   +-- useUnifiedCallManagement.ts
+|   |   |   |   |   |-- pages/
+|   |   |   |   |   |   |-- CallImportPage.tsx
+|   |   |   |   |   |   +-- CallManagementPage.tsx
+|   |   |   |   |   +-- sections/
+|   |   |   |   |       |-- CMActionsBar.tsx
+|   |   |   |   |       |-- CMFiltersBar.tsx
+|   |   |   |   |       |-- CMHeaderStats.tsx
+|   |   |   |   |       |-- CMOriginAccordions.tsx
+|   |   |   |   |       +-- CMServiceTabs.tsx
+|   |   |   |   |-- CallImporter.tsx
+|   |   |   |   |-- CallList.tsx
+|   |   |   |   |-- CallPreparation.tsx
+|   |   |   |   |-- ComplementActionButtons.tsx
+|   |   |   |   |-- DuplicateDialog.tsx
+|   |   |   |   +-- TranscriptionUploadModal.tsx
+|   |   |   +-- workdrive/
+|   |   |       |-- components/
+|   |   |       |   |-- AuthPrompt.tsx
+|   |   |       |   |-- FileList.tsx
+|   |   |       |   |-- FileSelectionSummary.tsx
+|   |   |       |   |-- NavigationControls.tsx
+|   |   |       |   |-- Notifications.tsx
+|   |   |       |   |-- SearchBar.tsx
+|   |   |       |   |-- SearchDebug.tsx
+|   |   |       |   +-- SearchResults.tsx
+|   |   |       |-- hooks/
+|   |   |       |   |-- useWorkdriveDuplicateCheck.ts
+|   |   |       |   |-- useWorkdriveFiles.tsx
+|   |   |       |   +-- useWorkdriveSearch.tsx
+|   |   |       |-- utils/
+|   |   |       |   |-- authHelpers.tsx
+|   |   |       |   +-- fileHelpers.tsx
+|   |   |       |-- index.tsx
+|   |   |       +-- types.tsx
+|   |   +-- phase2-annotation/
+|   |       |-- shared/
+|   |       |   |-- context/
+|   |       |   |   |-- index.ts
+|   |       |   |   |-- SupabaseContext.tsx
+|   |       |   |   +-- TaggingDataContext.tsx
+|   |       |   +-- utils/
+|   |       |       |-- index.ts
+|   |       |       +-- signedUrls.tsx
+|   |       |-- supervision/
+|   |       |   |-- domain/
+|   |       |   |   +-- services/
+|   |       |   |       +-- QualityControlService.ts
+|   |       |   +-- ui/
+|   |       |       +-- components/
+|   |       |           +-- SupervisionDashboard.tsx
+|   |       |-- tags/
+|   |       |   +-- ui/
+|   |       |       +-- components/
+|   |       |           |-- TagEditor.tsx
+|   |       |           |-- TagHistoryView.tsx
+|   |       |           |-- TagSelector.tsx
+|   |       |           |-- TagStats.tsx
+|   |       |           +-- TagTreeView.tsx
+|   |       |-- transcript/
+|   |       |   |-- hooks/
+|   |       |   |   |-- useRelationStatus.ts
+|   |       |   |   |-- useTaggingLogic.tsx
+|   |       |   |   +-- useTranscriptAudio.tsx
+|   |       |   |-- index.tsx
+|   |       |   |-- README.md
+|   |       |   |-- TagSidePanel.tsx
+|   |       |   |-- TranscriptAudioPlayer.tsx
+|   |       |   |-- TranscriptControls.tsx
+|   |       |   |-- TranscriptHeader.tsx
+|   |       |   |-- TranscriptText.tsx
+|   |       |   +-- types.tsx
+|   |       +-- turns/
+|   |           +-- ui/
+|   |               +-- components/
+|   |                   |-- TurnTagEditor.tsx
+|   |                   +-- TurnTaggedTable.tsx
 |   |-- lib/
 |   |   |-- config/
 |   |   |   |-- assemblyAIConfig.ts
@@ -921,8 +955,7 @@ tsconfig.json.backup
 |   |   |-- common.tsx
 |   |   |-- database.types.ts
 |   |   +-- index.ts
-|   |-- jest.setup.js
-|   +-- supabaseClient_old.tsx
+|   +-- jest.setup.js
 +-- tests/
     |-- diarizationApiClient.test.ts
     |-- setupTests.ts

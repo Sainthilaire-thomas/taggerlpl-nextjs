@@ -1,7 +1,7 @@
 // src/components/cognitive-metrics/hooks/useCognitiveMetricsByFamily.ts
 
 import { useState, useEffect, useMemo } from "react";
-import { useSupabase } from "@/context/SupabaseContext";
+import { useSupabase } from "@/features/shared/context";
 
 // Types pour les métriques cognitives par famille
 interface FamilyImpactMetrics {
