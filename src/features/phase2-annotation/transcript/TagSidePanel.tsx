@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useTheme } from "@mui/material/styles";
-import TagSelector from "../TagSelector";
+import TagSelector from "@/features/phase2-annotation/tags/ui/components/TagSelector";
 import { TagSidePanelProps, DRAWER_WIDTH } from "./types";
 
 const TagSidePanel: React.FC<TagSidePanelProps> = ({

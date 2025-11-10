@@ -19,7 +19,7 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import * as echarts from "echarts";
 import { supabase } from "@/lib/supabaseClient";
-import TurnTagEditor from "./TurnTagEditor";
+import TurnTagEditor from "@/features/phase2-annotation/turns/ui/components/TurnTagEditor";
 import ArrivalTable from "./ArrivalTable";
 import DepartureTable from "./DepartureTable";
 

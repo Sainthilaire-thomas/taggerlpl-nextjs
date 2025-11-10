@@ -13,10 +13,10 @@ import {
   Button,
   Alert,
 } from "@mui/material";
-import { useTaggingData } from "@/context/TaggingDataContext";
+import { useTaggingData } from "@/features/phase2-annotation/shared/context/TaggingDataContext";
 import TranscriptLPL from "@/features/phase2-annotation/transcript";
 import { useRouter, useSearchParams } from "next/navigation"; // ✅ ajoute useSearchParams
-import { generateSignedUrl } from "@/components/utils/signedUrls";
+import { generateSignedUrl } from "@/features/phase2-annotation/shared/utils/signedUrls";
 
 export default function NewTaggingPage() {
   const router = useRouter();
