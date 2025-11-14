@@ -15,7 +15,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import { ClassifierSelector } from "@/features/phase3-analysis/shared/ui/molecules/ClassifierSelector";
-import { useLevel1Testing } from "../@/features/phase3-analysis/level1-validation/ui/hooks/useLevel1Testing";
+import { useLevel1Testing } from "@/features/phase3-analysis/level1-validation/ui/hooks/useLevel1Testing";
 import { RunPanel } from "../../shared/results/base/RunPanel";
 import { MetricsPanel } from "../../shared/results/base/MetricsPanel";
 import { ResultsPanel } from "../../shared/results/base/ResultsSample/ResultsPanel";

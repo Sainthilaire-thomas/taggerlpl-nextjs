@@ -1,7 +1,7 @@
-// analysis/hooks/useStrategyStats.ts
+﻿// analysis/hooks/useStrategyStats.ts
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { StrategyStats } from "../types";
+import { StrategyStats } from "@/types/algorithm-lab";
 
 export const useStrategyStats = (selectedOrigin?: string | null) => {
   const [data, setData] = useState<StrategyStats[]>([]);

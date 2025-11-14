@@ -1,5 +1,5 @@
-// utils/versionIdGenerator.ts
-import type { AlgorithmVersionId } from "../types";
+﻿// utils/versionIdGenerator.ts
+import type { AlgorithmVersionId } from "@/types/algorithm-lab";
 
 export const generateVersionId = (
   algorithmKey: string,

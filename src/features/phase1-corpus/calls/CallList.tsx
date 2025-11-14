@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, FC } from "react";
 import {
@@ -19,8 +19,8 @@ import {
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 import { useTaggingData } from "@/context/TaggingDataContext";
-import { removeCallUpload } from "../utils/removeCallUpload";
-import { generateSignedUrl } from "../utils/signedUrls";
+import { removeCallUpload } from "../shared/utils/removeCallUpload";
+import { generateSignedUrl } from "../shared/utils/signedUrls";
 
 // Types
 interface Call {

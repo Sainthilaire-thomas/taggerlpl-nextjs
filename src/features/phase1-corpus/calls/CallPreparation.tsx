@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { Box, Typography, Button, Paper } from "@mui/material";
-import CallListUnprepared from "../CallListUnprepared";
+import CallListUnprepared from "@/components/CallListUnprepared/CallListUnprepared";
 import { useCallPreparation } from "@/features/phase1-corpus/calls/ui/hooks/useCallPreparation";
-import SnackbarManager from "../SnackBarManager";
+import SnackbarManager from "@/components/SnackBarManager";
 
 // (optionnel) type minimal local si besoin
 interface SnackbarMessage {

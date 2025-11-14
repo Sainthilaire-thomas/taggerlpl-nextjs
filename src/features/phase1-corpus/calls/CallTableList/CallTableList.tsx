@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback, useEffect, memo, FC } from "react";
 import {
@@ -27,9 +27,9 @@ import {
   Tooltip,
 } from "@mui/material";
 import { RelationsStatus, useTaggingData } from "@/context/TaggingDataContext";
-import { removeCallUpload } from "../../utils/removeCallUpload";
-import { generateSignedUrl } from "../../utils/signedUrls";
-import { updateCallOrigine } from "../../utils/updateCallOrigine";
+import { removeCallUpload } from "../../shared/utils/removeCallUpload";
+import { generateSignedUrl } from "../../shared/utils/signedUrls";
+import { updateCallOrigine } from "../../shared/utils/updateCallOrigine";
 
 // Imports des composants
 import CallTableFilters from "./CallTableFilters";

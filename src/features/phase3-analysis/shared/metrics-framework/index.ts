@@ -1,4 +1,4 @@
-// src/app/(protected)/analysis/components/metrics-framework/index.ts
+﻿// src/app/(protected)/analysis/components/metrics-framework/index.ts
 
 /**
  * Point d'entrée principal du framework unifié de métriques
@@ -52,7 +52,7 @@ export { useMetricsEngine } from "./hooks/useMetricsEngine";
 export {
   FluiditeCognitiveIndicator,
   createFluiditeCognitiveIndicator,
-} from "../cognitive-metrics/indicators/FluiditeCognitiveIndicator/FluiditeCognitiveIndicator";
+} from "@/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/indicators/FluiditeCognitiveIndicator/FluiditeCognitiveIndicator";
 
 // ================ REGISTRES SPÉCIALISÉS ================
 
@@ -62,7 +62,7 @@ import initializeCognitiveDomainFn, {
   validateCognitiveRegistry,
   getCognitiveStats,
   diagnoseCognitiveDomain,
-} from "../cognitive-metrics/CognitiveMetricsRegistry";
+} from "@/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/CognitiveMetricsRegistry";
 
 export {
   initializeCognitiveDomainFn as initializeCognitiveDomain,
@@ -75,8 +75,8 @@ export {
 // ================ COMPOSANTS ================
 
 // Import des composants avec gestion d'erreur
-import CognitiveMetricsMigration from "../cognitive-metrics/migration/CognitiveMetricsMigration";
-import TestFrameworkIntegration from "../TestFrameworkIntegration";
+import CognitiveMetricsMigration from "@/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/migration/CognitiveMetricsMigration";
+import TestFrameworkIntegration from "@/features/phase3-analysis/level2-hypotheses/shared/TestFrameworkIntegration";
 
 export { CognitiveMetricsMigration, TestFrameworkIntegration };
 
@@ -87,7 +87,7 @@ import {
   useAdaptedCognitiveMetrics,
   validateCognitiveMigration,
   diagnoseCognitiveMigration,
-} from "../cognitive-metrics/migration/adaptUseCognitiveMetrics";
+} from "@/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/migration/adaptUseCognitiveMetrics";
 
 export {
   useAdaptedCognitiveMetrics,
@@ -267,7 +267,7 @@ export function welcomeMessage(): string {
 
 // Import des exports pour le default export
 import { useMetricsEngine } from "./hooks/useMetricsEngine";
-import { FluiditeCognitiveIndicator } from "../cognitive-metrics/indicators/FluiditeCognitiveIndicator/FluiditeCognitiveIndicator";
+import { FluiditeCognitiveIndicator } from "@/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/indicators/FluiditeCognitiveIndicator/FluiditeCognitiveIndicator";
 
 const defaultExport = {
   // Core

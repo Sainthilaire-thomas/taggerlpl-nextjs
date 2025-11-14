@@ -1,6 +1,6 @@
-// src/app/(protected)/analysis/components/cognitive-metrics/CognitiveMetricsRegistry.ts
+﻿// src/app/(protected)/analysis/components/cognitive-metrics/CognitiveMetricsRegistry.ts
 
-import { metricsRegistry } from "../metrics-framework/core/MetricsRegistry";
+import { metricsRegistry } from "@/features/phase3-analysis/shared/metrics-framework/core/MetricsRegistry";
 import { FluiditeCognitiveIndicator } from "./indicators/FluiditeCognitiveIndicator/FluiditeCognitiveIndicator";
 
 /**

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, FC, ChangeEvent, FormEvent } from "react";
 import {
@@ -13,9 +13,9 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useZoho } from "@/context/ZohoContext";
-import AudioList from "../AudioList";
+import AudioList from "@/components/AudioList";
 import SimpleWorkdriveExplorer from "@/features/phase1-corpus/workdrive";
-import { handleCallSubmission } from "../utils/callApiUtils";
+import { handleCallSubmission } from "../shared/utils/callApiUtils";
 
 // ✅ Types corrigés pour correspondre exactement à AudioList
 interface ZohoFile {

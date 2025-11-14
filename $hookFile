@@ -1,0 +1,88 @@
+﻿# ============================================
+# Script v6 - Correction imports Phase 1
+# ============================================
+
+Write-Host "🔧 Script v6 - Correction imports Phase 1..." -ForegroundColor Cyan
+Write-Host ""
+
+function Replace-InFile {
+    param([string]$FilePath, [string]$OldPattern, [string]$NewPattern)
+    if (Test-Path $FilePath) {
+        $content = Get-Content $FilePath -Raw -Encoding UTF8
+        $content = $content -replace [regex]::Escape($OldPattern), $NewPattern
+        Set-Content $FilePath -Value $content -Encoding UTF8 -NoNewline
+        return $true
+    }
+    return $false
+}
+
+$count = 0
+
+# ============================================
+# 1. CallImporter - imports vers @/components
+# ============================================
+Write-Host "📦 Correction CallImporter.tsx..." -ForegroundColor Yellow
+
+$file = "src/features/phase1-corpus/calls/CallImporter.tsx"
+if (Replace-InFile $file 'from "../AudioList"' 'from "@/components/AudioList"') { $count++ }
+if (Replace-InFile $file 'from "../utils/callApiUtils"' 'from "../shared/utils/callApiUtils"') { $count++ }
+Write-Host "  ✓ CallImporter.tsx" -ForegroundColor Green
+
+# ============================================
+# 2. CallList - imports vers shared/utils
+# ============================================
+Write-Host ""
+Write-Host "📦 Correction CallList.tsx..." -ForegroundColor Yellow
+
+$file = "src/features/phase1-corpus/calls/CallList.tsx"
+if (Replace-InFile $file 'from "../utils/removeCallUpload"' 'from "../shared/utils/removeCallUpload"') { $count++ }
+if (Replace-InFile $file 'from "../utils/signedUrls"' 'from "../shared/utils/signedUrls"') { $count++ }
+Write-Host "  ✓ CallList.tsx" -ForegroundColor Green
+
+# ============================================
+# 3. CallPreparation - imports vers @/components
+# ============================================
+Write-Host ""
+Write-Host "📦 Correction CallPreparation.tsx..." -ForegroundColor Yellow
+
+$file = "src/features/phase1-corpus/calls/CallPreparation.tsx"
+if (Replace-InFile $file 'from "../CallListUnprepared"' 'from "@/components/CallListUnprepared/CallListUnprepared"') { $count++ }
+if (Replace-InFile $file 'from "../SnackBarManager"' 'from "@/components/SnackBarManager"') { $count++ }
+Write-Host "  ✓ CallPreparation.tsx" -ForegroundColor Green
+
+# ============================================
+# 4. CallTableList - imports vers shared/utils
+# ============================================
+Write-Host ""
+Write-Host "📦 Correction CallTableList.tsx..." -ForegroundColor Yellow
+
+$file = "src/features/phase1-corpus/calls/CallTableList/CallTableList.tsx"
+if (Replace-InFile $file 'from "../../utils/removeCallUpload"' 'from "../../shared/utils/removeCallUpload"') { $count++ }
+if (Replace-InFile $file 'from "../../utils/signedUrls"' 'from "../../shared/utils/signedUrls"') { $count++ }
+if (Replace-InFile $file 'from "../../utils/updateCallOrigine"' 'from "../../shared/utils/updateCallOrigine"') { $count++ }
+Write-Host "  ✓ CallTableList.tsx" -ForegroundColor Green
+
+# ============================================
+# 5. InterAnnotatorAgreement - créer le hook manquant
+# ============================================
+Write-Host ""
+Write-Host "🪝 Vérification useLevel0Validation..." -ForegroundColor Yellow
+
+$hookFile = "src/features/phase3-analysis/level0-gold/ui/hooks/useLevel0Validation.ts"
+if (-not (Test-Path $hookFile)) {
+    Write-Host "  ⚠️  Hook manquant - création d'un stub" -ForegroundColor Yellow
+    
+    # Créer le dossier hooks si nécessaire
+    $hooksDir = Split-Path $hookFile -Parent
+    if (-not (Test-Path $hooksDir)) {
+        New-Item -ItemType Directory -Path $hooksDir -Force | Out-Null
+    }
+    
+    # Créer un stub basique
+    @"
+// TODO: Implémenter useLevel0Validation
+export function useLevel0Validation() {
+  return {
+    // Stub implementation
+  };
+}

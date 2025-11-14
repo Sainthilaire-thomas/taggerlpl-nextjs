@@ -6,13 +6,13 @@ import {
   BaseClassifier,
   ClassificationResult,
 } from "../../algorithms/shared/BaseClassifier";
-import { initializeAlgorithms } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms";
+import { initializeAlgorithms } from "@/features/phase3-analysis/level1-validation/algorithms/shared/initializeAlgorithms";
 
 import { normalizeUniversalToTV } from "./normalizeUniversalToTV";
 import type { TVValidationResult } from "@/types/algorithm-lab";
 import type { TVGoldStandardSample as GoldStandardSample } from "@/types/algorithm-lab";
 
-import { algorithmRegistry } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry";
+import { algorithmRegistry } from "@/features/phase3-analysis/level1-validation/algorithms/shared/AlgorithmRegistry";
 
 import type {
   XTag,

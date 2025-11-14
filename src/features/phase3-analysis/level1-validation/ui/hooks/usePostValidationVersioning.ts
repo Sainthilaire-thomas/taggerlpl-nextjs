@@ -1,6 +1,6 @@
 ﻿// hooks/usePostValidationVersioning.ts
 import { supabase } from "@/lib/supabaseClient";
-import { algorithmRegistry } from "../algorithms/level1/shared/AlgorithmRegistry";
+import { algorithmRegistry } from "../../algorithms/shared/AlgorithmRegistry";
 import type {
   TVValidationResultCore,
   TargetKind,
