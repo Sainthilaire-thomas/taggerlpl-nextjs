@@ -1,4 +1,4 @@
-// components/AlgorithmLab/Level1/comparison/CrossValidation.tsx
+﻿// components/AlgorithmLab/Level1/comparison/CrossValidation.tsx
 // Interface de validation croisée pour évaluer la robustesse des classificateurs
 
 import React, { useState, useEffect } from "react";
@@ -36,8 +36,8 @@ import TimelineIcon from "@mui/icons-material/Timeline";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 
-import { ClassifierRegistry } from "../../../algorithms/level1/shared/ClassifierRegistry";
-import { useLevel1Testing } from "../../../hooks/useLevel1Testing";
+import { ClassifierRegistry } from "@/features/phase3-analysis/level1-validation/algorithms/shared/ClassifierRegistry";
+import { useLevel1Testing } from "@/features/phase3-analysis/level1-validation/ui/hooks/useLevel1Testing";
 
 interface FoldResult {
   foldIndex: number;

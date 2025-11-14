@@ -1,4 +1,4 @@
-// components/Level1/shared/results/VersionSelector.tsx
+﻿// components/Level1/shared/results/VersionSelector.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -19,7 +19,7 @@ import type {
   TargetKind,
   AlgorithmVersionId,
   AlgorithmVersionMetadata,
-} from "../../../../types";
+} from "@/types/algorithm-lab";
 
 export interface VersionSelectorProps {
   targetKind: TargetKind;

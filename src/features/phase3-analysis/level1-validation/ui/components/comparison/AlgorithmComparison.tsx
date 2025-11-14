@@ -1,4 +1,4 @@
-// components/AlgorithmLab/Level1/comparison/AlgorithmComparison.tsx
+﻿// components/AlgorithmLab/Level1/comparison/AlgorithmComparison.tsx
 // Interface de comparaison multi-algorithmes
 
 import React, { useState, useEffect } from "react";
@@ -27,8 +27,8 @@ import {
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 
-import { ClassifierRegistry } from "../../../algorithms/level1/shared/ClassifierRegistry";
-import { useLevel1Testing } from "../../../hooks/useLevel1Testing";
+import { ClassifierRegistry } from "@/features/phase3-analysis/level1-validation/algorithms/shared/ClassifierRegistry";
+import { useLevel1Testing } from "@/features/phase3-analysis/level1-validation/ui/hooks/useLevel1Testing";
 
 interface ComparisonResult {
   classifierName: string;

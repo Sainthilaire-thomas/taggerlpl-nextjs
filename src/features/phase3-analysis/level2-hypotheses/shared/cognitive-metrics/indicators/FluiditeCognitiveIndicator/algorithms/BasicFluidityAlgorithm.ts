@@ -1,11 +1,11 @@
 ﻿// src/app/(protected)/analysis/components/cognitive-metrics/indicators/FluiditeCognitiveIndicator/algorithms/BasicFluidityAlgorithm.ts
 
-import { BaseAlgorithmStrategy } from "../@/features/phase3-analysis/shared/metrics-framework/core/strategies/BaseAlgorithmStrategy";
+import { BaseAlgorithmStrategy } from "@/features/phase3-analysis/shared/metrics-framework/core/strategies/BaseAlgorithmStrategy";
 import {
   AlgorithmConfig,
   IndicatorResult,
   TurnTaggedData,
-} from "../@/features/phase3-analysis/shared/metrics-framework/core/types/base";
+} from "@/features/phase3-analysis/shared/metrics-framework/core/types/base";
 
 // Types spécifiques à la fluidité cognitive
 interface FluidityCognitiveResult extends IndicatorResult {

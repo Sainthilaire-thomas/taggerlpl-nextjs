@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import {
@@ -14,12 +14,12 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-import { ClassifierSelector } from "../../../shared/ClassifierSelector";
-import { useLevel1Testing } from "../../../../hooks/useLevel1Testing";
+import { ClassifierSelector } from "@/features/phase3-analysis/shared/ui/molecules/ClassifierSelector";
+import { useLevel1Testing } from "../@/features/phase3-analysis/level1-validation/ui/hooks/useLevel1Testing";
 import { RunPanel } from "../../shared/results/base/RunPanel";
 import { MetricsPanel } from "../../shared/results/base/MetricsPanel";
 import { ResultsPanel } from "../../shared/results/base/ResultsSample/ResultsPanel";
-import { useClassifierStatus } from "../../../../hooks/useClassifierStatus";
+import { useClassifierStatus } from "@/features/phase3-analysis/level1-validation/ui/hooks/useClassifierStatus";
 
 interface ValidationResult {
   verbatim: string;

@@ -1,4 +1,4 @@
-// components/AlgorithmLab/Level1/comparison/ClassifierConfiguration.tsx
+﻿// components/AlgorithmLab/Level1/comparison/ClassifierConfiguration.tsx
 // Interface de configuration avancée pour multiple classificateurs
 
 import React, { useState, useEffect } from "react";
@@ -47,8 +47,8 @@ import UploadIcon from "@mui/icons-material/Upload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
-import { ClassifierRegistry } from "../../../algorithms/level1/shared/ClassifierRegistry";
-import { ClassifierMetadata } from "../../../algorithms/level1/shared/BaseClassifier";
+import { ClassifierRegistry } from "@/features/phase3-analysis/level1-validation/algorithms/shared/ClassifierRegistry";
+import { ClassifierMetadata } from "@/features/phase3-analysis/level1-validation/algorithms/shared/BaseClassifier";
 
 interface ClassifierConfig {
   name: string;

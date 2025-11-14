@@ -1,4 +1,4 @@
-// components/Level1/comparison/VersionComparator.tsx
+﻿// components/Level1/comparison/VersionComparator.tsx
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -29,10 +29,10 @@ import type {
   AlgorithmVersionId,
   AlgorithmVersionMetadata,
   Level1ValidationMetrics,
-} from "../../../types";
+} from "@/types/algorithm-lab";
 
 import { VersionSelector } from "../shared/results/VersionSelector";
-import { useAlgorithmVersioning } from "../../../hooks/useAlgorithmVersioning";
+import { useAlgorithmVersioning } from "@/features/phase3-analysis/level1-validation/ui/hooks/useAlgorithmVersioning";
 
 export interface VersionComparatorProps {
   targetKind: TargetKind;

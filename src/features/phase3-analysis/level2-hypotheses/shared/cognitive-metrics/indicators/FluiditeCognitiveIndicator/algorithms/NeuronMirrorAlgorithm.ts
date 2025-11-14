@@ -1,11 +1,11 @@
 ﻿// src/app/(protected)/analysis/components/cognitive-metrics/indicators/FluiditeCognitiveIndicator/algorithms/NeuronMirrorAlgorithm.ts
 
-import { BaseAlgorithmStrategy } from "../@/features/phase3-analysis/shared/metrics-framework/core/BaseIndicator";
+import { BaseAlgorithmStrategy } from "@/features/phase3-analysis/shared/metrics-framework/core/BaseIndicator";
 import {
   AlgorithmConfig,
   IndicatorResult,
   TurnTaggedData,
-} from "../@/features/phase3-analysis/shared/metrics-framework/core/types/base";
+} from "@/features/phase3-analysis/shared/metrics-framework/core/types/base";
 
 // Types spécifiques à l'algorithme neurones miroirs
 interface FluidityCognitiveResult extends IndicatorResult {

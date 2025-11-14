@@ -23,19 +23,19 @@ import type {
 import {
   ALGORITHM_CONFIGS,
   getConfigForAlgorithm,
-} from "../types/algorithms/base";
+} from "@/types/algorithm-lab/algorithms";
 import {
   filterCorpusForAlgorithm,
   countSamplesPerAlgorithm,
-} from "../types/utils/corpusFilters";
+} from "@/types/algorithm-lab/utils";
 import {
   prepareInputsForAlgorithm,
   debugPreparedInputs,
-} from "../types/utils/inputPreparation";
+} from "@/types/algorithm-lab/utils";
 
 // 🆕 IMPORT du nouveau hook H2
 import { useH2Data, H2AnalysisPair } from "./useH2Data";
-import { getH2Property } from "../types/h2Types";
+import { getH2Property } from "@/types/algorithm-lab";
 // ----------------- Types -----------------
 
 interface ClassificationMetrics {

@@ -1,11 +1,11 @@
-// types.tsx — pont de compatibilité ResultsPanel ⇄ AlgorithmLab/types
+﻿// types.tsx — pont de compatibilité ResultsPanel ⇄ AlgorithmLab/types
 // ✅ Recommandé : alias TS "AlgorithmLab/types/*" (voir referencetypes.md)
 // ⛳️ Si tu n'as pas d'alias, remplace la ligne d'import par un chemin relatif vers /types/core
 
 import type {
   TVValidationResultCore as CoreTVValidationResult,
   TVMetadataCore as CoreTVMetadata,
-} from "AlgorithmLab/types/core"; // <-- sinon ex: "../../../../types/core"
+} from "@/types/algorithm-lab/core"; // <-- sinon ex: "../../../../types/core"
 
 // =========================
 //   Auxiliaires UI locaux
