@@ -19,8 +19,8 @@ import {
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 import { useTaggingData } from "@/context/TaggingDataContext";
-import { removeCallUpload } from "../shared/utils/removeCallUpload";
-import { generateSignedUrl } from "../shared/utils/signedUrls";
+import { removeCallUpload } from "@/components/utils/removeCallUpload";
+import { generateSignedUrl } from "@/components/utils/signedUrls";
 
 // Types
 interface Call {

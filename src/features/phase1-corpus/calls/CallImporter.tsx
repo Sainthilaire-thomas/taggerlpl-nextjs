@@ -15,7 +15,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useZoho } from "@/context/ZohoContext";
 import AudioList from "@/components/AudioList";
 import SimpleWorkdriveExplorer from "@/features/phase1-corpus/workdrive";
-import { handleCallSubmission } from "../shared/utils/callApiUtils";
+import { handleCallSubmission } from "@/components/utils/callApiUtils";
 
 // ✅ Types corrigés pour correspondre exactement à AudioList
 interface ZohoFile {

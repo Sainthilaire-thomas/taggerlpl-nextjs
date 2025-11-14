@@ -27,9 +27,9 @@ import {
   Tooltip,
 } from "@mui/material";
 import { RelationsStatus, useTaggingData } from "@/context/TaggingDataContext";
-import { removeCallUpload } from "../../shared/utils/removeCallUpload";
-import { generateSignedUrl } from "../../shared/utils/signedUrls";
-import { updateCallOrigine } from "../../shared/utils/updateCallOrigine";
+import { removeCallUpload } from "@/components/utils/removeCallUpload";
+import { generateSignedUrl } from "@/components/utils/signedUrls";
+import { updateCallOrigine } from "@/components/utils/updateCallOrigine";
 
 // Imports des composants
 import CallTableFilters from "./CallTableFilters";
