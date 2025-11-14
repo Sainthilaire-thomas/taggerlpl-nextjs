@@ -1,0 +1,738 @@
+﻿[96msrc/app/(protected)/phase1-corpus/workdrive/page.tsx[0m:[93m7[0m:[93m11[0m - [91merror[0m[90m TS2741: [0mProperty 'onFilesSelect' is missing in type '{}' but required in type 'SimpleWorkdriveExplorerProps'.
+
+[7m7[0m   return <SimpleWorkdriveExplorer />;
+[7m [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/features/phase1-corpus/workdrive/types.tsx[0m:[93m42[0m:[93m3[0m
+    [7m42[0m   onFilesSelect: (
+    [7m  [0m [96m  ~~~~~~~~~~~~~[0m
+    'onFilesSelect' is declared here.
+
+[96msrc/app/(protected)/phase2-annotation/transcript/[callId]/page.tsx[0m:[93m28[0m:[93m8[0m - [91merror[0m[90m TS2741: [0mProperty 'audioSrc' is missing in type '{ callId: string; }' but required in type 'TranscriptLPLProps'.
+
+[7m28[0m       <TranscriptLPL callId={params.callId} />
+[7m  [0m [91m       ~~~~~~~~~~~~~[0m
+
+  [96msrc/features/phase2-annotation/transcript/types.tsx[0m:[93m16[0m:[93m3[0m
+    [7m16[0m   audioSrc: string;
+    [7m  [0m [96m  ~~~~~~~~[0m
+    'audioSrc' is declared here.
+
+[96msrc/app/api/algolab/classifiers/[name]/route.ts[0m:[93m5[0m:[93m35[0m - [91merror[0m[90m TS2307: [0mCannot find module '@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry' or its corresponding type declarations.
+
+[7m5[0m import { algorithmRegistry } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry";
+[7m [0m [91m                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/app/api/algolab/classifiers/[name]/route.ts[0m:[93m6[0m:[93m38[0m - [91merror[0m[90m TS2307: [0mCannot find module '@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms' or its corresponding type declarations.
+
+[7m6[0m import { initializeAlgorithms } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms";
+[7m [0m [91m                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/CallListUnprepared/hooks/useComplementActions.ts[0m:[93m57[0m:[93m15[0m - [91merror[0m[90m TS2339: [0mProperty 'uploadAudio' does not exist on type 'typeof import("C:/Users/thoma/OneDrive/SONEAR_2025/taggerlpl-nextjs/src/components/utils/callApiUtils")'.
+
+[7m57[0m       const { uploadAudio } = await import("../../utils/callApiUtils");
+[7m  [0m [91m              ~~~~~~~~~~~[0m
+
+[96msrc/components/utils/duplicateManager.ts[0m:[93m339[0m:[93m15[0m - [91merror[0m[90m TS2339: [0mProperty 'uploadAudio' does not exist on type 'typeof import("C:/Users/thoma/OneDrive/SONEAR_2025/taggerlpl-nextjs/src/components/utils/callApiUtils")'.
+
+[7m339[0m       const { uploadAudio } = await import("./callApiUtils");
+[7m   [0m [91m              ~~~~~~~~~~~[0m
+
+[96msrc/features/phase1-corpus/calls/infrastructure/ServiceFactory.ts[0m:[93m80[0m:[93m54[0m - [91merror[0m[90m TS2554: [0mExpected 0 arguments, but got 1.
+
+[7m80[0m     this.diarizationService = new DiarizationService(this.diarizationApiClient);
+[7m  [0m [91m                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase1-corpus/calls/infrastructure/ServiceFactory.ts[0m:[93m195[0m:[93m26[0m - [91merror[0m[90m TS2339: [0mProperty 'inferSegments' does not exist on type 'DiarizationService'.
+
+[7m195[0m         ) => diarization.inferSegments(audioUrl, opts),
+[7m   [0m [91m                         ~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase1-corpus/calls/infrastructure/ServiceFactory.ts[0m:[93m211[0m:[93m26[0m - [91merror[0m[90m TS2339: [0mProperty 'diarizeWords' does not exist on type 'DiarizationService'.
+
+[7m211[0m         ) => diarization.diarizeWords(audioUrl, words, opts),
+[7m   [0m [91m                         ~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level0-gold/ui/components/InterAnnotatorAgreement.tsx[0m:[93m36[0m:[93m37[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../hooks/useLevel0Validation' or its corresponding type declarations.
+
+[7m36[0m import { useLevel0Validation } from "../../hooks/useLevel0Validation";
+[7m  [0m [91m                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level0-gold/ui/components/InterAnnotatorAgreement.tsx[0m:[93m326[0m:[93m35[0m - [91merror[0m[90m TS7006: [0mParameter 'annotation' implicitly has an 'any' type.
+
+[7m326[0m                 {annotations.map((annotation) => (
+[7m   [0m [91m                                  ~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/OpenAI3TClientClassifier.ts[0m:[93m475[0m:[93m11[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'rawResponse' does not exist in type 'VariableDetails'.
+
+[7m475[0m           rawResponse: rawContent,
+[7m   [0m [91m          ~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/OpenAI3TClientClassifier.ts[0m:[93m602[0m:[93m53[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'reason' does not exist in type 'VariableDetails'.
+
+[7m602[0m         details: { family: this.familyFromX(label), reason },
+[7m   [0m [91m                                                    ~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/OpenAIClientClassifier.ts[0m:[93m173[0m:[93m11[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'rawResponse' does not exist in type 'VariableDetails'.
+
+[7m173[0m           rawResponse: rawContent,
+[7m   [0m [91m          ~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/OpenAIClientClassifier.ts[0m:[93m420[0m:[93m53[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'reason' does not exist in type 'VariableDetails'.
+
+[7m420[0m         details: { family: this.familyFromX(label), reason },
+[7m   [0m [91m                                                    ~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m210[0m:[93m21[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m210[0m     confusionMatrix[predicted] = {};
+[7m   [0m [91m                    ~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m212[0m:[93m23[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m212[0m       confusionMatrix[predicted][actual] = 0;
+[7m   [0m [91m                      ~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m218[0m:[93m21[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m218[0m     confusionMatrix[result.predicted][result.goldStandard]++;
+[7m   [0m [91m                    ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m224[0m:[93m32[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m224[0m     const tp = confusionMatrix[cls][cls] || 0;
+[7m   [0m [91m                               ~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m225[0m:[93m44[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m225[0m     const fp = Object.keys(confusionMatrix[cls])
+[7m   [0m [91m                                           ~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m227[0m:[93m50[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m227[0m       .reduce((sum, k) => sum + (confusionMatrix[cls][k] || 0), 0);
+[7m   [0m [91m                                                 ~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m230[0m:[93m53[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m230[0m       .reduce((sum, k) => sum + (confusionMatrix[k][cls] || 0), 0);
+[7m   [0m [91m                                                    ~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m233[0m:[93m15[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m233[0m     precision[cls] = tp + fp > 0 ? tp / (tp + fp) : 0;
+[7m   [0m [91m              ~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m234[0m:[93m12[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m234[0m     recall[cls] = tp + fn > 0 ? tp / (tp + fn) : 0;
+[7m   [0m [91m           ~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m235[0m:[93m13[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m235[0m     f1Score[cls] =
+[7m   [0m [91m            ~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m236[0m:[93m17[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m236[0m       precision[cls] + recall[cls] > 0
+[7m   [0m [91m                ~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m236[0m:[93m31[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m236[0m       precision[cls] + recall[cls] > 0
+[7m   [0m [91m                              ~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m237[0m:[93m27[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m237[0m         ? (2 * (precision[cls] * recall[cls])) / (precision[cls] + recall[cls])
+[7m   [0m [91m                          ~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m237[0m:[93m41[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m237[0m         ? (2 * (precision[cls] * recall[cls])) / (precision[cls] + recall[cls])
+[7m   [0m [91m                                        ~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m237[0m:[93m61[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m237[0m         ? (2 * (precision[cls] * recall[cls])) / (precision[cls] + recall[cls])
+[7m   [0m [91m                                                            ~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m237[0m:[93m75[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m237[0m         ? (2 * (precision[cls] * recall[cls])) / (precision[cls] + recall[cls])
+[7m   [0m [91m                                                                          ~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m246[0m:[93m5[0m - [91merror[0m[90m TS2322: [0mType 'Record<string, number>' is not assignable to type 'number'.
+
+[7m246[0m     precision,
+[7m   [0m [91m    ~~~~~~~~~[0m
+
+  [96msrc/types/algorithm-lab/core/validation.ts[0m:[93m67[0m:[93m3[0m
+    [7m67[0m   precision: number;
+    [7m  [0m [96m  ~~~~~~~~~[0m
+    The expected type comes from property 'precision' which is declared here on type 'ValidationMetrics'
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m247[0m:[93m5[0m - [91merror[0m[90m TS2322: [0mType 'Record<string, number>' is not assignable to type 'number'.
+
+[7m247[0m     recall,
+[7m   [0m [91m    ~~~~~~[0m
+
+  [96msrc/types/algorithm-lab/core/validation.ts[0m:[93m68[0m:[93m3[0m
+    [7m68[0m   recall: number;
+    [7m  [0m [96m  ~~~~~~[0m
+    The expected type comes from property 'recall' which is declared here on type 'ValidationMetrics'
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m248[0m:[93m5[0m - [91merror[0m[90m TS2322: [0mType 'Record<string, number>' is not assignable to type 'number'.
+
+[7m248[0m     f1Score,
+[7m   [0m [91m    ~~~~~~~[0m
+
+  [96msrc/types/algorithm-lab/core/validation.ts[0m:[93m69[0m:[93m3[0m
+    [7m69[0m   f1Score: number;
+    [7m  [0m [96m  ~~~~~~~[0m
+    The expected type comes from property 'f1Score' which is declared here on type 'ValidationMetrics'
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m271[0m:[93m12[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m271[0m     matrix[c1] = {};
+[7m   [0m [91m           ~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m273[0m:[93m14[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m273[0m       matrix[c1][c2] = 0;
+[7m   [0m [91m             ~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m278[0m:[93m12[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m278[0m     matrix[r.predicted][r.goldStandard]++;
+[7m   [0m [91m           ~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m288[0m:[93m48[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m288[0m       classes.reduce((sum, c) => sum + (matrix[cls][c] || 0), 0) / n;
+[7m   [0m [91m                                               ~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[0m:[93m290[0m:[93m48[0m - [91merror[0m[90m TS2538: [0mType 'undefined' cannot be used as an index type.
+
+[7m290[0m       classes.reduce((sum, c) => sum + (matrix[c][cls] || 0), 0) / n;
+[7m   [0m [91m                                               ~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/SpacyClientClassifier.ts[0m:[93m2[0m:[93m43[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../conseiller/SpacyConseillerClassifier' or its corresponding type declarations.
+
+[7m2[0m import { SpacyConseillerClassifier } from "../../conseiller/SpacyConseillerClassifier";
+[7m [0m [91m                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/mediators/M1Algorithms/RegexM1Calculator.ts[0m:[93m48[0m:[93m5[0m - [91merror[0m[90m TS2739: [0mType '{ id: string; label: string; target: "M1"; algorithmKind: string; version: string; tags: string[]; }' is missing the following properties from type 'CalculationMetadata': algorithmVersion, inputSignature, executionPath
+
+[7m48[0m     return {
+[7m  [0m [91m    ~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/shared/initializeAlgorithms.ts[0m:[93m7[0m:[93m10[0m - [91merror[0m[90m TS2724: [0m'"../classifiers/client/SpacyClientClassifier"' has no exported member named 'SpacyClientClassifier'. Did you mean 'SpacyXClassifier'?
+
+[7m7[0m import { SpacyClientClassifier } from "../classifiers/client/SpacyClientClassifier";
+[7m [0m [91m         ~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/SpacyClientClassifier.ts[0m:[93m11[0m:[93m14[0m
+    [7m11[0m export class SpacyXClassifier implements BaseAlgorithm<string, any> {
+    [7m  [0m [96m             ~~~~~~~~~~~~~~~~[0m
+    'SpacyXClassifier' is declared here.
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/shared/initializeAlgorithms.ts[0m:[93m8[0m:[93m10[0m - [91merror[0m[90m TS2724: [0m'"../classifiers/client/OpenAIClientClassifier"' has no exported member named 'OpenAIClientClassifier'. Did you mean 'OpenAIXClassifier'?
+
+[7m8[0m import { OpenAIClientClassifier } from "../classifiers/client/OpenAIClientClassifier";
+[7m [0m [91m         ~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/OpenAIClientClassifier.ts[0m:[93m28[0m:[93m14[0m
+    [7m28[0m export class OpenAIXClassifier implements UniversalAlgorithm {
+    [7m  [0m [96m             ~~~~~~~~~~~~~~~~~[0m
+    'OpenAIXClassifier' is declared here.
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/shared/initializeAlgorithms.ts[0m:[93m9[0m:[93m10[0m - [91merror[0m[90m TS2724: [0m'"../classifiers/client/OpenAI3TClientClassifier"' has no exported member named 'OpenAI3TClientClassifier'. Did you mean 'OpenAI3TXClassifier'?
+
+[7m9[0m import { OpenAI3TClientClassifier } from "../classifiers/client/OpenAI3TClientClassifier";
+[7m [0m [91m         ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/features/phase3-analysis/level1-validation/algorithms/classifiers/client/OpenAI3TClientClassifier.ts[0m:[93m39[0m:[93m14[0m
+    [7m39[0m export class OpenAI3TXClassifier implements UniversalAlgorithm {
+    [7m  [0m [96m             ~~~~~~~~~~~~~~~~~~~[0m
+    'OpenAI3TXClassifier' is declared here.
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/shared/initializeAlgorithms.ts[0m:[93m50[0m:[93m57[0m - [91merror[0m[90m TS2345: [0mArgument of type 'RegexClientClassifier' is not assignable to parameter of type 'UniversalAlgorithm | BaseAlgorithm<any, any>'.
+  Type 'RegexClientClassifier' is missing the following properties from type 'UniversalAlgorithm': describe, validateConfig, run
+
+[7m50[0m     algorithmRegistry.register("RegexClientClassifier", new RegexClientClassifier());
+[7m  [0m [91m                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/algorithms/shared/initializeAlgorithms.ts[0m:[93m95[0m:[93m61[0m - [91merror[0m[90m TS2345: [0mArgument of type 'RegexConseillerClassifier' is not assignable to parameter of type 'UniversalAlgorithm | BaseAlgorithm<any, any>'.
+  Type 'RegexConseillerClassifier' is missing the following properties from type 'UniversalAlgorithm': describe, run
+
+[7m95[0m     algorithmRegistry.register("RegexConseillerClassifier", new RegexConseillerClassifier());
+[7m  [0m [91m                                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/ui/components/individual/TechnicalValidation/TechnicalValidation.tsx[0m:[93m17[0m:[93m36[0m - [91merror[0m[90m TS2307: [0mCannot find module '@/features/phase3-analysis/shared/ui/molecules/ClassifierSelector' or its corresponding type declarations.
+
+[7m17[0m import { ClassifierSelector } from "@/features/phase3-analysis/shared/ui/molecules/ClassifierSelector";
+[7m  [0m [91m                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/ui/components/individual/TechnicalValidation/TechnicalValidation.tsx[0m:[93m20[0m:[93m10[0m - [91merror[0m[90m TS2614: [0mModule '"../../shared/results/base/MetricsPanel"' has no exported member 'MetricsPanel'. Did you mean to use 'import MetricsPanel from "../../shared/results/base/MetricsPanel"' instead?
+
+[7m20[0m import { MetricsPanel } from "../../shared/results/base/MetricsPanel";
+[7m  [0m [91m         ~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/ui/components/individual/TechnicalValidation/TechnicalValidation.tsx[0m:[93m99[0m:[93m22[0m - [91merror[0m[90m TS2345: [0mArgument of type 'TVValidationResultCore[]' is not assignable to parameter of type 'SetStateAction<ValidationResult[]>'.
+  Type 'TVValidationResultCore[]' is not assignable to type 'ValidationResult[]'.
+    Type 'TVValidationResultCore' is not assignable to type 'ValidationResult'.
+      Types of property 'confidence' are incompatible.
+        Type 'number | undefined' is not assignable to type 'number'.
+          Type 'undefined' is not assignable to type 'number'.
+
+[7m99[0m       setTestResults(results);
+[7m  [0m [91m                     ~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/ui/components/individual/TechnicalValidation/TechnicalValidation.tsx[0m:[93m210[0m:[93m43[0m - [91merror[0m[90m TS2322: [0mType '{ results: ValidationResult[]; limit: number; }' is not assignable to type 'IntrinsicAttributes & ResultsPanelProps'.
+  Property 'limit' does not exist on type 'IntrinsicAttributes & ResultsPanelProps'.
+
+[7m210[0m       <ResultsPanel results={testResults} limit={10} />
+[7m   [0m [91m                                          ~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/ui/components/Level1Interface.tsx[0m:[93m126[0m:[93m13[0m - [91merror[0m[90m TS2739: [0mType '{ name: string; description: string; parameters: {}; type: string; enabled: true; }' is missing the following properties from type 'AlgorithmConfig': target, speakerType, inputFormat, requiresNextTurn, requiresPrevContext
+
+[7m126[0m             algorithm={{
+[7m   [0m [91m            ~~~~~~~~~[0m
+
+  [96msrc/features/phase3-analysis/level1-validation/ui/components/individual/ParameterOptimization.tsx[0m:[93m23[0m:[93m3[0m
+    [7m23[0m   algorithm: AlgorithmConfig;
+    [7m  [0m [96m  ~~~~~~~~~[0m
+    The expected type comes from property 'algorithm' which is declared here on type 'IntrinsicAttributes & ParameterOptimizationProps'
+
+[96msrc/features/phase3-analysis/level1-validation/ui/components/shared/results/base/MetricsPanel.classification.tsx[0m:[93m49[0m:[93m56[0m - [91merror[0m[90m TS18048: [0m'r.confidence' is possibly 'undefined'.
+
+[7m49[0m     const avgConfidence = results.reduce((s, r) => s + r.confidence, 0) / total;
+[7m  [0m [91m                                                       ~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level1-validation/ui/components/shared/results/base/ResultsSample/components/FineTuningDialog/FineTuningExtractor.tsx[0m:[93m116[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+
+[7m116[0m         confidence: result.confidence,
+[7m   [0m [91m        ~~~~~~~~~~[0m
+
+  [96msrc/features/phase3-analysis/level1-validation/ui/components/shared/results/base/ResultsSample/types.ts[0m:[93m110[0m:[93m5[0m
+    [7m110[0m     confidence: number;
+    [7m   [0m [96m    ~~~~~~~~~~[0m
+    The expected type comes from property 'confidence' which is declared here on type '{ turnId: number; verbatim: string; context: any; predicted: string; goldStandard: string; confidence: number; annotations: string[]; algo: any; }'
+
+[96msrc/features/phase3-analysis/level1-validation/ui/hooks/useLevel1Testing.ts[0m:[93m38[0m:[93m10[0m - [91merror[0m[90m TS2305: [0mModule '"@/types/algorithm-lab"' has no exported member 'getH2Property'.
+
+[7m38[0m import { getH2Property } from "@/types/algorithm-lab";
+[7m  [0m [91m         ~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/h2/ui/hooks/useStrategyStats.tsx[0m:[93m4[0m:[93m10[0m - [91merror[0m[90m TS2305: [0mModule '"@/types/algorithm-lab"' has no exported member 'StrategyStats'.
+
+[7m4[0m import { StrategyStats } from "@/types/algorithm-lab";
+[7m [0m [91m         ~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/h2/ui/hooks/useTemporalAnalysis.tsx[0m:[93m141[0m:[93m30[0m - [91merror[0m[90m TS2352: [0mConversion of type '{ id: any; call_id: any; tag: any; start_time: any; end_time: any; speaker: any; verbatim: any; lpltag: { family: any; color: any; }[]; }[]' to type 'SupabaseTagData[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ id: any; call_id: any; tag: any; start_time: any; end_time: any; speaker: any; verbatim: any; lpltag: { family: any; color: any; }[]; }' is not comparable to type 'SupabaseTagData'.
+    Types of property 'lpltag' are incompatible.
+      Type '{ family: any; color: any; }[]' is missing the following properties from type '{ family: string; color: string; }': family, color
+
+[7m141[0m       const turnTaggedData = rawData as SupabaseTagData[];
+[7m   [0m [91m                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/CognitiveMetricsRegistry.tsx[0m:[93m30[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'register' does not exist on type 'MetricsRegistry'.
+
+[7m30[0m     if (metricsRegistry.register(fluiditeIndicator)) {
+[7m  [0m [91m                        ~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/CognitiveMetricsRegistry.tsx[0m:[93m50[0m:[93m43[0m - [91merror[0m[90m TS2339: [0mProperty 'getStats' does not exist on type 'MetricsRegistry'.
+
+[7m50[0m     const registryStats = metricsRegistry.getStats();
+[7m  [0m [91m                                          ~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/CognitiveMetricsRegistry.tsx[0m:[93m93[0m:[93m47[0m - [91merror[0m[90m TS2339: [0mProperty 'getByDomain' does not exist on type 'MetricsRegistry'.
+
+[7m93[0m   const registeredCognitive = metricsRegistry.getByDomain("cognitive");
+[7m  [0m [91m                                              ~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/CognitiveMetricsRegistry.tsx[0m:[93m94[0m:[93m50[0m - [91merror[0m[90m TS7006: [0mParameter 'ind' implicitly has an 'any' type.
+
+[7m94[0m   const registeredIds = registeredCognitive.map((ind) => ind.getId());
+[7m  [0m [91m                                                 ~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/CognitiveMetricsRegistry.tsx[0m:[93m99[0m:[93m39[0m - [91merror[0m[90m TS7006: [0mParameter 'id' implicitly has an 'any' type.
+
+[7m99[0m   const extra = registeredIds.filter((id) => !expectedIndicators.includes(id));
+[7m  [0m [91m                                      ~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/CognitiveMetricsRegistry.tsx[0m:[93m101[0m:[93m37[0m - [91merror[0m[90m TS2339: [0mProperty 'diagnose' does not exist on type 'MetricsRegistry'.
+
+[7m101[0m   const diagnosis = metricsRegistry.diagnose();
+[7m   [0m [91m                                    ~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/CognitiveMetricsRegistry.tsx[0m:[93m127[0m:[93m47[0m - [91merror[0m[90m TS2339: [0mProperty 'getByDomain' does not exist on type 'MetricsRegistry'.
+
+[7m127[0m   const cognitiveIndicators = metricsRegistry.getByDomain("cognitive");
+[7m   [0m [91m                                              ~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/CognitiveMetricsRegistry.tsx[0m:[93m129[0m:[93m6[0m - [91merror[0m[90m TS7006: [0mParameter 'ind' implicitly has an 'any' type.
+
+[7m129[0m     (ind) => ind.getImplementationStatus() === "implemented"
+[7m   [0m [91m     ~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/CognitiveMetricsRegistry.tsx[0m:[93m133[0m:[93m6[0m - [91merror[0m[90m TS7006: [0mParameter 'sum' implicitly has an 'any' type.
+
+[7m133[0m     (sum, ind) => sum + ind.getAvailableAlgorithms().length,
+[7m   [0m [91m     ~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/CognitiveMetricsRegistry.tsx[0m:[93m133[0m:[93m11[0m - [91merror[0m[90m TS7006: [0mParameter 'ind' implicitly has an 'any' type.
+
+[7m133[0m     (sum, ind) => sum + ind.getAvailableAlgorithms().length,
+[7m   [0m [91m          ~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/CognitiveMetricsRegistry.tsx[0m:[93m137[0m:[93m33[0m - [91merror[0m[90m TS2339: [0mProperty 'getStats' does not exist on type 'MetricsRegistry'.
+
+[7m137[0m   const stats = metricsRegistry.getStats();
+[7m   [0m [91m                                ~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/indicators/FluiditeCognitiveIndicator/algorithms/BasicFluidityAlgorithm.ts[0m:[93m527[0m:[93m44[0m - [91merror[0m[90m TS2683: [0m'this' implicitly has type 'any' because it does not have a type annotation.
+
+[7m527[0m     temporalConsistency: ReturnType<typeof this.analyzeTemporalConsistency>;
+[7m   [0m [91m                                           ~~~~[0m
+
+  [96msrc/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/indicators/FluiditeCognitiveIndicator/algorithms/BasicFluidityAlgorithm.ts[0m:[93m527[0m:[93m5[0m
+    [7m527[0m     temporalConsistency: ReturnType<typeof this.analyzeTemporalConsistency>;
+    [7m   [0m [96m    ~~~~~~~~~~~~~~~~~~~[0m
+    An outer value of 'this' is shadowed by this container.
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/indicators/FluiditeCognitiveIndicator/algorithms/BasicFluidityAlgorithm.ts[0m:[93m528[0m:[93m45[0m - [91merror[0m[90m TS2683: [0m'this' implicitly has type 'any' because it does not have a type annotation.
+
+[7m528[0m     linguisticComplexity: ReturnType<typeof this.calculateLinguisticComplexity>;
+[7m   [0m [91m                                            ~~~~[0m
+
+  [96msrc/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/indicators/FluiditeCognitiveIndicator/algorithms/BasicFluidityAlgorithm.ts[0m:[93m528[0m:[93m5[0m
+    [7m528[0m     linguisticComplexity: ReturnType<typeof this.calculateLinguisticComplexity>;
+    [7m   [0m [96m    ~~~~~~~~~~~~~~~~~~~~[0m
+    An outer value of 'this' is shadowed by this container.
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/algorithms/SentimentEnhancedAlgorithm.ts[0m:[93m36[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'analyze' does not exist on type 'BasicAlignmentAlgorithm'.
+
+[7m36[0m     const baseResult = super.analyze(conseiller_turn);
+[7m  [0m [91m                             ~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/ComparisonTab.tsx[0m:[93m56[0m:[93m5[0m - [91merror[0m[90m TS2339: [0mProperty 'convergenceAnalysis' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m56[0m     convergenceAnalysis,
+[7m  [0m [91m    ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/ComparisonTab.tsx[0m:[93m57[0m:[93m5[0m - [91merror[0m[90m TS2339: [0mProperty 'isComparison' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m57[0m     isComparison,
+[7m  [0m [91m    ~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/ComparisonTab.tsx[0m:[93m58[0m:[93m5[0m - [91merror[0m[90m TS2339: [0mProperty 'isLoading' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m58[0m     isLoading,
+[7m  [0m [91m    ~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/ComparisonTab.tsx[0m:[93m60[0m:[93m5[0m - [91merror[0m[90m TS2339: [0mProperty 'error' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m60[0m     error,
+[7m  [0m [91m    ~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/ComparisonTab.tsx[0m:[93m62[0m:[93m5[0m - [91merror[0m[90m TS2339: [0mProperty 'refreshData' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m62[0m     refreshData,
+[7m  [0m [91m    ~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/ComparisonTab.tsx[0m:[93m63[0m:[93m5[0m - [91merror[0m[90m TS2339: [0mProperty 'dataCount' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m63[0m     dataCount,
+[7m  [0m [91m    ~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/ComparisonTab.tsx[0m:[93m64[0m:[93m5[0m - [91merror[0m[90m TS2339: [0mProperty 'hasData' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m64[0m     hasData,
+[7m  [0m [91m    ~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/ComparisonTab.tsx[0m:[93m65[0m:[93m5[0m - [91merror[0m[90m TS2339: [0mProperty 'sourceDataCount' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m65[0m     sourceDataCount,
+[7m  [0m [91m    ~~~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/ComparisonTab.tsx[0m:[93m149[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType '"info"' is not assignable to type '"error" | "success" | "primary" | "secondary" | "warning" | undefined'.
+
+[7m149[0m         color="info"
+[7m   [0m [91m        ~~~~~[0m
+
+  [96msrc/features/phase3-analysis/shared/ui/atoms/IndicatorHeader.tsx[0m:[93m11[0m:[93m3[0m
+    [7m11[0m   color?: "primary" | "secondary" | "success" | "warning" | "error";
+    [7m  [0m [96m  ~~~~~[0m
+    The expected type comes from property 'color' which is declared here on type 'IntrinsicAttributes & IndicatorHeaderProps'
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/ComparisonTab.tsx[0m:[93m317[0m:[93m15[0m - [91merror[0m[90m TS2322: [0mType '"info"' is not assignable to type '"primary" | "secondary" | undefined'.
+
+[7m317[0m               headerColor="info"
+[7m   [0m [91m              ~~~~~~~~~~~[0m
+
+  [96msrc/features/phase3-analysis/shared/ui/molecules/ResultsTable.tsx[0m:[93m37[0m:[93m3[0m
+    [7m37[0m   headerColor?: "primary" | "secondary";
+    [7m  [0m [96m  ~~~~~~~~~~~[0m
+    The expected type comes from property 'headerColor' which is declared here on type 'IntrinsicAttributes & ResultsTableProps'
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/ComparisonTab.tsx[0m:[93m360[0m:[93m57[0m - [91merror[0m[90m TS7006: [0mParameter 'divergence' implicitly has an 'any' type.
+
+[7m360[0m                   {convergenceAnalysis.divergences.map((divergence) => (
+[7m   [0m [91m                                                        ~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/LICAAlgorithmTab copy.tsx[0m:[93m65[0m:[93m5[0m - [91merror[0m[90m TS2339: [0mProperty 'stats' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m65[0m     stats,
+[7m  [0m [91m    ~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/LICAAlgorithmTab copy.tsx[0m:[93m66[0m:[93m5[0m - [91merror[0m[90m TS2339: [0mProperty 'isLoading' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m66[0m     isLoading,
+[7m  [0m [91m    ~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/LICAAlgorithmTab copy.tsx[0m:[93m68[0m:[93m5[0m - [91merror[0m[90m TS2339: [0mProperty 'error' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m68[0m     error,
+[7m  [0m [91m    ~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/LICAAlgorithmTab copy.tsx[0m:[93m70[0m:[93m5[0m - [91merror[0m[90m TS2339: [0mProperty 'refreshData' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m70[0m     refreshData,
+[7m  [0m [91m    ~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/LICAAlgorithmTab copy.tsx[0m:[93m71[0m:[93m5[0m - [91merror[0m[90m TS2339: [0mProperty 'dataCount' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m71[0m     dataCount,
+[7m  [0m [91m    ~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/LICAAlgorithmTab copy.tsx[0m:[93m72[0m:[93m5[0m - [91merror[0m[90m TS2339: [0mProperty 'hasData' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m72[0m     hasData,
+[7m  [0m [91m    ~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/LICAAlgorithmTab copy.tsx[0m:[93m73[0m:[93m5[0m - [91merror[0m[90m TS2339: [0mProperty 'sourceDataCount' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m73[0m     sourceDataCount,
+[7m  [0m [91m    ~~~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/LICAAlgorithmTab copy.tsx[0m:[93m74[0m:[93m5[0m - [91merror[0m[90m TS2339: [0mProperty 'debugInfo' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m74[0m     debugInfo,
+[7m  [0m [91m    ~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/LICAAlgorithmTab copy.tsx[0m:[93m397[0m:[93m50[0m - [91merror[0m[90m TS7006: [0mParameter 'family' implicitly has an 'any' type.
+
+[7m397[0m                         {debugInfo.families.map((family) => (
+[7m   [0m [91m                                                 ~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/LICAAlgorithmTab copy.tsx[0m:[93m488[0m:[93m58[0m - [91merror[0m[90m TS18046: [0m'data' is of type 'unknown'.
+
+[7m488[0m                     label={`${strategy.toUpperCase()}: ${data.alignmentScore.toFixed(
+[7m   [0m [91m                                                         ~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/LICAAlgorithmTab copy.tsx[0m:[93m490[0m:[93m28[0m - [91merror[0m[90m TS18046: [0m'data' is of type 'unknown'.
+
+[7m490[0m                     )}% (${data.totalOccurrences})`}
+[7m   [0m [91m                           ~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/LICAAlgorithmTab copy.tsx[0m:[93m492[0m:[93m23[0m - [91merror[0m[90m TS18046: [0m'data' is of type 'unknown'.
+
+[7m492[0m                       data.alignmentScore >= 70
+[7m   [0m [91m                      ~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/LICAAlgorithmTab copy.tsx[0m:[93m494[0m:[93m27[0m - [91merror[0m[90m TS18046: [0m'data' is of type 'unknown'.
+
+[7m494[0m                         : data.alignmentScore >= 50
+[7m   [0m [91m                          ~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/FeedbackAlignmentIndicator.tsx[0m:[93m20[0m:[93m11[0m - [91merror[0m[90m TS2339: [0mProperty 'results' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m20[0m   const { results, globalStats, familyResults, loading, error } =
+[7m  [0m [91m          ~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/FeedbackAlignmentIndicator.tsx[0m:[93m20[0m:[93m20[0m - [91merror[0m[90m TS2339: [0mProperty 'globalStats' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m20[0m   const { results, globalStats, familyResults, loading, error } =
+[7m  [0m [91m                   ~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/FeedbackAlignmentIndicator.tsx[0m:[93m20[0m:[93m33[0m - [91merror[0m[90m TS2339: [0mProperty 'familyResults' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m20[0m   const { results, globalStats, familyResults, loading, error } =
+[7m  [0m [91m                                ~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/FeedbackAlignmentIndicator.tsx[0m:[93m20[0m:[93m48[0m - [91merror[0m[90m TS2339: [0mProperty 'loading' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m20[0m   const { results, globalStats, familyResults, loading, error } =
+[7m  [0m [91m                                               ~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/FeedbackAlignmentIndicator.tsx[0m:[93m20[0m:[93m57[0m - [91merror[0m[90m TS2339: [0mProperty 'error' does not exist on type '{ isAnalyzing: boolean; analysisResults: AlignmentAnalysis | null; analysisError: string | null; comparisonResults: AlgorithmComparison | null; ... 4 more ...; tableRows: { ...; }[]; }'.
+
+[7m20[0m   const { results, globalStats, familyResults, loading, error } =
+[7m  [0m [91m                                                        ~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/FeedbackAlignmentIndicator.tsx[0m:[93m21[0m:[93m39[0m - [91merror[0m[90m TS2554: [0mExpected 0-1 arguments, but got 2.
+
+[7m 21[0m     useFeedbackAlignmentMetrics(data, {
+[7m   [0m [91m                                      ~[0m
+[7m 22[0m       algorithm,
+[7m   [0m [91m~~~~~~~~~~~~~~~~[0m
+[7m...[0m 
+[7m 24[0m       enable_context_analysis: false,
+[7m   [0m [91m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[7m 25[0m     });
+[7m   [0m [91m~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/FeedbackAlignmentIndicator.tsx[0m:[93m39[0m:[93m29[0m - [91merror[0m[90m TS7006: [0mParameter 'family' implicitly has an 'any' type.
+
+[7m39[0m         {familyResults.map((family) => (
+[7m  [0m [91m                            ~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/FeedbackAlignmentIndicator.tsx[0m:[93m64[0m:[93m38[0m - [91merror[0m[90m TS7006: [0mParameter 'result' implicitly has an 'any' type.
+
+[7m64[0m           {results.slice(0, 10).map((result, index) => (
+[7m  [0m [91m                                     ~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/FeedbackAlignmentIndicator.tsx[0m:[93m64[0m:[93m46[0m - [91merror[0m[90m TS7006: [0mParameter 'index' implicitly has an 'any' type.
+
+[7m64[0m           {results.slice(0, 10).map((result, index) => (
+[7m  [0m [91m                                             ~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/hooks/useFeedbackAlignmentAnnotation.ts[0m:[93m91[0m:[93m35[0m - [91merror[0m[90m TS2554: [0mExpected 1 arguments, but got 0.
+
+[7m91[0m   const algorithm = useMemo(() => new BasicAlignmentAlgorithm(), []);
+[7m  [0m [91m                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/algorithms/BasicAlignmentAlgorithm.ts[0m:[93m255[0m:[93m15[0m
+    [7m255[0m   constructor(turnTaggedData: TaggedTurn[]) {
+    [7m   [0m [96m              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    An argument for 'turnTaggedData' was not provided.
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/hooks/useFeedbackAlignmentAnnotation.ts[0m:[93m136[0m:[93m42[0m - [91merror[0m[90m TS2339: [0mProperty 'analyze' does not exist on type 'BasicAlignmentAlgorithm'.
+
+[7m136[0m       const algorithm_result = algorithm.analyze(turn);
+[7m   [0m [91m                                         ~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/hooks/useFeedbackAlignmentAnnotation.ts[0m:[93m175[0m:[93m20[0m - [91merror[0m[90m TS7053: [0mElement implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ ALIGNEMENT_FORT: string; ALIGNEMENT_FAIBLE: string; DESALIGNEMENT: string; }'.
+
+[7m175[0m             return algorithmToExisting[predicted] !== existing;
+[7m   [0m [91m                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/hooks/useFeedbackAlignmentAnnotation.ts[0m:[93m194[0m:[93m18[0m - [91merror[0m[90m TS7053: [0mElement implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ ALIGNEMENT_FORT: string; ALIGNEMENT_FAIBLE: string; DESALIGNEMENT: string; }'.
+
+[7m194[0m           return algorithmToExisting[predicted] !== existing;
+[7m   [0m [91m                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/shared/metrics-framework/index.ts[0m:[93m36[0m:[93m30[0m - [91merror[0m[90m TS2304: [0mCannot find name 'initializeCognitiveDomainFn'.
+
+[7m36[0m     const cognitiveSuccess = initializeCognitiveDomainFn();
+[7m  [0m [91m                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/shared/metrics-framework/index.ts[0m:[93m39[0m:[93m44[0m - [91merror[0m[90m TS2339: [0mProperty 'getByDomain' does not exist on type 'MetricsRegistry'.
+
+[7m39[0m       const cognitiveIndicators = registry.getByDomain("cognitive");
+[7m  [0m [91m                                           ~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/shared/metrics-framework/index.ts[0m:[93m47[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'getStats' does not exist on type 'MetricsRegistry'.
+
+[7m47[0m     const stats = registry.getStats();
+[7m  [0m [91m                           ~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/shared/metrics-framework/index.ts[0m:[93m48[0m:[93m32[0m - [91merror[0m[90m TS2339: [0mProperty 'diagnose' does not exist on type 'MetricsRegistry'.
+
+[7m48[0m     const diagnosis = registry.diagnose();
+[7m  [0m [91m                               ~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/shared/metrics-framework/index.ts[0m:[93m81[0m:[93m26[0m - [91merror[0m[90m TS2339: [0mProperty 'getStats' does not exist on type 'MetricsRegistry'.
+
+[7m81[0m   const stats = registry.getStats();
+[7m  [0m [91m                         ~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/shared/metrics-framework/index.ts[0m:[93m82[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'diagnose' does not exist on type 'MetricsRegistry'.
+
+[7m82[0m   const diagnosis = registry.diagnose();
+[7m  [0m [91m                             ~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/shared/metrics-framework/index.ts[0m:[93m83[0m:[93m31[0m - [91merror[0m[90m TS2339: [0mProperty 'validate' does not exist on type 'MetricsRegistry'.
+
+[7m83[0m   const validation = registry.validate();
+[7m  [0m [91m                              ~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/shared/metrics-framework/index.ts[0m:[93m126[0m:[93m36[0m - [91merror[0m[90m TS2339: [0mProperty 'summary' does not exist on type 'MetricsRegistry'.
+
+[7m126[0m   const registrySummary = registry.summary();
+[7m   [0m [91m                                   ~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/shared/metrics-framework/index.ts[0m:[93m197[0m:[93m30[0m - [91merror[0m[90m TS2304: [0mCannot find name 'initializeCognitiveDomainFn'.
+
+[7m197[0m   initializeCognitiveDomain: initializeCognitiveDomainFn,
+[7m   [0m [91m                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/shared/metrics-framework/index.ts[0m:[93m200[0m:[93m3[0m - [91merror[0m[90m TS18004: [0mNo value exists in scope for the shorthand property 'CognitiveMetricsMigration'. Either declare one or provide an initializer.
+
+[7m200[0m   CognitiveMetricsMigration,
+[7m   [0m [91m  ~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/features/phase3-analysis/shared/metrics-framework/index.ts[0m:[93m201[0m:[93m3[0m - [91merror[0m[90m TS18004: [0mNo value exists in scope for the shorthand property 'TestFrameworkIntegration'. Either declare one or provide an initializer.
+
+[7m201[0m   TestFrameworkIntegration,
+[7m   [0m [91m  ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/types/algorithm-lab/ThesisVariables.ts[0m:[93m163[0m:[93m3[0m - [91merror[0m[90m TS2717: [0mSubsequent property declarations must have the same type.  Property 'perClass' must be of type 'Record<string, { precision: number; recall: number; f1: number; support: number; }> | undefined', but here has type 'Record<string, { precision: number; recall: number; f1: number; support?: number | undefined; }> | undefined'.
+
+[7m163[0m   perClass?: Record<
+[7m   [0m [91m  ~~~~~~~~[0m
+
+  [96msrc/types/algorithm-lab/ThesisVariables.ts[0m:[93m108[0m:[93m3[0m
+    [7m108[0m   perClass?: Record<
+    [7m   [0m [96m  ~~~~~~~~[0m
+    'perClass' was also declared here.
+
+[96msrc/types/index.ts[0m:[93m29[0m:[93m1[0m - [91merror[0m[90m TS2308: [0mModule './entities' has already exported a member named 'ConversionResult'. Consider explicitly re-exporting to resolve the ambiguity.
+
+[7m29[0m export * from './algorithm-lab';
+[7m  [0m [91m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/types/index.ts[0m:[93m39[0m:[93m1[0m - [91merror[0m[90m TS2308: [0mModule './common' has already exported a member named 'ZohoFile'. Consider explicitly re-exporting to resolve the ambiguity.
+
+[7m39[0m export * from './workdrive';
+[7m  [0m [91m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+Found 121 errors in 30 files.
+
+Errors  Files
+     1  src/app/(protected)/phase1-corpus/workdrive/page.tsx[90m:7[0m
+     1  src/app/(protected)/phase2-annotation/transcript/[callId]/page.tsx[90m:28[0m
+     2  src/app/api/algolab/classifiers/[name]/route.ts[90m:5[0m
+     1  src/components/CallListUnprepared/hooks/useComplementActions.ts[90m:57[0m
+     1  src/components/utils/duplicateManager.ts[90m:339[0m
+     3  src/features/phase1-corpus/calls/infrastructure/ServiceFactory.ts[90m:80[0m
+     2  src/features/phase3-analysis/level0-gold/ui/components/InterAnnotatorAgreement.tsx[90m:36[0m
+     2  src/features/phase3-analysis/level1-validation/algorithms/classifiers/client/OpenAI3TClientClassifier.ts[90m:475[0m
+     2  src/features/phase3-analysis/level1-validation/algorithms/classifiers/client/OpenAIClientClassifier.ts[90m:173[0m
+    24  src/features/phase3-analysis/level1-validation/algorithms/classifiers/client/RegexClientClassifier.ts[90m:210[0m
+     1  src/features/phase3-analysis/level1-validation/algorithms/classifiers/client/SpacyClientClassifier.ts[90m:2[0m
+     1  src/features/phase3-analysis/level1-validation/algorithms/mediators/M1Algorithms/RegexM1Calculator.ts[90m:48[0m
+     5  src/features/phase3-analysis/level1-validation/algorithms/shared/initializeAlgorithms.ts[90m:7[0m
+     4  src/features/phase3-analysis/level1-validation/ui/components/individual/TechnicalValidation/TechnicalValidation.tsx[90m:17[0m
+     1  src/features/phase3-analysis/level1-validation/ui/components/Level1Interface.tsx[90m:126[0m
+     1  src/features/phase3-analysis/level1-validation/ui/components/shared/results/base/MetricsPanel.classification.tsx[90m:49[0m
+     1  src/features/phase3-analysis/level1-validation/ui/components/shared/results/base/ResultsSample/components/FineTuningDialog/FineTuningExtractor.tsx[90m:116[0m
+     1  src/features/phase3-analysis/level1-validation/ui/hooks/useLevel1Testing.ts[90m:38[0m
+     1  src/features/phase3-analysis/level2-hypotheses/h2/ui/hooks/useStrategyStats.tsx[90m:4[0m
+     1  src/features/phase3-analysis/level2-hypotheses/h2/ui/hooks/useTemporalAnalysis.tsx[90m:141[0m
+    11  src/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/CognitiveMetricsRegistry.tsx[90m:30[0m
+     2  src/features/phase3-analysis/level2-hypotheses/shared/cognitive-metrics/indicators/FluiditeCognitiveIndicator/algorithms/BasicFluidityAlgorithm.ts[90m:527[0m
+     1  src/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/algorithms/SentimentEnhancedAlgorithm.ts[90m:36[0m
+    11  src/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/ComparisonTab.tsx[90m:56[0m
+    13  src/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/components/tabs/LICAAlgorithmTab copy.tsx[90m:65[0m
+     9  src/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/FeedbackAlignmentIndicator.tsx[90m:20[0m
+     4  src/features/phase3-analysis/level2-hypotheses/shared/li-metrics/indicators/FeedbackAlignementIndicator/hooks/useFeedbackAlignmentAnnotation.ts[90m:91[0m
+    11  src/features/phase3-analysis/shared/metrics-framework/index.ts[90m:36[0m
+     1  src/types/algorithm-lab/ThesisVariables.ts[90m:163[0m
+     2  src/types/index.ts[90m:29[0m

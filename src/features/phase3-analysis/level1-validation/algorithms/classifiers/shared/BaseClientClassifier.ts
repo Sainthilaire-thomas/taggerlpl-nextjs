@@ -1,4 +1,4 @@
-﻿import type { BaseAlgorithm } from "../../../shared/BaseAlgorithm";
+﻿import type { BaseAlgorithm } from "../../shared/BaseAlgorithm";
 import type { VariableX } from "@/types/algorithm-lab";
 
 export interface XClassification {
