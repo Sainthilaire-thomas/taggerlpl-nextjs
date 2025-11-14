@@ -1,13 +1,13 @@
-// src/app/(protected)/analysis/components/cognitive-metrics/indicators/FluiditeCognitiveIndicator/FluiditeCognitiveIndicator.ts
+﻿// src/app/(protected)/analysis/components/cognitive-metrics/indicators/FluiditeCognitiveIndicator/FluiditeCognitiveIndicator.ts
 
-import BaseIndicator from "../../../metrics-framework/core/BaseIndicator";
+import BaseIndicator from "@/features/phase3-analysis/shared/metrics-framework/core/BaseIndicator";
 import {
   BaseIndicatorConfig,
   IndicatorResult,
   TurnTaggedData,
   BenchmarkResult,
   AnnotatedData, // CORRECTION 1: AnnotationData → AnnotatedData
-} from "../../../metrics-framework/core/types/base";
+} from "@/features/phase3-analysis/shared/metrics-framework/core/types/base";
 
 // Import des algorithmes factorisés
 import BasicFluidityAlgorithm from "./algorithms/BasicFluidityAlgorithm";

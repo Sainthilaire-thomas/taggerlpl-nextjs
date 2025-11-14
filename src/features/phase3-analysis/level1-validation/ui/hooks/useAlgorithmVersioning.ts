@@ -1,10 +1,10 @@
-// hooks/useAlgorithmVersioning.ts
+﻿// hooks/useAlgorithmVersioning.ts
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import type { 
   AlgorithmVersionId, 
   AlgorithmVersionMetadata 
-} from "../types";
+} from "@/types/algorithm-lab";
 
 export const useAlgorithmVersioning = () => {
   const [loading, setLoading] = useState(false);

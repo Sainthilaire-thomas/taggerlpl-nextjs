@@ -1,16 +1,16 @@
-// hooks/useLevel1Testing.ts — VERSION MIGRÉE H2
+﻿// hooks/useLevel1Testing.ts — VERSION MIGRÉE H2
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import {
   BaseClassifier,
   ClassificationResult,
-} from "../algorithms/level1/shared/BaseClassifier";
+} from "../../algorithms/shared/BaseClassifier";
 import { initializeAlgorithms } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms";
 
 import { normalizeUniversalToTV } from "./normalizeUniversalToTV";
-import type { TVValidationResult } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
-import type { TVGoldStandardSample as GoldStandardSample } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import type { TVValidationResult } from "@/types/algorithm-lab";
+import type { TVGoldStandardSample as GoldStandardSample } from "@/types/algorithm-lab";
 
 import { algorithmRegistry } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry";
 
@@ -19,7 +19,7 @@ import type {
   YTag,
   XDetails,
   YDetails,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+} from "@/types/algorithm-lab";
 import {
   ALGORITHM_CONFIGS,
   getConfigForAlgorithm,

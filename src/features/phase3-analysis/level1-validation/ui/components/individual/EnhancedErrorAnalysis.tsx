@@ -1,4 +1,4 @@
-// components/Level1/EnhancedErrorAnalysis.tsx - Version corrigée
+﻿// components/Level1/EnhancedErrorAnalysis.tsx - Version corrigée
 import React, { useState, useCallback } from "react";
 import {
   Box,
@@ -29,7 +29,7 @@ import {
   Assignment,
   Warning,
 } from "@mui/icons-material";
-import { BaseAlgorithmResult } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import { BaseAlgorithmResult } from "@/types/algorithm-lab";
 import { useTaggingData } from "@/context/TaggingDataContext";
 import { supabase } from "@/lib/supabaseClient";
 import { generateSignedUrl } from "@/components/utils/signedUrls";
@@ -41,8 +41,8 @@ import type { SupervisionTurnTagged } from "@/app/(protected)/supervision/types"
 import type {
   AlgorithmResult,
   EnhancedAlgorithmResult,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
-import { normalizeAlgorithmResult } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+} from "@/types/algorithm-lab";
+import { normalizeAlgorithmResult } from "@/types/algorithm-lab";
 interface EnhancedErrorAnalysisProps {
   results: AlgorithmResult[];
   algorithmName: string;

@@ -1,8 +1,8 @@
-// ==========================================
+﻿// ==========================================
 // 📁 FeedbackAlignmentIndicator/types.ts
 // ==========================================
 
-import { BaseIndicatorResult } from "../../../metrics-framework/core/types/base";
+import { BaseIndicatorResult } from "@/features/phase3-analysis/shared/metrics-framework/core/types/base";
 
 // Types spécifiques au Feedback Alignment
 // Types spécifiques au Feedback Alignment

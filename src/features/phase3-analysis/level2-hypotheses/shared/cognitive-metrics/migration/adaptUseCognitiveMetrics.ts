@@ -1,8 +1,8 @@
-// src/app/(protected)/analysis/components/cognitive-metrics/migration/adaptUseCognitiveMetrics.ts
+﻿// src/app/(protected)/analysis/components/cognitive-metrics/migration/adaptUseCognitiveMetrics.ts
 
 import { useState, useEffect, useMemo } from "react";
-import { useMetricsEngine } from "../../metrics-framework/hooks/useMetricsEngine";
-import { metricsRegistry } from "../../metrics-framework/core/MetricsRegistry";
+import { useMetricsEngine } from "@/features/phase3-analysis/shared/metrics-framework/hooks/useMetricsEngine";
+import { metricsRegistry } from "@/features/phase3-analysis/shared/metrics-framework/core/MetricsRegistry";
 import initializeCognitiveDomain from "../CognitiveMetricsRegistry";
 import { useCognitiveMetrics } from "../../cognitive-metrics/hooks/useCognitiveMetrics";
 

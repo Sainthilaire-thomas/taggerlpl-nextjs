@@ -1,9 +1,9 @@
-// algorithms/level1/conseillerclassifiers/RegexConseillerClassifier.ts
+﻿// algorithms/level1/conseillerclassifiers/RegexConseillerClassifier.ts
 import {
   BaseClassifier,
   ClassificationResult,
   ClassifierMetadata,
-} from "../shared/BaseClassifier";
+} from "../../shared/BaseClassifier";
 
 export class RegexConseillerClassifier implements BaseClassifier {
   private config: { retourRefletDetaille: boolean };

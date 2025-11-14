@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 
 import {
   getAlgorithmStatus,
   initializeAlgorithms,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms";
-import { algorithmRegistry } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry";
+} from "@/features/phase3-analysis/level1-validation/algorithms/shared/initializeAlgorithms";
+import { algorithmRegistry } from "@/features/phase3-analysis/level1-validation/algorithms/shared/AlgorithmRegistry";
 
 function ensureInitialized() {
   initializeAlgorithms();

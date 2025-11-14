@@ -1,4 +1,4 @@
-// ComparisonTab.tsx - Onglet pour la comparaison multi-algorithmes
+﻿// ComparisonTab.tsx - Onglet pour la comparaison multi-algorithmes
 import React, { useState } from "react";
 import {
   Box,
@@ -29,15 +29,15 @@ import {
 } from "@mui/icons-material";
 
 // 🧩 Composants shared réutilisés
-import { IndicatorHeader } from "../../../../../shared/atoms/IndicatorHeader";
-import { ColorLegend } from "../../../../../shared/atoms/ColorLegend";
-import { ResultsTable } from "../../../../../shared/molecules/ResultsTable";
+import { IndicatorHeader } from "@/features/phase3-analysis/shared/ui/atoms/IndicatorHeader";
+import { ColorLegend } from "@/features/phase3-analysis/shared/ui/atoms/ColorLegend";
+import { ResultsTable } from "@/features/phase3-analysis/shared/ui/molecules/ResultsTable";
 
 // 🪝 Hook pour les métriques
 import { useFeedbackAlignmentMetrics } from "../../hooks/useFeedbackAlignmentMetrics";
 
 // 📊 Types
-import { TableColumn } from "../../../../../shared/molecules/ResultsTable";
+import { TableColumn } from "@/features/phase3-analysis/shared/ui/molecules/ResultsTable";
 
 // Types spécifiques à l'onglet
 interface ComparisonTabProps {

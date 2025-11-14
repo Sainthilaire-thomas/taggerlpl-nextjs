@@ -1,11 +1,11 @@
-// algorithms/level1/M2Algorithms/shared/BaseM2Calculator.ts
+﻿// algorithms/level1/M2Algorithms/shared/BaseM2Calculator.ts
 import type {
   M2Input,
   M2Details,
   CalculationResult,
   CalculationMetadata,
   AlgorithmType,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+} from "@/types/algorithm-lab";
 
 export abstract class BaseM2Calculator {
   abstract calculate(input: M2Input): Promise<CalculationResult<M2Details>>;

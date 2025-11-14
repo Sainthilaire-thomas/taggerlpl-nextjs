@@ -1,26 +1,26 @@
-// src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms.ts
+﻿// src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms.ts
 
 import { algorithmRegistry } from "./AlgorithmRegistry";
 
 // --- X (Conseiller)
-import { RegexXClassifier } from "../XAlgorithms/RegexXClassifier";
-import { SpacyXClassifier } from "../XAlgorithms/SpacyXClassifier";
-import { OpenAIXClassifier } from "../XAlgorithms/OpenAIXClassifier";
-import { OpenAI3TXClassifier } from "../XAlgorithms/OpenAI3TXClassifier";
+import { RegexXClassifier } from "../classifiers/client/RegexClientClassifier";
+import { SpacyXClassifier } from "../classifiers/client/SpacyClientClassifier";
+import { OpenAIXClassifier } from "../classifiers/client/OpenAIClientClassifier";
+import { OpenAI3TXClassifier } from "../classifiers/client/OpenAI3TClientClassifier";
 
 // --- Y (Client)
-import { RegexYClassifier } from "../YAlgorithms/RegexYClassifier";
+import { RegexYClassifier } from "../classifiers/conseiller/RegexConseillerClassifier";
 
 // --- M1 (Compteurs / métriques)
-import { M1ActionVerbCounter } from "../M1Algorithms/M1ActionVerbCounter";
+import { M1ActionVerbCounter } from "../mediators/M1Algorithms/M1ActionVerbCounter";
 
 // --- M2 (Alignement X→Y)
-import M2LexicalAlignmentCalculator from "../M2Algorithms/M2LexicalAlignmentCalculator";
-import M2SemanticAlignmentCalculator from "../M2Algorithms/M2SemanticAlignmentCalculator";
-import M2CompositeAlignmentCalculator from "../M2Algorithms/M2CompositeAlignmentCalculator";
+import M2LexicalAlignmentCalculator from "../mediators/M2Algorithms/M2LexicalAlignmentCalculator";
+import M2SemanticAlignmentCalculator from "../mediators/M2Algorithms/M2SemanticAlignmentCalculator";
+import M2CompositeAlignmentCalculator from "../mediators/M2Algorithms/M2CompositeAlignmentCalculator";
 
 // --- M3 (charge cognitive)
-import { PausesM3Calculator } from "../M3Algorithms/PausesM3Calculator";
+import { PausesM3Calculator } from "../mediators/M3Algorithms/PausesM3Calculator";
 
 // Flag d'initialisation global
 let initialized = false;

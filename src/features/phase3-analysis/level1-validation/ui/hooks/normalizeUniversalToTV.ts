@@ -1,4 +1,4 @@
-// hooks/normalizeUniversalToTV.ts
+﻿// hooks/normalizeUniversalToTV.ts
 import type {
   TVValidationResult,
   XDetails,
@@ -7,7 +7,7 @@ import type {
   M2Details,
   M3Details,
   UniversalResult,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+} from "@/types/algorithm-lab";
 
 type Target = "X" | "Y" | "M1" | "M2" | "M3";
 

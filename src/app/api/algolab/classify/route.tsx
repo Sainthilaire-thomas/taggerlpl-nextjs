@@ -1,8 +1,8 @@
-// app/api/algolab/classify/route.ts (proxy facultatif)
+﻿// app/api/algolab/classify/route.ts (proxy facultatif)
 import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 
-import { algorithmRegistry } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry";
+import { algorithmRegistry } from "@/features/phase3-analysis/level1-validation/algorithms/shared/AlgorithmRegistry";
 
 export async function POST(req: Request) {
   try {

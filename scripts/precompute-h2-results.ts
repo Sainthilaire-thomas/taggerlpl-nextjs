@@ -1,4 +1,4 @@
-// ✅ ÉTAPE 1 : Charger les variables d'environnement EN PREMIER
+﻿// ✅ ÉTAPE 1 : Charger les variables d'environnement EN PREMIER
 import { config } from 'dotenv';
 import { resolve } from 'path';
 
@@ -14,12 +14,12 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_
 }
 
 import { createClient } from '@supabase/supabase-js';
-import { algorithmRegistry } from '@/algorithms/level1/shared/AlgorithmRegistry';
+import { algorithmRegistry } from '@/features/phase3-analysis/level1-validation/algorithms/shared/AlgorithmRegistry';
 
 // ✅ IMPORTS CORRECTS (named exports, pas default)
-import { M1ActionVerbCounter } from '@/algorithms/level1/M1Algorithms/M1ActionVerbCounter';
-import M2CompositeAlignmentCalculator from '@/algorithms/level1/M2Algorithms/M2CompositeAlignmentCalculator';
-import { PausesM3Calculator } from '@/algorithms/level1/M3Algorithms/PausesM3Calculator';
+import { M1ActionVerbCounter } from '@/features/phase3-analysis/level1-validation/algorithms/mediators/M1Algorithms/M1ActionVerbCounter';
+import M2CompositeAlignmentCalculator from '@/features/phase3-analysis/level1-validation/algorithms/mediators/M2Algorithms/M2CompositeAlignmentCalculator';
+import { PausesM3Calculator } from '@/features/phase3-analysis/level1-validation/algorithms/mediators/M3Algorithms/PausesM3Calculator';
 
 // Enregistrer les algorithmes dans le registre
 console.log('📝 Enregistrement des algorithmes...');

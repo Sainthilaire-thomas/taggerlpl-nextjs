@@ -1,7 +1,7 @@
-import type {
+﻿import type {
   ValidationRow, // alias de TVValidationResultCore
   ValidationMetrics,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+} from "@/types/algorithm-lab";
 
 /**
  * Calcule les métriques globales de validation à partir des lignes de validation.

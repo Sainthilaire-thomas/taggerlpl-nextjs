@@ -1,4 +1,4 @@
-// src/app/(protected)/analysis/components/cognitive-metrics/indicators/FluiditeCognitiveIndicator/index.ts
+﻿// src/app/(protected)/analysis/components/cognitive-metrics/indicators/FluiditeCognitiveIndicator/index.ts
 
 // ================ IMPORTS DIRECTS ================
 
@@ -250,7 +250,7 @@ export type {
   TurnTaggedData,
   IndicatorResult,
   AlgorithmConfig as BaseAlgorithmConfig,
-} from "../../../metrics-framework/core/types/base";
+} from "@/features/phase3-analysis/shared/metrics-framework/core/types/base";
 
 // ================ DEFAULT EXPORT ================
 

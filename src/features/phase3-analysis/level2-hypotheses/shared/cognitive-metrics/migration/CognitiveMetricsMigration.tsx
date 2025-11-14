@@ -1,4 +1,4 @@
-// src/app/(protected)/analysis/components/cognitive-metrics/migration/CognitiveMetricsMigration.tsx
+﻿// src/app/(protected)/analysis/components/cognitive-metrics/migration/CognitiveMetricsMigration.tsx
 
 import React, { useState, useEffect } from "react";
 import {
@@ -24,8 +24,8 @@ import {
 } from "@mui/icons-material";
 
 // Import du framework unifié
-import { useMetricsEngine } from "../../metrics-framework/hooks/useMetricsEngine";
-import { metricsRegistry } from "../../metrics-framework/core/MetricsRegistry";
+import { useMetricsEngine } from "@/features/phase3-analysis/shared/metrics-framework/hooks/useMetricsEngine";
+import { metricsRegistry } from "@/features/phase3-analysis/shared/metrics-framework/core/MetricsRegistry";
 
 // Import de l'indicateur migré
 import { FluiditeCognitiveIndicator } from "../indicators/FluiditeCognitiveIndicator/FluiditeCognitiveIndicator";

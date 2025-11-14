@@ -1,13 +1,13 @@
-// algorithms/level1/M3Algorithms/PausesM3Calculator.ts
+﻿// algorithms/level1/M3Algorithms/PausesM3Calculator.ts
 import type {
   UniversalAlgorithm,
   AlgorithmDescriptor,
   UniversalResult,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base";
+} from "@/types/algorithm-lab/algorithms/base";
 import type {
   M3Input,
   M3Details,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+} from "@/types/algorithm-lab";
 
 type CognitiveInput = M3Input | string;
 

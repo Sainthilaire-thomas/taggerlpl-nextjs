@@ -1,13 +1,13 @@
-// algorithms/level1/M2Algorithms/M2SemanticAlignmentCalculator.ts
+﻿// algorithms/level1/M2Algorithms/M2SemanticAlignmentCalculator.ts
 import type {
   UniversalAlgorithm,
   AlgorithmDescriptor,
   UniversalResult,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base";
+} from "@/types/algorithm-lab/algorithms/base";
 import type {
   M2Input,
   M2Details,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+} from "@/types/algorithm-lab";
 import { normalize } from "./shared/m2-utils";
 
 interface SemanticConfig {

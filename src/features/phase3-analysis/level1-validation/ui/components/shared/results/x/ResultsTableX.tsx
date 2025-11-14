@@ -1,4 +1,4 @@
-// src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/shared/results/x/ResultsTableX.tsx
+﻿// src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/shared/results/x/ResultsTableX.tsx
 "use client";
 
 import * as React from "react";
@@ -12,11 +12,11 @@ import {
 } from "@mui/material";
 
 import ResultsTableBase from "../base/ResultsTableBase";
-import type { XValidationResult } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import type { XValidationResult } from "@/types/algorithm-lab";
 import {
   VARIABLE_LABELS,
   VARIABLE_COLORS,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+} from "@/types/algorithm-lab";
 
 export interface ResultsTableXProps {
   items: XValidationResult[];

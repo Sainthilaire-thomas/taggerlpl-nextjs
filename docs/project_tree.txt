@@ -877,48 +877,335 @@ tsconfig.json
 |   |   |       |   +-- fileHelpers.tsx
 |   |   |       |-- index.tsx
 |   |   |       +-- types.tsx
-|   |   +-- phase2-annotation/
-|   |       |-- shared/
-|   |       |   |-- context/
-|   |       |   |   |-- index.ts
-|   |       |   |   |-- SupabaseContext.tsx
-|   |       |   |   +-- TaggingDataContext.tsx
-|   |       |   +-- utils/
-|   |       |       |-- index.ts
-|   |       |       +-- signedUrls.tsx
-|   |       |-- supervision/
-|   |       |   |-- domain/
-|   |       |   |   +-- services/
-|   |       |   |       +-- QualityControlService.ts
-|   |       |   +-- ui/
-|   |       |       +-- components/
-|   |       |           +-- SupervisionDashboard.tsx
-|   |       |-- tags/
-|   |       |   +-- ui/
-|   |       |       +-- components/
-|   |       |           |-- TagEditor.tsx
-|   |       |           |-- TagHistoryView.tsx
-|   |       |           |-- TagSelector.tsx
-|   |       |           |-- TagStats.tsx
-|   |       |           +-- TagTreeView.tsx
-|   |       |-- transcript/
-|   |       |   |-- hooks/
-|   |       |   |   |-- useRelationStatus.ts
-|   |       |   |   |-- useTaggingLogic.tsx
-|   |       |   |   +-- useTranscriptAudio.tsx
-|   |       |   |-- index.tsx
-|   |       |   |-- README.md
-|   |       |   |-- TagSidePanel.tsx
-|   |       |   |-- TranscriptAudioPlayer.tsx
-|   |       |   |-- TranscriptControls.tsx
-|   |       |   |-- TranscriptHeader.tsx
-|   |       |   |-- TranscriptText.tsx
-|   |       |   +-- types.tsx
-|   |       +-- turns/
-|   |           +-- ui/
-|   |               +-- components/
-|   |                   |-- TurnTagEditor.tsx
-|   |                   +-- TurnTaggedTable.tsx
+|   |   |-- phase2-annotation/
+|   |   |   |-- shared/
+|   |   |   |   +-- utils/
+|   |   |   |       |-- index.ts
+|   |   |   |       +-- signedUrls.tsx
+|   |   |   |-- supervision/
+|   |   |   |   |-- domain/
+|   |   |   |   |   +-- services/
+|   |   |   |   |       +-- QualityControlService.ts
+|   |   |   |   +-- ui/
+|   |   |   |       +-- components/
+|   |   |   |           +-- SupervisionDashboard.tsx
+|   |   |   |-- tags/
+|   |   |   |   +-- ui/
+|   |   |   |       +-- components/
+|   |   |   |           |-- TagEditor.tsx
+|   |   |   |           |-- TagHistoryView.tsx
+|   |   |   |           |-- TagSelector.tsx
+|   |   |   |           |-- TagStats.tsx
+|   |   |   |           +-- TagTreeView.tsx
+|   |   |   |-- transcript/
+|   |   |   |   |-- hooks/
+|   |   |   |   |   |-- useRelationStatus.ts
+|   |   |   |   |   |-- useTaggingLogic.tsx
+|   |   |   |   |   +-- useTranscriptAudio.tsx
+|   |   |   |   |-- index.tsx
+|   |   |   |   |-- README.md
+|   |   |   |   |-- TagSidePanel.tsx
+|   |   |   |   |-- TranscriptAudioPlayer.tsx
+|   |   |   |   |-- TranscriptControls.tsx
+|   |   |   |   |-- TranscriptHeader.tsx
+|   |   |   |   |-- TranscriptText.tsx
+|   |   |   |   +-- types.tsx
+|   |   |   +-- turns/
+|   |   |       +-- ui/
+|   |   |           +-- components/
+|   |   |               |-- TurnTagEditor.tsx
+|   |   |               +-- TurnTaggedTable.tsx
+|   |   |-- phase3-analysis/
+|   |   |   |-- level0-gold/
+|   |   |   |   +-- ui/
+|   |   |   |       +-- components/
+|   |   |   |           +-- InterAnnotatorAgreement.tsx
+|   |   |   |-- level1-validation/
+|   |   |   |   |-- algorithms/
+|   |   |   |   |   |-- classifiers/
+|   |   |   |   |   |   |-- client/
+|   |   |   |   |   |   |   +-- RegexClientClassifier.ts
+|   |   |   |   |   |   +-- conseiller/
+|   |   |   |   |   |       |-- CustomClassifier.ts
+|   |   |   |   |   |       |-- EnsembleConseillerClassifier.ts
+|   |   |   |   |   |       |-- HuggingFaceConseillerClassifier.ts
+|   |   |   |   |   |       |-- index.ts
+|   |   |   |   |   |       |-- MistralConseillerClassifier.ts
+|   |   |   |   |   |       |-- OpenAI3TConseillerClassifier.tsx
+|   |   |   |   |   |       |-- OpenAIConseillerClassifier.ts
+|   |   |   |   |   |       |-- ProxyOpenAIConseillerClassifier.ts
+|   |   |   |   |   |       |-- RegexConseillerClassifier.ts
+|   |   |   |   |   |       +-- SpacyConseillerClassifier.ts
+|   |   |   |   |   |-- mediators/
+|   |   |   |   |   |   |-- M1Algorithms/
+|   |   |   |   |   |   |   |-- shared/
+|   |   |   |   |   |   |   |   +-- BaseM1Calculator.ts
+|   |   |   |   |   |   |   |-- M1ActionVerbCounter.ts
+|   |   |   |   |   |   |   +-- RegexM1Calculator.ts
+|   |   |   |   |   |   |-- M2Algorithms/
+|   |   |   |   |   |   |   |-- shared/
+|   |   |   |   |   |   |   |   |-- BaseM2Calculator.ts
+|   |   |   |   |   |   |   |   +-- m2-utils.ts
+|   |   |   |   |   |   |   |-- M2CompositeAlignmentCalculator.ts
+|   |   |   |   |   |   |   |-- M2LexicalAlignmentCalculator.ts
+|   |   |   |   |   |   |   +-- M2SemanticAlignmentCalculator.ts
+|   |   |   |   |   |   +-- M3Algorithms/
+|   |   |   |   |   |       |-- shared/
+|   |   |   |   |   |       |   +-- BaseM3Calculator.ts
+|   |   |   |   |   |       +-- PausesM3Calculator.tsx
+|   |   |   |   |   +-- shared/
+|   |   |   |   |       |-- AlgorithmRegistry.ts
+|   |   |   |   |       |-- BaseAlgorithm.ts
+|   |   |   |   |       |-- BaseClassifier.ts
+|   |   |   |   |       |-- ClassifierComparator.ts
+|   |   |   |   |       |-- ClassifierRegistry.ts
+|   |   |   |   |       |-- index.ts
+|   |   |   |   |       |-- initializeAlgorithms.ts
+|   |   |   |   |       +-- PerformanceMetrics.ts
+|   |   |   |   |-- shared/
+|   |   |   |   |   +-- utils/
+|   |   |   |   |       |-- metricsCalculation.ts
+|   |   |   |   |       +-- versionGenerator.ts
+|   |   |   |   +-- ui/
+|   |   |   |       |-- components/
+|   |   |   |       |   |-- algorithms/
+|   |   |   |       |   |   |-- M1Calculators/
+|   |   |   |       |   |   |   |-- M1AlgorithmTesting.tsx
+|   |   |   |       |   |   |   +-- M1ValidationInterface.tsx
+|   |   |   |       |   |   |-- M2Calculators/
+|   |   |   |       |   |   |   +-- M2ValidationInterface.tsx
+|   |   |   |       |   |   |-- M3Calculators/
+|   |   |   |       |   |   |   +-- M3ValidationInterface.tsx
+|   |   |   |       |   |   |-- shared/
+|   |   |   |       |   |   |   +-- classification/
+|   |   |   |       |   |   |       +-- ClassificationValidationTable.tsx
+|   |   |   |       |   |   |-- XClassifiers/
+|   |   |   |       |   |   |   |-- XAlgorithmTesting.tsx
+|   |   |   |       |   |   |   +-- XValidationInterface.tsx
+|   |   |   |       |   |   |-- YClassifiers/
+|   |   |   |       |   |   |   |-- YAlgorithmTesting.tsx
+|   |   |   |       |   |   |   +-- YValidationInterface.tsx
+|   |   |   |       |   |   +-- BaseAlgorithmTesting.tsx
+|   |   |   |       |   |-- comparison/
+|   |   |   |       |   |   |-- AlgorithmComparison.tsx
+|   |   |   |       |   |   |-- ClassifierConfiguration.tsx
+|   |   |   |       |   |   |-- CrossValidation.tsx
+|   |   |   |       |   |   |-- EnsembleTuning.tsx
+|   |   |   |       |   |   +-- VersionComparator.tsx
+|   |   |   |       |   |-- individual/
+|   |   |   |       |   |   |-- TechnicalValidation/
+|   |   |   |       |   |   |   |-- index.ts
+|   |   |   |       |   |   |   |-- TechnicalValidation.tsx
+|   |   |   |       |   |   |   +-- TECHNICALVALIDATION_MIG.MD
+|   |   |   |       |   |   |-- ConfusionMatrix.tsx
+|   |   |   |       |   |   |-- EnhancedErrorAnalysis.tsx
+|   |   |   |       |   |   |-- ParameterOptimization.tsx
+|   |   |   |       |   |   +-- TechnicalValidationFixed.tsx
+|   |   |   |       |   |-- shared/
+|   |   |   |       |   |   +-- results/
+|   |   |   |       |   |       |-- base/
+|   |   |   |       |   |       |   |-- ResultsSample/
+|   |   |   |       |   |       |   |   |-- components/
+|   |   |   |       |   |       |   |   |   |-- FineTuningDialog/
+|   |   |   |       |   |       |   |   |   |   |-- hooks/
+|   |   |   |       |   |       |   |   |   |   |   +-- useFineTuningExtractor.ts
+|   |   |   |       |   |       |   |   |   |   |-- FineTuningAnalyzer.tsx
+|   |   |   |       |   |       |   |   |   |   |-- FineTuningDialog.tsx
+|   |   |   |       |   |       |   |   |   |   |-- FineTuningExtractor.tsx
+|   |   |   |       |   |       |   |   |   |   |-- FineTuningFormatter.tsx
+|   |   |   |       |   |       |   |   |   |   |-- FineTuningMetrics.tsx
+|   |   |   |       |   |       |   |   |   |   |-- index.ts
+|   |   |   |       |   |       |   |   |   |   +-- types.ts
+|   |   |   |       |   |       |   |   |   |-- AnnotationList.tsx
+|   |   |   |       |   |       |   |   |   |-- CommentDialog.tsx
+|   |   |   |       |   |       |   |   |   |-- ResultsFilters.tsx
+|   |   |   |       |   |       |   |   |   |-- ResultsTableBody.tsx
+|   |   |   |       |   |       |   |   |   |-- ResultsTableHeader.tsx
+|   |   |   |       |   |       |   |   |   |-- ResultsTableRow.tsx
+|   |   |   |       |   |       |   |   |   +-- ToneLine.tsx
+|   |   |   |       |   |       |   |   |-- hooks/
+|   |   |   |       |   |       |   |   |   |-- useCommentManagement.ts
+|   |   |   |       |   |       |   |   |   |-- useFineTuningData.ts
+|   |   |   |       |   |       |   |   |   |-- useResultsFiltering.ts
+|   |   |   |       |   |       |   |   |   +-- useResultsPagination.ts
+|   |   |   |       |   |       |   |   |-- utils/
+|   |   |   |       |   |       |   |   |   |-- constants.ts
+|   |   |   |       |   |       |   |   |   |-- dataFormating.ts
+|   |   |   |       |   |       |   |   |   +-- errorAnalysis.tsx
+|   |   |   |       |   |       |   |   |-- index.ts
+|   |   |   |       |   |       |   |   |-- ResultsPanel.tsx
+|   |   |   |       |   |       |   |   |-- ResultsSample.tsx
+|   |   |   |       |   |       |   |   +-- types.ts
+|   |   |   |       |   |       |   |-- extraColumns.tsx
+|   |   |   |       |   |       |   |-- MetricsPanel.classification.tsx
+|   |   |   |       |   |       |   |-- MetricsPanel.numeric.tsx
+|   |   |   |       |   |       |   |-- MetricsPanel.tsx
+|   |   |   |       |   |       |   |-- ResultsTableBase.tsx
+|   |   |   |       |   |       |   +-- RunPanel.tsx
+|   |   |   |       |   |       |-- m/
+|   |   |   |       |   |       |   +-- ResultsTableM1.tsx
+|   |   |   |       |   |       |-- x/
+|   |   |   |       |   |       |   +-- ResultsTableX.tsx
+|   |   |   |       |   |       +-- VersionSelector.tsx
+|   |   |   |       |   |-- index.ts
+|   |   |   |       |   |-- Level1Interface.tsx
+|   |   |   |       |   +-- TechnicalBenchmark.tsx
+|   |   |   |       +-- hooks/
+|   |   |   |           |-- normalizeUniversalToTV.ts
+|   |   |   |           |-- useAlgorithmVersioning.ts
+|   |   |   |           |-- useClassifierConfiguration.ts
+|   |   |   |           |-- useClassifierStatus.ts
+|   |   |   |           |-- useH2Data.ts
+|   |   |   |           |-- useLevel0Validation.ts
+|   |   |   |           |-- useLevel1Testing.ts
+|   |   |   |           |-- useMultiAlgorithmComparison.ts
+|   |   |   |           |-- usePostValidationVersioning.ts
+|   |   |   |           +-- useWorkflowManagement.ts
+|   |   |   |-- level2-hypotheses/
+|   |   |   |   |-- h2/
+|   |   |   |   |   |-- domain/
+|   |   |   |   |   |   +-- services/
+|   |   |   |   |   |       |-- h2.converters.ts
+|   |   |   |   |   |       |-- h2.reflet-analysis.ts
+|   |   |   |   |   |       +-- h2.service.ts
+|   |   |   |   |   +-- ui/
+|   |   |   |   |       |-- components/
+|   |   |   |   |       |   |-- config/
+|   |   |   |   |       |   |   +-- hypotheses.ts
+|   |   |   |   |       |   |-- hooks/
+|   |   |   |   |       |   |   +-- useH1Analysis.ts
+|   |   |   |   |       |   |-- hypothesis/
+|   |   |   |   |       |   |   |-- H2AlignmentValidation.tsx
+|   |   |   |   |       |   |   +-- H3ApplicationValidation.tsx
+|   |   |   |   |       |   |-- shared/
+|   |   |   |   |       |   |   |-- DataProcessing.ts
+|   |   |   |   |       |   |   |-- stats.ts
+|   |   |   |   |       |   |   +-- types.ts
+|   |   |   |   |       |   |-- validation/
+|   |   |   |   |       |   |   |-- StatisticalSummary.tsx
+|   |   |   |   |       |   |   +-- StatisticalTestsPanel.tsx
+|   |   |   |   |       |   |-- CHAPITRE3.MD
+|   |   |   |   |       |   |-- EVOLUTION_LEVEL2.MD
+|   |   |   |   |       |   |-- Level2Interface.tsx
+|   |   |   |   |       |   +-- README_THESE_MEDIATION.MD
+|   |   |   |   |       +-- hooks/
+|   |   |   |   |           |-- useStrategyStats.tsx
+|   |   |   |   |           +-- useTemporalAnalysis.tsx
+|   |   |   |   +-- shared/
+|   |   |   |       |-- cognitive-metrics/
+|   |   |   |       |   |-- components/
+|   |   |   |       |   |   |-- index.ts
+|   |   |   |       |   |   |-- indicatorCard.tsx
+|   |   |   |       |   |   +-- MetricBox.tsx
+|   |   |   |       |   |-- hooks/
+|   |   |   |       |   |   |-- useCognitiveMetrics.ts
+|   |   |   |       |   |   +-- useCognitiveMetricsByFamily.ts
+|   |   |   |       |   |-- indicators/
+|   |   |   |       |   |   +-- FluiditeCognitiveIndicator/
+|   |   |   |       |   |       |-- algorithms/
+|   |   |   |       |   |       |   |-- BasicFluidityAlgorithm.ts
+|   |   |   |       |   |       |   +-- NeuronMirrorAlgorithm.ts
+|   |   |   |       |   |       |-- hooks/
+|   |   |   |       |   |       |   +-- useFluiditeCognitive.ts
+|   |   |   |       |   |       |-- FluiditeCognitiveIndicator.ts
+|   |   |   |       |   |       |-- FluiditeCognitiveInterface.tsx
+|   |   |   |       |   |       +-- index.ts
+|   |   |   |       |   |-- migration/
+|   |   |   |       |   |   |-- adaptUseCognitiveMetrics.ts
+|   |   |   |       |   |   +-- CognitiveMetricsMigration.tsx
+|   |   |   |       |   |-- CognitiveMetrics.tsx
+|   |   |   |       |   |-- CognitiveMetricsRegistry.tsx
+|   |   |   |       |   |-- indicatorData.ts
+|   |   |   |       |   |-- README.MD
+|   |   |   |       |   +-- types.ts
+|   |   |   |       +-- li-metrics/
+|   |   |   |           |-- indicators/
+|   |   |   |           |   |-- CommonGroundIndicator/
+|   |   |   |           |   |   +-- index.ts
+|   |   |   |           |   +-- FeedbackAlignementIndicator/
+|   |   |   |           |       |-- algorithms/
+|   |   |   |           |       |   |-- BasicAlignmentAlgorithm.ts
+|   |   |   |           |       |   |-- ConversationalPatternAlgorithm.ts
+|   |   |   |           |       |   |-- extrait.JSON
+|   |   |   |           |       |   |-- extrait_simplifie.JSON
+|   |   |   |           |       |   |-- index.ts
+|   |   |   |           |       |   |-- SentimentEnhancedAlgorithm.ts
+|   |   |   |           |       |   +-- SequentialPatternAlgorithm.ts
+|   |   |   |           |       |-- components/
+|   |   |   |           |       |   |-- algorithm-specific/
+|   |   |   |           |       |   |   |-- BasicAlgorithmControl.tsx
+|   |   |   |           |       |   |   |-- ComparisonControls.tsx
+|   |   |   |           |       |   |   +-- LICAAlgorithmControl.tsx
+|   |   |   |           |       |   +-- tabs/
+|   |   |   |           |       |       |-- AlgorithmLabTab/
+|   |   |   |           |       |       |   |-- hooks/
+|   |   |   |           |       |       |   |   +-- useAlgorithmTesting.ts
+|   |   |   |           |       |       |   |-- ALGORITHMLABTAB.MD
+|   |   |   |           |       |       |   |-- AlgorithmLabTab.tsx
+|   |   |   |           |       |       |   |-- index.ts
+|   |   |   |           |       |       |   |-- PHASE1MVP.MD
+|   |   |   |           |       |       |   +-- types.ts
+|   |   |   |           |       |       |-- BasicAlgorithmTab.tsx
+|   |   |   |           |       |       |-- ComparisonTab.tsx
+|   |   |   |           |       |       |-- LICAAlgorithmTab copy.tsx
+|   |   |   |           |       |       |-- LICAAlgorithmTab.tsx
+|   |   |   |           |       |       |-- LICADetailedInterface.tsx
+|   |   |   |           |       |       |-- TabContainer.tsx
+|   |   |   |           |       |       +-- types.ts
+|   |   |   |           |       |-- hooks/
+|   |   |   |           |       |   |-- index.ts
+|   |   |   |           |       |   |-- useFeedbackAlignmentAnnotation.ts
+|   |   |   |           |       |   +-- useFeedbackAlignmentMetrics.ts
+|   |   |   |           |       |-- FeedbackAlignmentIndicator.tsx
+|   |   |   |           |       |-- FeedbackAlignmentInterface.tsx
+|   |   |   |           |       |-- index.ts
+|   |   |   |           |       +-- types.ts
+|   |   |   |           +-- LinguisticInteractionalMetrics.tsx
+|   |   |   +-- shared/
+|   |   |       |-- metrics-framework/
+|   |   |       |   |-- components/
+|   |   |       |   |   +-- MetricsDashBoard.tsx
+|   |   |       |   |-- core/
+|   |   |       |   |   |-- strategies/
+|   |   |       |   |   |   +-- BaseAlgorithmStrategy.ts
+|   |   |       |   |   |-- types/
+|   |   |       |   |   |   +-- base.ts
+|   |   |       |   |   |-- BaseIndicator.ts
+|   |   |       |   |   +-- MetricsRegistry.ts
+|   |   |       |   |-- hooks/
+|   |   |       |   |   +-- useMetricsEngine.ts
+|   |   |       |   +-- index.ts
+|   |   |       +-- ui/
+|   |   |           |-- atoms/
+|   |   |           |   |-- AlgorithmChip.tsx
+|   |   |           |   |-- AlgorithmDetailDialog.tsx
+|   |   |           |   |-- ColorLegend.tsx
+|   |   |           |   |-- HypothesisCard.tsx
+|   |   |           |   |-- index.ts
+|   |   |           |   |-- IndicatorHeader.tsx
+|   |   |           |   |-- MetricCard.tsx
+|   |   |           |   |-- ResponsiveGrid.tsx
+|   |   |           |   |-- ScientificReferenceCard.tsx
+|   |   |           |   |-- ScoreChip.tsx
+|   |   |           |   +-- types.ts
+|   |   |           |-- hooks/
+|   |   |           |   |-- index.ts
+|   |   |           |   |-- useAlgorithmDialog.ts
+|   |   |           |   +-- useScientificReferences.ts
+|   |   |           |-- molecules/
+|   |   |           |   |-- AlgorithmLogicExplanation.tsx
+|   |   |           |   |-- AlgorithmSelector.tsx
+|   |   |           |   |-- FamilyMetricsCard.tsx
+|   |   |           |   |-- HypothesisValidation.tsx
+|   |   |           |   |-- index.ts
+|   |   |           |   |-- ResultsTable.tsx
+|   |   |           |   +-- types.ts
+|   |   |           +-- index.ts
+|   |   +-- shared/
+|   |       +-- context/
+|   |           |-- index.ts
+|   |           |-- SupabaseContext.tsx
+|   |           +-- TaggingDataContext.tsx
 |   |-- lib/
 |   |   |-- config/
 |   |   |   |-- assemblyAIConfig.ts
@@ -930,12 +1217,48 @@ tsconfig.json
 |   |   +-- supabaseClient.tsx
 |   |-- types/
 |   |   |-- algorithm-lab/
+|   |   |   |-- algorithms/
+|   |   |   |   |-- base.ts
+|   |   |   |   |-- index.ts
+|   |   |   |   +-- universal-adapter.ts
+|   |   |   |-- core/
+|   |   |   |   |-- calculations.ts
+|   |   |   |   |-- index.ts
+|   |   |   |   |-- level0.ts
+|   |   |   |   |-- validation.ts
+|   |   |   |   +-- variables.ts
+|   |   |   |-- legacy/
+|   |   |   |   +-- README.md
+|   |   |   |-- ui/
+|   |   |   |   |-- components.ts
+|   |   |   |   |-- index.ts
+|   |   |   |   +-- validation.ts
+|   |   |   |-- utils/
+|   |   |   |   |-- converters.ts
+|   |   |   |   |-- corpusFilters.ts
+|   |   |   |   |-- index.ts
+|   |   |   |   |-- inputPreparation.ts
+|   |   |   |   +-- normalizers.ts
+|   |   |   |-- enrichir les types.md
 |   |   |   |-- h2.ts
+|   |   |   |-- h2Types.ts
 |   |   |   |-- index.ts
 |   |   |   |-- level0.ts
+|   |   |   |-- Level0Types.ts
 |   |   |   |-- level1.ts
+|   |   |   |-- Level1Types.ts
+|   |   |   |-- normalizers.ts
+|   |   |   |-- referencetypes.md
 |   |   |   |-- shared.ts
-|   |   |   +-- validation.ts
+|   |   |   |-- SharedTypes.ts
+|   |   |   |-- ThesisVariables.m1.ts
+|   |   |   |-- ThesisVariables.m2.ts
+|   |   |   |-- ThesisVariables.m3.ts
+|   |   |   |-- ThesisVariables.ts
+|   |   |   |-- ThesisVariables.x.ts
+|   |   |   |-- ThesisVariables.y.ts
+|   |   |   |-- validation.ts
+|   |   |   +-- ValidationTypes.ts
 |   |   |-- analysis/
 |   |   |   |-- index.ts
 |   |   |   +-- types.ts

@@ -1,4 +1,4 @@
-// LICAAlgorithmTab.tsx - Version corrigée des erreurs TypeScript
+﻿// LICAAlgorithmTab.tsx - Version corrigée des erreurs TypeScript
 import React, { useState } from "react";
 import {
   Box,
@@ -33,11 +33,11 @@ import {
 } from "@mui/icons-material";
 
 // Composants shared réutilisés
-import { IndicatorHeader } from "../../../../../shared/atoms/IndicatorHeader";
-import { ColorLegend } from "../../../../../shared/atoms/ColorLegend";
-import { ResultsTable } from "../../../../../shared/molecules/ResultsTable";
-import { AlgorithmDetailDialog } from "../../../../../shared/atoms/AlgorithmDetailDialog";
-import AlgorithmLogicExplanation from "../../../../../shared/molecules/AlgorithmLogicExplanation";
+import { IndicatorHeader } from "@/features/phase3-analysis/shared/ui/atoms/IndicatorHeader";
+import { ColorLegend } from "@/features/phase3-analysis/shared/ui/atoms/ColorLegend";
+import { ResultsTable } from "@/features/phase3-analysis/shared/ui/molecules/ResultsTable";
+import { AlgorithmDetailDialog } from "@/features/phase3-analysis/shared/ui/atoms/AlgorithmDetailDialog";
+import AlgorithmLogicExplanation from "@/features/phase3-analysis/shared/ui/molecules/AlgorithmLogicExplanation";
 
 // Hook pour les métriques
 import { useFeedbackAlignmentMetrics } from "../../hooks/useFeedbackAlignmentMetrics";
@@ -46,11 +46,11 @@ import { useFeedbackAlignmentMetrics } from "../../hooks/useFeedbackAlignmentMet
 import {
   useAlgorithmDialog,
   AlgorithmDetail,
-} from "../../../../../shared/hooks/useAlgorithmDialog";
+} from "@/features/phase3-analysis/shared/ui/hooks/useAlgorithmDialog";
 
 // Types
-import { TableColumn } from "../../../../../shared/molecules/ResultsTable";
-import type { ExtendedAlgorithmLogicProps } from "../../../../../shared/molecules/types";
+import { TableColumn } from "@/features/phase3-analysis/shared/ui/molecules/ResultsTable";
+import type { ExtendedAlgorithmLogicProps } from "@/features/phase3-analysis/shared/ui/molecules/types";
 
 // Types spécifiques à l'onglet LICA
 interface LICAAlgorithmTabProps {

@@ -1,4 +1,4 @@
-// hooks/usePostValidationVersioning.ts
+﻿// hooks/usePostValidationVersioning.ts
 import { supabase } from "@/lib/supabaseClient";
 import { algorithmRegistry } from "../algorithms/level1/shared/AlgorithmRegistry";
 import type {
@@ -8,7 +8,7 @@ import type {
   Level1ValidationMetrics,
   VariableConfig,
   AlgorithmMetadata,
-} from "../types";
+} from "@/types/algorithm-lab";
 
 export const usePostValidationVersioning = () => {
   const computeLevel1Metrics = (

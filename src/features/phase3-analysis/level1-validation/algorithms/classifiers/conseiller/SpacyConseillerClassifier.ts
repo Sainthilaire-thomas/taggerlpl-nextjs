@@ -1,10 +1,10 @@
-// algorithms/level1/conseillerclassifiers/SpacyConseillerClassifier.ts
+﻿// algorithms/level1/conseillerclassifiers/SpacyConseillerClassifier.ts
 
 import {
   BaseClassifier,
   ClassificationResult,
   ClassifierMetadata,
-} from "../shared/BaseClassifier";
+} from "../../shared/BaseClassifier";
 
 export interface SpacyClassifierConfig {
   apiUrl?: string;

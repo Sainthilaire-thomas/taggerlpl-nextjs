@@ -1,10 +1,10 @@
-// Hook Niveau 0 - useLevel0Validation.ts
+﻿// Hook Niveau 0 - useLevel0Validation.ts
 import { useState, useCallback } from "react";
 import {
   InterAnnotatorData,
   KappaMetrics,
   DisagreementCase,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+} from "@/types/algorithm-lab";
 
 export const useLevel0Validation = () => {
   const [annotations, setAnnotations] = useState<InterAnnotatorData[]>([]);

@@ -1,4 +1,4 @@
-// LICAAlgorithmTab.tsx - Onglet pour l'algorithme ConversationalPatternAlgorithm (LI-CA)
+﻿// LICAAlgorithmTab.tsx - Onglet pour l'algorithme ConversationalPatternAlgorithm (LI-CA)
 import React, { useState } from "react";
 import {
   Box,
@@ -31,10 +31,10 @@ import {
 } from "@mui/icons-material";
 
 // 🧩 Composants shared réutilisés
-import { IndicatorHeader } from "@/analysis-components/shared/atoms/IndicatorHeader";
-import { ColorLegend } from "@/analysis-components/shared/atoms/ColorLegend";
-import { ResultsTable } from "@/analysis-components/shared/molecules/ResultsTable";
-import { AlgorithmDetailDialog } from "@/analysis-components/shared/atoms/AlgorithmDetailDialog";
+import { IndicatorHeader } from "@/features/phase3-analysis/shared/ui/atoms/IndicatorHeader";
+import { ColorLegend } from "@/features/phase3-analysis/shared/ui/atoms/ColorLegend";
+import { ResultsTable } from "@/features/phase3-analysis/shared/ui/molecules/ResultsTable";
+import { AlgorithmDetailDialog } from "@/features/phase3-analysis/shared/ui/atoms/AlgorithmDetailDialog";
 
 // 🪝 Hook pour les métriques
 import { useFeedbackAlignmentMetrics } from "../../hooks/useFeedbackAlignmentMetrics";
@@ -43,10 +43,10 @@ import { useFeedbackAlignmentMetrics } from "../../hooks/useFeedbackAlignmentMet
 import {
   useAlgorithmDialog,
   AlgorithmDetail,
-} from "@/analysis-components/shared/hooks/useAlgorithmDialog";
+} from "@/features/phase3-analysis/shared/ui/hooks/useAlgorithmDialog";
 
 // 📊 Types
-import { TableColumn } from "@/analysis-components/shared/molecules/ResultsTable";
+import { TableColumn } from "@/features/phase3-analysis/shared/ui/molecules/ResultsTable";
 
 // Types spécifiques à l'onglet
 interface LICAAlgorithmTabProps {
