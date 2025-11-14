@@ -3,13 +3,13 @@
 import { algorithmRegistry } from "./AlgorithmRegistry";
 
 // --- X (Conseiller)
-import { RegexXClassifier } from "../classifiers/client/RegexClientClassifier";
-import { SpacyXClassifier } from "../classifiers/client/SpacyClientClassifier";
-import { OpenAIXClassifier } from "../classifiers/client/OpenAIClientClassifier";
-import { OpenAI3TXClassifier } from "../classifiers/client/OpenAI3TClientClassifier";
+import { RegexClientClassifier } from "../classifiers/client/RegexClientClassifier";
+import { SpacyClientClassifier } from "../classifiers/client/SpacyClientClassifier";
+import { OpenAIClientClassifier } from "../classifiers/client/OpenAIClientClassifier";
+import { OpenAI3TClientClassifier } from "../classifiers/client/OpenAI3TClientClassifier";
 
 // --- Y (Client)
-import { RegexYClassifier } from "../classifiers/conseiller/RegexConseillerClassifier";
+import { RegexConseillerClassifier } from "../classifiers/conseiller/RegexConseillerClassifier";
 
 // --- M1 (Compteurs / métriques)
 import { M1ActionVerbCounter } from "../mediators/M1Algorithms/M1ActionVerbCounter";
@@ -47,17 +47,17 @@ export function initializeAlgorithms(): void {
     const isDev = process.env.NODE_ENV === "development";
 
     // ===== X (classifieurs conseiller) =====
-    algorithmRegistry.register("RegexXClassifier", new RegexXClassifier());
+    algorithmRegistry.register("RegexClientClassifier", new RegexClientClassifier());
 
     // SpaCy avec configuration complète
     if (spacyUrl || isDev) {
-      const spacyX = new SpacyXClassifier({
+      const spacyX = new SpacyClientClassifier({
         apiUrl: spacyUrl,
         model: "fr_core_news_md",
         timeout: 5000,
         confidenceThreshold: 0.6,
       });
-      algorithmRegistry.register("SpacyXClassifier", spacyX);
+      algorithmRegistry.register("SpacyClientClassifier", spacyX);
       console.log("✅ SpaCy X Classifier enregistré");
     } else {
       console.log("⚠️ SpaCy X Classifier ignoré (pas de SPACY_API_URL)");
@@ -65,8 +65,8 @@ export function initializeAlgorithms(): void {
 
     // OpenAI classifieurs avec configuration optimisée
     algorithmRegistry.register(
-      "OpenAIXClassifier",
-      new OpenAIXClassifier({
+      "OpenAIClientClassifier",
+      new OpenAIClientClassifier({
         apiKey: openAIKey, // peut être vide → fallback côté run()
         model: "gpt-4o-mini",
         temperature: 0,
@@ -75,8 +75,8 @@ export function initializeAlgorithms(): void {
       })
     );
     algorithmRegistry.register(
-      "OpenAI3TXClassifier",
-      new OpenAI3TXClassifier({
+      "OpenAI3TClientClassifier",
+      new OpenAI3TClientClassifier({
         apiKey: openAIKey,
         model: "gpt-4o-mini",
         temperature: 0,
@@ -92,7 +92,7 @@ export function initializeAlgorithms(): void {
     });
     console.log("✅ OpenAI X Classifiers enregistrés");
     // ===== Y (classifieurs client) =====
-    algorithmRegistry.register("RegexYClassifier", new RegexYClassifier());
+    algorithmRegistry.register("RegexConseillerClassifier", new RegexConseillerClassifier());
 
     // ===== M1 (compteurs / métriques) =====
     algorithmRegistry.register(
