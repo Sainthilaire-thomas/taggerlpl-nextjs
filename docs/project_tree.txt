@@ -117,6 +117,7 @@ tsconfig.json
 |   |   |-- INVENTAIRE_TYPES_EXISTANTS.md
 |   |   |-- PHASE3_IMPORTS_CORRECTIONS.md
 |   |   |-- PHASE3_REMAINING_ERRORS.txt
+|   |   |-- PHASE3_REMAINING_ERRORS_v10.txt
 |   |   |-- PHASE3_REMAINING_ERRORS_v3.txt
 |   |   |-- PHASE3_REMAINING_ERRORS_v4.txt
 |   |   |-- PHASE3_REMAINING_ERRORS_v7.txt
@@ -170,6 +171,8 @@ tsconfig.json
 |-- scripts/
 |   |-- complete-step-0-5.ps1
 |   |-- fix-phase3-imports.ps1
+|   |-- fix-phase3-imports-v10.ps1
+|   |-- fix-phase3-imports-v11.ps1
 |   |-- fix-phase3-imports-v2.ps1
 |   |-- fix-phase3-imports-v3.ps1
 |   |-- fix-phase3-imports-v4.ps1
