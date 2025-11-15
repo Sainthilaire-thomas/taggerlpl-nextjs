@@ -4,11 +4,11 @@ import React, { useMemo, useState } from "react";
 import { Box, Tabs, Tab, Typography, Divider } from "@mui/material";
 
 // UI “par variable”
-import XValidationInterface from "./algorithms/XClassifiers/XValidationInterface";
-import YValidationInterface from "./algorithms/YClassifiers/YValidationInterface";
-import M1ValidationInterface from "./algorithms/M1Calculators/M1ValidationInterface";
-import M2ValidationInterface from "./algorithms/M2Calculators/M2ValidationInterface";
-import M3ValidationInterface from "./algorithms/M3Calculators/M3ValidationInterface";
+import XValidationInterface from "../algorithms/XClassifiers/XValidationInterface";
+import YValidationInterface from "../algorithms/YClassifiers/YValidationInterface";
+import M1ValidationInterface from "../algorithms/M1Calculators/M1ValidationInterface";
+import M2ValidationInterface from "../algorithms/M2Calculators/M2ValidationInterface";
+import M3ValidationInterface from "../algorithms/M3Calculators/M3ValidationInterface";
 
 // Onglets historiques qui restent surtout pertinents pour X/Y
 import { ConfusionMatrix } from "./individual/ConfusionMatrix";

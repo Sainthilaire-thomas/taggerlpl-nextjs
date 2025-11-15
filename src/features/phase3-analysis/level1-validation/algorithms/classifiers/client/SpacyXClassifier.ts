@@ -1,5 +1,5 @@
-import type { BaseAlgorithm, AlgorithmMetadata } from "../shared/BaseAlgorithm";
-import { SpacyConseillerClassifier } from "../conseillerclassifiers/SpacyConseillerClassifier";
+import type { BaseAlgorithm, AlgorithmMetadata } from "../../shared/BaseAlgorithm";
+import { SpacyConseillerClassifier } from "../conseiller/SpacyConseillerClassifier";
 
 type SpacyXConfig = {
   apiUrl?: string;
