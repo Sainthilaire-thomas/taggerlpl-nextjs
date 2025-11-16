@@ -1,0 +1,32 @@
+﻿// ... (garder tout le code d'avant jusqu'à navigationStructure)
+
+const navigationStructure: MenuItem[] = [
+  {
+    name: "Phase 1: Corpus",
+    icon: <Inventory2Icon />,
+    children: [
+      { name: "Import appels", icon: <UploadFileIcon />, path: "/phase1-corpus/import" },
+      { name: "WorkDrive Explorer", icon: <FolderIcon />, path: "/phase1-corpus/workdrive" },
+      { name: "Gestion corpus", icon: <PhoneIcon />, path: "/phase1-corpus/management" },
+      { name: "Gestion appels (Legacy)", icon: <PhoneIcon />, path: "/calls" },
+    ],
+  },
+  {
+    name: "Phase 2: Annotation",
+    icon: <EditNoteIcon />,
+    children: [
+      { name: "Transcript", icon: <LocalOfferIcon />, path: "/phase2-annotation/transcript" },
+      { name: "Tags Management", icon: <SettingsIcon />, path: "/phase2-annotation/tags-management" },
+      { name: "Supervision", icon: <VisibilityIcon />, path: "/phase2-annotation/supervision" },
+      { name: "Tagging (Legacy)", icon: <LocalOfferIcon />, path: "/new-tagging" },
+    ],
+  },
+  {
+    name: "Phase 3: Analyse",
+    icon: <ScienceIcon />,
+    children: [
+      { name: "Level 1: AlgorithmLab", icon: <BiotechIcon />, path: "/phase3-analysis/level1/algorithm-lab" },
+      { name: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
+    ],
+  },
+];

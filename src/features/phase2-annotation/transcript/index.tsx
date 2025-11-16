@@ -1,11 +1,11 @@
-// TranscriptLPL optimisé - Version avec memo et callbacks stables
+﻿// TranscriptLPL optimisÃ© - Version avec memo et callbacks stables
 
 "use client";
 
 import { memo, useEffect, useMemo, useCallback } from "react";
 import { Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { useTaggingData } from "@/context/TaggingDataContext";
+import { useTaggingData } from "@/features/shared/context";
 
 // Importation des composants
 import TranscriptHeader from "./TranscriptHeader";
@@ -20,7 +20,7 @@ import { useTranscriptAudio } from "./hooks/useTranscriptAudio";
 import { TranscriptLPLProps, DRAWER_WIDTH } from "./types";
 
 const TranscriptLPL = memo<TranscriptLPLProps>(({ callId, audioSrc }) => {
-  // Suppression des logs en production pour améliorer les performances
+  // Suppression des logs en production pour amÃ©liorer les performances
   if (process.env.NODE_ENV === "development") {
     console.log("TranscriptLPL render - callId:", callId);
   }
@@ -35,17 +35,17 @@ const TranscriptLPL = memo<TranscriptLPLProps>(({ callId, audioSrc }) => {
     fetchTaggedTurns,
   } = useTaggingData();
 
-  // Mémoisation du filename
+  // MÃ©moisation du filename
   const filename = useMemo(() => {
     const call = taggingCalls.find((call) => call.callid === callId);
     return call?.filename || "Nom de fichier indisponible";
   }, [taggingCalls, callId]);
 
-  // Hooks personnalisés
+  // Hooks personnalisÃ©s
   const taggingLogic = useTaggingLogic(callId);
   const transcriptAudio = useTranscriptAudio();
 
-  // Mémoisation des handlers pour éviter les re-renders
+  // MÃ©moisation des handlers pour Ã©viter les re-renders
   const memoizedHandlers = useMemo(
     () => ({
       handleMouseUp: taggingLogic.handleMouseUp,
@@ -63,7 +63,7 @@ const TranscriptLPL = memo<TranscriptLPLProps>(({ callId, audioSrc }) => {
     ]
   );
 
-  // Mémoisation des données pour éviter les re-renders
+  // MÃ©moisation des donnÃ©es pour Ã©viter les re-renders
   const memoizedData = useMemo(
     () => ({
       taggedTurns,
@@ -73,20 +73,20 @@ const TranscriptLPL = memo<TranscriptLPLProps>(({ callId, audioSrc }) => {
     [taggedTurns, taggingTranscription, transcriptAudio.groupedTurns]
   );
 
-  // Charger les données initiales seulement quand nécessaire
+  // Charger les donnÃ©es initiales seulement quand nÃ©cessaire
   useEffect(() => {
     if (callId && typeof callId === "string") {
       fetchTaggedTurns(callId);
       fetchTaggingTranscription(callId);
     }
-  }, [callId]); // Dépendances minimales
+  }, [callId]); // DÃ©pendances minimales
 
-  // Gérer l'audio seulement quand nécessaire
+  // GÃ©rer l'audio seulement quand nÃ©cessaire
   useEffect(() => {
     if (audioSrc) {
       transcriptAudio.setAudioSrc(audioSrc);
     }
-  }, [audioSrc, transcriptAudio.setAudioSrc]); // Dépendance corrigée
+  }, [audioSrc, transcriptAudio.setAudioSrc]); // DÃ©pendance corrigÃ©e
 
   return (
     <Box
@@ -108,7 +108,7 @@ const TranscriptLPL = memo<TranscriptLPLProps>(({ callId, audioSrc }) => {
           padding: theme.spacing(2),
         }}
       >
-        {/* En-tête */}
+        {/* En-tÃªte */}
         <TranscriptHeader filename={filename} />
 
         {/* Lecteur audio */}
@@ -119,7 +119,7 @@ const TranscriptLPL = memo<TranscriptLPLProps>(({ callId, audioSrc }) => {
           />
         </Box>
 
-        {/* Contrôles */}
+        {/* ContrÃ´les */}
         <TranscriptControls
           fontSize={transcriptAudio.fontSize}
           setFontSize={transcriptAudio.setFontSize}
@@ -142,7 +142,7 @@ const TranscriptLPL = memo<TranscriptLPLProps>(({ callId, audioSrc }) => {
         />
       </Box>
 
-      {/* Panneau latéral */}
+      {/* Panneau latÃ©ral */}
       <TagSidePanel
         drawerOpen={taggingLogic.drawerOpen}
         handleToggleDrawer={memoizedHandlers.handleToggleDrawer}
@@ -162,3 +162,5 @@ const TranscriptLPL = memo<TranscriptLPLProps>(({ callId, audioSrc }) => {
 TranscriptLPL.displayName = "TranscriptLPL";
 
 export default TranscriptLPL;
+
+

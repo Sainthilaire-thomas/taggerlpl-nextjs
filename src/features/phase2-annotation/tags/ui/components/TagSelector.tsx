@@ -1,14 +1,14 @@
-import React from "react";
+﻿import React from "react";
 import { useState, useEffect } from "react";
 import { Box, Typography, Button } from "@mui/material";
 import { useTaggingData } from "@/features/shared/context";
 import TagManager from "@/app/(protected)/tags/components/TagManager";
 
-// Import dynamique pour why-did-you-render (uniquement en développement)
-// Next.js utilise un système d'import différent de Vite
+// Import dynamique pour why-did-you-render (uniquement en dÃ©veloppement)
+// Next.js utilise un systÃ¨me d'import diffÃ©rent de Vite
 let wdyr: any;
 if (process.env.NODE_ENV === "development") {
-  // Import dynamique pour éviter d'affecter l'environnement de production
+  // Import dynamique pour Ã©viter d'affecter l'environnement de production
   import("@welldone-software/why-did-you-render").then((mod) => {
     wdyr = mod.default;
   });
@@ -141,7 +141,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({
           gap: 2,
         }}
       >
-        {/* Première ligne : ENGAGEMENT et REFLET */}
+        {/* PremiÃ¨re ligne : ENGAGEMENT et REFLET */}
         <Box
           sx={{
             display: "grid",
@@ -153,7 +153,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({
           {renderTagGrid(groupedTags.REFLET, "REFLET")}
         </Box>
 
-        {/* Deuxième ligne : EXPLICATION et OUVERTURE */}
+        {/* DeuxiÃ¨me ligne : EXPLICATION et OUVERTURE */}
         <Box
           sx={{
             display: "grid",
@@ -165,10 +165,10 @@ const TagSelector: React.FC<TagSelectorProps> = ({
           {renderTagGrid(groupedTags.OUVERTURE, "OUVERTURE")}
         </Box>
 
-        {/* Troisième ligne : CLIENT */}
+        {/* TroisiÃ¨me ligne : CLIENT */}
         {renderTagGrid(groupedTags.CLIENT, "CLIENT")}
 
-        {/* Dernière ligne : AUTRES */}
+        {/* DerniÃ¨re ligne : AUTRES */}
         {renderTagGrid(groupedTags.OTHERS, "AUTRES")}
       </Box>
 
@@ -179,10 +179,10 @@ const TagSelector: React.FC<TagSelectorProps> = ({
         onClick={() => setShowTagManager(true)}
         sx={{ marginTop: 4 }}
       >
-        Gérer les Tags
+        GÃ©rer les Tags
       </Button>
 
-      {/* Bouton pour supprimer le tag du tour sélectionné */}
+      {/* Bouton pour supprimer le tag du tour sÃ©lectionnÃ© */}
       {tooltipState?.tag && (
         <Button
           variant="outlined"
@@ -190,7 +190,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({
           onClick={onRemoveTag}
           sx={{ marginTop: 2 }}
         >
-          Supprimer le Tag associé
+          Supprimer le Tag associÃ©
         </Button>
       )}
     </Box>
@@ -199,11 +199,11 @@ const TagSelector: React.FC<TagSelectorProps> = ({
 
 // Configuration why-did-you-render
 if (process.env.NODE_ENV === "development") {
-  // Cette section sera exécutée uniquement côté client après le chargement de la page
+  // Cette section sera exÃ©cutÃ©e uniquement cÃ´tÃ© client aprÃ¨s le chargement de la page
   if (typeof window !== "undefined") {
     setTimeout(() => {
       if (wdyr) {
-        console.log("why-did-you-render activé pour TagSelector");
+        console.log("why-did-you-render activÃ© pour TagSelector");
         wdyr(React, {
           trackAllPureComponents: false,
         });
@@ -215,3 +215,4 @@ if (process.env.NODE_ENV === "development") {
 }
 
 export default React.memo(TagSelector);
+

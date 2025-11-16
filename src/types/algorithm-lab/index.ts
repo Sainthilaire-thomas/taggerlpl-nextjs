@@ -1,12 +1,12 @@
-/**
- * @fileoverview Point d’entrée principal des types AlgorithmLab
- * - Ré-exports sans conflits
+﻿/**
+ * @fileoverview Point dâ€™entrÃ©e principal des types AlgorithmLab
+ * - RÃ©-exports sans conflits
  * - Ajout des utilitaires publics
- * - Interfaces UI complémentaires (MetricsPanel, ConfusionMatrix, etc.)
+ * - Interfaces UI complÃ©mentaires (MetricsPanel, ConfusionMatrix, etc.)
  */
 
 // ========================================================================
-// IMPORTS POUR TYPES DIFFUSÉS DANS CE FICHIER
+// IMPORTS POUR TYPES DIFFUSÃ‰S DANS CE FICHIER
 // ========================================================================
 
 import type { VariableTarget, VariableX } from "./core/variables";
@@ -16,10 +16,10 @@ import type { ValidationMetrics, ValidationResult } from "./core/validation";
 // EXPORTS PAR DOMAINE
 // ========================================================================
 
-// Variables & détails
+// Variables & dÃ©tails
 export * from "./core/variables";
 
-// Calculs & résultats
+// Calculs & rÃ©sultats
 export type {
   CalculationInput,
   CalculationResult,
@@ -36,11 +36,11 @@ export type {
   M3CalculationResult,
 } from "./core/calculations";
 
-// Validation & métriques
+// Validation & mÃ©triques
 export * from "./core/validation";
 
 // ========================================================================
-// EXPORTS ALGORITHMES (sélectifs pour éviter conflits)
+// EXPORTS ALGORITHMES (sÃ©lectifs pour Ã©viter conflits)
 // ========================================================================
 
 export type {
@@ -59,7 +59,7 @@ export type {
   XClassifier,
 } from "./algorithms/base";
 
-// 👉 Expose aussi les noms canoniques attendus par les composants
+// ðŸ‘‰ Expose aussi les noms canoniques attendus par les composants
 export type {
   AlgorithmResult,
   EnhancedAlgorithmResult,
@@ -75,14 +75,14 @@ export type {
 export { createUniversalAlgorithm } from "./algorithms/universal-adapter";
 
 // ========================================================================
-// UI & UTILS (si présents dans ton repo)
+// UI & UTILS (si prÃ©sents dans ton repo)
 // ========================================================================
 
 export * from "./ui";
 export * from "./utils";
 
 // ========================================================================
-// RÉ-EXPORTS COMBINÉS (commodité)
+// RÃ‰-EXPORTS COMBINÃ‰S (commoditÃ©)
 // ========================================================================
 
 // Variables
@@ -114,7 +114,7 @@ export type {
   InterAnnotatorData,
 } from "./core/validation";
 
-// UI types (si définis)
+// UI types (si dÃ©finis)
 export type {
   BaseValidationProps,
   XValidationProps,
@@ -142,7 +142,7 @@ export {
 
 export { calculateMetrics, createValidationConfig } from "./core/validation";
 
-// ✅ Ajoute normalizeAlgorithmResult ici (manquait avant)
+// âœ… Ajoute normalizeAlgorithmResult ici (manquait avant)
 export {
   isValidAlgorithmResult,
   normalizeAlgorithmResult,
@@ -150,8 +150,10 @@ export {
   createSuccessResult,
 } from "./algorithms/base";
 
+export { createAlgorithmMetadata, convertLegacyMetadata } from './algorithms/base';
+
 // ========================================================================
-// INTERFACES UI COMPLÉMENTAIRES (utilisées par tes composants)
+// INTERFACES UI COMPLÃ‰MENTAIRES (utilisÃ©es par tes composants)
 // ========================================================================
 
 export interface SimpleMetrics {
@@ -186,3 +188,16 @@ export interface ConfusionMatrixProps {
   showLabels?: boolean;
   compact?: boolean;
 }
+
+// Exports des configurations d'algorithmes
+export {
+  ALGORITHM_CONFIGS,
+  getAlgorithmsByTarget,
+  getConfigForAlgorithm,
+  getAllTargets,
+  validateAlgorithmName,
+} from "./algorithms/base";
+
+
+// Export H2 helpers
+export { getH2Property } from "./h2Types";

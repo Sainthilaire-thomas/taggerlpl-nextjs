@@ -3,13 +3,13 @@
 import { algorithmRegistry } from "./AlgorithmRegistry";
 
 // --- X (Conseiller)
-import { RegexXClassifier } from "../classifiers/client/RegexXClassifier";
-import { SpacyXClassifier } from "../classifiers/client/SpacyXClassifier";
-import { OpenAIXClassifier } from "../classifiers/client/OpenAIXClassifier";
-import { OpenAI3TXClassifier } from "../classifiers/client/OpenAI3TXClassifier";
+import { RegexXClassifier } from "../client/RegexXClassifier";
+import { SpacyXClassifier } from "../client/SpacyXClassifier";
+import { OpenAIXClassifier } from "../client/OpenAIXClassifier";
+import { OpenAI3TXClassifier } from "../client/OpenAI3TXClassifier";
 
 // --- Y (Client)
-import { RegexYClassifier } from "../classifiers/conseiller/RegexYClassifier";
+import { RegexYClassifier } from "../conseiller/RegexYClassifier";
 
 // --- M1 (Compteurs / métriques)
 import { M1ActionVerbCounter } from "../mediators/M1Algorithms/M1ActionVerbCounter";

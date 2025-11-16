@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import {
@@ -20,7 +20,7 @@ import TagStats from "@/features/phase2-annotation/tags/ui/components/TagStats";
 import TurntaggedTable from "@/features/phase2-annotation/turns/ui/components/TurnTaggedTable";
 import { getFamilyIcon } from "@/components/utils/iconUtils";
 
-// Types (à extraire dans un fichier séparé)
+// Types (Ã  extraire dans un fichier sÃ©parÃ©)
 interface Tag {
   id?: number;
   label: string;
@@ -69,9 +69,9 @@ export default function TagTreeView() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const handleEditTag = (tag: Tag): void => {
-    console.log("Tag sélectionné pour édition :", tag);
+    console.log("Tag sÃ©lectionnÃ© pour Ã©dition :", tag);
     if (!tag) {
-      console.error("Tentative d'éditer un tag null ou indéfini !");
+      console.error("Tentative d'Ã©diter un tag null ou indÃ©fini !");
       return;
     }
 
@@ -90,16 +90,16 @@ export default function TagTreeView() {
       return;
     }
 
-    console.log("Mise à jour du tag :", updatedTag);
+    console.log("Mise Ã  jour du tag :", updatedTag);
 
     const oldLabel = editingTag.label;
     const newLabel = updatedTag.label;
 
     try {
-      // Logique de mise à jour du tag extraite de TaggerLPL
+      // Logique de mise Ã  jour du tag extraite de TaggerLPL
       // Pour la phase 1, nous simplifions cette fonction
 
-      // Mettre à jour l'état local
+      // Mettre Ã  jour l'Ã©tat local
       setTagTree((prevTree) =>
         prevTree.map((family) => ({
           ...family,
@@ -113,13 +113,13 @@ export default function TagTreeView() {
       setIsModalOpen(false);
     } catch (err) {
       console.error(
-        "Erreur inattendue lors de la mise à jour :",
+        "Erreur inattendue lors de la mise Ã  jour :",
         err instanceof Error ? err.message : String(err)
       );
     }
   };
 
-  // Fonction pour charger les données filtrées
+  // Fonction pour charger les donnÃ©es filtrÃ©es
   const fetchTurntaggedData = async (
     tag: string
   ): Promise<TurntaggedData[]> => {
@@ -131,7 +131,7 @@ export default function TagTreeView() {
 
       if (error) {
         console.error(
-          "Erreur lors de la récupération des données :",
+          "Erreur lors de la rÃ©cupÃ©ration des donnÃ©es :",
           error.message
         );
         return [];
@@ -187,7 +187,7 @@ export default function TagTreeView() {
               label: tag.label,
               color: tag.color,
               callCount, // Nombre d'appels
-              turnCount, // Nombre de tours taggés
+              turnCount, // Nombre de tours taggÃ©s
               family: tag.family,
             });
           } else {
@@ -208,7 +208,7 @@ export default function TagTreeView() {
           return acc;
         }, []);
 
-        // Trier les familles par priorité d'icône
+        // Trier les familles par prioritÃ© d'icÃ´ne
         tree = sortFamilies(tree);
 
         setTagTree(tree);
@@ -337,7 +337,7 @@ export default function TagTreeView() {
                           handleTagClick(child.label);
                         }}
                       >
-                        Voir détails
+                        Voir dÃ©tails
                       </Button>
                       <Button
                         variant="outlined"
@@ -454,3 +454,4 @@ export default function TagTreeView() {
     </Box>
   );
 }
+

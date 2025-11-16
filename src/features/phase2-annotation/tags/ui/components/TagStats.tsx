@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useRef, FC } from "react";
 import { Box, CircularProgress, Typography } from "@mui/material";
@@ -16,13 +16,13 @@ interface TagData {
   count: number;
 }
 
-// Correction du type pour correspondre à la structure retournée par Supabase
+// Correction du type pour correspondre Ã  la structure retournÃ©e par Supabase
 interface TurnTaggedRecord {
   tag: string | null;
   next_turn_tag: string | null;
   lpltag: {
     family: string;
-  }[]; // Correction: lpltag est retourné comme un tableau par Supabase
+  }[]; // Correction: lpltag est retournÃ© comme un tableau par Supabase
 }
 
 interface AggregatedData {
@@ -40,7 +40,7 @@ const TagStats: FC<TagStatsProps> = ({ family }) => {
   const [data, setData] = useState<TagData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const chartRef = useRef<HTMLDivElement>(null); // Référence pour ECharts
+  const chartRef = useRef<HTMLDivElement>(null); // RÃ©fÃ©rence pour ECharts
 
   useEffect(() => {
     const fetchData = async () => {
@@ -79,7 +79,7 @@ const TagStats: FC<TagStatsProps> = ({ family }) => {
 
         if (!data || data.length === 0) {
           console.warn("No data found for the specified family:", family);
-          setData([]); // Mettre à jour avec un tableau vide si aucune donnée trouvée
+          setData([]); // Mettre Ã  jour avec un tableau vide si aucune donnÃ©e trouvÃ©e
           return;
         }
 
@@ -87,12 +87,12 @@ const TagStats: FC<TagStatsProps> = ({ family }) => {
         const aggregatedData = (
           data as TurnTaggedRecord[]
         ).reduce<AggregatedData>((acc, item) => {
-          // Vérifier que lpltag existe et n'est pas vide
+          // VÃ©rifier que lpltag existe et n'est pas vide
           if (!item.lpltag || item.lpltag.length === 0) {
             return acc;
           }
 
-          const tag = item.tag || "Non spécifié";
+          const tag = item.tag || "Non spÃ©cifiÃ©";
           const nextTurnTag = item.next_turn_tag || "Aucun";
           const key = `${tag}-${nextTurnTag}`;
 
@@ -109,7 +109,7 @@ const TagStats: FC<TagStatsProps> = ({ family }) => {
 
         console.log("Aggregated data:", aggregatedData);
 
-        setData(Object.values(aggregatedData)); // Mettre à jour l'état avec les données agrégées
+        setData(Object.values(aggregatedData)); // Mettre Ã  jour l'Ã©tat avec les donnÃ©es agrÃ©gÃ©es
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Erreur inconnue";
@@ -129,7 +129,7 @@ const TagStats: FC<TagStatsProps> = ({ family }) => {
 
       const chartInstance = echarts.init(chartRef.current);
 
-      // Préparer les données pour ECharts
+      // PrÃ©parer les donnÃ©es pour ECharts
       const tags = [...new Set(data.map((item) => item.tag))]; // Liste unique des tags
       const nextTags = [...new Set(data.map((item) => item.next_turn_tag))]; // Liste unique des next_turn_tag (y compris "Aucun")
 
@@ -170,7 +170,7 @@ const TagStats: FC<TagStatsProps> = ({ family }) => {
 
       chartInstance.setOption(option);
 
-      // Nettoyer l'instance de graphique à la destruction
+      // Nettoyer l'instance de graphique Ã  la destruction
       return () => {
         console.log("Disposing ECharts instance");
         chartInstance.dispose();
@@ -200,7 +200,7 @@ const TagStats: FC<TagStatsProps> = ({ family }) => {
     return (
       <Box sx={{ textAlign: "center", marginTop: 4 }}>
         <Typography variant="h6">
-          Veuillez sélectionner une famille pour afficher les statistiques
+          Veuillez sÃ©lectionner une famille pour afficher les statistiques
         </Typography>
       </Box>
     );
@@ -213,7 +213,7 @@ const TagStats: FC<TagStatsProps> = ({ family }) => {
       </Typography>
       {data.length === 0 ? (
         <Typography variant="body1">
-          Aucune donnée disponible pour cette famille
+          Aucune donnÃ©e disponible pour cette famille
         </Typography>
       ) : (
         <Box
@@ -226,3 +226,4 @@ const TagStats: FC<TagStatsProps> = ({ family }) => {
 };
 
 export default TagStats;
+

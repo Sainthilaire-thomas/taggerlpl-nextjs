@@ -1,4 +1,4 @@
-// src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/shared/results/base/ResultsTableBase.tsx
+﻿// src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/shared/results/base/ResultsTableBase.tsx
 "use client";
 
 import * as React from "react";

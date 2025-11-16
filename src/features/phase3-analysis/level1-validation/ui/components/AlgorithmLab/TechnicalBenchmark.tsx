@@ -1,4 +1,4 @@
-// components/Level1/TechnicalBenchmark.tsx - Corrigé
+﻿// components/Level1/TechnicalBenchmark.tsx - Corrigé
 import React from "react";
 import {
   Box,
@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@mui/material";
 import { TrendingUp, TrendingDown, Timeline } from "@mui/icons-material";
-import { ValidationMetrics } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import { ValidationMetrics } from "@/types/algorithm-lab";
 
 interface BenchmarkData {
   algorithmName: string;

@@ -1,5 +1,5 @@
-// M3ValidationInterface.tsx - APRÈS
-import { BaseAlgorithmTesting } from "../BaseAlgorithmTesting";
+﻿// M3ValidationInterface.tsx - APRÈS
+import { BaseAlgorithmTesting } from '../shared/BaseAlgorithmTesting';
 export default function M3ValidationInterface() {
   return (
     <BaseAlgorithmTesting

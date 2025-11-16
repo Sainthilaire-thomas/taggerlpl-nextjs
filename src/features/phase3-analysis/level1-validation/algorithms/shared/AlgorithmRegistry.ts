@@ -1,14 +1,14 @@
-// src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry.ts
+﻿// src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry.ts
 import type { BaseAlgorithm } from "./BaseAlgorithm";
 import type {
   UniversalAlgorithm,
   AlgorithmMetadata,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base";
+} from "@/types/algorithm-lab";
 // Import normal pour les fonctions (pas import type)
 import {
   createAlgorithmMetadata,
   convertLegacyMetadata,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base";
+} from "@/types/algorithm-lab";
 
 function isFunc(v: unknown): v is (...args: any[]) => any {
   return typeof v === "function";

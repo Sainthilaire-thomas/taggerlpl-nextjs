@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Typography } from "@mui/material";
 import { TranscriptHeaderProps } from "./types";
 
@@ -11,3 +11,4 @@ const TranscriptHeader: React.FC<TranscriptHeaderProps> = ({ filename }) => {
 };
 
 export default TranscriptHeader;
+

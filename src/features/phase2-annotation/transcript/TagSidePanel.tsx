@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -91,11 +91,11 @@ const TagSidePanel: React.FC<TagSidePanelProps> = ({
         {/* Contenu de l'onglet Tags */}
         {tabValue === 0 && (
           <>
-            {/* Afficher le texte sélectionné en mode "create" */}
+            {/* Afficher le texte sÃ©lectionnÃ© en mode "create" */}
             {tagMode === "create" && selectedText && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" color="text.secondary">
-                  Texte sélectionné:
+                  Texte sÃ©lectionnÃ©:
                 </Typography>
                 <Paper
                   variant="outlined"
@@ -149,7 +149,7 @@ const TagSidePanel: React.FC<TagSidePanelProps> = ({
               </Box>
             )}
 
-            {/* TagSelector intégré dans le panneau */}
+            {/* TagSelector intÃ©grÃ© dans le panneau */}
             <TagSelector
               tooltipState={adaptedTooltipState}
               onRemoveTag={onRemoveTag}
@@ -177,7 +177,7 @@ const TagSidePanel: React.FC<TagSidePanelProps> = ({
               Comment utiliser le tagging
             </Typography>
             <Typography variant="body2" paragraph>
-              1. Sélectionnez du texte pour créer un nouveau tag
+              1. SÃ©lectionnez du texte pour crÃ©er un nouveau tag
             </Typography>
             <Typography variant="body2" paragraph>
               2. Cliquez sur un tag existant pour le modifier
@@ -194,3 +194,4 @@ const TagSidePanel: React.FC<TagSidePanelProps> = ({
 };
 
 export default TagSidePanel;
+

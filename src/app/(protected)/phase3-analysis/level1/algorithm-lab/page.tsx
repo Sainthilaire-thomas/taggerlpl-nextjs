@@ -1,5 +1,5 @@
-﻿import Level1Interface from '@/features/phase3-analysis/level1-validation/ui/components/AlgorithmLab/Level1Interface';
+import ClientAlgorithmLabWrapper from '@/features/phase3-analysis/level1-validation/ui/components/AlgorithmLab/ClientAlgorithmLabWrapper';
 
 export default function AlgorithmLabPage() {
-  return <Level1Interface />;
+  return <ClientAlgorithmLabWrapper />;
 }

@@ -14,8 +14,10 @@ package.json
 package-lock.json
 postcss.config.mjs
 README.md
+temp_nav.txt
 tsconfig.algorithmlab.json
 tsconfig.json
+typescript-errors.txt
 |-- .vscode/
 |   |-- settings.json
 |   +-- tasks.json
@@ -107,6 +109,7 @@ tsconfig.json
 |-- docs/
 |   |-- architecture/
 |   |   |-- ARCHITECTURE_CIBLE_WORKFLOW.md
+|   |   |-- ARCHITECTURE_ETAT_MIGRATION_15_nov_18h.md
 |   |   |-- ARCHITECTURE_ETAT_MIGRATION_PHASE_3.md
 |   |   |-- BILAN_SESSION_PHASE3_14NOV.md
 |   |   |-- ETAPE_0.5_TYPES_SOLIDIFICATION.md
@@ -171,17 +174,7 @@ tsconfig.json
 |   +-- window.svg
 |-- scripts/
 |   |-- complete-step-0-5.ps1
-|   |-- fix-phase3-imports.ps1
-|   |-- fix-phase3-imports-v10.ps1
-|   |-- fix-phase3-imports-v11.ps1
-|   |-- fix-phase3-imports-v2.ps1
-|   |-- fix-phase3-imports-v3.ps1
-|   |-- fix-phase3-imports-v4.ps1
-|   |-- fix-phase3-imports-v5.ps1
-|   |-- fix-phase3-imports-v6.ps1
-|   |-- fix-phase3-imports-v7.ps1
-|   |-- fix-phase3-imports-v8.ps1
-|   |-- fix-phase3-imports-v9.ps1
+|   |-- Fix-Phase3Imports.ps1
 |   |-- fix-recovered-classifiers.ps1
 |   |-- generate-structure-report.ps1
 |   |-- generate-tree.ps1
@@ -595,7 +588,6 @@ tsconfig.json
 |   |   |   |   |-- hooks/
 |   |   |   |   |   |-- useStrategyStats.tsx
 |   |   |   |   |   +-- useTemporalAnalysis.tsx
-|   |   |   |   |-- page.tsx
 |   |   |   |   |-- page.tsx.disabled
 |   |   |   |   +-- types.ts
 |   |   |   |-- calls/
@@ -625,6 +617,10 @@ tsconfig.json
 |   |   |   |   |       +-- page.tsx
 |   |   |   |   |-- layout.tsx
 |   |   |   |   +-- page.tsx
+|   |   |   |-- phase3-analysis/
+|   |   |   |   +-- level1/
+|   |   |   |       +-- algorithm-lab/
+|   |   |   |           +-- page.tsx
 |   |   |   |-- shared/
 |   |   |   |   +-- TurnWithContext.tsx
 |   |   |   |-- supervision/
@@ -656,7 +652,9 @@ tsconfig.json
 |   |   |   |   |   +-- TagUsageStats.tsx
 |   |   |   |   +-- page.tsx
 |   |   |   |-- AlgorithmLab - Raccourci.lnk
-|   |   |   +-- layout.tsx
+|   |   |   |-- layout.tsx
+|   |   |   |-- layout.tsx.backup
+|   |   |   +-- layout.tsx.old
 |   |   |-- api/
 |   |   |   |-- algolab/
 |   |   |   |   |-- classifiers/
@@ -941,6 +939,167 @@ tsconfig.json
 |   |   |           +-- components/
 |   |   |               |-- TurnTagEditor.tsx
 |   |   |               +-- TurnTaggedTable.tsx
+|   |   |-- phase3-analysis/
+|   |   |   |-- level0-gold/
+|   |   |   |   +-- ui/
+|   |   |   |       +-- components/
+|   |   |   |           +-- InterAnnotatorAgreement.tsx
+|   |   |   |-- level1-validation/
+|   |   |   |   |-- algorithms/
+|   |   |   |   |   |-- client/
+|   |   |   |   |   |   |-- XAlgorithms/
+|   |   |   |   |   |   |   +-- OpenAIXClassifier-copy.ts
+|   |   |   |   |   |   |-- OpenAI3TXClassifier.ts
+|   |   |   |   |   |   |-- OpenAIXClassifier.ts
+|   |   |   |   |   |   |-- RegexClientClassifier.ts
+|   |   |   |   |   |   |-- RegexXClassifier.ts
+|   |   |   |   |   |   +-- SpacyXClassifier.ts
+|   |   |   |   |   |-- conseiller/
+|   |   |   |   |   |   |-- CustomClassifier.ts
+|   |   |   |   |   |   |-- EnsembleConseillerClassifier.ts
+|   |   |   |   |   |   |-- HuggingFaceConseillerClassifier.ts
+|   |   |   |   |   |   |-- MistralConseillerClassifier.ts
+|   |   |   |   |   |   |-- OpenAIConseillerClassifier.ts
+|   |   |   |   |   |   |-- ProxyOpenAIConseillerClassifier.ts
+|   |   |   |   |   |   |-- RegexConseillerClassifier.ts
+|   |   |   |   |   |   |-- RegexYClassifier.ts
+|   |   |   |   |   |   +-- SpacyConseillerClassifier.ts
+|   |   |   |   |   |-- mediators/
+|   |   |   |   |   |   |-- M1Algorithms/
+|   |   |   |   |   |   |   |-- shared/
+|   |   |   |   |   |   |   |   +-- BaseM1Calculator.ts
+|   |   |   |   |   |   |   |-- M1ActionVerbCounter.ts
+|   |   |   |   |   |   |   +-- RegexM1Calculator.ts
+|   |   |   |   |   |   |-- M2Algorithms/
+|   |   |   |   |   |   |   |-- shared/
+|   |   |   |   |   |   |   |   |-- BaseM2Calculator.ts
+|   |   |   |   |   |   |   |   +-- m2-utils.ts
+|   |   |   |   |   |   |   |-- M2CompositeAlignmentCalculator.ts
+|   |   |   |   |   |   |   |-- M2LexicalAlignmentCalculator.ts
+|   |   |   |   |   |   |   +-- M2SemanticAlignmentCalculator.ts
+|   |   |   |   |   |   +-- M3Algorithms/
+|   |   |   |   |   |       |-- shared/
+|   |   |   |   |   |       |   +-- BaseM3Calculator.ts
+|   |   |   |   |   |       +-- PausesM3Calculator.tsx
+|   |   |   |   |   +-- shared/
+|   |   |   |   |       |-- AlgorithmRegistry.ts
+|   |   |   |   |       |-- BaseAlgorithm.ts
+|   |   |   |   |       |-- BaseClassifier.ts
+|   |   |   |   |       |-- ClassifierComparator.ts
+|   |   |   |   |       |-- ClassifierRegistry.ts
+|   |   |   |   |       |-- initializeAlgorithms.ts
+|   |   |   |   |       +-- PerformanceMetrics.ts
+|   |   |   |   |-- ui/
+|   |   |   |   |   |-- components/
+|   |   |   |   |   |   |-- AlgorithmLab/
+|   |   |   |   |   |   |   |-- ResultsSample/
+|   |   |   |   |   |   |   |   |-- components/
+|   |   |   |   |   |   |   |   |   |-- FineTuningDialog/
+|   |   |   |   |   |   |   |   |   |   |-- hooks/
+|   |   |   |   |   |   |   |   |   |   |   +-- useFineTuningExtractor.ts
+|   |   |   |   |   |   |   |   |   |   |-- FineTuningAnalyzer.tsx
+|   |   |   |   |   |   |   |   |   |   |-- FineTuningDialog.tsx
+|   |   |   |   |   |   |   |   |   |   |-- FineTuningExtractor.tsx
+|   |   |   |   |   |   |   |   |   |   |-- FineTuningFormatter.tsx
+|   |   |   |   |   |   |   |   |   |   |-- FineTuningMetrics.tsx
+|   |   |   |   |   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   |   |   |   +-- types.ts
+|   |   |   |   |   |   |   |   |   |-- AnnotationList.tsx
+|   |   |   |   |   |   |   |   |   |-- CommentDialog.tsx
+|   |   |   |   |   |   |   |   |   |-- ResultsFilters.tsx
+|   |   |   |   |   |   |   |   |   |-- ResultsTableBody.tsx
+|   |   |   |   |   |   |   |   |   |-- ResultsTableHeader.tsx
+|   |   |   |   |   |   |   |   |   |-- ResultsTableRow.tsx
+|   |   |   |   |   |   |   |   |   +-- ToneLine.tsx
+|   |   |   |   |   |   |   |   |-- hooks/
+|   |   |   |   |   |   |   |   |   |-- useCommentManagement.ts
+|   |   |   |   |   |   |   |   |   |-- useFineTuningData.ts
+|   |   |   |   |   |   |   |   |   |-- useResultsFiltering.ts
+|   |   |   |   |   |   |   |   |   +-- useResultsPagination.ts
+|   |   |   |   |   |   |   |   |-- utils/
+|   |   |   |   |   |   |   |   |   |-- constants.ts
+|   |   |   |   |   |   |   |   |   |-- dataFormating.ts
+|   |   |   |   |   |   |   |   |   +-- errorAnalysis.tsx
+|   |   |   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   |   |-- ResultsPanel.tsx
+|   |   |   |   |   |   |   |   |-- ResultsSample.tsx
+|   |   |   |   |   |   |   |   +-- types.ts
+|   |   |   |   |   |   |   |-- extraColumns.tsx
+|   |   |   |   |   |   |   |-- Level1Interface.tsx
+|   |   |   |   |   |   |   |-- MetricsPanel.classification.tsx
+|   |   |   |   |   |   |   |-- MetricsPanel.numeric.tsx
+|   |   |   |   |   |   |   |-- MetricsPanel.tsx
+|   |   |   |   |   |   |   |-- ResultsTableBase.tsx
+|   |   |   |   |   |   |   |-- ResultsTableM1.tsx
+|   |   |   |   |   |   |   |-- ResultsTableX.tsx
+|   |   |   |   |   |   |   |-- RunPanel.tsx
+|   |   |   |   |   |   |   +-- TechnicalBenchmark.tsx
+|   |   |   |   |   |   |-- algorithms/
+|   |   |   |   |   |   |   |-- M1Calculators/
+|   |   |   |   |   |   |   |   |-- M1AlgorithmTesting.tsx
+|   |   |   |   |   |   |   |   +-- M1ValidationInterface.tsx
+|   |   |   |   |   |   |   |-- M2Calculators/
+|   |   |   |   |   |   |   |   +-- M2ValidationInterface.tsx
+|   |   |   |   |   |   |   |-- M3Calculators/
+|   |   |   |   |   |   |   |   +-- M3ValidationInterface.tsx
+|   |   |   |   |   |   |   |-- shared/
+|   |   |   |   |   |   |   |   |-- BaseAlgorithmTesting.tsx
+|   |   |   |   |   |   |   |   +-- ClassificationValidationTable.tsx
+|   |   |   |   |   |   |   |-- XClassifiers/
+|   |   |   |   |   |   |   |   |-- XAlgorithmTesting.tsx
+|   |   |   |   |   |   |   |   +-- XValidationInterface.tsx
+|   |   |   |   |   |   |   +-- YClassifiers/
+|   |   |   |   |   |   |       |-- YAlgorithmTesting.tsx
+|   |   |   |   |   |   |       +-- YValidationInterface.tsx
+|   |   |   |   |   |   |-- individual/
+|   |   |   |   |   |   |   |-- AlgorithmComparison.tsx
+|   |   |   |   |   |   |   |-- ClassifierConfiguration.tsx
+|   |   |   |   |   |   |   |-- ConfusionMatrix.tsx
+|   |   |   |   |   |   |   |-- CrossValidation.tsx
+|   |   |   |   |   |   |   |-- EnhancedErrorAnalysis.tsx
+|   |   |   |   |   |   |   |-- EnsembleTuning.tsx
+|   |   |   |   |   |   |   |-- ParameterOptimization.tsx
+|   |   |   |   |   |   |   |-- TechnicalValidation.tsx
+|   |   |   |   |   |   |   +-- TechnicalValidationFixed.tsx
+|   |   |   |   |   |   +-- shared/
+|   |   |   |   |   |       |-- atoms/
+|   |   |   |   |   |       |   +-- AlgorithmChip.tsx
+|   |   |   |   |   |       |-- AlgorithmLabInterface.tsx
+|   |   |   |   |   |       |-- AlgorithmSelector.tsx
+|   |   |   |   |   |       |-- ClassifierSelector.tsx
+|   |   |   |   |   |       |-- NavigationTabs.tsx
+|   |   |   |   |   |       |-- PerformanceDashBoard.tsx
+|   |   |   |   |   |       |-- VersionComparator.tsx
+|   |   |   |   |   |       +-- VersionSelector.tsx
+|   |   |   |   |   +-- hooks/
+|   |   |   |   |       |-- normalizeUniversalToTV.ts
+|   |   |   |   |       |-- useAlgorithmVersioning.ts
+|   |   |   |   |       |-- useClassifierConfiguration.ts
+|   |   |   |   |       |-- useClassifierStatus.ts
+|   |   |   |   |       |-- useH2data.ts
+|   |   |   |   |       |-- useLevel0Validation.ts
+|   |   |   |   |       |-- useLevel1Testing.ts
+|   |   |   |   |       |-- useMultiAlgorithmComparison.ts
+|   |   |   |   |       |-- usePostValidationVersioning.ts
+|   |   |   |   |       +-- useWorkflowManagement.ts
+|   |   |   |   +-- utils/
+|   |   |   |       |-- metricsCalculation.ts
+|   |   |   |       +-- versionGenerator.ts
+|   |   |   +-- level2-hypotheses/
+|   |   |       |-- config/
+|   |   |       |   +-- hypotheses.ts
+|   |   |       |-- hooks/
+|   |   |       |   +-- useH1Analysis.ts
+|   |   |       |-- ui/
+|   |   |       |   +-- components/
+|   |   |       |       |-- H2AlignmentValidation.tsx
+|   |   |       |       |-- H3ApplicationValidation.tsx
+|   |   |       |       |-- Level2Interface.tsx
+|   |   |       |       |-- StatisticalSummary.tsx
+|   |   |       |       +-- StatisticalTestsPanel.tsx
+|   |   |       +-- utils/
+|   |   |           |-- DataProcessing.ts
+|   |   |           +-- stats.ts
 |   |   +-- shared/
 |   |       +-- context/
 |   |           |-- index.ts

@@ -1,5 +1,5 @@
-// M1ValidationInterface.tsx - APRÈS
-import { BaseAlgorithmTesting } from "../BaseAlgorithmTesting";
+﻿// M1ValidationInterface.tsx - APRÈS
+import { BaseAlgorithmTesting } from '../shared/BaseAlgorithmTesting';
 export default function M1ValidationInterface() {
   return (
     <BaseAlgorithmTesting

@@ -1,8 +1,8 @@
-import { useState, useCallback } from "react";
-import { useTaggingData } from "@/context/TaggingDataContext";
+﻿import { useState, useCallback } from "react";
+import { useTaggingData } from "@/features/shared/context";
 import { supabase } from "@/lib/supabaseClient";
-// ✅ Utilisez uniquement les types du contexte
-import { TaggedTurn, Tag as LPLTag } from "@/context/TaggingDataContext";
+// âœ… Utilisez uniquement les types du contexte
+import { TaggedTurn, Tag as LPLTag } from "@/features/shared/context";
 
 export function useTaggingLogic(callId: string) {
   const { taggedTurns, fetchTaggedTurns, addTag, taggingTranscription } =
@@ -20,7 +20,7 @@ export function useTaggingLogic(callId: string) {
   // Handler pour la suppression d'un tag
   const handleRemoveTag = async () => {
     if (!selectedTaggedTurn) {
-      console.error("Aucun tag à supprimer !");
+      console.error("Aucun tag Ã  supprimer !");
       return;
     }
 
@@ -35,12 +35,12 @@ export function useTaggingLogic(callId: string) {
         return;
       }
 
-      console.log(`Tag "${selectedTaggedTurn.tag}" supprimé avec succès.`);
+      console.log(`Tag "${selectedTaggedTurn.tag}" supprimÃ© avec succÃ¨s.`);
 
-      // Rafraîchissez les tags après la suppression
+      // RafraÃ®chissez les tags aprÃ¨s la suppression
       fetchTaggedTurns(callId);
 
-      // Fermer le panneau latéral
+      // Fermer le panneau latÃ©ral
       setDrawerOpen(false);
       setSelectedTaggedTurn(null);
     } catch (err) {
@@ -50,13 +50,13 @@ export function useTaggingLogic(callId: string) {
     }
   };
 
-  // ✅ Fonction pour mettre à jour les tags précédents (rétroactif)
+  // âœ… Fonction pour mettre Ã  jour les tags prÃ©cÃ©dents (rÃ©troactif)
   const updatePreviousTagsNextTurnTag = async (newTag: TaggedTurn) => {
     try {
-      console.log("=== MISE À JOUR RÉTROACTIVE AVEC VALIDATION ===");
-      console.log("Nouveau tag créé:", newTag);
+      console.log("=== MISE Ã€ JOUR RÃ‰TROACTIVE AVEC VALIDATION ===");
+      console.log("Nouveau tag crÃ©Ã©:", newTag);
 
-      // ✅ AJOUT : Vérifier que le nouveau tag existe dans lpltag
+      // âœ… AJOUT : VÃ©rifier que le nouveau tag existe dans lpltag
       const { data: tagExists, error: validationError } = await supabase
         .from("lpltag")
         .select("label")
@@ -65,12 +65,12 @@ export function useTaggingLogic(callId: string) {
 
       if (validationError || !tagExists) {
         console.warn(
-          `🚫 Tag "${newTag.tag}" non trouvé dans lpltag - abandon mise à jour rétroactive`
+          `ðŸš« Tag "${newTag.tag}" non trouvÃ© dans lpltag - abandon mise Ã  jour rÃ©troactive`
         );
         return;
       }
 
-      console.log(`✅ Tag "${newTag.tag}" validé dans lpltag`);
+      console.log(`âœ… Tag "${newTag.tag}" validÃ© dans lpltag`);
 
       // Trouver les tags qui se terminent avant ce nouveau tag
       const potentialPreviousTags = taggedTurns.filter(
@@ -78,18 +78,18 @@ export function useTaggingLogic(callId: string) {
           existingTag.call_id === newTag.call_id &&
           existingTag.end_time <= newTag.start_time &&
           existingTag.id !== newTag.id &&
-          // Vérification correcte des types
+          // VÃ©rification correcte des types
           (!existingTag.next_turn_tag ||
             existingTag.next_turn_tag === "" ||
             existingTag.next_turn_tag === null)
       );
 
       console.log(
-        `Trouvé ${potentialPreviousTags.length} tags précédents potentiels`
+        `TrouvÃ© ${potentialPreviousTags.length} tags prÃ©cÃ©dents potentiels`
       );
 
       for (const previousTag of potentialPreviousTags) {
-        // Vérifier si ce tag précédent devrait pointer vers le nouveau tag
+        // VÃ©rifier si ce tag prÃ©cÃ©dent devrait pointer vers le nouveau tag
         const nextTurnWord = taggingTranscription.find(
           (word) =>
             word.turn !== previousTag.speaker &&
@@ -102,67 +102,67 @@ export function useTaggingLogic(callId: string) {
           Math.abs(nextTurnWord.startTime - newTag.start_time) <= 3.0
         ) {
           console.log(
-            `Mise à jour du tag ${previousTag.id}: next_turn_tag = "${newTag.tag}"`
+            `Mise Ã  jour du tag ${previousTag.id}: next_turn_tag = "${newTag.tag}"`
           );
 
-          // Mettre à jour via l'API Supabase
+          // Mettre Ã  jour via l'API Supabase
           const { error } = await supabase
             .from("turntagged")
             .update({ next_turn_tag: newTag.tag })
             .eq("id", previousTag.id);
 
           if (error) {
-            console.error("Erreur mise à jour rétroactive:", error);
+            console.error("Erreur mise Ã  jour rÃ©troactive:", error);
           } else {
             console.log(
-              `✅ Tag ${previousTag.id} mis à jour avec next_turn_tag: ${newTag.tag}`
+              `âœ… Tag ${previousTag.id} mis Ã  jour avec next_turn_tag: ${newTag.tag}`
             );
-            // Rafraîchir les tags pour refléter les changements
+            // RafraÃ®chir les tags pour reflÃ©ter les changements
             fetchTaggedTurns(callId);
           }
         }
       }
     } catch (error) {
-      console.error("Erreur lors de la mise à jour rétroactive:", error);
+      console.error("Erreur lors de la mise Ã  jour rÃ©troactive:", error);
     }
   };
 
   // Version ultra-simple de handleSaveTag dans useTaggingLogic.tsx
-  // handleSaveTag optimisé dans useTaggingLogic.tsx
+  // handleSaveTag optimisÃ© dans useTaggingLogic.tsx
 
   // Correction dans useTaggingLogic.tsx - handleSaveTag
   const handleSaveTag = useCallback(
     async (tag: LPLTag) => {
-      console.log("=== DÉBUT HANDLE SAVE TAG ===");
+      console.log("=== DÃ‰BUT HANDLE SAVE TAG ===");
 
-      // Validation des données
+      // Validation des donnÃ©es
       const startTime = selectedWords[0]?.startTime;
       const endTime = selectedWords[0]?.endTime;
 
       if (!startTime || !endTime || !selectedText?.trim()) {
-        console.error("Données incomplètes:", {
+        console.error("DonnÃ©es incomplÃ¨tes:", {
           startTime,
           endTime,
           selectedText,
         });
-        alert("Erreur: Sélection de texte invalide");
+        alert("Erreur: SÃ©lection de texte invalide");
         return;
       }
 
-      // Récupérer le speaker actuel
+      // RÃ©cupÃ©rer le speaker actuel
       const currentTurn = taggingTranscription.find(
         (word) =>
           word.startTime >= startTime && word.endTime <= endTime && word.turn
       )?.turn;
 
       if (!currentTurn) {
-        console.error("Speaker non identifié");
+        console.error("Speaker non identifiÃ©");
         alert("Erreur: Impossible d'identifier le locuteur");
         return;
       }
 
       try {
-        // Calculer next_turn_verbatim (logique existante conservée)
+        // Calculer next_turn_verbatim (logique existante conservÃ©e)
         const firstNextTurnWord = taggingTranscription.find(
           (word) => word.turn !== currentTurn && word.startTime >= endTime
         );
@@ -202,20 +202,20 @@ export function useTaggingLogic(callId: string) {
           speaker: currentTurn,
         };
 
-        console.log("Tag à sauvegarder:", newTag);
+        console.log("Tag Ã  sauvegarder:", newTag);
 
         // Sauvegarder via le contexte
         const savedTag = await addTag(newTag);
 
         if (savedTag) {
-          console.log("✅ Tag sauvegardé:", savedTag.id);
+          console.log("âœ… Tag sauvegardÃ©:", savedTag.id);
 
-          // ✅ AJOUT : Mise à jour rétroactive des tags précédents
+          // âœ… AJOUT : Mise Ã  jour rÃ©troactive des tags prÃ©cÃ©dents
           try {
             await updatePreviousTagsNextTurnTag(savedTag);
           } catch (retroError) {
-            console.error("Erreur mise à jour rétroactive:", retroError);
-            // Ne pas faire échouer la sauvegarde pour autant
+            console.error("Erreur mise Ã  jour rÃ©troactive:", retroError);
+            // Ne pas faire Ã©chouer la sauvegarde pour autant
           }
 
           // Nettoyer l'interface
@@ -224,43 +224,43 @@ export function useTaggingLogic(callId: string) {
           setDrawerOpen(false);
 
           // Optionnel: Feedback visuel
-          // toast.success(`Tag "${tag.label}" ajouté avec succès`);
+          // toast.success(`Tag "${tag.label}" ajoutÃ© avec succÃ¨s`);
         } else {
-          throw new Error("Échec de la sauvegarde");
+          throw new Error("Ã‰chec de la sauvegarde");
         }
       } catch (error) {
         console.error("Erreur lors de la sauvegarde:", error);
-        alert("Erreur lors de la sauvegarde du tag. Veuillez réessayer.");
+        alert("Erreur lors de la sauvegarde du tag. Veuillez rÃ©essayer.");
       }
     },
-    [callId, selectedWords, selectedText, taggingTranscription, addTag] // ✅ Ajouter updatePreviousTagsNextTurnTag aux dépendances si nécessaire
+    [callId, selectedWords, selectedText, taggingTranscription, addTag] // âœ… Ajouter updatePreviousTagsNextTurnTag aux dÃ©pendances si nÃ©cessaire
   );
 
   // Handler pour la modification d'un tag existant
   const handleEditComplete = useCallback(
     async (selectedLPLTag: LPLTag | null) => {
       if (!selectedLPLTag) {
-        console.log("Aucun tag sélectionné après suppression.");
+        console.log("Aucun tag sÃ©lectionnÃ© aprÃ¨s suppression.");
         setDrawerOpen(false);
         return;
       }
 
-      console.log("Tag sélectionné pour mise à jour :", selectedLPLTag);
+      console.log("Tag sÃ©lectionnÃ© pour mise Ã  jour :", selectedLPLTag);
 
       if (!selectedTaggedTurn) {
-        console.error("Aucun tag en cours d'édition !");
+        console.error("Aucun tag en cours d'Ã©dition !");
         return;
       }
 
-      // Construire l'objet pour la mise à jour (seulement le tag, pas next_turn_tag)
+      // Construire l'objet pour la mise Ã  jour (seulement le tag, pas next_turn_tag)
       const updatedTurnTag = {
         tag: selectedLPLTag.label, // Seulement modifier le tag
       };
 
-      console.log("Tag nettoyé pour mise à jour :", updatedTurnTag);
+      console.log("Tag nettoyÃ© pour mise Ã  jour :", updatedTurnTag);
 
       try {
-        // Mise à jour dans Supabase
+        // Mise Ã  jour dans Supabase
         const { data, error } = await supabase
           .from("turntagged")
           .update(updatedTurnTag)
@@ -268,25 +268,25 @@ export function useTaggingLogic(callId: string) {
 
         if (error) {
           console.error(
-            "Erreur lors de la mise à jour du tag :",
+            "Erreur lors de la mise Ã  jour du tag :",
             error.message
           );
           return;
         }
 
-        console.log("Tag mis à jour avec succès :", data);
+        console.log("Tag mis Ã  jour avec succÃ¨s :", data);
 
-        // Rafraîchir les tags après mise à jour
+        // RafraÃ®chir les tags aprÃ¨s mise Ã  jour
         fetchTaggedTurns(callId);
 
-        // Fermer le panneau après mise à jour
+        // Fermer le panneau aprÃ¨s mise Ã  jour
         setDrawerOpen(false);
         setSelectedTaggedTurn(null);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Erreur inconnue";
         console.error(
-          "Erreur inattendue lors de la mise à jour :",
+          "Erreur inattendue lors de la mise Ã  jour :",
           errorMessage
         );
       }
@@ -302,11 +302,11 @@ export function useTaggingLogic(callId: string) {
     setTabValue(0);
   };
 
-  // Handler pour la sélection d'un nouveau tag
+  // Handler pour la sÃ©lection d'un nouveau tag
   const onSelectTag = useCallback(
     (tag: LPLTag) => {
       console.log("=== ON SELECT TAG ===");
-      console.log("Tag sélectionné:", tag);
+      console.log("Tag sÃ©lectionnÃ©:", tag);
       console.log("Mode actuel:", tagMode);
 
       if (tagMode === "create") {
@@ -318,8 +318,8 @@ export function useTaggingLogic(callId: string) {
     [tagMode, handleSaveTag, handleEditComplete]
   );
 
-  // Handler pour l'événement mouseUp (sélection de texte)
-  // handleMouseUp corrigé dans useTaggingLogic.tsx
+  // Handler pour l'Ã©vÃ©nement mouseUp (sÃ©lection de texte)
+  // handleMouseUp corrigÃ© dans useTaggingLogic.tsx
   const handleMouseUp = useCallback(() => {
     if (process.env.NODE_ENV === "development") {
       console.log("=== HANDLE MOUSE UP ===");
@@ -341,14 +341,14 @@ export function useTaggingLogic(callId: string) {
       const endContainer = range.endContainer.parentElement;
 
       if (!startContainer || !endContainer) {
-        console.warn("Containers de sélection non trouvés");
+        console.warn("Containers de sÃ©lection non trouvÃ©s");
         return;
       }
 
       const startWordIndex = parseInt(startContainer.dataset.index || "-1", 10);
       const endWordIndex = parseInt(endContainer.dataset.index || "-1", 10);
 
-      // ✅ Validation robuste des index
+      // âœ… Validation robuste des index
       if (
         isNaN(startWordIndex) ||
         isNaN(endWordIndex) ||
@@ -370,10 +370,10 @@ export function useTaggingLogic(callId: string) {
       const endTime = taggingTranscription[endWordIndex].endTime;
 
       if (process.env.NODE_ENV === "development") {
-        console.log("Sélection valide:", { selectedText, startTime, endTime });
+        console.log("SÃ©lection valide:", { selectedText, startTime, endTime });
       }
 
-      // ✅ Mise à jour atomique de l'état
+      // âœ… Mise Ã  jour atomique de l'Ã©tat
       setSelectedText(selectedText);
       setSelectedWords([{ startTime, endTime }]);
       setTagMode("create");
@@ -381,7 +381,7 @@ export function useTaggingLogic(callId: string) {
       setDrawerOpen(true);
       setTabValue(0);
     } catch (error) {
-      console.error("Erreur lors de la sélection:", error);
+      console.error("Erreur lors de la sÃ©lection:", error);
     }
   }, [
     taggingTranscription,
@@ -393,7 +393,7 @@ export function useTaggingLogic(callId: string) {
     setTabValue,
   ]);
 
-  // Toggle du panneau latéral
+  // Toggle du panneau latÃ©ral
   const handleToggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
   };
@@ -426,3 +426,4 @@ export function useTaggingLogic(callId: string) {
     setTabValue,
   };
 }
+

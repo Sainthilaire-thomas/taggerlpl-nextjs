@@ -1,6 +1,6 @@
-// Créer un fichier hooks/useRelationsStatus.ts
+﻿// CrÃ©er un fichier hooks/useRelationsStatus.ts
 import { useState, useEffect, useCallback } from "react";
-import { useTaggingData, RelationsStatus } from "@/context/TaggingDataContext";
+import { useTaggingData, RelationsStatus } from "@/features/shared/context";
 
 export const useRelationsStatus = (callId: string) => {
   const { getRelationsStatus } = useTaggingData();
@@ -19,7 +19,7 @@ export const useRelationsStatus = (callId: string) => {
       setStatus(newStatus);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur inconnue");
-      console.error("Erreur lors de la vérification du statut:", err);
+      console.error("Erreur lors de la vÃ©rification du statut:", err);
     } finally {
       setLoading(false);
     }
@@ -43,3 +43,4 @@ export const useRelationsStatus = (callId: string) => {
     missingCount: status?.missingRelations ?? 0,
   };
 };
+

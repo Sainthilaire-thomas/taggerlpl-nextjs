@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useTaggingData } from "@/context/TaggingDataContext";
+﻿import { useState, useEffect, useCallback, useMemo } from "react";
+import { useTaggingData } from "@/features/shared/context";
 import { TranscriptWord } from "../types";
 import { useTheme } from "@mui/material/styles";
 
@@ -40,7 +40,7 @@ export function useTranscriptAudio() {
     [playerRef]
   );
 
-  // Mettre à jour le mot mis en surbrillance en fonction du temps de lecture
+  // Mettre Ã  jour le mot mis en surbrillance en fonction du temps de lecture
   const updateHighlight = useCallback(
     (currentTime: number) => {
       const index = taggingTranscription.findIndex(
@@ -84,7 +84,7 @@ export function useTranscriptAudio() {
     };
   }, [playerRef, updateHighlight]);
 
-  // Définir le style d'un mot
+  // DÃ©finir le style d'un mot
   const getWordStyle = useCallback(
     (index: number) => {
       if (index < 0 || index >= taggingTranscription.length) {
@@ -129,15 +129,15 @@ export function useTranscriptAudio() {
     ]
   );
 
-  // ✅ Calculer les groupes de tours de parole - VERSION CORRIGÉE
+  // âœ… Calculer les groupes de tours de parole - VERSION CORRIGÃ‰E
   const groupedTurns = useMemo(() => {
     if (!taggingTranscription || taggingTranscription.length === 0) {
-      console.log("⚠️ Pas de transcription disponible");
+      console.log("âš ï¸ Pas de transcription disponible");
       return [];
     }
 
     console.log(
-      "🔧 Calcul des groupedTurns avec",
+      "ðŸ”§ Calcul des groupedTurns avec",
       taggingTranscription.length,
       "mots"
     );
@@ -152,7 +152,7 @@ export function useTranscriptAudio() {
 
       // Si nouveau speaker ou premier mot
       if (speaker !== currentSpeaker) {
-        // Sauvegarder le groupe précédent s'il existe
+        // Sauvegarder le groupe prÃ©cÃ©dent s'il existe
         if (currentGroup.length > 0) {
           groups.push([...currentGroup]);
         }
@@ -160,7 +160,7 @@ export function useTranscriptAudio() {
         currentGroup = [word];
         currentSpeaker = speaker;
       } else {
-        // Même speaker, ajouter au groupe actuel
+        // MÃªme speaker, ajouter au groupe actuel
         currentGroup.push(word);
       }
     }
@@ -171,7 +171,7 @@ export function useTranscriptAudio() {
     }
 
     console.log(
-      `✅ ${groups.length} groupes créés:`,
+      `âœ… ${groups.length} groupes crÃ©Ã©s:`,
       groups.map((g) => `${g[0]?.turn || g[0]?.speaker} (${g.length} mots)`)
     );
 
@@ -190,3 +190,4 @@ export function useTranscriptAudio() {
     setAudioSrc,
   };
 }
+

@@ -1,4 +1,4 @@
-// src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/algorithms/BaseAlgorithmTesting.tsx
+﻿// src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/algorithms/BaseAlgorithmTesting.tsx
 "use client";
 
 import React from "react";
@@ -24,16 +24,16 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SaveIcon from "@mui/icons-material/Save";
 import HistoryIcon from "@mui/icons-material/History";
 
-import AlgorithmSelector from "../../../../shared/molecules/AlgorithmSelector";
-import { algorithmRegistry } from "../../../algorithms/level1/shared/AlgorithmRegistry";
+import AlgorithmSelector from '@/features/phase3-analysis/level1-validation/ui/components/shared/AlgorithmSelector';
+import { algorithmRegistry } from '@/features/phase3-analysis/level1-validation/algorithms/shared/AlgorithmRegistry';
 import { useLevel1Testing } from "../../../hooks/useLevel1Testing";
 import { useAlgorithmVersioning } from "../../../hooks/useAlgorithmVersioning";
 import { usePostValidationVersioning } from "../../../hooks/usePostValidationVersioning";
 
-import RunPanel from "../shared/results/base/RunPanel";
-import { ResultsPanel } from "src/app/(protected)/analysis/components/AlgorithmLab/components/Level1/shared/results/base/ResultsSample/ResultsPanel";
-import { VersionSelector } from "../shared/results/VersionSelector";
-import { VersionComparator } from "../comparison/VersionComparator";
+import RunPanel from '@/features/phase3-analysis/level1-validation/ui/components/AlgorithmLab/RunPanel';
+import { ResultsPanel } from "@/features/phase3-analysis/level1-validation/ui/components/AlgorithmLab/ResultsSample/ResultsPanel";
+import { VersionSelector } from '@/features/phase3-analysis/level1-validation/ui/components/shared/VersionSelector';
+import { VersionComparator } from '@/features/phase3-analysis/level1-validation/ui/components/shared/VersionComparator';
 
 import type {
   VariableTarget,
@@ -41,7 +41,7 @@ import type {
   TVValidationResultCore,
   TargetKind,
   AlgorithmVersionId,
-} from "../../../types";
+} from '@/types/algorithm-lab';
 
 interface RegistryEntry {
   key: string;

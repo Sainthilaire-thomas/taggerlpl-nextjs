@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import {
@@ -58,11 +58,11 @@ export default function TagHistoryView() {
       const { data, error } = await supabase
         .from("tag_modifications")
         .select("*")
-        .order("modified_at", { ascending: false }); // Trier par date décroissante
+        .order("modified_at", { ascending: false }); // Trier par date dÃ©croissante
 
       if (error) {
         console.error(
-          "Erreur lors de la récupération des modifications :",
+          "Erreur lors de la rÃ©cupÃ©ration des modifications :",
           error.message
         );
         return [];
@@ -82,7 +82,7 @@ export default function TagHistoryView() {
     setRestoring(true);
 
     try {
-      // Récupérer la modification
+      // RÃ©cupÃ©rer la modification
       const { data: modification, error } = await supabase
         .from("tag_modifications")
         .select("*")
@@ -91,7 +91,7 @@ export default function TagHistoryView() {
 
       if (error) {
         console.error(
-          "Erreur lors de la récupération de la modification :",
+          "Erreur lors de la rÃ©cupÃ©ration de la modification :",
           error.message
         );
         return;
@@ -112,7 +112,7 @@ export default function TagHistoryView() {
           );
           return;
         }
-        console.log(`Tag restauré dans lpltag : ${lpltag.label}`);
+        console.log(`Tag restaurÃ© dans lpltag : ${lpltag.label}`);
       }
 
       // Filtrer les champs valides de turntagged
@@ -147,21 +147,21 @@ export default function TagHistoryView() {
 
         if (turntaggedRestoreError) {
           console.error(
-            "Erreur lors de la restauration des données dans turntagged :",
+            "Erreur lors de la restauration des donnÃ©es dans turntagged :",
             turntaggedRestoreError.message
           );
           return;
         }
         console.log(
-          `Données restaurées dans turntagged pour le tag ${lpltag?.label}`
+          `DonnÃ©es restaurÃ©es dans turntagged pour le tag ${lpltag?.label}`
         );
       }
 
       console.log(
-        `Restauration effectuée avec succès pour la modification ID ${modificationId}.`
+        `Restauration effectuÃ©e avec succÃ¨s pour la modification ID ${modificationId}.`
       );
 
-      // Recharger les modifications après restauration
+      // Recharger les modifications aprÃ¨s restauration
       loadModifications();
     } catch (err) {
       const errorMessage =
@@ -206,7 +206,7 @@ export default function TagHistoryView() {
         sx={{ mb: 2 }}
         disabled={loading}
       >
-        Rafraîchir l'historique
+        RafraÃ®chir l'historique
       </Button>
 
       {modifications.length > 0 ? (
@@ -246,7 +246,7 @@ export default function TagHistoryView() {
                   </Typography>
                   <Typography variant="body1">
                     <strong>Nouveau Tag :</strong>{" "}
-                    {modification.new_tag || "Supprimé"}
+                    {modification.new_tag || "SupprimÃ©"}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
                     <strong>Date :</strong>{" "}
@@ -259,7 +259,7 @@ export default function TagHistoryView() {
 
                 <Box>
                   <Typography variant="body2" color="textSecondary">
-                    <strong>Nb d'éléments affectés :</strong>{" "}
+                    <strong>Nb d'Ã©lÃ©ments affectÃ©s :</strong>{" "}
                     {modification.previous_data.turntagged?.length || 0}
                   </Typography>
                 </Box>
@@ -290,8 +290,9 @@ export default function TagHistoryView() {
           </List>
         </Paper>
       ) : (
-        <Alert severity="info">Aucun historique de modifications trouvé.</Alert>
+        <Alert severity="info">Aucun historique de modifications trouvÃ©.</Alert>
       )}
     </Box>
   );
 }
+

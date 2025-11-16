@@ -1,4 +1,4 @@
-// components/AlgorithmLab/Level1Interface.tsx
+﻿// components/AlgorithmLab/Level1Interface.tsx
 "use client";
 import React, { useMemo, useState } from "react";
 import { Box, Tabs, Tab, Typography, Divider } from "@mui/material";
@@ -11,11 +11,11 @@ import M2ValidationInterface from "../algorithms/M2Calculators/M2ValidationInter
 import M3ValidationInterface from "../algorithms/M3Calculators/M3ValidationInterface";
 
 // Onglets historiques qui restent surtout pertinents pour X/Y
-import { ConfusionMatrix } from "./individual/ConfusionMatrix";
-import { EnhancedErrorAnalysis } from "./individual/EnhancedErrorAnalysis";
-import { ParameterOptimization } from "./individual/ParameterOptimization";
+import { ConfusionMatrix } from '@/features/phase3-analysis/level1-validation/ui/components/individual/ConfusionMatrix';
+import { EnhancedErrorAnalysis } from '@/features/phase3-analysis/level1-validation/ui/components/individual/EnhancedErrorAnalysis';
+import { ParameterOptimization } from '@/features/phase3-analysis/level1-validation/ui/components/individual/ParameterOptimization';
 import { TechnicalBenchmark } from "./TechnicalBenchmark";
-import type { ValidationMetrics } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import type { ValidationMetrics } from "@/types/algorithm-lab";
 // (optionnel) métriques si tu veux réutiliser la matrice pour X/Y
 // import { useXAlgorithmTesting } from "../hooks/level1/useXAlgorithmTesting";
 

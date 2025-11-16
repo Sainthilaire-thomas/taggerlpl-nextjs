@@ -1,8 +1,6 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 
 export default function Home() {
-  redirect("/tagging");
-
-  // Ce code ne sera jamais exécuté en raison de la redirection
+  redirect("/phase1-corpus/management");
   return null;
 }

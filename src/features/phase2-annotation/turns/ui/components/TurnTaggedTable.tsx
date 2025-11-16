@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { FC } from "react";
 import {
@@ -35,9 +35,9 @@ interface TurntaggedTableProps {
 }
 
 const TurntaggedTable: FC<TurntaggedTableProps> = ({ data, tag, onClose }) => {
-  const theme = useTheme(); // Accès au thème global
+  const theme = useTheme(); // AccÃ¨s au thÃ¨me global
 
-  // Styles dynamiques basés sur le mode du thème
+  // Styles dynamiques basÃ©s sur le mode du thÃ¨me
   const backgroundColor =
     theme.palette.mode === "dark" ? theme.palette.background.default : "white";
 
@@ -57,7 +57,7 @@ const TurntaggedTable: FC<TurntaggedTableProps> = ({ data, tag, onClose }) => {
       }}
     >
       <Typography variant="h6" gutterBottom>
-        Détails pour le tag : {tag}
+        DÃ©tails pour le tag : {tag}
       </Typography>
       <TableContainer component={Paper}>
         <Table>
@@ -72,7 +72,7 @@ const TurntaggedTable: FC<TurntaggedTableProps> = ({ data, tag, onClose }) => {
             <TableRow>
               <TableCell sx={{ color: textColor }}>ID</TableCell>
               <TableCell sx={{ color: textColor }}>Call ID</TableCell>
-              <TableCell sx={{ color: textColor }}>Heure de début</TableCell>
+              <TableCell sx={{ color: textColor }}>Heure de dÃ©but</TableCell>
               <TableCell sx={{ color: textColor }}>Heure de fin</TableCell>
               <TableCell sx={{ color: textColor }}>Verbatim</TableCell>
               <TableCell sx={{ color: textColor }}>Date</TableCell>
@@ -138,3 +138,4 @@ const TurntaggedTable: FC<TurntaggedTableProps> = ({ data, tag, onClose }) => {
 };
 
 export default TurntaggedTable;
+

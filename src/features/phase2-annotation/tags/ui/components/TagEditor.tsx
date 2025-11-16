@@ -1,13 +1,13 @@
-"use client"; // Nécessaire pour les composants interactifs dans Next.js
+﻿"use client"; // NÃ©cessaire pour les composants interactifs dans Next.js
 
 import { useState, useEffect, FC } from "react";
 import { Box, TextField, Button, MenuItem } from "@mui/material";
-import { supabase } from "@/lib/supabaseClient"; // Adapté pour Next.js avec chemins d'alias
+import { supabase } from "@/lib/supabaseClient"; // AdaptÃ© pour Next.js avec chemins d'alias
 
-// Définition de l'interface pour Tag
+// DÃ©finition de l'interface pour Tag
 interface Tag {
   id?: number;
-  label: string; // ✅ Obligatoire, pas optionnel
+  label: string; // âœ… Obligatoire, pas optionnel
   description?: string;
   family?: string;
   color?: string;
@@ -15,15 +15,15 @@ interface Tag {
   turnCount?: number;
 }
 
-// Définition des props pour le composant
+// DÃ©finition des props pour le composant
 interface TagEditorProps {
   tag?: Tag;
-  onUpdate: (updatedTag: Tag) => Promise<void>; // ✅ Ajout Promise<void>
+  onUpdate: (updatedTag: Tag) => Promise<void>; // âœ… Ajout Promise<void>
   onCancel: () => void;
 }
 
 const TagEditor: FC<TagEditorProps> = ({ tag, onUpdate, onCancel }) => {
-  // ✅ Supprimez = {}
+  // âœ… Supprimez = {}
   console.log("tag dans TagEditor", tag);
 
   const [name, setName] = useState<string>(tag?.label || "");
@@ -32,10 +32,10 @@ const TagEditor: FC<TagEditorProps> = ({ tag, onUpdate, onCancel }) => {
   );
   const [family, setFamily] = useState<string>(tag?.family || "");
   const [color, setColor] = useState<string>(tag?.color || "#000000");
-  const [families, setFamilies] = useState<string[]>([]); // État pour stocker les familles
+  const [families, setFamilies] = useState<string[]>([]); // Ã‰tat pour stocker les familles
 
   useEffect(() => {
-    console.log("Tag chargé dans TagEditor :", tag);
+    console.log("Tag chargÃ© dans TagEditor :", tag);
     setName(tag?.label || "");
     setColor(tag?.color || "#000000");
     setDescription(tag?.description || "");
@@ -52,7 +52,7 @@ const TagEditor: FC<TagEditorProps> = ({ tag, onUpdate, onCancel }) => {
         .order("family", { ascending: true }); // Trier les familles
 
       if (error) {
-        console.error("Erreur lors de la récupération des familles :", error);
+        console.error("Erreur lors de la rÃ©cupÃ©ration des familles :", error);
         return;
       }
 
@@ -71,12 +71,12 @@ const TagEditor: FC<TagEditorProps> = ({ tag, onUpdate, onCancel }) => {
     }
 
     onUpdate({
-      ...tag, // ✅ Spread de tag (peut être undefined)
+      ...tag, // âœ… Spread de tag (peut Ãªtre undefined)
       label: name,
       color,
       description,
       family, // Inclure la famille lors de la sauvegarde
-    } as Tag); // ✅ Cast explicite en Tag
+    } as Tag); // âœ… Cast explicite en Tag
   };
 
   const availableFamilies =
@@ -149,3 +149,4 @@ const TagEditor: FC<TagEditorProps> = ({ tag, onUpdate, onCancel }) => {
 };
 
 export default TagEditor;
+

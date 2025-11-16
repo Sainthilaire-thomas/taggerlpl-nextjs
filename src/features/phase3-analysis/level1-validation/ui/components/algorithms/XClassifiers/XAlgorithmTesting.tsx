@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import React from "react";
-import { BaseAlgorithmTesting } from "../BaseAlgorithmTesting";
+import { BaseAlgorithmTesting } from '../shared/BaseAlgorithmTesting';
 
 /**
  * Interface de test pour la variable X (classification conseiller).

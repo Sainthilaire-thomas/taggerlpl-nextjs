@@ -1,4 +1,4 @@
-// components/Level1/ConfusionMatrix.tsx
+﻿// components/Level1/ConfusionMatrix.tsx
 import React from "react";
 import {
   Box,
@@ -14,7 +14,7 @@ import {
   useTheme,
   alpha,
 } from "@mui/material";
-import { ValidationMetrics } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import { ValidationMetrics } from "@/types/algorithm-lab";
 
 interface ConfusionMatrixProps {
   metrics: ValidationMetrics | null;

@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Box, IconButton, Typography } from "@mui/material";
 import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import { TranscriptAudioPlayerProps } from "./types";
@@ -38,3 +38,4 @@ const TranscriptAudioPlayer: React.FC<TranscriptAudioPlayerProps> = ({
 };
 
 export default TranscriptAudioPlayer;
+

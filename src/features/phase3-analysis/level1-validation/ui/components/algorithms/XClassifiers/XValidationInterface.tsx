@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 // XValidationInterface.tsx - APRÈS
-import { BaseAlgorithmTesting } from "../BaseAlgorithmTesting";
+import { BaseAlgorithmTesting } from '../shared/BaseAlgorithmTesting';
 export default function XValidationInterface() {
   return (
     <BaseAlgorithmTesting

@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Box, Paper, Typography } from "@mui/material";
 import { TranscriptTextProps } from "./types";
 import { useTheme } from "@mui/material/styles";
@@ -16,7 +16,7 @@ const TranscriptText: React.FC<TranscriptTextProps> = ({
 }) => {
   const theme = useTheme();
 
-  // ✅ Fonction pour trouver les tags qui intersectent avec un tour de parole - VERSION FINALE
+  // âœ… Fonction pour trouver les tags qui intersectent avec un tour de parole - VERSION FINALE
   const findTagsForTurn = (turn: any[]) => {
     if (!turn || turn.length === 0) return [];
 
@@ -25,16 +25,16 @@ const TranscriptText: React.FC<TranscriptTextProps> = ({
     const turnSpeaker = turn[0].turn || turn[0].speaker;
 
     return taggedTurns.filter((tag) => {
-      // Vérifier qu'il y a une intersection temporelle
+      // VÃ©rifier qu'il y a une intersection temporelle
       const hasTimeOverlap =
         tag.start_time < turnEndTime && tag.end_time > turnStartTime;
 
-      // ✅ Logique de correspondance des speakers améliorée
+      // âœ… Logique de correspondance des speakers amÃ©liorÃ©e
       const speakerMatches =
         tag.speaker === turnSpeaker ||
         tag.speaker === turn[0].turn ||
         tag.speaker === turn[0].speaker ||
-        // Mappings spéciaux pour votre système
+        // Mappings spÃ©ciaux pour votre systÃ¨me
         (turnSpeaker === "conseiller_F11" &&
           (tag.speaker === "gare" || tag.speaker === "conseiller")) ||
         (turnSpeaker === "gare" && tag.speaker === "conseiller_F11") ||
@@ -45,7 +45,7 @@ const TranscriptText: React.FC<TranscriptTextProps> = ({
     });
   };
 
-  // ✅ Debug logging pour vérifier les données
+  // âœ… Debug logging pour vÃ©rifier les donnÃ©es
   if (process.env.NODE_ENV === "development") {
     console.log("TranscriptText - Debug:", {
       groupedTurns: groupedTurns,
@@ -60,10 +60,10 @@ const TranscriptText: React.FC<TranscriptTextProps> = ({
     });
   }
 
-  // ✅ Fallback si groupedTurns n'est pas défini - grouper par speaker
+  // âœ… Fallback si groupedTurns n'est pas dÃ©fini - grouper par speaker
   const safeGroupedTurns = groupedTurns || [];
 
-  // Si groupedTurns est vide mais qu'on a une transcription, créer les groupes
+  // Si groupedTurns est vide mais qu'on a une transcription, crÃ©er les groupes
   const finalGroupedTurns =
     safeGroupedTurns.length > 0
       ? safeGroupedTurns
@@ -109,13 +109,13 @@ const TranscriptText: React.FC<TranscriptTextProps> = ({
         }}
       >
         {finalGroupedTurns.map((turn, turnIndex) => {
-          // ✅ Utiliser la nouvelle fonction pour trouver les tags
+          // âœ… Utiliser la nouvelle fonction pour trouver les tags
           const turnTags = findTagsForTurn(turn);
 
-          // Debug pour ce tour spécifique (seulement si tags trouvés)
+          // Debug pour ce tour spÃ©cifique (seulement si tags trouvÃ©s)
           if (process.env.NODE_ENV === "development" && turnTags.length > 0) {
             console.log(
-              `✅ Tour ${turnIndex}: ${turnTags.length} tag(s) affiché(s)`
+              `âœ… Tour ${turnIndex}: ${turnTags.length} tag(s) affichÃ©(s)`
             );
           }
 
@@ -130,7 +130,7 @@ const TranscriptText: React.FC<TranscriptTextProps> = ({
                 width: "100%",
               }}
             >
-              {/* En-tête du tour de parole */}
+              {/* En-tÃªte du tour de parole */}
               <Typography
                 sx={{
                   display: "inline",
@@ -142,7 +142,7 @@ const TranscriptText: React.FC<TranscriptTextProps> = ({
                 {turn[0]?.turn || turn[0]?.speaker || "Inconnu"}:
               </Typography>
 
-              {/* ✅ Afficher tous les tags trouvés pour ce groupe */}
+              {/* âœ… Afficher tous les tags trouvÃ©s pour ce groupe */}
               {turnTags.map((tag, tagIndex) => (
                 <Typography
                   key={`tag-${tag.id}-${tagIndex}`}
@@ -192,3 +192,4 @@ const TranscriptText: React.FC<TranscriptTextProps> = ({
 };
 
 export default TranscriptText;
+

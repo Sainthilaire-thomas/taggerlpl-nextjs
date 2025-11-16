@@ -1,11 +1,11 @@
-import supabase from "@/lib/supabaseClient";
+﻿import supabase from "@/lib/supabaseClient";
 
 /**
- * Génère une URL signée pour un fichier dans le bucket de stockage Supabase
+ * GÃ©nÃ¨re une URL signÃ©e pour un fichier dans le bucket de stockage Supabase
  * @param filePath - Chemin du fichier dans le bucket
- * @param expiration - Durée de validité de l'URL en secondes (par défaut: 1200s = 20min)
- * @returns Promise<string> - URL signée pour accéder au fichier
- * @throws Error si la génération échoue
+ * @param expiration - DurÃ©e de validitÃ© de l'URL en secondes (par dÃ©faut: 1200s = 20min)
+ * @returns Promise<string> - URL signÃ©e pour accÃ©der au fichier
+ * @throws Error si la gÃ©nÃ©ration Ã©choue
  */
 export const generateSignedUrl = async (
   filePath: string,
@@ -17,13 +17,14 @@ export const generateSignedUrl = async (
       .createSignedUrl(filePath, expiration);
 
     if (error) {
-      console.error("Erreur lors de la génération de l'URL signée :", error);
+      console.error("Erreur lors de la gÃ©nÃ©ration de l'URL signÃ©e :", error);
       throw new Error(error.message);
     }
 
     return data.signedUrl;
   } catch (error) {
-    console.error("Erreur lors de la génération de l'URL signée :", error);
+    console.error("Erreur lors de la gÃ©nÃ©ration de l'URL signÃ©e :", error);
     throw error;
   }
 };
+

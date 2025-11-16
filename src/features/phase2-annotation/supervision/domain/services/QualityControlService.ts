@@ -1,7 +1,7 @@
-// src/features/phase2-annotation/supervision/domain/services/QualityControlService.ts
-// TODO: Implémenter service de contrôle qualité
+﻿// src/features/phase2-annotation/supervision/domain/services/QualityControlService.ts
+// TODO: ImplÃ©menter service de contrÃ´le qualitÃ©
 
 export class QualityControlService {
-  // Service pour le contrôle qualité des annotations
-  // À implémenter selon les besoins
+  // Service pour le contrÃ´le qualitÃ© des annotations
+  // Ã€ implÃ©menter selon les besoins
 }

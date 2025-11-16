@@ -1,4 +1,4 @@
-// components/Level1/ParameterOptimization.tsx
+﻿// components/Level1/ParameterOptimization.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
@@ -13,7 +13,7 @@ import {
   Switch,
 } from "@mui/material";
 import { Tune, PlayArrow, RestartAlt } from "@mui/icons-material";
-import { AlgorithmConfig } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import { AlgorithmConfig } from "@/types/algorithm-lab";
 
 // ---------- Types locaux forts ----------
 type ParameterMap = Record<string, number>;

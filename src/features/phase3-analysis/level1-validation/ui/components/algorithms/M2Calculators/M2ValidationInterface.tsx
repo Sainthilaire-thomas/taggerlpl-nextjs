@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 
 // M2ValidationInterface.tsx - APRÈS (FIX CRITIQUE)
-import { BaseAlgorithmTesting } from "../BaseAlgorithmTesting";
+import { BaseAlgorithmTesting } from '../shared/BaseAlgorithmTesting';
 export default function M2ValidationInterface() {
   return (
     <BaseAlgorithmTesting

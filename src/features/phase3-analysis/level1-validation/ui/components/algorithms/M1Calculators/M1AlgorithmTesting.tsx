@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 import React from "react";
-import { BaseAlgorithmTesting } from "../BaseAlgorithmTesting";
+import { BaseAlgorithmTesting } from '../shared/BaseAlgorithmTesting';
 
 export default function M1AlgorithmTesting() {
   return (

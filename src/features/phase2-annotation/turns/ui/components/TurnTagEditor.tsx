@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogActions,
@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import supabase from "@/lib/supabaseClient";
 
-// Définition des interfaces TypeScript
+// DÃ©finition des interfaces TypeScript
 interface TurnTag {
   id: number;
   call_id: number;
@@ -40,7 +40,7 @@ const TurnTagEditor: React.FC<TurnTagEditorProps> = ({ turnTag, onClose }) => {
   const [editedNextTurnTag, setEditedNextTurnTag] = useState<string>("");
   const [availableTags, setAvailableTags] = useState<string[]>([]); // Tags valides
 
-  // Récupérer les tags valides de la table `lpltag`
+  // RÃ©cupÃ©rer les tags valides de la table `lpltag`
   useEffect(() => {
     const fetchTags = async () => {
       try {
@@ -61,7 +61,7 @@ const TurnTagEditor: React.FC<TurnTagEditorProps> = ({ turnTag, onClose }) => {
     fetchTags();
   }, []);
 
-  // Synchroniser les valeurs locales avec les données de turnTag
+  // Synchroniser les valeurs locales avec les donnÃ©es de turnTag
   useEffect(() => {
     if (turnTag) {
       setEditedTag(turnTag.tag || "");
@@ -82,26 +82,26 @@ const TurnTagEditor: React.FC<TurnTagEditorProps> = ({ turnTag, onClose }) => {
         .eq("id", turnTag.id);
 
       if (error) {
-        console.error("Erreur lors de la mise à jour :", error.message);
+        console.error("Erreur lors de la mise Ã  jour :", error.message);
         return;
       }
 
-      console.log("Mise à jour réussie :", {
+      console.log("Mise Ã  jour rÃ©ussie :", {
         editedTag,
         editedVerbatim,
         editedNextTurnTag,
       });
 
-      // Recharger les données si nécessaire
+      // Recharger les donnÃ©es si nÃ©cessaire
       setEditedTag("");
       setEditedVerbatim("");
       setEditedNextTurnTag("");
 
-      // Fermer le dialogue après la sauvegarde réussie
+      // Fermer le dialogue aprÃ¨s la sauvegarde rÃ©ussie
       onClose();
     } catch (err) {
       console.error(
-        "Erreur inattendue lors de la mise à jour :",
+        "Erreur inattendue lors de la mise Ã  jour :",
         err instanceof Error ? err.message : String(err)
       );
     }
@@ -109,9 +109,9 @@ const TurnTagEditor: React.FC<TurnTagEditorProps> = ({ turnTag, onClose }) => {
 
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Éditer TurnTag</DialogTitle>
+      <DialogTitle>Ã‰diter TurnTag</DialogTitle>
       <DialogContent>
-        {/* Informations non éditables */}
+        {/* Informations non Ã©ditables */}
         <Box sx={{ marginBottom: 2 }}>
           <Typography variant="body2" color="textSecondary" gutterBottom>
             ID : {turnTag.id}
@@ -121,7 +121,7 @@ const TurnTagEditor: React.FC<TurnTagEditorProps> = ({ turnTag, onClose }) => {
           </Typography>
         </Box>
 
-        {/* Sélecteur de tag */}
+        {/* SÃ©lecteur de tag */}
         <FormControl fullWidth margin="normal">
           <InputLabel>Tag</InputLabel>
           <Select
@@ -137,7 +137,7 @@ const TurnTagEditor: React.FC<TurnTagEditorProps> = ({ turnTag, onClose }) => {
           </Select>
         </FormControl>
 
-        {/* Champ de texte éditable pour le verbatim */}
+        {/* Champ de texte Ã©ditable pour le verbatim */}
         <TextField
           label="Verbatim"
           value={editedVerbatim}
@@ -148,7 +148,7 @@ const TurnTagEditor: React.FC<TurnTagEditorProps> = ({ turnTag, onClose }) => {
           margin="normal"
         />
 
-        {/* Champ de texte éditable pour le prochain tag */}
+        {/* Champ de texte Ã©ditable pour le prochain tag */}
         <TextField
           label="Next Turn Tag"
           value={editedNextTurnTag}
@@ -183,3 +183,4 @@ const TurnTagEditor: React.FC<TurnTagEditorProps> = ({ turnTag, onClose }) => {
 };
 
 export default TurnTagEditor;
+
