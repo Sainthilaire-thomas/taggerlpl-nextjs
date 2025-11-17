@@ -110,6 +110,7 @@ typescript-errors.txt
 |   |-- architecture/
 |   |   |-- ARCHITECTURE_CIBLE_WORKFLOW.md
 |   |   |-- ARCHITECTURE_ETAT_MIGRATION_15_nov_18h.md
+|   |   |-- ARCHITECTURE_ETAT_MIGRATION_16_nov.md
 |   |   |-- ARCHITECTURE_ETAT_MIGRATION_PHASE_3.md
 |   |   |-- BILAN_SESSION_PHASE3_14NOV.md
 |   |   |-- ETAPE_0.5_TYPES_SOLIDIFICATION.md
@@ -618,6 +619,9 @@ typescript-errors.txt
 |   |   |   |   |-- layout.tsx
 |   |   |   |   +-- page.tsx
 |   |   |   |-- phase3-analysis/
+|   |   |   |   |-- level0/
+|   |   |   |   |   +-- inter-annotator/
+|   |   |   |   |       +-- page.tsx
 |   |   |   |   +-- level1/
 |   |   |   |       +-- algorithm-lab/
 |   |   |   |           +-- page.tsx
@@ -942,8 +946,10 @@ typescript-errors.txt
 |   |   |-- phase3-analysis/
 |   |   |   |-- level0-gold/
 |   |   |   |   +-- ui/
-|   |   |   |       +-- components/
-|   |   |   |           +-- InterAnnotatorAgreement.tsx
+|   |   |   |       |-- components/
+|   |   |   |       |   +-- InterAnnotatorAgreement.tsx
+|   |   |   |       +-- hooks/
+|   |   |   |           +-- useLevel0Validation.ts
 |   |   |   |-- level1-validation/
 |   |   |   |   |-- algorithms/
 |   |   |   |   |   |-- client/
@@ -988,6 +994,7 @@ typescript-errors.txt
 |   |   |   |   |       |-- ClassifierComparator.ts
 |   |   |   |   |       |-- ClassifierRegistry.ts
 |   |   |   |   |       |-- initializeAlgorithms.ts
+|   |   |   |   |       |-- initializeAlgorithms.ts.backup
 |   |   |   |   |       +-- PerformanceMetrics.ts
 |   |   |   |   |-- ui/
 |   |   |   |   |   |-- components/
@@ -1024,6 +1031,7 @@ typescript-errors.txt
 |   |   |   |   |   |   |   |   |-- ResultsPanel.tsx
 |   |   |   |   |   |   |   |   |-- ResultsSample.tsx
 |   |   |   |   |   |   |   |   +-- types.ts
+|   |   |   |   |   |   |   |-- ClientAlgorithmLabWrapper.tsx
 |   |   |   |   |   |   |   |-- extraColumns.tsx
 |   |   |   |   |   |   |   |-- Level1Interface.tsx
 |   |   |   |   |   |   |   |-- MetricsPanel.classification.tsx
@@ -1077,7 +1085,6 @@ typescript-errors.txt
 |   |   |   |   |       |-- useClassifierConfiguration.ts
 |   |   |   |   |       |-- useClassifierStatus.ts
 |   |   |   |   |       |-- useH2data.ts
-|   |   |   |   |       |-- useLevel0Validation.ts
 |   |   |   |   |       |-- useLevel1Testing.ts
 |   |   |   |   |       |-- useMultiAlgorithmComparison.ts
 |   |   |   |   |       |-- usePostValidationVersioning.ts

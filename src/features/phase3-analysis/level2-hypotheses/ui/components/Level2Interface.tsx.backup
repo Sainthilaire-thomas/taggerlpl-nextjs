@@ -1,4 +1,4 @@
-﻿// components/AlgorithmLab/Level2/Level2Interface.tsx
+// components/AlgorithmLab/Level2/Level2Interface.tsx
 "use client";
 
 import React, { useMemo, useState } from "react";
@@ -34,9 +34,9 @@ import {
   Info,
 } from "@mui/icons-material";
 
-import { useTaggingData } from "@/features/shared/context";
-import StatisticalTestsPanel from "./StatisticalTestsPanel";
-import StatisticalSummary from "./StatisticalSummary";
+import { useTaggingData } from "@/context/TaggingDataContext";
+import StatisticalTestsPanel from "./validation/StatisticalTestsPanel";
+import StatisticalSummary from "./validation/StatisticalSummary";
 
 import {
   filterValidTurnTagged,
@@ -44,12 +44,12 @@ import {
   toStrategyStats,
   summarizeH1,
   extractDetailedCriteria,
-} from "../../utils/stats";
+} from "./shared/stats";
 import {
   DEFAULT_H1_THRESHOLDS,
   H1Thresholds,
   getContextualThresholds,
-} from "../../config/hypotheses";
+} from "./config/hypotheses";
 
 interface Level2InterfaceProps {
   selectedOrigin?: string | null;

@@ -1,4 +1,4 @@
-// components/AlgorithmLab/Level2/validation/StatisticalTestsPanel.tsx
+﻿// components/AlgorithmLab/Level2/validation/StatisticalTestsPanel.tsx
 "use client";
 
 import React from "react";
@@ -26,12 +26,12 @@ import {
   TrendingUp,
   Analytics,
 } from "@mui/icons-material";
-import { H1StrategyData } from "../shared/types";
+import { H1StrategyData } from "./types";
 import {
   computeChiSquare,
   computeFisherPairwise,
   computeAnova,
-} from "../shared/stats";
+} from "../../utils/stats";
 
 interface Props {
   data: H1StrategyData[];

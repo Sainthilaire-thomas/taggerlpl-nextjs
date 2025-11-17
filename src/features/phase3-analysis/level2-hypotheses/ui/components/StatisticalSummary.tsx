@@ -1,4 +1,4 @@
-// components/AlgorithmLab/Level2/validation/StatisticalSummary.tsx
+﻿// components/AlgorithmLab/Level2/validation/StatisticalSummary.tsx
 "use client";
 
 import React from "react";
@@ -29,7 +29,7 @@ import {
   Timeline,
   Assessment,
 } from "@mui/icons-material";
-import { H1Summary, StrategyStats } from "../shared/types";
+import { H1Summary, StrategyStats } from "./types";
 
 interface Props {
   data: StrategyStats[];
