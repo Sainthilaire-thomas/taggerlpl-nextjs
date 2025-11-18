@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { ReactNode, useState } from "react";
 import {
@@ -65,11 +65,9 @@ const navigationStructure: MenuItem[] = [
   {
     name: "Phase 2: Annotation",
     icon: <EditNoteIcon />,
-    children: [
-      { name: "Transcript", icon: <LocalOfferIcon />, path: "/phase2-annotation/transcript" },
-      { name: "Tags Management", icon: <SettingsIcon />, path: "/phase2-annotation/tags-management" },
+    children: [{ name: "Tags Management", icon: <SettingsIcon />, path: "/phase2-annotation/tags-management" },
       { name: "Supervision", icon: <VisibilityIcon />, path: "/phase2-annotation/supervision" },
-      { name: "Tagging (Legacy)", icon: <LocalOfferIcon />, path: "/new-tagging" },
+      { name: "Liste des appels", icon: <LocalOfferIcon />, path: "/phase2-annotation/transcript" },
     ],
   },
   {
@@ -278,5 +276,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     </Box>
   );
 }
+
+
 
 
