@@ -8,6 +8,7 @@ algorithm-lab-imports.txt
 erreurs-par-fichier.txt
 eslint.config.mjs
 jest.config.demo
+MIGRATION_SUPERVISION_COMPLETE.md
 next.config.ts
 next-env.d.ts
 package.json
@@ -122,6 +123,7 @@ typescript-errors.txt
 |   |   |-- IMPORTS_MANQUANTS_v7.txt
 |   |   |-- INVENTAIRE_TYPES_EXISTANTS.md
 |   |   |-- MIGRATION_LEVEL2_17_NOV_FINAL.md
+|   |   |-- MIGRATION_SUPERVISION_COMPLETE.md
 |   |   |-- MIGRATION_SUPERVISION_ETAT.md
 |   |   |-- PHASE3_IMPORTS_CORRECTIONS.md
 |   |   |-- PHASE3_REMAINING_ERRORS.txt

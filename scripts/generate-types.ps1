@@ -33,7 +33,7 @@ try {
     
     # Generate types to temporary location
     $tempFile = [System.IO.Path]::GetTempFileName()
-    npx supabase gen types typescript --project-id $PROJECT_ID | Out-File -FilePath $tempFile -Encoding utf8
+    supabase gen types typescript --project-id $PROJECT_ID | Out-File -FilePath $tempFile -Encoding utf8
     
     if ($LASTEXITCODE -ne 0) {
         throw "Supabase CLI command failed with exit code $LASTEXITCODE"
@@ -83,3 +83,4 @@ try {
     Write-Host "   $($_.Exception.Message)" -ForegroundColor Red
     exit 1
 }
+

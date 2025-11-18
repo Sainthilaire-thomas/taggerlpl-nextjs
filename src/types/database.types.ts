@@ -8,7 +8,7 @@
  *   - Or run: npm run generate:types
  *   - Or run: .\scripts\generate-types.ps1
  * 
- * Generated on: 2025-11-08 17:02:59
+ * Generated on: 2025-11-18 10:47:34
  * Project ID: jregkxiwrnquslbocicz
  */
 export type Json =
