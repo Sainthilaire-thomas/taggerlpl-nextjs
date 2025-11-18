@@ -50,7 +50,7 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
   const [relationsStatus, setRelationsStatus] = useState<ExtendedRelationsStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
 
-  // VÃ©rifier le statut des relations au chargement
+  // Vérifier le statut des relations au chargement
   useEffect(() => {
     if (callId) {
       checkCurrentStatus();
@@ -64,11 +64,11 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
     try {
       const status = await getRelationsStatus(callId);
       
-      // TODO: Ajouter un appel RPC pour rÃ©cupÃ©rer la profondeur du contexte
+      // TODO: Ajouter un appel RPC pour récupérer la profondeur du contexte
       // Pour l'instant, on utilise le status basique
       setRelationsStatus(status);
     } catch (error) {
-      console.error("Erreur lors de la vÃ©rification du statut:", error);
+      console.error("Erreur lors de la vérification du statut:", error);
     } finally {
       setStatusLoading(false);
     }
@@ -77,17 +77,17 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
   const handleCalculateRelations = async () => {
     setCalculating(true);
     try {
-      console.log("ðŸš€ Calcul des relations Ã©tendues pour l'appel:", callId);
+      console.log("🚀 Calcul des relations étendues pour l'appel:", callId);
       const updatedCount = await calculateAllNextTurnTags(callId);
       setLastResult(updatedCount);
 
-      // Mettre Ã  jour le statut aprÃ¨s calcul
+      // Mettre à jour le statut après calcul
       await checkCurrentStatus();
 
       if (updatedCount > 0) {
-        console.log(`âœ… ${updatedCount} relations calculÃ©es`);
+        console.log(`✅ ${updatedCount} relations calculées`);
       } else {
-        console.log("â„¹ï¸ Toutes les relations Ã©taient dÃ©jÃ  Ã  jour");
+        console.log("ℹ️ Toutes les relations étaient déjà à jour");
       }
     } catch (error) {
       console.error("Erreur lors du calcul des relations:", error);
@@ -100,7 +100,7 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
     if (statusLoading) {
       return {
         icon: <CircularProgress size={16} />,
-        label: "VÃ©rification...",
+        label: "Vérification...",
         color: "default" as const,
         severity: "info" as const,
       };
@@ -120,15 +120,15 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
     if (isCalculated) {
       return {
         icon: <CheckCircleIcon />,
-        label: `Relations Ã  jour (${completenessPercent.toFixed(1)}%)`,
+        label: `Relations à jour (${completenessPercent.toFixed(1)}%)`,
         color: "success" as const,
         severity: "success" as const,
-        details: `${totalTags} tags analysÃ©s - Contexte Ã©tendu (prev4â†’next4)`,
+        details: `${totalTags} tags analysés - Contexte étendu (prev4→next4)`,
       };
     } else if (completenessPercent > 50) {
       return {
         icon: <WarningIcon />,
-        label: `Partiellement calculÃ© (${completenessPercent.toFixed(1)}%)`,
+        label: `Partiellement calculé (${completenessPercent.toFixed(1)}%)`,
         color: "warning" as const,
         severity: "warning" as const,
         details: `${missingRelations} relations manquantes`,
@@ -136,7 +136,7 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
     } else {
       return {
         icon: <ErrorIcon />,
-        label: `Relations non calculÃ©es (${completenessPercent.toFixed(1)}%)`,
+        label: `Relations non calculées (${completenessPercent.toFixed(1)}%)`,
         color: "error" as const,
         severity: "error" as const,
         details: `${missingRelations} relations manquantes sur ${totalTags}`,
@@ -148,7 +148,7 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
 
   return (
     <Box sx={{ mb: 2 }}>
-      {/* ContrÃ´les principaux */}
+      {/* Contrôles principaux */}
       <Box
         sx={{
           display: "flex",
@@ -159,7 +159,7 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
           flexWrap: "wrap",
         }}
       >
-        {/* ContrÃ´les de taille de police */}
+        {/* Contrôles de taille de police */}
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Button
             variant="outlined"
@@ -216,7 +216,7 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
             opacity: calculating ? 0.7 : 1,
           }}
         >
-          {calculating ? "Calcul en cours..." : "Calculer Relations Ã‰tendues"}
+          {calculating ? "Calcul en cours..." : "Calculer Relations Étendues"}
         </Button>
 
         {/* Chip de statut des relations */}
@@ -237,10 +237,10 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
           />
         </Tooltip>
 
-        {/* Indicateur du rÃ©sultat du dernier calcul */}
+        {/* Indicateur du résultat du dernier calcul */}
         {lastResult !== null && !calculating && (
           <Chip
-            label={lastResult > 0 ? `${lastResult} mis Ã  jour` : "DÃ©jÃ  Ã  jour"}
+            label={lastResult > 0 ? `${lastResult} mis à jour` : "Déjà à jour"}
             size="small"
             color={lastResult > 0 ? "info" : "default"}
             variant="filled"
@@ -248,7 +248,7 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
         )}
       </Box>
 
-      {/* Alert informatif si relations incomplÃ¨tes */}
+      {/* Alert informatif si relations incomplètes */}
       {relationsStatus && !relationsStatus.isCalculated && !calculating && (
         <Alert
           severity={statusDisplay.severity}
@@ -268,22 +268,22 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
             <>
               <strong>{relationsStatus.missingRelations} relations manquantes</strong> sur{" "}
               {relationsStatus.totalTags} tags. Les relations permettent d'analyser les
-              enchaÃ®nements conversationnels avec un contexte Ã©tendu (prev4â†’next4).
+              enchaînements conversationnels avec un contexte étendu (prev4→next4).
             </>
           )}
         </Alert>
       )}
 
-      {/* Info sur le contexte Ã©tendu si calculÃ© */}
+      {/* Info sur le contexte étendu si calculé */}
       {relationsStatus?.isCalculated && (
         <Alert severity="success" sx={{ mt: 1 }}>
           <Stack spacing={0.5}>
             <Typography variant="body2">
-              âœ… Contexte Ã©tendu calculÃ© : <strong>prev4, prev3, prev2, prev1</strong> et{" "}
+              ✅ Contexte étendu calculé : <strong>prev4, prev3, prev2, prev1</strong> et{" "}
               <strong>next1, next2, next3, next4</strong>
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              8 tours de contexte par tag pour une analyse approfondie des enchaÃ®nements
+              8 tours de contexte par tag pour une analyse approfondie des enchaînements
               conversationnels
             </Typography>
           </Stack>
@@ -294,4 +294,3 @@ const TranscriptControls: React.FC<ExtendedTranscriptControlsProps> = ({
 };
 
 export default TranscriptControls;
-
