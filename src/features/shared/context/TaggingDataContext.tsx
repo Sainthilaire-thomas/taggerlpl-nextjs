@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 declare global {
   interface Window {
@@ -22,7 +22,7 @@ import { useSupabase } from "./SupabaseContext";
 // Define types for your data models
 export interface Tag {
   id?: number;
-  label: string; // ✅ Correspond à votre DB lpltag.label
+  label: string; // âœ… Correspond Ã  votre DB lpltag.label
   color?: string;
   description?: string;
   family?: string;
@@ -43,12 +43,12 @@ export interface Word {
   id: number;
   transcriptid: string;
   word: string;
-  text: string; // ✅ Ajout de cette propriété (alias de word)
+  text: string; // âœ… Ajout de cette propriÃ©tÃ© (alias de word)
   startTime: number;
   endTime: number;
   speaker: string;
-  turn: string; // ✅ Ajout de cette propriété manquante
-  index?: number; // ✅ Ajout de cette propriété optionnelle
+  turn: string; // âœ… Ajout de cette propriÃ©tÃ© manquante
+  index?: number; // âœ… Ajout de cette propriÃ©tÃ© optionnelle
   [key: string]: any;
 }
 
@@ -63,7 +63,7 @@ export type TurnAnnotation = {
   author: string;
   created_at: string; // ISO
   rationale: string; // commentaire principal
-  proposed_label?: string | null; // label proposé (prédit)
+  proposed_label?: string | null; // label proposÃ© (prÃ©dit)
   gold_label?: string | null; // label gold
   verbatim?: string | null; // snapshot du tour
   context?: { prev2?: string; prev1?: string; next1?: string } | null;
@@ -106,8 +106,8 @@ export interface TaggedTurn {
   tag: string;
   verbatim: string;
   next_turn_verbatim: string;
-  next_turn_tag?: string; // ✅ Ajout du champ
-  speaker: string; // ✅ Ajout du champ
+  next_turn_tag?: string; // âœ… Ajout du champ
+  speaker: string; // âœ… Ajout du champ
   color: string;
   [key: string]: any;
   annotations?: TurnAnnotation[];
@@ -118,15 +118,15 @@ export interface NewTag {
   start_time: number;
   end_time: number;
   tag: string;
-  verbatim: string; // ✅ Ajout obligatoire
+  verbatim: string; // âœ… Ajout obligatoire
   next_turn_verbatim?: string;
-  speaker: string; // ✅ Ajout obligatoire
-  next_turn_tag?: string; // ✅ Ajout optionnel
+  speaker: string; // âœ… Ajout obligatoire
+  next_turn_tag?: string; // âœ… Ajout optionnel
   [key: string]: any;
 }
 
 // ==========================================
-// 📋 NOUVEAUX TYPES (sans conflit)
+// ðŸ“‹ NOUVEAUX TYPES (sans conflit)
 // ==========================================
 
 interface GlobalTurnTaggedFilters {
@@ -208,15 +208,15 @@ interface TaggingDataContextType {
     annotationId: string
   ) => Promise<AnnotationOpResult>;
 
-  // 🆕 NOUVELLES PROPRIÉTÉS (ajoutées sans conflit)
-  allTurnTagged: TaggedTurn[]; // ← Pour analyse globale
+  // ðŸ†• NOUVELLES PROPRIÃ‰TÃ‰S (ajoutÃ©es sans conflit)
+  allTurnTagged: TaggedTurn[]; // â† Pour analyse globale
   setAllTurnTagged: React.Dispatch<React.SetStateAction<TaggedTurn[]>>;
   fetchAllTurnTagged: (filters?: GlobalTurnTaggedFilters) => Promise<void>;
   globalTurnTaggedStats: GlobalTurnTaggedStats;
   loadingGlobalData: boolean;
   errorGlobalData: string | null;
 
-  // 🆕 Fonctions utilitaires pour compatibilité
+  // ðŸ†• Fonctions utilitaires pour compatibilitÃ©
   getFilteredTurnsForAnalysis: (
     filters?: GlobalTurnTaggedFilters
   ) => TaggedTurn[];
@@ -247,7 +247,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
   // Destructurer directement le hook useSupabase
   const { supabase } = useSupabase();
 
-  // ✅ ÉTATS EXISTANTS (inchangés)
+  // âœ… Ã‰TATS EXISTANTS (inchangÃ©s)
   const [taggingCalls, setTaggingCalls] = useState<TaggingCall[]>([]);
   const [selectedTaggingCall, setSelectedTaggingCall] =
     useState<TaggingCall | null>(null);
@@ -259,7 +259,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
   const [taggedTurns, setTaggedTurns] = useState<TaggedTurn[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
 
-  // 🆕 NOUVEAUX ÉTATS (corrigés - au bon endroit)
+  // ðŸ†• NOUVEAUX Ã‰TATS (corrigÃ©s - au bon endroit)
   const [allTurnTagged, setAllTurnTagged] = useState<TaggedTurn[]>([]);
   const [loadingGlobalData, setLoadingGlobalData] = useState(false);
   const [errorGlobalData, setErrorGlobalData] = useState<string | null>(null);
@@ -270,7 +270,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     const { count } = await supabase
       .from("turntagged")
       .select("*", { count: "exact", head: true });
-    console.log(`📊 Total réel en DB: ${count} turns`);
+    console.log(`ðŸ“Š Total rÃ©el en DB: ${count} turns`);
     return count;
   };
 
@@ -283,7 +283,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     console.log("Mappage du mot:", word); // Debug log
 
     return {
-      ...word, // Garder toutes les propriétés originales
+      ...word, // Garder toutes les propriÃ©tÃ©s originales
       text: word.text || word.word || "", // Utiliser text si disponible, sinon word
       turn: word.turn || word.speaker || "Inconnu", // Utiliser turn si disponible, sinon speaker
       word: word.word || word.text || "", // Assurer que word existe
@@ -296,7 +296,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
   };
 
   useEffect(() => {
-    // Vérifier que supabase est disponible
+    // VÃ©rifier que supabase est disponible
     if (!supabase) {
       console.warn("Supabase client not available yet");
       return;
@@ -307,7 +307,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
       try {
         const { data, error } = await supabase.from("lpltag").select("*");
         if (error) {
-          console.error("Erreur de récupération des tags :", error.message);
+          console.error("Erreur de rÃ©cupÃ©ration des tags :", error.message);
         } else {
           setTags(data || []);
         }
@@ -339,7 +339,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
       if (error) {
         console.error("Erreur lors du fetch des appels de tagging :", error);
       } else {
-        console.log("Appels récupérés :", data);
+        console.log("Appels rÃ©cupÃ©rÃ©s :", data);
         setTaggingCalls(data || []);
       }
     } catch (err) {
@@ -350,8 +350,8 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     }
   }, [supabase]);
 
-  // 🆕 NOUVELLE FONCTION pour fetch global (sans conflit)
-  // 1. ✅ Correction dans fetchAllTurnTagged
+  // ðŸ†• NOUVELLE FONCTION pour fetch global (sans conflit)
+  // 1. âœ… Correction dans fetchAllTurnTagged
   const fetchAllTurnTagged = useCallback(
     async (filters?: GlobalTurnTaggedFilters) => {
       if (!supabase) {
@@ -366,7 +366,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
         console.log("=== FETCH ALL TURNTAGGED COMPLET (SANS LIMITE) ===");
         console.log("Filtres:", filters);
 
-        // 🚀 PREMIÈRE ÉTAPE: Compter le total exact
+        // ðŸš€ PREMIÃˆRE Ã‰TAPE: Compter le total exact
         const { count: totalCount, error: countError } = await supabase
           .from("turntagged")
           .select("*", { count: "exact", head: true });
@@ -376,23 +376,23 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
           throw countError;
         }
 
-        console.log(`📊 Total réel en base: ${totalCount} turntagged`);
+        console.log(`ðŸ“Š Total rÃ©el en base: ${totalCount} turntagged`);
 
-        // 🚀 DEUXIÈME ÉTAPE: Récupération par pages
+        // ðŸš€ DEUXIÃˆME Ã‰TAPE: RÃ©cupÃ©ration par pages
         const pageSize = 1000; // Taille de page Supabase
         let allData: any[] = [];
         let page = 0;
         let hasMore = true;
 
-        console.log(`🔄 Récupération par pages (${pageSize} par page)...`);
+        console.log(`ðŸ”„ RÃ©cupÃ©ration par pages (${pageSize} par page)...`);
 
         while (hasMore && allData.length < (totalCount || 10000)) {
           const from = page * pageSize;
           const to = from + pageSize - 1;
 
-          console.log(`📥 Page ${page + 1}: récupération ${from}-${to}`);
+          console.log(`ðŸ“¥ Page ${page + 1}: rÃ©cupÃ©ration ${from}-${to}`);
 
-          // Construction de la requête avec jointures
+          // Construction de la requÃªte avec jointures
           let query = supabase
             .from("turntagged")
             .select(
@@ -406,7 +406,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
             .order("call_id", { ascending: true })
             .order("start_time", { ascending: true });
 
-          // Application des filtres si spécifiés
+          // Application des filtres si spÃ©cifiÃ©s
           if (filters?.strategies?.length) {
             query = query.in("tag", filters.strategies);
           }
@@ -432,7 +432,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
 
           if (!pageData || pageData.length === 0) {
             console.log(
-              `📄 Page ${page + 1}: aucune donnée, fin de pagination`
+              `ðŸ“„ Page ${page + 1}: aucune donnÃ©e, fin de pagination`
             );
             hasMore = false;
             break;
@@ -440,7 +440,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
 
           allData = [...allData, ...pageData];
           console.log(
-            `✅ Page ${page + 1}: +${pageData.length} turns (total: ${
+            `âœ… Page ${page + 1}: +${pageData.length} turns (total: ${
               allData.length
             })`
           );
@@ -448,23 +448,23 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
           // Si moins que pageSize, on a atteint la fin
           if (pageData.length < pageSize) {
             hasMore = false;
-            console.log(`🏁 Fin naturelle de pagination (page incomplète)`);
+            console.log(`ðŸ Fin naturelle de pagination (page incomplÃ¨te)`);
           }
 
           page++;
 
-          // Sécurité: éviter les boucles infinies
+          // SÃ©curitÃ©: Ã©viter les boucles infinies
           if (page > 10) {
-            console.warn("⚠️ Arrêt sécurité: plus de 10 pages récupérées");
+            console.warn("âš ï¸ ArrÃªt sÃ©curitÃ©: plus de 10 pages rÃ©cupÃ©rÃ©es");
             break;
           }
         }
 
         console.log(
-          `🎉 Récupération terminée: ${allData.length}/${totalCount} turns`
+          `ðŸŽ‰ RÃ©cupÃ©ration terminÃ©e: ${allData.length}/${totalCount} turns`
         );
 
-        // 🚀 TROISIÈME ÉTAPE: Traitement des données
+        // ðŸš€ TROISIÃˆME Ã‰TAPE: Traitement des donnÃ©es
         const processedData: TaggedTurn[] = allData.map((turn: any) => ({
           id: turn.id,
           call_id: turn.call_id,
@@ -478,7 +478,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
           color: turn.lpltag?.color || "#gray",
           annotations: Array.isArray(turn.annotations) ? turn.annotations : [],
 
-          // Données enrichies
+          // DonnÃ©es enrichies
           family: turn.lpltag?.family || "UNKNOWN",
           originespeaker: turn.lpltag?.originespeaker || "unknown",
           call_origine: turn.call?.origine || "unknown",
@@ -486,20 +486,20 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
         }));
 
         setAllTurnTagged(processedData);
-        console.log("✅ CONTEXTE MIS À JOUR:", processedData.length, "turns");
+        console.log("âœ… CONTEXTE MIS Ã€ JOUR:", processedData.length, "turns");
         (window as any).allTurnTagged = processedData;
         setLastGlobalFetch(new Date());
 
-        console.log(`📈 État mis à jour avec ${processedData.length} turns`);
+        console.log(`ðŸ“ˆ Ã‰tat mis Ã  jour avec ${processedData.length} turns`);
 
-        // Vérification finale
+        // VÃ©rification finale
         if (processedData.length < (totalCount || 0) * 0.9) {
           console.warn(
-            `⚠️ Attention: seulement ${processedData.length}/${totalCount} récupérés`
+            `âš ï¸ Attention: seulement ${processedData.length}/${totalCount} rÃ©cupÃ©rÃ©s`
           );
         }
       } catch (err) {
-        console.error("❌ Erreur lors du fetch global:", err);
+        console.error("âŒ Erreur lors du fetch global:", err);
         setErrorGlobalData(
           err instanceof Error ? err.message : "Erreur inconnue"
         );
@@ -510,11 +510,11 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     [supabase]
   );
 
-  // 3. ✅ Fonction utilitaire pour diagnostiquer
+  // 3. âœ… Fonction utilitaire pour diagnostiquer
   const diagnosticSupabaseLimit = useCallback(async () => {
     if (!supabase) return;
 
-    console.log("🔍 DIAGNOSTIC LIMITATION SUPABASE");
+    console.log("ðŸ” DIAGNOSTIC LIMITATION SUPABASE");
     console.log("================================");
 
     // Test 1: Count exact
@@ -523,11 +523,11 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
       .select("*", { count: "exact", head: true });
     console.log("Total en base:", count);
 
-    // Test 2: Fetch avec limite par défaut
+    // Test 2: Fetch avec limite par dÃ©faut
     const { data: defaultData } = await supabase
       .from("turntagged")
       .select("id");
-    console.log("Fetch par défaut:", defaultData?.length);
+    console.log("Fetch par dÃ©faut:", defaultData?.length);
 
     // Test 3: Fetch avec limite explicite
     const { data: limitedData } = await supabase
@@ -565,7 +565,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     }
   }, [supabase]);
 
-  // Fetch des transcriptions pour un appel spécifique
+  // Fetch des transcriptions pour un appel spÃ©cifique
   const fetchTaggingTranscription = useCallback(
     async (callId: string): Promise<void> => {
       if (!supabase) {
@@ -574,9 +574,9 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
       }
 
       try {
-        console.log("🔍 Début fetchTaggingTranscription pour callId:", callId);
+        console.log("ðŸ” DÃ©but fetchTaggingTranscription pour callId:", callId);
 
-        // Étape 1 : Obtenir le transcriptid à partir du callid
+        // Ã‰tape 1 : Obtenir le transcriptid Ã  partir du callid
         const { data: transcriptData, error: transcriptError } = await supabase
           .from("transcript")
           .select("transcriptid")
@@ -593,15 +593,15 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
         }
 
         const transcriptId = transcriptData?.transcriptid;
-        console.log("📄 TranscriptId trouvé:", transcriptId);
+        console.log("ðŸ“„ TranscriptId trouvÃ©:", transcriptId);
 
         if (!transcriptId) {
-          console.warn("Aucun transcriptid trouvé pour callid :", callId);
+          console.warn("Aucun transcriptid trouvÃ© pour callid :", callId);
           setTaggingTranscription([]);
           return;
         }
 
-        // Étape 2 : Obtenir les mots associés au transcriptid
+        // Ã‰tape 2 : Obtenir les mots associÃ©s au transcriptid
         const { data: wordsData, error: wordsError } = await supabase
           .from("word")
           .select("*")
@@ -614,22 +614,22 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
           return;
         }
 
-        console.log("📝 Données words brutes récupérées:", wordsData);
-        console.log("📊 Nombre de mots récupérés:", wordsData?.length || 0);
+        console.log("ðŸ“ DonnÃ©es words brutes rÃ©cupÃ©rÃ©es:", wordsData);
+        console.log("ðŸ“Š Nombre de mots rÃ©cupÃ©rÃ©s:", wordsData?.length || 0);
 
         if (!wordsData || wordsData.length === 0) {
-          console.warn("Aucun mot trouvé pour transcriptId:", transcriptId);
+          console.warn("Aucun mot trouvÃ© pour transcriptId:", transcriptId);
           setTaggingTranscription([]);
           return;
         }
 
-        // ✅ Mappez les données pour inclure les propriétés manquantes
+        // âœ… Mappez les donnÃ©es pour inclure les propriÃ©tÃ©s manquantes
         const mappedWords = wordsData.map(mapWordToTranscriptWord);
-        console.log("🔄 Mots après mappage:", mappedWords.slice(0, 3)); // Log des 3 premiers pour debug
+        console.log("ðŸ”„ Mots aprÃ¨s mappage:", mappedWords.slice(0, 3)); // Log des 3 premiers pour debug
 
         setTaggingTranscription(mappedWords);
         console.log(
-          "✅ TaggingTranscription mis à jour avec",
+          "âœ… TaggingTranscription mis Ã  jour avec",
           mappedWords.length,
           "mots"
         );
@@ -644,7 +644,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     [supabase]
   );
 
-  // 🆕 FONCTION pour données filtrées (utilitaire)
+  // ðŸ†• FONCTION pour donnÃ©es filtrÃ©es (utilitaire)
   const getFilteredTurnsForAnalysis = useCallback(
     (filters?: GlobalTurnTaggedFilters): TaggedTurn[] => {
       let filtered = allTurnTagged;
@@ -672,7 +672,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     [allTurnTagged]
   );
 
-  // 🆕 FONCTION pour refresh intelligent
+  // ðŸ†• FONCTION pour refresh intelligent
   const refreshGlobalDataIfNeeded = useCallback(async () => {
     const now = new Date();
     const shouldRefresh =
@@ -680,12 +680,12 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
       now.getTime() - lastGlobalFetch.getTime() > 5 * 60 * 1000; // 5 minutes
 
     if (shouldRefresh) {
-      console.log("🔄 Refresh automatique des données globales");
+      console.log("ðŸ”„ Refresh automatique des donnÃ©es globales");
       await fetchAllTurnTagged({ limit: 5000 });
     }
   }, [lastGlobalFetch, fetchAllTurnTagged]);
 
-  // 🆕 CALCUL des statistiques globales
+  // ðŸ†• CALCUL des statistiques globales
   const globalTurnTaggedStats = useMemo((): GlobalTurnTaggedStats => {
     const uniqueCallIds = new Set(
       allTurnTagged.map((turn: TaggedTurn) => turn.call_id)
@@ -720,7 +720,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     };
   }, [allTurnTagged, lastGlobalFetch]);
 
-  // Fetch des post-its liés à un appel
+  // Fetch des post-its liÃ©s Ã  un appel
   const fetchTaggingPostits = useCallback(
     async (callId: string): Promise<void> => {
       if (!supabase) {
@@ -756,9 +756,9 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
       }
 
       try {
-        console.log("🔍 Vérification complétude relations pour:", callId);
+        console.log("ðŸ” VÃ©rification complÃ©tude relations pour:", callId);
 
-        // Récupérer tous les tags de l'appel
+        // RÃ©cupÃ©rer tous les tags de l'appel
         const { data: tags, error } = await supabase
           .from("turntagged")
           .select("id, next_turn_tag, speaker, start_time, end_time, tag")
@@ -766,12 +766,12 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
           .order("start_time", { ascending: true });
 
         if (error) {
-          console.error("Erreur lors de la vérification:", error);
+          console.error("Erreur lors de la vÃ©rification:", error);
           return null;
         }
 
         if (!tags || tags.length === 0) {
-          console.log("Aucun tag trouvé pour cet appel");
+          console.log("Aucun tag trouvÃ© pour cet appel");
           return {
             totalTags: 0,
             tagsWithNextTurn: 0,
@@ -788,11 +788,11 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
           (tag) => tag.next_turn_tag && tag.next_turn_tag.trim() !== ""
         ).length;
 
-        // Calculer le pourcentage de complétude
+        // Calculer le pourcentage de complÃ©tude
         const completenessPercent =
           totalTags > 0 ? (tagsWithNextTurn / totalTags) * 100 : 100;
 
-        // Seuil pour considérer comme "calculé" : 85%
+        // Seuil pour considÃ©rer comme "calculÃ©" : 85%
         // (car certains tags en fin de conversation n'auront jamais de next_turn)
         const isCalculated = completenessPercent >= 85;
         const missingRelations = totalTags - tagsWithNextTurn;
@@ -800,16 +800,16 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
         const status: RelationsStatus = {
           totalTags,
           tagsWithNextTurn,
-          completenessPercent: Math.round(completenessPercent * 100) / 100, // Arrondir à 2 décimales
+          completenessPercent: Math.round(completenessPercent * 100) / 100, // Arrondir Ã  2 dÃ©cimales
           isCalculated,
           missingRelations,
           lastChecked: new Date(),
         };
 
-        console.log("📊 Analyse complétude:", status);
+        console.log("ðŸ“Š Analyse complÃ©tude:", status);
         return status;
       } catch (err) {
-        console.error("Erreur lors de l'analyse de complétude:", err);
+        console.error("Erreur lors de l'analyse de complÃ©tude:", err);
         return null;
       }
     },
@@ -818,10 +818,10 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
 
   const getRelationsStatus = checkRelationsCompleteness;
 
-  // Sélectionner un appel pour le tagging
+  // SÃ©lectionner un appel pour le tagging
   const callId = selectedTaggingCall?.callid;
 
-  // Fonction pour jouer l'audio à un timestamp donné
+  // Fonction pour jouer l'audio Ã  un timestamp donnÃ©
   const playAudioAtTimestamp = (timestamp: number): void => {
     if (audioSrc && playerRef.current) {
       playerRef.current.currentTime = timestamp;
@@ -834,14 +834,14 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     fetchTaggingCalls();
   }, [fetchTaggingCalls]);
 
-  // 2. ✅ Correction dans l'initialisation
+  // 2. âœ… Correction dans l'initialisation
   useEffect(() => {
-    console.log("🚀 Initialisation avec fetch complet des données");
+    console.log("ðŸš€ Initialisation avec fetch complet des donnÃ©es");
     fetchAllTurnTagged({ limit: undefined }); // Pas de limite pour l'initial
   }, [fetchAllTurnTagged]);
 
-  // Fonction pour récupérer les tags
-  // Fonction fetchTaggedTurns simplifiée dans TaggingDataContext.tsx
+  // Fonction pour rÃ©cupÃ©rer les tags
+  // Fonction fetchTaggedTurns simplifiÃ©e dans TaggingDataContext.tsx
 
   const fetchTaggedTurns = useCallback(
     async (callId: string): Promise<void> => {
@@ -864,7 +864,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
           )
           .eq("call_id", callId)
           .order("start_time", { ascending: true })
-          .order("id", { ascending: true }); // stabilité si mêmes timestamps
+          .order("id", { ascending: true }); // stabilitÃ© si mÃªmes timestamps
 
         if (error) {
           console.error("Erreur fetch tags:", error);
@@ -876,12 +876,12 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
             ...tag,
             color: tag.lpltag?.color || "#gray",
             verbatim: tag.verbatim || "",
-            // ✅ les annotations JSONB sont normalisées en tableau
+            // âœ… les annotations JSONB sont normalisÃ©es en tableau
             annotations: Array.isArray(tag.annotations) ? tag.annotations : [],
           })
         );
 
-        console.log(`✅ ${processedTags.length} tags récupérés`);
+        console.log(`âœ… ${processedTags.length} tags rÃ©cupÃ©rÃ©s`);
         setTaggedTurns(processedTags);
       } catch (err) {
         console.error("Erreur dans fetchTaggedTurns:", err);
@@ -901,26 +901,26 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
       setSelectedTaggingCall(call);
 
       if (call?.callid) {
-        // ✅ Charger TOUTES les données nécessaires en parallèle
+        // âœ… Charger TOUTES les donnÃ©es nÃ©cessaires en parallÃ¨le
         Promise.all([
           fetchTaggingTranscription(call.callid),
-          fetchTaggedTurns(call.callid), // ✅ AJOUT CRUCIAL
+          fetchTaggedTurns(call.callid), // âœ… AJOUT CRUCIAL
           fetchTaggingPostits(call.callid),
         ])
           .then(() => {
             console.log(
-              "✅ Toutes les données chargées pour l'appel",
+              "âœ… Toutes les donnÃ©es chargÃ©es pour l'appel",
               call.callid
             );
           })
           .catch((error) => {
-            console.error("❌ Erreur lors du chargement des données:", error);
+            console.error("âŒ Erreur lors du chargement des donnÃ©es:", error);
           });
 
         setAudioSrc(call.audiourl);
       }
     },
-    [fetchTaggingTranscription, fetchTaggedTurns, fetchTaggingPostits] // ✅ Ajouter fetchTaggedTurns aux dépendances
+    [fetchTaggingTranscription, fetchTaggedTurns, fetchTaggingPostits] // âœ… Ajouter fetchTaggedTurns aux dÃ©pendances
   );
   // Fonction pour ajouter un tag
   // Fonction addTag robuste dans TaggingDataContext.tsx
@@ -930,9 +930,9 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
       if (!supabase) return null;
 
       try {
-        console.log("=== ADD TAG OPTIMISÉ ===");
+        console.log("=== ADD TAG OPTIMISÃ‰ ===");
 
-        // Vérifier doublons
+        // VÃ©rifier doublons
         const { data: existingTags, error: checkError } = await supabase
           .from("turntagged")
           .select("*")
@@ -946,7 +946,7 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
         let result: TaggedTurn;
 
         if (existingTags && existingTags.length > 0) {
-          // Mise à jour
+          // Mise Ã  jour
           const existingTag = existingTags[0];
           const { data: updatedData, error: updateError } = await supabase
             .from("turntagged")
@@ -961,9 +961,9 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
 
           if (updateError) throw updateError;
           result = updatedData;
-          console.log("✅ Tag mis à jour:", result.id);
+          console.log("âœ… Tag mis Ã  jour:", result.id);
         } else {
-          // Création
+          // CrÃ©ation
           const { data: insertedData, error: insertError } = await supabase
             .from("turntagged")
             .insert([newTag])
@@ -972,10 +972,10 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
 
           if (insertError) throw insertError;
           result = insertedData;
-          console.log("✅ Nouveau tag créé:", result.id);
+          console.log("âœ… Nouveau tag crÃ©Ã©:", result.id);
         }
 
-        // Récupérer couleur
+        // RÃ©cupÃ©rer couleur
         const { data: tagData } = await supabase
           .from("lpltag")
           .select("color")
@@ -988,16 +988,16 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
           verbatim: result.verbatim || "",
         };
 
-        // ✅ Mise à jour intelligente de l'état local SANS fetchTaggedTurns
+        // âœ… Mise Ã  jour intelligente de l'Ã©tat local SANS fetchTaggedTurns
         setTaggedTurns((prevTags) => {
           // Supprimer l'ancien tag s'il existe
           const filteredTags = prevTags.filter(
             (tag) => tag.id !== enrichedTag.id
           );
-          // Ajouter le nouveau/mis à jour
+          // Ajouter le nouveau/mis Ã  jour
           const newState = [...filteredTags, enrichedTag];
           console.log(
-            `État local mis à jour: ${prevTags.length} → ${newState.length} tags`
+            `Ã‰tat local mis Ã  jour: ${prevTags.length} â†’ ${newState.length} tags`
           );
           return newState;
         });
@@ -1011,40 +1011,40 @@ export const TaggingDataProvider: React.FC<TaggingDataProviderProps> = ({
     [supabase]
   );
 
-  // ✅ FONCTION pour valider si un tag peut être un "next turn"
+  // âœ… FONCTION pour valider si un tag peut Ãªtre un "next turn"
   function isValidNextTurnCandidate(
     currentTag: any,
     candidateTag: any,
     tolerance: number
   ): boolean {
-    // Cas 1: Tag candidat commence après la fin du tag actuel (cas classique)
+    // Cas 1: Tag candidat commence aprÃ¨s la fin du tag actuel (cas classique)
     if (candidateTag.start_time >= currentTag.end_time - tolerance) {
       return true;
     }
 
-    // Cas 2: Chevauchement partiel acceptable (le candidat commence pendant le tag actuel mais continue après)
+    // Cas 2: Chevauchement partiel acceptable (le candidat commence pendant le tag actuel mais continue aprÃ¨s)
     if (
       candidateTag.start_time < currentTag.end_time &&
       candidateTag.end_time > currentTag.end_time
     ) {
       console.log(
-        `⚠️ Chevauchement détecté entre ${currentTag.id} et ${candidateTag.id}`
+        `âš ï¸ Chevauchement dÃ©tectÃ© entre ${currentTag.id} et ${candidateTag.id}`
       );
       return true;
     }
 
-    // Cas 3: Tags très proches dans le temps (conversation rapide)
+    // Cas 3: Tags trÃ¨s proches dans le temps (conversation rapide)
     const timeGap = candidateTag.start_time - currentTag.end_time;
     if (timeGap >= -tolerance && timeGap <= 0.5) {
-      // Tolérance de 500ms
+      // TolÃ©rance de 500ms
       return true;
     }
 
     return false;
   }
 
-  // Fonction calculateAllNextTurnTags corrigée (lignes ~520)
-  // ✅ NOUVELLE VERSION : Appel de la fonction RPC calculate_turn_relations
+  // Fonction calculateAllNextTurnTags corrigÃ©e (lignes ~520)
+  // âœ… NOUVELLE VERSION : Appel de la fonction RPC calculate_turn_relations
 const calculateAllNextTurnTags = useCallback(
   async (callId: string): Promise<number> => {
     if (!supabase) {
@@ -1053,37 +1053,59 @@ const calculateAllNextTurnTags = useCallback(
     }
 
     try {
-      console.log("=== CALCUL RELATIONS ÉTENDUES (RPC) ===");
+      console.log("=== CALCUL RELATIONS ÉTENDUES + REFRESH PAIRES ===");
       console.log("Call ID:", callId);
 
-      // ✅ Appeler la fonction RPC avec call_id en INTEGER
-      const { data, error } = await supabase.rpc('calculate_turn_relations', {
-        p_call_id: parseInt(callId, 10) // Cast en INTEGER
-      });
+      // ✅ ÉTAPE 1 : Calculer les relations dans turntagged
+      const { data: relationsData, error: relationsError } = await supabase.rpc(
+        'calculate_turn_relations',
+        { p_call_id: parseInt(callId, 10) }
+      );
 
-      if (error) {
-        console.error("❌ Erreur calcul relations:", error);
-        throw error;
+      if (relationsError) {
+        console.error("❌ Erreur calcul relations:", relationsError);
+        throw relationsError;
       }
 
-      const result = data?.[0];
-      
-      if (!result) {
-        console.warn("⚠️ Aucun résultat retourné par la fonction");
+      const relationsResult = relationsData?.[0];
+
+      if (!relationsResult) {
+        console.warn("⚠️ Aucun résultat retourné par calculate_turn_relations");
         return 0;
       }
 
-      console.log(`✅ ${result.updated_count} tours mis à jour`);
-      console.log(`📊 ${result.total_turns} tours traités`);
-      console.log(`⏱️ ${result.execution_time_ms}ms`);
+      console.log(`✅ ${relationsResult.updated_count} tours mis à jour dans turntagged`);
+      console.log(`📊 ${relationsResult.total_turns} tours traités`);
+      console.log(`⏱️ ${relationsResult.execution_time_ms}ms`);
 
-      // Rafraîchir l'état local si des changements
-      if (result.updated_count > 0) {
+      // ✅ ÉTAPE 2 : Régénérer les paires pour ce call
+      if (relationsResult.updated_count > 0) {
+        console.log("🔄 Régénération des paires analysis_pairs...");
+        
+        const { data: pairsData, error: pairsError } = await supabase.rpc(
+          'refresh_analysis_pairs',
+          {
+            p_incremental: true,
+            p_call_ids: [callId]
+          }
+        );
+
+        if (pairsError) {
+          console.warn("⚠️ Erreur refresh paires (non bloquant):", pairsError);
+        } else {
+          const pairsResult = pairsData?.[0];
+          console.log(`✅ ${pairsResult?.inserted || 0} paires créées`);
+          console.log(`♻️ ${pairsResult?.deleted || 0} anciennes paires supprimées`);
+        }
+      }
+
+      // ✅ ÉTAPE 3 : Rafraîchir l'état local
+      if (relationsResult.updated_count > 0) {
         console.log("🔄 Rafraîchissement de l'état local...");
         await fetchTaggedTurns(callId);
       }
 
-      return result.updated_count;
+      return relationsResult.updated_count;
     } catch (err) {
       console.error("❌ Erreur dans calculateAllNextTurnTags:", err);
       return 0;
@@ -1091,6 +1113,7 @@ const calculateAllNextTurnTags = useCallback(
   },
   [supabase, fetchTaggedTurns]
 );
+
 
   const deleteTurnTag = useCallback(
     async (id: number): Promise<void> => {
@@ -1111,7 +1134,7 @@ const calculateAllNextTurnTags = useCallback(
           );
         } else {
           setTaggedTurns((prevTags) => prevTags.filter((tag) => tag.id !== id));
-          console.log("Tag supprimé avec succès :", id);
+          console.log("Tag supprimÃ© avec succÃ¨s :", id);
         }
       } catch (err) {
         console.error(
@@ -1123,8 +1146,8 @@ const calculateAllNextTurnTags = useCallback(
     [supabase]
   );
 
-  //Méthodes d'annotation
-  // met à jour le même tour dans les 2 états (liste globale + liste par appel)
+  //MÃ©thodes d'annotation
+  // met Ã  jour le mÃªme tour dans les 2 Ã©tats (liste globale + liste par appel)
   const replaceTurnInStates = useCallback(
     (turnId: number, updater: (t: TaggedTurn) => TaggedTurn) => {
       setAllTurnTagged((prev) =>
@@ -1206,7 +1229,7 @@ const calculateAllNextTurnTags = useCallback(
       }));
 
       try {
-        // 2) DB merge (on relit pour éviter les écrasements)
+        // 2) DB merge (on relit pour Ã©viter les Ã©crasements)
         const current = await fetchDbAnnotations(turnId);
         const merged = [...current, { ...temp, _pending: undefined }];
 
@@ -1234,7 +1257,7 @@ const calculateAllNextTurnTags = useCallback(
           ...t,
           annotations: (t.annotations ?? []).filter((a) => a.id !== temp.id),
         }));
-        return { ok: false, error: e?.message || "Échec de l'enregistrement" };
+        return { ok: false, error: e?.message || "Ã‰chec de l'enregistrement" };
       }
     },
     [supabase, replaceTurnInStates]
@@ -1257,7 +1280,7 @@ const calculateAllNextTurnTags = useCallback(
       const prev = getLocalAnnotations(turnId) ?? [];
       const before = prev.find((a) => a.id === annotationId);
       if (!before)
-        return { ok: false, error: "Annotation introuvable en mémoire" };
+        return { ok: false, error: "Annotation introuvable en mÃ©moire" };
 
       // 1) Optimistic
       replaceTurnInStates(turnId, (t) => ({
@@ -1268,7 +1291,7 @@ const calculateAllNextTurnTags = useCallback(
       }));
 
       try {
-        // 2) DB: on repart de l’état DB
+        // 2) DB: on repart de lâ€™Ã©tat DB
         const current = await fetchDbAnnotations(turnId);
         const updated = current.map((a) =>
           a.id === annotationId ? { ...a, ...patch } : a
@@ -1297,7 +1320,7 @@ const calculateAllNextTurnTags = useCallback(
           ...t,
           annotations: prev, // on remet les annotations avant patch
         }));
-        return { ok: false, error: e?.message || "Échec de la mise à jour" };
+        return { ok: false, error: e?.message || "Ã‰chec de la mise Ã  jour" };
       }
     },
     [supabase, replaceTurnInStates, getLocalAnnotations]
@@ -1346,7 +1369,7 @@ const calculateAllNextTurnTags = useCallback(
           ...t,
           annotations: prev,
         }));
-        return { ok: false, error: e?.message || "Échec de la suppression" };
+        return { ok: false, error: e?.message || "Ã‰chec de la suppression" };
       }
     },
     [supabase, replaceTurnInStates, getLocalAnnotations]
@@ -1355,7 +1378,7 @@ const calculateAllNextTurnTags = useCallback(
   return (
     <TaggingDataContext.Provider
       value={{
-        // ✅ PROPRIÉTÉS EXISTANTES (inchangées)
+        // âœ… PROPRIÃ‰TÃ‰S EXISTANTES (inchangÃ©es)
         taggingCalls,
         setTaggingCalls,
         selectedTaggingCall,
@@ -1382,7 +1405,7 @@ const calculateAllNextTurnTags = useCallback(
         checkRelationsCompleteness,
         getRelationsStatus,
 
-        // 🆕 NOUVELLES PROPRIÉTÉS (ajoutées)
+        // ðŸ†• NOUVELLES PROPRIÃ‰TÃ‰S (ajoutÃ©es)
         allTurnTagged,
         setAllTurnTagged,
         fetchAllTurnTagged,
@@ -1391,10 +1414,10 @@ const calculateAllNextTurnTags = useCallback(
         errorGlobalData,
         getFilteredTurnsForAnalysis,
         refreshGlobalDataIfNeeded,
-        // Méthodes d'annotation
-        addAnnotation, // ⬅️ nouveau
-        updateAnnotation, // ⬅️ nouveau
-        deleteAnnotation, // ⬅️ nouveau
+        // MÃ©thodes d'annotation
+        addAnnotation, // â¬…ï¸ nouveau
+        updateAnnotation, // â¬…ï¸ nouveau
+        deleteAnnotation, // â¬…ï¸ nouveau
       }}
     >
       {children}
