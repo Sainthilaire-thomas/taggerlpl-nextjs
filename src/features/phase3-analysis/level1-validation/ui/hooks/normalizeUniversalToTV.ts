@@ -1,4 +1,4 @@
-// hooks/normalizeUniversalToTV.ts
+﻿// hooks/normalizeUniversalToTV.ts
 import type {
   TVValidationResult,
   XDetails,
@@ -31,6 +31,7 @@ export function normalizeUniversalToTV(
     // on met aussi "details" à la racine pour les fallbacks des extra-colonnes
     details: (uni.metadata as any)?.details ?? {},
     // contexte pratique
+    pairId: sample.metadata?.pairId ?? undefined,
     turnId: sample.metadata?.turnId ?? undefined,
     callId: sample.metadata?.callId ?? undefined,
     prev1_turn_verbatim: sample.metadata?.prev1_turn_verbatim,
