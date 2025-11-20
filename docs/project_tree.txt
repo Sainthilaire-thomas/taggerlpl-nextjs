@@ -148,9 +148,15 @@ typescript-errors.txt
 |   |   |-- test-asr.md
 |   |   |-- transcription.json
 |   |   +-- transcriptionauto.md
+|   |-- migration-pair-analysis/
+|   |   |-- ANALYSE_WORKFLOW_COMPLET.md
+|   |   |-- MIGRATION_PAIR_ANALYSIS.md
+|   |   |-- RATIONALISATION_ANALYSIS_PAIRS.md
+|   |   +-- SESSION_MIGRATION_ANALYSIS_PAIRS_FINAL.md
 |   |-- calls_ddd_tree.txt
 |   |-- complete_project_tree.txt
-|   +-- project_tree.txt
+|   |-- project_tree.txt
+|   +-- TROUBLESHOOTING.md
 |-- migration/
 |   |-- audit/
 |   |   |-- accurate-transformation-rules.json
@@ -603,8 +609,6 @@ typescript-errors.txt
 |   |   |   |   +-- README_PREPARATION.MD
 |   |   |   |-- dashboard/
 |   |   |   |   +-- page.tsx
-|   |   |   |-- new-tagging/
-|   |   |   |   +-- page.tsx
 |   |   |   |-- phase1-corpus/
 |   |   |   |   |-- import/
 |   |   |   |   |   +-- page.tsx
@@ -619,8 +623,9 @@ typescript-errors.txt
 |   |   |   |   |-- tags-management/
 |   |   |   |   |   +-- page.tsx
 |   |   |   |   |-- transcript/
-|   |   |   |   |   +-- [callId]/
-|   |   |   |   |       +-- page.tsx
+|   |   |   |   |   |-- [callId]/
+|   |   |   |   |   |   +-- page.tsx
+|   |   |   |   |   +-- page.tsx
 |   |   |   |   |-- layout.tsx
 |   |   |   |   +-- page.tsx
 |   |   |   |-- phase3-analysis/
@@ -955,6 +960,8 @@ typescript-errors.txt
 |   |   |   |   |       +-- TagUsageStats.tsx
 |   |   |   |   +-- page.tsx
 |   |   |   |-- transcript/
+|   |   |   |   |-- components/
+|   |   |   |   |   +-- CallsListTable.tsx
 |   |   |   |   |-- hooks/
 |   |   |   |   |   |-- useRelationStatus.ts
 |   |   |   |   |   |-- useTaggingLogic.tsx
