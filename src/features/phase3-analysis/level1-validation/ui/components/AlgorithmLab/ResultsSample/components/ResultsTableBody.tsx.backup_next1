@@ -174,7 +174,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
         prev2: m.prev2_turn_verbatim || null,
         prev1: m.prev1_turn_verbatim || null,
         current: row.verbatim,
-        next1: m.next1_turn_verbatim || null,
+        next1: m.next_turn_verbatim || null,
       },
       classifier: m.classifier || "unknown",
       created_at: new Date().toISOString(),
@@ -279,7 +279,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
               const m = (r.metadata || {}) as Record<string, any>;
               const prev2 = m.prev2_turn_verbatim as string | undefined;
               const prev1 = m.prev1_turn_verbatim as string | undefined;
-              const next1 = m.next1_turn_verbatim as string | undefined;
+              const next1 = m.next_turn_verbatim as string | undefined;
               // ✅ FOCUS UNIVERSEL - fonctionne pour X et Y
               const focusVerbatim = m.current_turn_verbatim || r.verbatim;
               const isClientTarget = m.target === "client";
@@ -445,7 +445,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                         context={{
                           prev2: m.prev2_turn_verbatim,
                           prev1: m.prev1_turn_verbatim,
-                          next1: m.next1_turn_verbatim,
+                          next1: m.next_turn_verbatim,
                         }}
                         predicted={r.predicted}
                         gold={r.goldStandard}

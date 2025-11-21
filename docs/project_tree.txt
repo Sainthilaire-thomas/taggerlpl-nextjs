@@ -15,6 +15,7 @@ package.json
 package-lock.json
 postcss.config.mjs
 README.md
+temp_function.txt
 temp_nav.txt
 tsconfig.algorithmlab.json
 tsconfig.json
@@ -105,6 +106,7 @@ typescript-errors.txt
 |   |   |-- level2-specifications-techniques-H2.md
 |   |   |-- level2-stockage-essais-overlay-vue-H2.md
 |   |   +-- llevel2-implementationH2-a-partir-h2_analysis_pair.md
+|   |-- DOCUMENTATION_FLUX_COMPLET_ANALYSE.md
 |   |-- Flux-donnees-taggerLPL.md
 |   +-- schema.sql
 |-- docs/
@@ -152,7 +154,9 @@ typescript-errors.txt
 |   |   |-- ANALYSE_WORKFLOW_COMPLET.md
 |   |   |-- MIGRATION_PAIR_ANALYSIS.md
 |   |   |-- RATIONALISATION_ANALYSIS_PAIRS.md
-|   |   +-- SESSION_MIGRATION_ANALYSIS_PAIRS_FINAL.md
+|   |   |-- RECAP_ALGO_FINAL.md
+|   |   |-- SESSION_MIGRATION_ANALYSIS_PAIRS_FINAL.md
+|   |   +-- SESSION_MIGRATION_ANALYSIS_PAIRS_PHASE4.md
 |   |-- calls_ddd_tree.txt
 |   |-- complete_project_tree.txt
 |   |-- project_tree.txt
@@ -1051,6 +1055,7 @@ typescript-errors.txt
 |   |   |   |   |   |   |   |   |   |-- CommentDialog.tsx
 |   |   |   |   |   |   |   |   |   |-- ResultsFilters.tsx
 |   |   |   |   |   |   |   |   |   |-- ResultsTableBody.tsx
+|   |   |   |   |   |   |   |   |   |-- ResultsTableBody.tsx.backup_next1
 |   |   |   |   |   |   |   |   |   |-- ResultsTableHeader.tsx
 |   |   |   |   |   |   |   |   |   |-- ResultsTableRow.tsx
 |   |   |   |   |   |   |   |   |   +-- ToneLine.tsx
@@ -1088,6 +1093,7 @@ typescript-errors.txt
 |   |   |   |   |   |   |   |   +-- M3ValidationInterface.tsx
 |   |   |   |   |   |   |   |-- shared/
 |   |   |   |   |   |   |   |   |-- BaseAlgorithmTesting.tsx
+|   |   |   |   |   |   |   |   |-- BaseAlgorithmTesting.tsx.backup
 |   |   |   |   |   |   |   |   +-- ClassificationValidationTable.tsx
 |   |   |   |   |   |   |   |-- XClassifiers/
 |   |   |   |   |   |   |   |   |-- XAlgorithmTesting.tsx
@@ -1116,12 +1122,17 @@ typescript-errors.txt
 |   |   |   |   |   |       |-- VersionComparator.tsx
 |   |   |   |   |   |       +-- VersionSelector.tsx
 |   |   |   |   |   +-- hooks/
+|   |   |   |   |       |-- index.ts
 |   |   |   |   |       |-- normalizeUniversalToTV.ts
+|   |   |   |   |       |-- normalizeUniversalToTV.ts.backup_next1
 |   |   |   |   |       |-- useAlgorithmVersioning.ts
+|   |   |   |   |       |-- useAnalysisPairs.ts
 |   |   |   |   |       |-- useClassifierConfiguration.ts
 |   |   |   |   |       |-- useClassifierStatus.ts
 |   |   |   |   |       |-- useH2data.ts
 |   |   |   |   |       |-- useLevel1Testing.ts
+|   |   |   |   |       |-- useLevel1Testing.ts.backup
+|   |   |   |   |       |-- useLevel1Testing.ts.backup_context
 |   |   |   |   |       |-- useMultiAlgorithmComparison.ts
 |   |   |   |   |       |-- usePostValidationVersioning.ts
 |   |   |   |   |       +-- useWorkflowManagement.ts
@@ -1149,7 +1160,8 @@ typescript-errors.txt
 |   |       |-- context/
 |   |       |   |-- index.ts
 |   |       |   |-- SupabaseContext.tsx
-|   |       |   +-- TaggingDataContext.tsx
+|   |       |   |-- TaggingDataContext.tsx
+|   |       |   +-- TaggingDataContext.tsx.backup
 |   |       +-- ui/
 |   |           +-- components/
 |   |               |-- index.ts

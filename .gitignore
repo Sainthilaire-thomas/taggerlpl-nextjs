@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Backups et fichiers temporaires de migration
+*.backup
+temp_*.txt

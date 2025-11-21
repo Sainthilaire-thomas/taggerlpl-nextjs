@@ -1,11 +1,11 @@
-// hooks/useLevel1Testing.ts — VERSION MIGRÉE H2
+﻿// hooks/useLevel1Testing.ts — VERSION MIGRÉE H2
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import {
   BaseClassifier,
   ClassificationResult,
-} from "../algorithms/level1/shared/BaseClassifier";
+} from '@/features/phase3-analysis/level1-validation/algorithms/shared/BaseClassifier';
 import { initializeAlgorithms } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms";
 
 import { normalizeUniversalToTV } from "./normalizeUniversalToTV";
@@ -23,19 +23,19 @@ import type {
 import {
   ALGORITHM_CONFIGS,
   getConfigForAlgorithm,
-} from "../types/algorithms/base";
+} from '@/types/algorithm-lab';
 import {
   filterCorpusForAlgorithm,
   countSamplesPerAlgorithm,
-} from "../types/utils/corpusFilters";
+} from '@/types/algorithm-lab';
 import {
   prepareInputsForAlgorithm,
   debugPreparedInputs,
-} from "../types/utils/inputPreparation";
+} from '@/types/algorithm-lab';
 
 // 🆕 IMPORT du nouveau hook H2
-import { useAnalysisPairs, AnalysisPair } from "@/features/phase3-analysis/level1-validation/ui/hooks/useAnalysisPairs";
-import { getH2Property } from "../types/h2Types";
+import { useAnalysisPairs, AnalysisPair } from './useAnalysisPairs';
+import { getH2Property } from '@/types/algorithm-lab';
 // ----------------- Types -----------------
 
 interface ClassificationMetrics {
@@ -182,7 +182,7 @@ const updateH2WithResults = async (
   algorithmName: string,
   algorithmVersion: string
 ): Promise<{ success: number; errors: number; total: number }> => {
-  console.log(`📝 Mise à jour h2_analysis_pairs : ${results.length} paires`);
+  console.log(`📝 Mise à jour analysis_pairs : ${results.length} paires`);
   
   let successCount = 0;
   let errorCount = 0;
@@ -197,10 +197,7 @@ const updateH2WithResults = async (
       continue;
     }
 
-    const updateData: any = {
-      computed_at: new Date().toISOString(),
-      algorithm_version: algorithmVersion,
-    };
+    const updateData: any = {};
 
     try {
       // Remplir selon l'algo avec accès type-safe
@@ -209,29 +206,34 @@ const updateH2WithResults = async (
         updateData.m1_verb_count = getH2Property(result.metadata, 'm1_verb_count');
         updateData.m1_total_words = getH2Property(result.metadata, 'm1_total_words');
         updateData.m1_action_verbs = getH2Property(result.metadata, 'm1_action_verbs');
-        updateData.computation_status = 'computed';
+        updateData.computation_status = 'complete';
       } else if (algorithmName.includes('M2')) {
         updateData.m2_lexical_alignment = getH2Property(result.metadata, 'm2_lexical_alignment');
         updateData.m2_semantic_alignment = getH2Property(result.metadata, 'm2_semantic_alignment');
         updateData.m2_global_alignment = getH2Property(result.metadata, 'm2_global_alignment');
         updateData.m2_shared_terms = getH2Property(result.metadata, 'm2_shared_terms');
-        updateData.computation_status = 'computed';
+        updateData.computation_status = 'complete';
       } else if (algorithmName.includes('M3')) {
         updateData.m3_hesitation_count = getH2Property(result.metadata, 'm3_hesitation_count');
         updateData.m3_clarification_count = getH2Property(result.metadata, 'm3_clarification_count');
         updateData.m3_cognitive_score = getH2Property(result.metadata, 'm3_cognitive_score');
         updateData.m3_cognitive_load = getH2Property(result.metadata, 'm3_cognitive_load');
         updateData.m3_patterns = getH2Property(result.metadata, 'm3_patterns');
-        updateData.computation_status = 'computed';
-      } else if (algorithmName.includes('X') || algorithmName.includes('Y')) {
-        updateData.x_predicted_tag = result.predicted; updateData.y_predicted_tag = result.predicted;
-        updateData.x_confidence = result.confidence; updateData.y_confidence = result.confidence;
-        updateData.computation_status = 'computed';
+        updateData.computation_status = 'complete';
+      } else if (algorithmName.includes('X')) {
+        updateData.x_predicted_tag = result.predicted;
+        updateData.x_confidence = result.confidence;
+        updateData.x_algorithm_key = algorithmName;
+        updateData.x_algorithm_version = algorithmVersion;
+        updateData.x_computed_at = new Date().toISOString();
+        updateData.computation_status = 'complete';
       }
 
       // Retry logic
       let success = false;
       let lastError: any = null;
+
+      console.log('🔍 UPDATE DATA:', { pairId, updateData });
 
       for (let attempt = 0; attempt <= MAX_RETRIES && !success; attempt++) {
         try {
@@ -240,7 +242,7 @@ const updateH2WithResults = async (
             .update(updateData)
             .eq('pair_id', pairId);
 
-          if (error) throw error;
+          if (error) { console.error('❌ SUPABASE ERROR:', error); throw error; }
           success = true;
           successCount++;
         } catch (err) {
@@ -371,8 +373,8 @@ const computeKappa = (cm: Record<string, Record<string, number>>): number => {
 // ----------------- Hook -----------------
 
 export const useLevel1Testing = () => {
-  // 🆕 REMPLACE useTaggingData par useH2Data
-  const { analysisPairs: h2Pairs, loading: h2Loading, error: h2Error } = useAnalysisPairs();
+  // 🆕 UTILISE useAnalysisPairs pour charger les paires d'analyse
+  const { analysisPairs, loading: h2Loading, error: h2Error } = useAnalysisPairs();
   const [error, setError] = useState<string | null>(null);
 
   // Initialise les classificateurs une seule fois
@@ -390,8 +392,8 @@ export const useLevel1Testing = () => {
 
   // 🆕 Dataset gold standard dérivé de H2
   const goldStandardData: GoldStandardSample[] = useMemo(
-    () => mapH2ToGoldStandard(h2Pairs),
-    [h2Pairs]
+    () => mapH2ToGoldStandard(analysisPairs),
+    [analysisPairs]
   );
 
   const samplesPerAlgorithm = useMemo(
@@ -490,7 +492,7 @@ export const useLevel1Testing = () => {
       const version = `${classifierName}_v${new Date().toISOString().split('T')[0]}`;
       await updateH2WithResults(tvRows, classifierName, version);
 
-      console.log(`✅ [${classifierName}] ${tvRows.length} résultats + update h2_analysis_pairs`);
+      console.log(`✅ [${classifierName}] ${tvRows.length} résultats + update analysis_pairs`);
       return tvRows;
     },
     [goldStandardData]
@@ -736,7 +738,7 @@ export const useLevel1Testing = () => {
     error,
 
     // 🆕 État H2
-    h2Pairs,
+    analysisPairs,
     h2Loading,
     h2Error,
 
@@ -801,3 +803,7 @@ export const useAlgorithmValidation = (target: string) => {
     totalSamples: Object.values(samplesPerAlgorithm).reduce((a, b) => a + b, 0),
   };
 };
+
+
+
+

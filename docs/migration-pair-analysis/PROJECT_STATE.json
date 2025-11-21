@@ -1,0 +1,245 @@
+{
+  "project": {
+    "name": "taggerlpl-nextjs",
+    "description": "Application d'analyse conversationnelle pour thèse PhD - Système de tagging et validation algorithmique",
+    "path": "C:\\Users\\thoma\\OneDrive\\SONEAR_2025\\taggerlpl-nextjs",
+    "repository": "https://github.com/Sainthilaire-thomas/taggerlpl-nextjs/tree/refactor/architecture-phases"
+  },
+  "session": {
+    "lastUpdate": "2025-11-21T01:00:00Z",
+    "lastSession": "SESSION_MIGRATION_M2_BILAN.md",
+    "duration": "2h30",
+    "focus": "Migration et validation algorithmes M2 (alignement linguistique)"
+  },
+  "git": {
+    "branch": "refactor/architecture-phases",
+    "lastCommit": "ee05c59",
+    "commitMessage": "✅ feat(level1): Support algorithmes M2 (alignement linguistique)",
+    "filesChanged": 9,
+    "linesAdded": 1594,
+    "status": "✅ Clean - Pushed to origin"
+  },
+  "architecture": {
+    "phase": "Phase 4 - Migration Médiateurs (M1, M2, M3)",
+    "database": {
+      "table": "analysis_pairs",
+      "rows": 901,
+      "structure": "Paires conseiller-client avec contexte étendu (prev3 → next3)"
+    },
+    "samples": {
+      "total": 2703,
+      "breakdown": {
+        "conseiller": 901,
+        "client": 901,
+        "M2": 901
+      },
+      "strategy": "3 samples par paire (conseiller + client + M2)"
+    }
+  },
+  "algorithms": {
+    "X": {
+      "status": "✅ Fonctionnel",
+      "tested": ["RegexXClassifier"],
+      "target": "conseiller",
+      "columns": ["x_predicted_tag", "x_confidence", "x_algorithm_key", "x_algorithm_version"]
+    },
+    "Y": {
+      "status": "✅ Fonctionnel",
+      "tested": ["RegexYClassifier"],
+      "target": "client",
+      "columns": ["y_predicted_tag", "y_confidence", "y_algorithm_key", "y_algorithm_version"]
+    },
+    "M1": {
+      "status": "🔄 À tester",
+      "algorithms": ["M1ActionVerbCounter"],
+      "target": "conseiller",
+      "input": "string (verbatim conseiller)",
+      "columns": ["m1_verb_density", "m1_verb_count", "m1_total_words", "m1_action_verbs"],
+      "note": "Réutilise les samples conseiller (target='conseiller')"
+    },
+    "M2": {
+      "status": "✅ Fonctionnel - 10 samples validés",
+      "algorithms": [
+        "M2LexicalAlignment",
+        "M2SemanticAlignment (à tester)",
+        "M2CompositeAlignment (à tester)"
+      ],
+      "target": "M2 (paire complète)",
+      "input": "M2Input {t0: string, t1: string}",
+      "columns": ["m2_lexical_alignment", "m2_semantic_alignment", "m2_global_alignment", "m2_shared_terms"],
+      "tested": {
+        "algorithm": "M2LexicalAlignment",
+        "samples": 10,
+        "success": 10,
+        "errors": 0,
+        "version": "M2LexicalAlignment-v1.0.0-8sn7st"
+      },
+      "note": "Utilise un sample dédié (target='M2') avec t0 et t1 en metadata"
+    },
+    "M3": {
+      "status": "🔄 À tester",
+      "algorithms": ["PausesM3Calculator"],
+      "target": "client",
+      "input": "M3Input {segment: string, options: {...}}",
+      "columns": ["m3_hesitation_count", "m3_cognitive_score", "m3_cognitive_load", "m3_patterns"],
+      "note": "Réutilise les samples client (target='client')"
+    }
+  },
+  "criticalFiles": {
+    "types": {
+      "base": "src/types/algorithm-lab/algorithms/base.ts",
+      "note": "Configs ALGORITHM_CONFIGS et type SpeakerType étendu (M1/M2/M3)"
+    },
+    "utils": {
+      "corpusFilters": "src/types/algorithm-lab/utils/corpusFilters.ts",
+      "note": "Filtrage par speakerType et requiresNextTurn adapté pour M2"
+    },
+    "inputPreparation": {
+      "file": "src/types/algorithm-lab/utils/inputPreparation.ts",
+      "note": "Case 'alignment' utilise metadata.t0 et metadata.t1"
+    },
+    "hooks": {
+      "useLevel1Testing": "src/features/phase3-analysis/level1-validation/ui/hooks/useLevel1Testing.ts",
+      "note": "mapH2ToGoldStandard crée 3 samples par paire, logs debug à supprimer (lignes 543-554)"
+    }
+  },
+  "issues": {
+    "current": [
+      {
+        "priority": "HIGH",
+        "type": "cleanup",
+        "description": "Supprimer logs de debug dans useLevel1Testing.ts",
+        "location": "lignes 543-554",
+        "time": "5 min"
+      },
+      {
+        "priority": "MEDIUM",
+        "type": "typescript",
+        "description": "Corriger warnings TypeScript 'as any' pour target: 'M2'",
+        "location": "useLevel1Testing.ts lignes 422, 547, 551",
+        "time": "5 min"
+      }
+    ],
+    "resolved": [
+      {
+        "date": "2025-11-21",
+        "issue": "M2 ne trouvait aucun sample compatible",
+        "solution": "Extension SpeakerType + filtrage adapté + création sample M2 dédié"
+      }
+    ]
+  },
+  "nextSteps": {
+    "immediate": [
+      "Supprimer logs de debug dans useLevel1Testing.ts (lignes 543-554)",
+      "Tester M1ActionVerbCounter sur 10 samples",
+      "Tester PausesM3Calculator sur 10 samples",
+      "Tester M2SemanticAlignment sur 10 samples",
+      "Tester M2CompositeAlignment sur 10 samples"
+    ],
+    "shortTerm": [
+      "Vérifier données en DB avec requête SQL",
+      "Corriger warnings TypeScript (as any)",
+      "Valider tous les médiateurs sur 50 samples"
+    ],
+    "optional": [
+      "Implémenter bulk upsert pour performance (15min → 30sec pour 901 paires)",
+      "Valider corpus complet (901 paires)"
+    ]
+  },
+  "documentation": {
+    "architecture": {
+      "file": "docs/migration-pair-analysis/ARCHITECTURE_ALGORITHMES_ANALYSIS_PAIRS.md",
+      "description": "Architecture complète du système avec analysis_pairs et workflow 3 niveaux"
+    },
+    "lastSession": {
+      "file": "docs/migration-pair-analysis/SESSION_MIGRATION_M2_BILAN.md",
+      "description": "Bilan détaillé session M2 avec corrections effectuées et prochaines étapes"
+    },
+    "targetArchitecture": {
+      "file": "docs/architecture/ARCHITECTURE_CIBLE_WORKFLOW.md",
+      "description": "Vision d'ensemble de l'architecture cible"
+    }
+  },
+  "devCommands": {
+    "start": "npm run dev",
+    "database": {
+      "checkM2": "SELECT pair_id, m2_lexical_alignment, m2_shared_terms FROM analysis_pairs WHERE m2_lexical_alignment IS NOT NULL LIMIT 10;",
+      "countResults": "SELECT COUNT(*) FROM analysis_pairs WHERE m2_lexical_alignment IS NOT NULL;",
+      "recentUpdates": "SELECT * FROM analysis_pairs WHERE updated_at > NOW() - INTERVAL '1 hour' ORDER BY updated_at DESC LIMIT 20;"
+    },
+    "git": {
+      "status": "git status",
+      "diff": "git diff src/types/algorithm-lab/",
+      "log": "git log --oneline -5"
+    }
+  },
+  "performance": {
+    "current": {
+      "updateMethod": "Individual UPDATEs",
+      "time": "~90 seconds for 901 pairs",
+      "bottleneck": "1 requête SQL par paire"
+    },
+    "target": {
+      "updateMethod": "Bulk upsert",
+      "estimatedTime": "< 2 seconds for 901 pairs",
+      "gain": "45x faster"
+    }
+  },
+  "keyLearnings": {
+    "architecture": [
+      "M2 nécessite un sample dédié (target='M2') avec t0 et t1",
+      "M1 et M3 réutilisent les samples existants (conseiller/client)",
+      "Le système à 3 samples par paire (conseiller/client/M2) est validé"
+    ],
+    "technical": [
+      "SpeakerType doit être étendu pour supporter M1/M2/M3",
+      "Le filtrage requiresNextTurn doit vérifier t0 et t1 pour M2",
+      "inputPreparation doit utiliser metadata.t0 et metadata.t1 pour M2"
+    ],
+    "workflow": [
+      "Toujours commencer par lire les fichiers SKILL.md avant d'utiliser les outils",
+      "Valider sur 10 samples avant de traiter le corpus complet",
+      "Documenter chaque session pour faciliter la continuité"
+    ]
+  },
+  "testScenarios": {
+    "M1": {
+      "input": "je vais vérifier votre dossier et traiter votre demande",
+      "expected": {
+        "m1_verb_count": 2,
+        "m1_action_verbs": ["vérifier", "traiter"]
+      }
+    },
+    "M2": {
+      "input": {
+        "t0": "je vais traiter votre demande",
+        "t1": "d'accord pour le traitement"
+      },
+      "expected": {
+        "m2_lexical_alignment": "> 0.5",
+        "m2_shared_terms": ["traiter", "demande"]
+      }
+    },
+    "M3": {
+      "input": "euh... je... comment dire... c'est compliqué",
+      "expected": {
+        "m3_hesitation_count": "≥ 3",
+        "m3_cognitive_load": "ELEVEE"
+      }
+    }
+  },
+  "contactContext": {
+    "researcher": "Thomas (PhD student)",
+    "project": "Analyse conversationnelle call center",
+    "hypothesis": {
+      "H1": "Réaction client prévisible par stratégie conseiller",
+      "H2": "Relation médiée par M1, M2, M3"
+    },
+    "methodology": {
+      "Level0": "Gold standard (annotations manuelles)",
+      "Level1": "Validation algorithmique (en cours)",
+      "Level2": "Test hypothèses H1/H2 (à venir)"
+    }
+  },
+  "quickStartSession": "Bonjour ! Je continue le projet taggerlpl-nextjs.\n\n📍 Contexte :\n- Branche : refactor/architecture-phases\n- Commit : ee05c59 (M2 fonctionnel)\n- Phase : Validation M1/M2/M3\n\n📄 Lire en priorité :\n- PROJECT_STATE.json (ce fichier)\n- SESSION_MIGRATION_M2_BILAN.md\n\n🎯 Objectif session : [décrire ici]"
+}
