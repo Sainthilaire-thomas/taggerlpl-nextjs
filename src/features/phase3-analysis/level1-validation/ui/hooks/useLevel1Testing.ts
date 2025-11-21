@@ -1,4 +1,4 @@
-// hooks/useLevel1Testing.ts — VERSION MIGRÉE H2
+ï»¿// hooks/useLevel1Testing.ts ï¿½ VERSION MIGRï¿½E H2
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -132,7 +132,7 @@ const updateH2WithResults = async (
   algorithmName: string,
   algorithmVersion: string
 ): Promise<{ success: number; errors: number; total: number }> => {
-  console.log(`?? Mise à jour analysis_pairs : ${results.length} paires`);
+  console.log(`?? Mise ï¿½ jour analysis_pairs : ${results.length} paires`);
   
   let successCount = 0;
   let errorCount = 0;
@@ -150,7 +150,7 @@ const updateH2WithResults = async (
     const updateData: any = {};
 
     try {
-      // Remplir selon l'algo avec accès type-safe
+      // Remplir selon l'algo avec accï¿½s type-safe
       if (algorithmName.includes('M1')) {
         updateData.m1_verb_density = getH2Property(result.metadata, 'm1_verb_density');
         updateData.m1_verb_count = getH2Property(result.metadata, 'm1_verb_count');
@@ -223,7 +223,7 @@ const updateH2WithResults = async (
     }
   }
 
-  console.log(`? ${successCount} paires mises à jour, ? ${errorCount} erreurs`);
+  console.log(`? ${successCount} paires mises ï¿½ jour, ? ${errorCount} erreurs`);
   return { success: successCount, errors: errorCount, total: results.length };
 };
 
@@ -331,7 +331,7 @@ const mapH2ToGoldStandard = useCallback(
     const samples: GoldStandardSample[] = [];
     
     pairs.forEach(pair => {
-      // ? DEBUG : Vérifier le contexte
+      // ? DEBUG : Vï¿½rifier le contexte
       console.log('?? CONTEXT CHECK:', {
         prev2: pair.prev2_verbatim ? '?' : '?',
         prev1: pair.prev1_verbatim ? '?' : '?',
@@ -360,7 +360,7 @@ const mapH2ToGoldStandard = useCallback(
           // Annotations
           annotations: Array.isArray(pair.annotations) ? pair.annotations : [],
           
-          // Résultats existants
+          // Rï¿½sultats existants
           existing_results: {
             m1_verb_density: pair.m1_verb_density,
             m2_global_alignment: pair.m2_global_alignment,
@@ -375,7 +375,7 @@ const mapH2ToGoldStandard = useCallback(
           // Champ pour affichage universel
           current_turn_verbatim: pair.conseiller_verbatim,
           
-          // CONTEXTE : tours précédents/suivants
+          // CONTEXTE : tours prï¿½cï¿½dents/suivants
           prev3_turn_verbatim: pair.prev3_verbatim,
           prev2_turn_verbatim: pair.prev2_verbatim,
           prev1_turn_verbatim: pair.prev1_verbatim,
@@ -413,7 +413,7 @@ const mapH2ToGoldStandard = useCallback(
           // Champ pour affichage universel
           current_turn_verbatim: pair.client_verbatim,
           
-          // CONTEXTE : tours précédents/suivants
+          // CONTEXTE : tours prï¿½cï¿½dents/suivants
           prev3_turn_verbatim: pair.prev3_verbatim,
           prev2_turn_verbatim: pair.prev2_verbatim,
           prev1_turn_verbatim: pair.prev1_verbatim,
@@ -423,7 +423,7 @@ const mapH2ToGoldStandard = useCallback(
         }
       });
 
-      // 3?? SAMPLE MÉDIATEUR M2 (pour alignement conseiller-client)
+      // 3?? SAMPLE Mï¿½DIATEUR M2 (pour alignement conseiller-client)
       samples.push({
         verbatim: pair.conseiller_verbatim,
         expectedTag: normalizeXLabelStrict(pair.strategy_tag),
@@ -437,7 +437,7 @@ const mapH2ToGoldStandard = useCallback(
           t0: pair.conseiller_verbatim,
           t1: pair.client_verbatim,
           
-          // Aussi pour compatibilité
+          // Aussi pour compatibilitï¿½
           conseiller_verbatim: pair.conseiller_verbatim,
           client_verbatim: pair.client_verbatim,
           
@@ -463,7 +463,7 @@ const mapH2ToGoldStandard = useCallback(
       });
     });
     
-    console.log(`? ${samples.length} samples créés (${pairs.length} × 3: conseiller + client + M2)`);
+    console.log(`? ${samples.length} samples crï¿½ï¿½s (${pairs.length} ï¿½ 3: conseiller + client + M2)`);
     return samples;
   },
   []
@@ -486,7 +486,7 @@ const mapH2ToGoldStandard = useCallback(
     setError(h2Error ?? null);
   }, [h2Error]);
 
-  // ?? Dataset gold standard dérivé de H2
+  // ?? Dataset gold standard dï¿½rivï¿½ de H2
   const goldStandardData: GoldStandardSample[] = useMemo(
     () => mapH2ToGoldStandard(analysisPairs),
     [analysisPairs]
@@ -522,13 +522,13 @@ const mapH2ToGoldStandard = useCallback(
     [goldStandardData]
   );
 
-  // ?? MODIFIÉ : validateAlgorithm avec update H2
+  // ?? MODIFIï¿½ : validateAlgorithm avec update H2
   const validateAlgorithm = useCallback(
     async (
       classifierName: string,
       sampleSize?: number
     ): Promise<TVValidationResult[]> => {
-      console.log(`\n?? [${classifierName}] Validation unifiée avec update H2`);
+      console.log(`\n?? [${classifierName}] Validation unifiï¿½e avec update H2`);
 
       const config = getConfigForAlgorithm(classifierName);
       if (!config)
@@ -543,23 +543,23 @@ const mapH2ToGoldStandard = useCallback(
 
       if (filteredBase.length === 0) {
         throw new Error(
-          `Aucune donnée compatible pour ${classifierName} (cible=${config.target}).`
+          `Aucune donnï¿½e compatible pour ${classifierName} (cible=${config.target}).`
         );
       }
 
-      // 2) Échantillon
+      // 2) ï¿½chantillon
       const samples = randomSample(filteredBase, sampleSize);
       console.log(
         `?? [${classifierName}] ${samples.length}/${filteredBase.length} exemples`
       );
 
-      // 3) Inputs adaptés
+      // 3) Inputs adaptï¿½s
       const inputs = prepareInputsForAlgorithm(samples, classifierName);
       if (process.env.NODE_ENV === "development") {
         debugPreparedInputs(inputs, classifierName);
       }
 
-      // 4) Récupérer l'algo
+      // 4) Rï¿½cupï¿½rer l'algo
       const classifier = algorithmRegistry.get<any, any>(classifierName);
       if (!classifier) {
         throw new Error(
@@ -567,7 +567,7 @@ const mapH2ToGoldStandard = useCallback(
         );
       }
 
-      // 5) Exécuter & normaliser
+      // 5) Exï¿½cuter & normaliser
       const tvRows: TVValidationResult[] = [];
       for (let i = 0; i < inputs.length; i++) {
         const input = inputs[i];
@@ -586,11 +586,11 @@ const mapH2ToGoldStandard = useCallback(
         tvRows.push(tv);
       }
 
-      // ?? 6) Update H2 avec les résultats
+      // ?? 6) Update H2 avec les rï¿½sultats
       const version = `${classifierName}_v${new Date().toISOString().split('T')[0]}`;
       await updateH2WithResults(tvRows, classifierName, version);
 
-      console.log(`? [${classifierName}] ${tvRows.length} résultats + update analysis_pairs`);
+      console.log(`? [${classifierName}] ${tvRows.length} rï¿½sultats + update analysis_pairs`);
       return tvRows;
     },
     [goldStandardData]
@@ -747,7 +747,7 @@ const mapH2ToGoldStandard = useCallback(
     const improvementSuggestions: string[] = [];
     if (results.length && totalErrors / results.length > 0.3) {
       improvementSuggestions.push(
-        "Accuracy < 70% : revoir les règles ou affiner le modèle"
+        "Accuracy < 70% : revoir les rï¿½gles ou affiner le modï¿½le"
       );
     }
 
@@ -763,7 +763,7 @@ const mapH2ToGoldStandard = useCallback(
     for (const ce of commonErrors) {
       if (ce.frequency >= 3) {
         improvementSuggestions.push(
-          `Confusion fréquente ${ce.expected}/${ce.predicted} : analyser les patterns linguistiques (${ce.frequency} cas)`
+          `Confusion frï¿½quente ${ce.expected}/${ce.predicted} : analyser les patterns linguistiques (${ce.frequency} cas)`
         );
       }
     }
@@ -783,11 +783,11 @@ const mapH2ToGoldStandard = useCallback(
     ): Promise<ClassificationResult[]> => {
       const classifier = algorithmRegistry.get<any, any>(classifierName);
       if (!classifier)
-        throw new Error(`Classificateur '${classifierName}' non trouvé`);
+        throw new Error(`Classificateur '${classifierName}' non trouvï¿½`);
       const samples = testSamples || [
-        "je vais vérifier votre dossier",
+        "je vais vï¿½rifier votre dossier",
         "vous devez nous envoyer le document",
-        "notre système fonctionne ainsi",
+        "notre systï¿½me fonctionne ainsi",
         "d'accord je comprends",
       ];
       const results: ClassificationResult[] = [];
@@ -830,12 +830,12 @@ const mapH2ToGoldStandard = useCallback(
   }, [goldStandardData]);
 
   return {
-    // état
+    // ï¿½tat
     goldStandardData,
     isLoading,
     error,
 
-    // ?? État H2
+    // ?? ï¿½tat H2
     analysisPairs,
     h2Loading,
     h2Error,
@@ -901,3 +901,4 @@ export const useAlgorithmValidation = (target: string) => {
     totalSamples: Object.values(samplesPerAlgorithm).reduce((a, b) => a + b, 0),
   };
 };
+

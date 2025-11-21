@@ -3,7 +3,7 @@
     "name": "taggerlpl-nextjs",
     "description": "Application d'analyse conversationnelle pour thèse PhD - Système de tagging et validation algorithmique",
     "path": "C:\\Users\\thoma\\OneDrive\\SONEAR_2025\\taggerlpl-nextjs",
-    "repository": "https://github.com/Sainthilaire-thomas/taggerlpl-nextjs/tree/refactor/architecture-phases"
+    "repository": "https://github.com/Sainthilaire-thomas/taggerlpl-nextjs.git"
   },
   "session": {
     "lastUpdate": "2025-11-21T01:00:00Z",
