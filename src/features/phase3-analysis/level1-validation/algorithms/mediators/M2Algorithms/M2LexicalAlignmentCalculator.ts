@@ -1,4 +1,4 @@
-// algorithms/level1/M2Algorithms/M2LexicalAlignmentCalculator.ts
+﻿// algorithms/level1/M2Algorithms/M2LexicalAlignmentCalculator.ts
 import type {
   UniversalAlgorithm,
   AlgorithmDescriptor,
@@ -77,19 +77,31 @@ export class M2LexicalAlignmentCalculator implements UniversalAlgorithm {
         confidence: result.confidence,
         processingTime: Date.now() - startTime,
         algorithmVersion: "1.0.0",
-        metadata: {
+      metadata: {
           target: "M2",
           inputType: "M2Input",
           executionPath: ["tokenize", "jaccard", "classify"],
-          // ✅ STRUCTURE ATTENDUE PAR L'ADAPTATEUR
-          details: {
-            value: result.prediction,
-            scale: "lexical",
-            lexicalAlignment: result.lexicalScore,
-            semanticAlignment: undefined,
-            overall: result.lexicalScore,
-            sharedTerms: result.sharedTerms,
+          pairId: (m2Input as any)?.pairId,
+          
+          // ✅ STRUCTURE UNIFIÉE : Colonnes DB
+          dbColumns: {
+            m2_lexical_alignment: result.lexicalScore,
+            m2_semantic_alignment: undefined,
+            m2_global_alignment: result.lexicalScore,
+            m2_shared_terms: result.sharedTerms,
+            computation_status: 'complete'
           },
+          
+          // Données UI optionnelles
+          uiData: {
+            explanation: `Alignement lexical: ${(result.lexicalScore * 100).toFixed(1)}%`,
+            highlights: result.sharedTerms,
+            chartData: {
+              lexicalScore: result.lexicalScore,
+              tokenCounts: result.tokenCounts,
+            }
+          }, // ← VIRGULE ICI !
+          
           // Contexte pour l'UI
           prev2_turn_verbatim: (m2Input as any)?.prev2_turn_verbatim,
           prev1_turn_verbatim: (m2Input as any)?.prev1_turn_verbatim,

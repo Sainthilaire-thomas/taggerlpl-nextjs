@@ -1,4 +1,4 @@
-// algorithms/level1/M1Algorithms/M1ActionVerbCounter.ts
+﻿// algorithms/level1/M1Algorithms/M1ActionVerbCounter.ts
 import type {
   UniversalAlgorithm,
   AlgorithmDescriptor,
@@ -131,19 +131,26 @@ export class M1ActionVerbCounter implements UniversalAlgorithm {
       confidence: result.confidence,
       processingTime: Date.now() - startTime,
       algorithmVersion: "1.0.0",
-      metadata: {
+       metadata: {
         target: "M1",
         inputType: "string",
         executionPath: ["tokenize", "lemmatize", "count_verbs", "normalize"],
-        // Métadonnées M1 directement accessibles
-        densityPer: result.metadata.densityPer,
-        density: result.metadata.density,
-        actionVerbCount: result.metadata.actionVerbCount,
-        totalTokens: result.metadata.totalTokens,
-        verbsFound: result.metadata.verbsFound,
-        // Données supplémentaires pour l'UI
-        metric: "M1",
-        algorithm: "M1ActionVerbCounter",
+        pairId: (input as any)?.pairId,
+        
+        // ✅ STRUCTURE UNIFIÉE : Colonnes DB
+        dbColumns: {
+          m1_verb_density: result.metadata.density,
+          m1_verb_count: result.metadata.actionVerbCount,
+          m1_total_words: result.metadata.totalTokens,
+          m1_action_verbs: result.metadata.verbsFound,
+          computation_status: 'complete'
+        },
+        
+        // Données UI optionnelles
+        uiData: {
+          explanation: `${result.metadata.actionVerbCount} verbes d'action trouvés sur ${result.metadata.totalTokens} mots (${(result.metadata.density * 100).toFixed(1)}%)`,
+          highlights: result.metadata.verbsFound,
+        }
       },
     };
   }

@@ -1,42 +1,46 @@
 ﻿// hooks/useLevel1Testing.ts � VERSION MIGR�E H2
 
+
+
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
+
+// ✅ MIGRÉ : Algorithmes
 import {
   BaseClassifier,
   ClassificationResult,
 } from '@/features/phase3-analysis/level1-validation/algorithms/shared/BaseClassifier';
-import { initializeAlgorithms } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms";
+import { initializeAlgorithms } from "@/features/phase3-analysis/level1-validation/algorithms/shared/initializeAlgorithms";
+import { algorithmRegistry } from "@/features/phase3-analysis/level1-validation/algorithms/shared/AlgorithmRegistry";
 
-import { normalizeUniversalToTV } from "./normalizeUniversalToTV";
-import type { TVValidationResult } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
-import type { TVGoldStandardSample as GoldStandardSample } from "@/types/algorithm-lab/utils/corpusFilters";
-
-import { algorithmRegistry } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry";
-
-import type {
+// ✅ MIGRÉ : Types de validation
+import type { 
+  TVValidationResult,
   XTag,
   YTag,
   XDetails,
   YDetails,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+  TVGoldStandardSample as GoldStandardSample 
+} from '@/types/algorithm-lab';
+
+// ✅ Types centralisés - Configuration algorithmes
 import {
   ALGORITHM_CONFIGS,
   getConfigForAlgorithm,
-  SpeakerType,
-} from '@/types/algorithm-lab/algorithms';
-import {
   filterCorpusForAlgorithm,
   countSamplesPerAlgorithm,
-} from '@/types/algorithm-lab';
-import {
   prepareInputsForAlgorithm,
   debugPreparedInputs,
 } from '@/types/algorithm-lab';
 
-// ?? IMPORT du nouveau hook H2
+// ✅ SpeakerType depuis algorithms
+import type { SpeakerType } from '@/types/algorithm-lab/algorithms';
+
+// ✅ MIGRÉ : Hook H2
 import { useAnalysisPairs, AnalysisPair } from './useAnalysisPairs';
-import { getH2Property } from '@/types/algorithm-lab';
+
+// ✅ Normalisation (à migrer si besoin)
+import { normalizeUniversalToTV } from "./normalizeUniversalToTV";
 // ----------------- Types -----------------
 
 interface ClassificationMetrics {
@@ -132,58 +136,39 @@ const updateH2WithResults = async (
   algorithmName: string,
   algorithmVersion: string
 ): Promise<{ success: number; errors: number; total: number }> => {
-  console.log(`?? Mise � jour analysis_pairs : ${results.length} paires`);
+  console.log(`🔄 Mise à jour analysis_pairs : ${results.length} paires`);
   
   let successCount = 0;
   let errorCount = 0;
 
   for (const result of results) {
-    // ? Utilisation du helper type-safe
-    const pairId = getH2Property(result.metadata, 'pairId');
+    // ✅ STRUCTURE UNIFIÉE : Récupération du pairId avec cast
+    const pairId = (result.metadata as any)?.pairId;
     
     if (!pairId) {
-      console.warn('?? Pas de pairId:', result);
+      console.warn('⚠️ Pas de pairId:', result);
       errorCount++;
       continue;
     }
 
-    const updateData: any = {};
+    // ✅ STRUCTURE UNIFIÉE : Accès direct à dbColumns avec cast
+    const updateData: any = (result.metadata as any)?.dbColumns || {};
+
+    // 🔍 DEBUG : Voir le contenu de metadata
+console.log('🔍 DEBUG metadata:', {
+  pairId,
+  hasMetadata: !!result.metadata,
+  hasDbColumns: !!(result.metadata as any)?.dbColumns,
+  metadataKeys: result.metadata ? Object.keys(result.metadata) : [],
+  dbColumns: (result.metadata as any)?.dbColumns,
+  fullMetadata: result.metadata
+});
+    console.log('📊 UPDATE DATA:', { pairId, updateData });
 
     try {
-      // Remplir selon l'algo avec acc�s type-safe
-      if (algorithmName.includes('M1')) {
-        updateData.m1_verb_density = getH2Property(result.metadata, 'm1_verb_density');
-        updateData.m1_verb_count = getH2Property(result.metadata, 'm1_verb_count');
-        updateData.m1_total_words = getH2Property(result.metadata, 'm1_total_words');
-        updateData.m1_action_verbs = getH2Property(result.metadata, 'm1_action_verbs');
-        updateData.computation_status = 'complete';
-      } else if (algorithmName.includes('M2')) {
-        updateData.m2_lexical_alignment = getH2Property(result.metadata, 'm2_lexical_alignment');
-        updateData.m2_semantic_alignment = getH2Property(result.metadata, 'm2_semantic_alignment');
-        updateData.m2_global_alignment = getH2Property(result.metadata, 'm2_global_alignment');
-        updateData.m2_shared_terms = getH2Property(result.metadata, 'm2_shared_terms');
-        updateData.computation_status = 'complete';
-      } else if (algorithmName.includes('M3')) {
-        updateData.m3_hesitation_count = getH2Property(result.metadata, 'm3_hesitation_count');
-        updateData.m3_clarification_count = getH2Property(result.metadata, 'm3_clarification_count');
-        updateData.m3_cognitive_score = getH2Property(result.metadata, 'm3_cognitive_score');
-        updateData.m3_cognitive_load = getH2Property(result.metadata, 'm3_cognitive_load');
-        updateData.m3_patterns = getH2Property(result.metadata, 'm3_patterns');
-        updateData.computation_status = 'complete';
-      } else if (algorithmName.includes('X')) {
-        updateData.x_predicted_tag = result.predicted;
-        updateData.x_confidence = result.confidence;
-        updateData.x_algorithm_key = algorithmName;
-        updateData.x_algorithm_version = algorithmVersion;
-        updateData.x_computed_at = new Date().toISOString();
-        updateData.computation_status = 'complete';
-      }
-
       // Retry logic
       let success = false;
       let lastError: any = null;
-
-      console.log('?? UPDATE DATA:', { pairId, updateData });
 
       for (let attempt = 0; attempt <= MAX_RETRIES && !success; attempt++) {
         try {
@@ -192,7 +177,10 @@ const updateH2WithResults = async (
             .update(updateData)
             .eq('pair_id', pairId);
 
-          if (error) { console.error('? SUPABASE ERROR:', error); throw error; }
+          if (error) { 
+            console.error('❌ SUPABASE ERROR:', error); 
+            throw error; 
+          }
           success = true;
           successCount++;
         } catch (err) {
@@ -219,11 +207,11 @@ const updateH2WithResults = async (
 
     } catch (err) {
       errorCount++;
-      console.error(`? Erreur pair_id=${pairId}:`, err);
+      console.error(`❌ Erreur pair_id=${pairId}:`, err);
     }
   }
 
-  console.log(`? ${successCount} paires mises � jour, ? ${errorCount} erreurs`);
+  console.log(`✅ ${successCount} paires mises à jour, ❌ ${errorCount} erreurs`);
   return { success: successCount, errors: errorCount, total: results.length };
 };
 
@@ -901,4 +889,3 @@ export const useAlgorithmValidation = (target: string) => {
     totalSamples: Object.values(samplesPerAlgorithm).reduce((a, b) => a + b, 0),
   };
 };
-

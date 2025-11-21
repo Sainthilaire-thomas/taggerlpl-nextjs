@@ -56,19 +56,39 @@ export class PausesM3Calculator implements UniversalAlgorithm {
         confidence: 0.7,
         processingTime: Date.now() - startTime,
         algorithmVersion: "1.0.0",
-        metadata: {
+       metadata: {
           target: "M3",
           inputType: "M3Input",
           executionPath: ["normalize", "analyze_markers", "calculate_load"],
-          // ✅ STRUCTURE ATTENDUE PAR L'ADAPTATEUR
-          details: {
-            value: result.cognitiveScore,
-            unit: "score",
-            pauseCount: result.pauseCount,
-            hesitationCount: result.hesitationCount,
-            speechRate: result.speechRate,
-            markers: result.markers,
+          pairId: (normalizedInput as any)?.pairId,
+          
+          // ✅ STRUCTURE UNIFIÉE : Colonnes DB
+          dbColumns: {
+            m3_cognitive_score: result.cognitiveScore,
+            m3_hesitation_count: result.hesitationCount,
+            m3_cognitive_load: result.cognitiveScore > 0.7 ? 'ELEVEE' : result.cognitiveScore > 0.4 ? 'MOYENNE' : 'FAIBLE',
+            m3_patterns: {
+              pauseCount: result.pauseCount,
+              markers: result.markers,
+              speechRate: result.speechRate
+            },
+            computation_status: 'complete'
           },
+          
+          // Données UI optionnelles
+          uiData: {
+           explanation: `Charge cognitive: ${result.cognitiveScore > 0.7 ? 'ELEVEE' : result.cognitiveScore > 0.4 ? 'MOYENNE' : 'FAIBLE'} (score: ${result.cognitiveScore.toFixed(2)})`,
+            highlights: result.markers,
+            chartData: {
+              cognitiveScore: result.cognitiveScore,
+              analysis: {
+                words: result.wordCount,
+                hesitations: result.hesitationCount,
+                pauses: result.pauseCount,
+              }
+            }
+          }, // ← VIRGULE ICI !
+          
           // Contexte pour l'UI
           verbatim: normalizedInput.segment,
           // Métadonnées supplémentaires

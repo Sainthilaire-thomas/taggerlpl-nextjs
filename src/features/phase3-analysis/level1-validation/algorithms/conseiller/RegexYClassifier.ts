@@ -1,4 +1,4 @@
-// algorithms/level1/YAlgorithms/RegexYClassifier.ts
+﻿// algorithms/level1/YAlgorithms/RegexYClassifier.ts
 import type {
   UniversalAlgorithm,
   AlgorithmDescriptor,
@@ -18,6 +18,7 @@ type YConfig = {
 
 export class RegexYClassifier implements UniversalAlgorithm {
   private config: YConfig;
+  private version = "1.0.0";
 
   constructor(config: Partial<YConfig> = {}) {
     this.config = {
@@ -36,7 +37,7 @@ export class RegexYClassifier implements UniversalAlgorithm {
     return {
       name: "RegexYClassifier",
       displayName: "Règles – Y (client)",
-      version: "1.0.0",
+      version: this.version,
       type: "rule-based",
       target: "Y",
       batchSupported: true,
@@ -75,11 +76,23 @@ export class RegexYClassifier implements UniversalAlgorithm {
         prediction: result.prediction,
         confidence: result.confidence,
         processingTime: Date.now() - startTime,
-        algorithmVersion: "1.0.0",
+        algorithmVersion: this.version,
         metadata: {
           target: "Y",
           inputType: "string",
           executionPath: ["sanitize", "dictionary_analysis", "classification"],
+          pairId: (input as any)?.pairId,
+          
+          // ✅ STRUCTURE UNIFIÉE : Colonnes DB
+          dbColumns: {
+            y_predicted_tag: result.prediction,
+            y_confidence: result.confidence,
+            y_algorithm_key: "RegexYClassifier",
+            y_algorithm_version: this.version,
+            y_computed_at: new Date().toISOString(),
+            computation_status: 'complete'
+          },
+          
           // ✅ STRUCTURE ATTENDUE PAR L'ADAPTATEUR
           details: {
             family: this.familyFromY(result.prediction),
@@ -95,11 +108,23 @@ export class RegexYClassifier implements UniversalAlgorithm {
         prediction: "CLIENT_NEUTRE",
         confidence: 0,
         processingTime: Date.now() - startTime,
-        algorithmVersion: "1.0.0",
+        algorithmVersion: this.version,
         metadata: {
           target: "Y",
           inputType: "string",
           executionPath: ["error"],
+          pairId: (input as any)?.pairId,
+          
+          // ✅ STRUCTURE UNIFIÉE : Colonnes DB
+          dbColumns: {
+            y_predicted_tag: "CLIENT_NEUTRE",
+            y_confidence: 0,
+            y_algorithm_key: "RegexYClassifier",
+            y_algorithm_version: this.version,
+            y_computed_at: new Date().toISOString(),
+            computation_status: 'error'
+          },
+          
           details: {
             family: "CLIENT",
             evidences: [],
@@ -138,27 +163,27 @@ export class RegexYClassifier implements UniversalAlgorithm {
 
     // ✅ SCORES POUR TOUS LES YTAG
     const scores: Record<YTag, number> = {
-      CLIENT_POSITIF: this.calculateScore(
+      "CLIENT_POSITIF": this.calculateScore(
         text,
-        this.dictionnaires.CLIENT_POSITIF
+        this.dictionnaires["CLIENT_POSITIF"]
       ),
-      CLIENT_NEGATIF: this.calculateScore(
+      "CLIENT_NEGATIF": this.calculateScore(
         text,
-        this.dictionnaires.CLIENT_NEGATIF
+        this.dictionnaires["CLIENT_NEGATIF"]
       ),
-      CLIENT_NEUTRE: this.calculateScore(
+      "CLIENT_NEUTRE": this.calculateScore(
         text,
-        this.dictionnaires.CLIENT_NEUTRE
+        this.dictionnaires["CLIENT_NEUTRE"]
       ),
-      CLIENT_QUESTION: this.calculateScore(
+      "CLIENT_QUESTION": this.calculateScore(
         text,
-        this.dictionnaires.CLIENT_QUESTION
+        this.dictionnaires["CLIENT_QUESTION"]
       ),
-      CLIENT_SILENCE: this.calculateScore(
+      "CLIENT_SILENCE": this.calculateScore(
         text,
-        this.dictionnaires.CLIENT_SILENCE
+        this.dictionnaires["CLIENT_SILENCE"]
       ),
-      AUTRE_Y: this.calculateScore(text, this.dictionnaires.AUTRE_Y),
+      "AUTRE_Y": this.calculateScore(text, this.dictionnaires["AUTRE_Y"]),
     };
 
     const { prediction, confidence, matched } = this.pickPrediction(
@@ -183,12 +208,12 @@ export class RegexYClassifier implements UniversalAlgorithm {
 
   private getEmptyScores(): Record<YTag, number> {
     return {
-      CLIENT_POSITIF: 0,
-      CLIENT_NEGATIF: 0,
-      CLIENT_NEUTRE: 0,
-      CLIENT_QUESTION: 0,
-      CLIENT_SILENCE: 0,
-      AUTRE_Y: 0,
+      "CLIENT_POSITIF": 0,
+      "CLIENT_NEGATIF": 0,
+      "CLIENT_NEUTRE": 0,
+      "CLIENT_QUESTION": 0,
+      "CLIENT_SILENCE": 0,
+      "AUTRE_Y": 0,
     };
   }
 
@@ -208,7 +233,7 @@ export class RegexYClassifier implements UniversalAlgorithm {
     YTag,
     { expressions: string[]; mots: string[] }
   > = {
-    CLIENT_POSITIF: {
+    "CLIENT_POSITIF": {
       expressions: [
         "d'accord",
         "parfait",
@@ -242,7 +267,7 @@ export class RegexYClassifier implements UniversalAlgorithm {
         "volontiers",
       ],
     },
-    CLIENT_NEGATIF: {
+    "CLIENT_NEGATIF": {
       expressions: [
         "pas d'accord",
         "c'est pas possible",
@@ -272,7 +297,7 @@ export class RegexYClassifier implements UniversalAlgorithm {
         "énervé",
       ],
     },
-    CLIENT_NEUTRE: {
+    "CLIENT_NEUTRE": {
       expressions: [
         "je ne sais pas",
         "peut-être",
@@ -300,7 +325,7 @@ export class RegexYClassifier implements UniversalAlgorithm {
         "besoin",
       ],
     },
-    CLIENT_QUESTION: {
+    "CLIENT_QUESTION": {
       expressions: [
         "comment ça",
         "c'est quoi",
@@ -328,7 +353,7 @@ export class RegexYClassifier implements UniversalAlgorithm {
         "savoir",
       ],
     },
-    CLIENT_SILENCE: {
+    "CLIENT_SILENCE": {
       expressions: [
         "...",
         "(silence)",
@@ -339,7 +364,7 @@ export class RegexYClassifier implements UniversalAlgorithm {
       ],
       mots: ["euh", "heu", "ben", "hmm", "ah", "oh", "silence", "pause"],
     },
-    AUTRE_Y: {
+    "AUTRE_Y": {
       expressions: [
         "je dois raccrocher",
         "ce n'est pas le sujet",
@@ -399,30 +424,30 @@ export class RegexYClassifier implements UniversalAlgorithm {
     matched: Record<YTag, string[]>;
   } {
     // Détection spéciale pour SILENCE (patterns très spécifiques)
-    if (scores.CLIENT_SILENCE > 0.5) {
+    if (scores["CLIENT_SILENCE"] > 0.5) {
       return {
         prediction: "CLIENT_SILENCE",
-        confidence: scores.CLIENT_SILENCE,
+        confidence: scores["CLIENT_SILENCE"],
         matched: this.getAllMatches(text),
       };
     }
 
     // Détection spéciale pour QUESTION (patterns interrogatifs)
-    if (scores.CLIENT_QUESTION > 0.4) {
+    if (scores["CLIENT_QUESTION"] > 0.4) {
       return {
         prediction: "CLIENT_QUESTION",
-        confidence: scores.CLIENT_QUESTION,
+        confidence: scores["CLIENT_QUESTION"],
         matched: this.getAllMatches(text),
       };
     }
 
     // Logique originale (priorité NÉGATIF > POSITIF > NEUTRE)
     let prediction: YTag = "CLIENT_NEUTRE";
-    if (scores.CLIENT_NEGATIF >= this.config.seuilNegatif) {
+    if (scores["CLIENT_NEGATIF"] >= this.config.seuilNegatif) {
       prediction = "CLIENT_NEGATIF";
-    } else if (scores.CLIENT_POSITIF >= this.config.seuilPositif) {
+    } else if (scores["CLIENT_POSITIF"] >= this.config.seuilPositif) {
       prediction = "CLIENT_POSITIF";
-    } else if (scores.AUTRE_Y > 0.3) {
+    } else if (scores["AUTRE_Y"] > 0.3) {
       prediction = "AUTRE_Y";
     } else {
       prediction = "CLIENT_NEUTRE";
@@ -439,15 +464,15 @@ export class RegexYClassifier implements UniversalAlgorithm {
 
   private getAllMatches(text: string): Record<YTag, string[]> {
     const matched: Record<YTag, string[]> = {
-      CLIENT_POSITIF: this.getMatches(text, this.dictionnaires.CLIENT_POSITIF),
-      CLIENT_NEGATIF: this.getMatches(text, this.dictionnaires.CLIENT_NEGATIF),
-      CLIENT_NEUTRE: this.getMatches(text, this.dictionnaires.CLIENT_NEUTRE),
-      CLIENT_QUESTION: this.getMatches(
+      "CLIENT_POSITIF": this.getMatches(text, this.dictionnaires["CLIENT_POSITIF"]),
+      "CLIENT_NEGATIF": this.getMatches(text, this.dictionnaires["CLIENT_NEGATIF"]),
+      "CLIENT_NEUTRE": this.getMatches(text, this.dictionnaires["CLIENT_NEUTRE"]),
+      "CLIENT_QUESTION": this.getMatches(
         text,
-        this.dictionnaires.CLIENT_QUESTION
+        this.dictionnaires["CLIENT_QUESTION"]
       ),
-      CLIENT_SILENCE: this.getMatches(text, this.dictionnaires.CLIENT_SILENCE),
-      AUTRE_Y: this.getMatches(text, this.dictionnaires.AUTRE_Y),
+      "CLIENT_SILENCE": this.getMatches(text, this.dictionnaires["CLIENT_SILENCE"]),
+      "AUTRE_Y": this.getMatches(text, this.dictionnaires["AUTRE_Y"]),
     };
 
     return matched;
