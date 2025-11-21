@@ -1,4 +1,4 @@
-﻿// hooks/useLevel1Testing.ts — VERSION MIGRÉE H2
+// hooks/useLevel1Testing.ts � VERSION MIGR�E H2
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -10,7 +10,7 @@ import { initializeAlgorithms } from "@/app/(protected)/analysis/components/Algo
 
 import { normalizeUniversalToTV } from "./normalizeUniversalToTV";
 import type { TVValidationResult } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
-import type { TVGoldStandardSample as GoldStandardSample } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import type { TVGoldStandardSample as GoldStandardSample } from "@/types/algorithm-lab/utils/corpusFilters";
 
 import { algorithmRegistry } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/AlgorithmRegistry";
 
@@ -23,7 +23,8 @@ import type {
 import {
   ALGORITHM_CONFIGS,
   getConfigForAlgorithm,
-} from '@/types/algorithm-lab';
+  SpeakerType,
+} from '@/types/algorithm-lab/algorithms';
 import {
   filterCorpusForAlgorithm,
   countSamplesPerAlgorithm,
@@ -33,7 +34,7 @@ import {
   debugPreparedInputs,
 } from '@/types/algorithm-lab';
 
-// 🆕 IMPORT du nouveau hook H2
+// ?? IMPORT du nouveau hook H2
 import { useAnalysisPairs, AnalysisPair } from './useAnalysisPairs';
 import { getH2Property } from '@/types/algorithm-lab';
 // ----------------- Types -----------------
@@ -125,23 +126,23 @@ const toYDetails = (out: ClassificationResult): YDetails => {
 
 
 
-// 🆕 NOUVELLE FONCTION : Update H2 avec results
+// ?? NOUVELLE FONCTION : Update H2 avec results
 const updateH2WithResults = async (
   results: TVValidationResult[],
   algorithmName: string,
   algorithmVersion: string
 ): Promise<{ success: number; errors: number; total: number }> => {
-  console.log(`📝 Mise à jour analysis_pairs : ${results.length} paires`);
+  console.log(`?? Mise � jour analysis_pairs : ${results.length} paires`);
   
   let successCount = 0;
   let errorCount = 0;
 
   for (const result of results) {
-    // ✅ Utilisation du helper type-safe
+    // ? Utilisation du helper type-safe
     const pairId = getH2Property(result.metadata, 'pairId');
     
     if (!pairId) {
-      console.warn('⚠️ Pas de pairId:', result);
+      console.warn('?? Pas de pairId:', result);
       errorCount++;
       continue;
     }
@@ -149,7 +150,7 @@ const updateH2WithResults = async (
     const updateData: any = {};
 
     try {
-      // Remplir selon l'algo avec accès type-safe
+      // Remplir selon l'algo avec acc�s type-safe
       if (algorithmName.includes('M1')) {
         updateData.m1_verb_density = getH2Property(result.metadata, 'm1_verb_density');
         updateData.m1_verb_count = getH2Property(result.metadata, 'm1_verb_count');
@@ -182,7 +183,7 @@ const updateH2WithResults = async (
       let success = false;
       let lastError: any = null;
 
-      console.log('🔍 UPDATE DATA:', { pairId, updateData });
+      console.log('?? UPDATE DATA:', { pairId, updateData });
 
       for (let attempt = 0; attempt <= MAX_RETRIES && !success; attempt++) {
         try {
@@ -191,7 +192,7 @@ const updateH2WithResults = async (
             .update(updateData)
             .eq('pair_id', pairId);
 
-          if (error) { console.error('❌ SUPABASE ERROR:', error); throw error; }
+          if (error) { console.error('? SUPABASE ERROR:', error); throw error; }
           success = true;
           successCount++;
         } catch (err) {
@@ -218,15 +219,15 @@ const updateH2WithResults = async (
 
     } catch (err) {
       errorCount++;
-      console.error(`❌ Erreur pair_id=${pairId}:`, err);
+      console.error(`? Erreur pair_id=${pairId}:`, err);
     }
   }
 
-  console.log(`✅ ${successCount} paires mises à jour, ❌ ${errorCount} erreurs`);
+  console.log(`? ${successCount} paires mises � jour, ? ${errorCount} erreurs`);
   return { success: successCount, errors: errorCount, total: results.length };
 };
 
-// 🆕 NOUVELLE FONCTION : Version batch avec progression
+// ?? NOUVELLE FONCTION : Version batch avec progression
 const updateH2WithResultsBatch = async (
   results: TVValidationResult[],
   algorithmName: string,
@@ -272,7 +273,7 @@ const getClassificationTarget = (
   const md = algo?.describe?.();
   const t = (md?.target ?? "").toString().toUpperCase();
 
-  if (t === "M1" || t === "M2" || t === "M3") return t as any;
+  if (t === "M1" || t === "M2" || t === "M3") return t;
   if (t === "Y" || t === "CLIENT") return "client";
   if (t === "X" || t === "CONSEILLER") return "conseiller";
 
@@ -322,23 +323,23 @@ const computeKappa = (cm: Record<string, Record<string, number>>): number => {
 // ----------------- Hook -----------------
 
 export const useLevel1Testing = () => {
-  // 🆕 NOUVELLE FONCTION : Convertit H2 en GoldStandard
+  // ?? NOUVELLE FONCTION : Convertit H2 en GoldStandard
 const mapH2ToGoldStandard = useCallback(
   (pairs: AnalysisPair[]): GoldStandardSample[] => {
-    console.log(`🔄 mapH2ToGoldStandard: Conversion de ${pairs.length} paires`);
+    console.log(`?? mapH2ToGoldStandard: Conversion de ${pairs.length} paires`);
     
     const samples: GoldStandardSample[] = [];
     
     pairs.forEach(pair => {
-      // ✅ DEBUG : Vérifier le contexte
-      console.log('🔍 CONTEXT CHECK:', {
-        prev2: pair.prev2_verbatim ? '✅' : '❌',
-        prev1: pair.prev1_verbatim ? '✅' : '❌',
-        next1: pair.next1_verbatim ? '✅' : '❌',
+      // ? DEBUG : V�rifier le contexte
+      console.log('?? CONTEXT CHECK:', {
+        prev2: pair.prev2_verbatim ? '?' : '?',
+        prev1: pair.prev1_verbatim ? '?' : '?',
+        next1: pair.next1_verbatim ? '?' : '?',
         next1_value: pair.next1_verbatim
       });
       
-      // 1️⃣ SAMPLE CONSEILLER (pour algos X, M1)
+      // 1?? SAMPLE CONSEILLER (pour algos X, M1)
       samples.push({
         verbatim: pair.conseiller_verbatim,
         expectedTag: normalizeXLabelStrict(pair.strategy_tag),
@@ -359,7 +360,7 @@ const mapH2ToGoldStandard = useCallback(
           // Annotations
           annotations: Array.isArray(pair.annotations) ? pair.annotations : [],
           
-          // Résultats existants
+          // R�sultats existants
           existing_results: {
             m1_verb_density: pair.m1_verb_density,
             m2_global_alignment: pair.m2_global_alignment,
@@ -374,7 +375,7 @@ const mapH2ToGoldStandard = useCallback(
           // Champ pour affichage universel
           current_turn_verbatim: pair.conseiller_verbatim,
           
-          // CONTEXTE : tours précédents/suivants
+          // CONTEXTE : tours pr�c�dents/suivants
           prev3_turn_verbatim: pair.prev3_verbatim,
           prev2_turn_verbatim: pair.prev2_verbatim,
           prev1_turn_verbatim: pair.prev1_verbatim,
@@ -384,7 +385,7 @@ const mapH2ToGoldStandard = useCallback(
         }
       });
       
-      // 2️⃣ SAMPLE CLIENT (pour algos Y)
+      // 2?? SAMPLE CLIENT (pour algos Y)
       samples.push({
         verbatim: pair.client_verbatim,
         expectedTag: pair.reaction_tag, // CLIENT_POSITIF, CLIENT_NEUTRE, CLIENT_NEGATIF
@@ -412,7 +413,7 @@ const mapH2ToGoldStandard = useCallback(
           // Champ pour affichage universel
           current_turn_verbatim: pair.client_verbatim,
           
-          // CONTEXTE : tours précédents/suivants
+          // CONTEXTE : tours pr�c�dents/suivants
           prev3_turn_verbatim: pair.prev3_verbatim,
           prev2_turn_verbatim: pair.prev2_verbatim,
           prev1_turn_verbatim: pair.prev1_verbatim,
@@ -422,21 +423,21 @@ const mapH2ToGoldStandard = useCallback(
         }
       });
 
-      // 3️⃣ SAMPLE MÉDIATEUR M2 (pour alignement conseiller-client)
+      // 3?? SAMPLE M�DIATEUR M2 (pour alignement conseiller-client)
       samples.push({
         verbatim: pair.conseiller_verbatim,
         expectedTag: normalizeXLabelStrict(pair.strategy_tag),
         metadata: {
-          target: 'M2' as any, // Type cast pour éviter erreur TypeScript
+          target: 'M2',
           callId: pair.call_id,
           turnId: pair.conseiller_turn_id,
           pairId: pair.pair_id,
           
-          // 🎯 CRUCIAL : Les deux verbatims pour M2
+          // ?? CRUCIAL : Les deux verbatims pour M2
           t0: pair.conseiller_verbatim,
           t1: pair.client_verbatim,
           
-          // Aussi pour compatibilité
+          // Aussi pour compatibilit�
           conseiller_verbatim: pair.conseiller_verbatim,
           client_verbatim: pair.client_verbatim,
           
@@ -462,13 +463,13 @@ const mapH2ToGoldStandard = useCallback(
       });
     });
     
-    console.log(`✅ ${samples.length} samples créés (${pairs.length} × 3: conseiller + client + M2)`);
+    console.log(`? ${samples.length} samples cr��s (${pairs.length} � 3: conseiller + client + M2)`);
     return samples;
   },
   []
 );
 
-  // 🆕 UTILISE useAnalysisPairs pour charger les paires d'analyse
+  // ?? UTILISE useAnalysisPairs pour charger les paires d'analyse
   const { analysisPairs, loading: h2Loading, error: h2Error } = useAnalysisPairs();
   const [error, setError] = useState<string | null>(null);
 
@@ -485,7 +486,7 @@ const mapH2ToGoldStandard = useCallback(
     setError(h2Error ?? null);
   }, [h2Error]);
 
-  // 🆕 Dataset gold standard dérivé de H2
+  // ?? Dataset gold standard d�riv� de H2
   const goldStandardData: GoldStandardSample[] = useMemo(
     () => mapH2ToGoldStandard(analysisPairs),
     [analysisPairs]
@@ -521,13 +522,13 @@ const mapH2ToGoldStandard = useCallback(
     [goldStandardData]
   );
 
-  // 🔄 MODIFIÉ : validateAlgorithm avec update H2
+  // ?? MODIFI� : validateAlgorithm avec update H2
   const validateAlgorithm = useCallback(
     async (
       classifierName: string,
       sampleSize?: number
     ): Promise<TVValidationResult[]> => {
-      console.log(`\n🔍 [${classifierName}] Validation unifiée avec update H2`);
+      console.log(`\n?? [${classifierName}] Validation unifi�e avec update H2`);
 
       const config = getConfigForAlgorithm(classifierName);
       if (!config)
@@ -539,38 +540,26 @@ const mapH2ToGoldStandard = useCallback(
   classifierName
 );
 
-// 🔍 DEBUG : Logs pour comprendre le filtrage
-console.log(`🔍 [DEBUG] goldStandardData total:`, goldStandardData.length);
-console.log(`🔍 [DEBUG] Samples par target:`, {
-  conseiller: goldStandardData.filter(s => s.metadata?.target === 'conseiller').length,
-  client: goldStandardData.filter(s => s.metadata?.target === 'client').length,
-  M2: goldStandardData.filter(s => s.metadata?.target === 'M2').length,
-  undefined: goldStandardData.filter(s => !s.metadata?.target).length
-});
-console.log(`🔍 [DEBUG] Premier sample M2:`, 
-  goldStandardData.find(s => s.metadata?.target === 'M2')
-);
-console.log(`🔍 [DEBUG] Config pour ${classifierName}:`, config);
-console.log(`🔍 [DEBUG] filteredBase après filtre:`, filteredBase.length);
+
       if (filteredBase.length === 0) {
         throw new Error(
-          `Aucune donnée compatible pour ${classifierName} (cible=${config.target}).`
+          `Aucune donn�e compatible pour ${classifierName} (cible=${config.target}).`
         );
       }
 
-      // 2) Échantillon
+      // 2) �chantillon
       const samples = randomSample(filteredBase, sampleSize);
       console.log(
-        `📊 [${classifierName}] ${samples.length}/${filteredBase.length} exemples`
+        `?? [${classifierName}] ${samples.length}/${filteredBase.length} exemples`
       );
 
-      // 3) Inputs adaptés
+      // 3) Inputs adapt�s
       const inputs = prepareInputsForAlgorithm(samples, classifierName);
       if (process.env.NODE_ENV === "development") {
         debugPreparedInputs(inputs, classifierName);
       }
 
-      // 4) Récupérer l'algo
+      // 4) R�cup�rer l'algo
       const classifier = algorithmRegistry.get<any, any>(classifierName);
       if (!classifier) {
         throw new Error(
@@ -578,7 +567,7 @@ console.log(`🔍 [DEBUG] filteredBase après filtre:`, filteredBase.length);
         );
       }
 
-      // 5) Exécuter & normaliser
+      // 5) Ex�cuter & normaliser
       const tvRows: TVValidationResult[] = [];
       for (let i = 0; i < inputs.length; i++) {
         const input = inputs[i];
@@ -597,11 +586,11 @@ console.log(`🔍 [DEBUG] filteredBase après filtre:`, filteredBase.length);
         tvRows.push(tv);
       }
 
-      // 🆕 6) Update H2 avec les résultats
+      // ?? 6) Update H2 avec les r�sultats
       const version = `${classifierName}_v${new Date().toISOString().split('T')[0]}`;
       await updateH2WithResults(tvRows, classifierName, version);
 
-      console.log(`✅ [${classifierName}] ${tvRows.length} résultats + update analysis_pairs`);
+      console.log(`? [${classifierName}] ${tvRows.length} r�sultats + update analysis_pairs`);
       return tvRows;
     },
     [goldStandardData]
@@ -725,14 +714,14 @@ console.log(`🔍 [DEBUG] filteredBase après filtre:`, filteredBase.length);
 
     const errorsByCategory: Record<string, number> = {};
     for (const e of errors) {
-      const key = `${e.goldStandard} → ${e.predicted}`;
+      const key = `${e.goldStandard} ? ${e.predicted}`;
       errorsByCategory[key] = (errorsByCategory[key] || 0) + 1;
     }
 
     const errorCounts: Record<string, { count: number; examples: string[] }> =
       {};
     for (const e of errors) {
-      const key = `${e.goldStandard}→${e.predicted}`;
+      const key = `${e.goldStandard}?${e.predicted}`;
       if (!errorCounts[key]) errorCounts[key] = { count: 0, examples: [] };
       errorCounts[key].count++;
       if (errorCounts[key].examples.length < 3) {
@@ -744,7 +733,7 @@ console.log(`🔍 [DEBUG] filteredBase après filtre:`, filteredBase.length);
 
     const commonErrors = Object.entries(errorCounts)
       .map(([key, data]) => {
-        const [expected, predicted] = key.split("→");
+        const [expected, predicted] = key.split("?");
         return {
           expected,
           predicted,
@@ -758,7 +747,7 @@ console.log(`🔍 [DEBUG] filteredBase après filtre:`, filteredBase.length);
     const improvementSuggestions: string[] = [];
     if (results.length && totalErrors / results.length > 0.3) {
       improvementSuggestions.push(
-        "Accuracy < 70% : revoir les règles ou affiner le modèle"
+        "Accuracy < 70% : revoir les r�gles ou affiner le mod�le"
       );
     }
 
@@ -774,7 +763,7 @@ console.log(`🔍 [DEBUG] filteredBase après filtre:`, filteredBase.length);
     for (const ce of commonErrors) {
       if (ce.frequency >= 3) {
         improvementSuggestions.push(
-          `Confusion fréquente ${ce.expected}/${ce.predicted} : analyser les patterns linguistiques (${ce.frequency} cas)`
+          `Confusion fr�quente ${ce.expected}/${ce.predicted} : analyser les patterns linguistiques (${ce.frequency} cas)`
         );
       }
     }
@@ -794,17 +783,17 @@ console.log(`🔍 [DEBUG] filteredBase après filtre:`, filteredBase.length);
     ): Promise<ClassificationResult[]> => {
       const classifier = algorithmRegistry.get<any, any>(classifierName);
       if (!classifier)
-        throw new Error(`Classificateur '${classifierName}' non trouvé`);
+        throw new Error(`Classificateur '${classifierName}' non trouv�`);
       const samples = testSamples || [
-        "je vais vérifier votre dossier",
+        "je vais v�rifier votre dossier",
         "vous devez nous envoyer le document",
-        "notre système fonctionne ainsi",
+        "notre syst�me fonctionne ainsi",
         "d'accord je comprends",
       ];
       const results: ClassificationResult[] = [];
       for (const s of samples) {
         try {
-          results.push(await (classifier as any).run(s));
+          results.push(await classifier.run(s));
         } catch (e) {
           results.push({
             prediction: "ERREUR",
@@ -841,12 +830,12 @@ console.log(`🔍 [DEBUG] filteredBase après filtre:`, filteredBase.length);
   }, [goldStandardData]);
 
   return {
-    // état
+    // �tat
     goldStandardData,
     isLoading,
     error,
 
-    // 🆕 État H2
+    // ?? �tat H2
     analysisPairs,
     h2Loading,
     h2Error,
@@ -856,7 +845,7 @@ console.log(`🔍 [DEBUG] filteredBase après filtre:`, filteredBase.length);
     compareAlgorithms,
     quickTest,
 
-    // 🆕 Nouvelles fonctions H2
+    // ?? Nouvelles fonctions H2
     updateH2WithResults,
     updateH2WithResultsBatch,
 
@@ -883,7 +872,7 @@ console.log(`🔍 [DEBUG] filteredBase après filtre:`, filteredBase.length);
   };
 };
 
-// ✅ Hook utilitaire pour BaseAlgorithmTesting
+// ? Hook utilitaire pour BaseAlgorithmTesting
 export const useAlgorithmValidation = (target: string) => {
   const {
     validateAlgorithm,
