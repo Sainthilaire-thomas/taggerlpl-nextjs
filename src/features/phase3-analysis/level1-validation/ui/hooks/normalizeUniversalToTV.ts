@@ -1,4 +1,4 @@
-﻿// hooks/normalizeUniversalToTV.ts
+// hooks/normalizeUniversalToTV.ts
 import type {
   TVValidationResult,
   XDetails,
@@ -36,7 +36,7 @@ export function normalizeUniversalToTV(
     callId: sample.metadata?.callId ?? undefined,
     prev1_turn_verbatim: sample.metadata?.prev1_turn_verbatim,
     prev2_turn_verbatim: sample.metadata?.prev2_turn_verbatim,
-    next_turn_verbatim: sample.metadata?.next_turn_verbatim,
+    next1_turn_verbatim: sample.metadata?.next1_turn_verbatim,
   };
 
   // détails bruts fournis par l’algo

@@ -1,4 +1,4 @@
-// utils/corpusFilters.ts
+﻿// utils/corpusFilters.ts
 import { ALGORITHM_CONFIGS, AlgorithmConfig } from "../algorithms/base";
 
 // Types (utiliser ceux existants dans votre projet)
@@ -6,17 +6,19 @@ export interface TVGoldStandardSample {
   verbatim: string;
   expectedTag: string;
   metadata?: {
-    target?: "conseiller" | "client";
-    callId?: string | number; // ✅ COMPATIBLE avec votre GoldStandardSample
+    target?: "conseiller" | "client" | "M1" | "M2" | "M3";  // ✅ Ajout M1, M2, M3
+    callId?: string | number;
     speaker?: string;
     start?: number;
     end?: number;
-    turnId?: string | number; // ✅ COMPATIBLE avec votre GoldStandardSample
+    turnId?: string | number;
     nextOf?: string | number;
     next_turn_verbatim?: string;
     prev1_turn_verbatim?: string;
     prev2_turn_verbatim?: string;
-    [k: string]: any; // ✅ COMPATIBLE avec votre interface
+    t0?: string;  // ✅ Ajout pour M2
+    t1?: string;  // ✅ Ajout pour M2
+    [k: string]: any;
   };
 }
 
@@ -48,28 +50,55 @@ export const filterCorpusForAlgorithm = (
 
   let filtered = goldStandardData;
 
-  // 1. Filtre par speaker
+  // 1. Filtre par speaker/target
   filtered = filtered.filter((sample) => {
+    const target = sample.metadata?.target;
+    
+    // Cas spéciaux pour médiateurs
+    if (config.speakerType === "M1") {
+      return target === "conseiller";  // M1 analyse le conseiller
+    }
+    if (config.speakerType === "M2") {
+      return target === "M2";  // M2 a son propre target
+    }
+    if (config.speakerType === "M3") {
+      return target === "client";  // M3 analyse le client
+    }
+    
+    // Cas normaux pour X et Y
     if (config.speakerType === "conseiller") {
       return (
-        sample.metadata?.target === "conseiller" &&
+        target === "conseiller" &&
         allowedConseiller.includes(sample.expectedTag)
       );
-    } else {
+    } else if (config.speakerType === "client") {
       return (
-        sample.metadata?.target === "client" &&
+        target === "client" &&
         allowedClient.includes(sample.expectedTag)
       );
     }
+    
+    return true;  // Fallback
   });
 
-  // 2. CRITIQUE : Filtre M2 - nécessite next_turn_verbatim
+  // 2. CRITIQUE : Filtre M2 - nécessite next_turn_verbatim OU t1
   if (config.requiresNextTurn) {
-    filtered = filtered.filter(
-      (s) =>
+    filtered = filtered.filter((s) => {
+      // Pour M2 : vérifier t0 et t1
+      if (config.speakerType === "M2") {
+        return (
+          s.metadata?.t0 &&
+          s.metadata?.t1 &&
+          s.metadata.t0.trim().length > 0 &&
+          s.metadata.t1.trim().length > 0
+        );
+      }
+      // Pour les autres : vérifier next_turn_verbatim
+      return (
         s.metadata?.next_turn_verbatim &&
         s.metadata.next_turn_verbatim.trim().length > 0
-    );
+      );
+    });
   }
 
   // 3. Filtre contexte

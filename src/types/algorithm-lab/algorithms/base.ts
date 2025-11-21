@@ -391,51 +391,63 @@ export interface XClassifier {
 export type BaseAlgorithmResult = AlgorithmResult;
 export type EnhancedAlgorithmResult = AlgorithmResult;
 
-// types/algorithms/base.ts - AJOUT à votre fichier existant
-export interface AlgorithmConfig {
+// ========================================================================
+// TYPES POUR LE SYSTÈME UNIFIÉ - ✅ CORRIGÉ
+// ========================================================================
+
+export type SpeakerType = "conseiller" | "client" | "M1" | "M2" | "M3";  // ✅ AJOUT M1, M2, M3
+
+export type InputFormat =
+  | "simple" // string simple
+  | "contextual" // contexte 3 tours
+  | "alignment" // {t0, t1}
+  | "alignment_context" // {t0, t1, prev1, prev2}
+  | "cognitive"; // M3Input {segment, options}
+
+// ========================================================================
+// CONFIGURATION ALGORITHMES - ✅ CORRIGÉ
+// ========================================================================
+
+export interface UnifiedAlgorithmConfig {
   target: VariableTarget;
-  speakerType: "conseiller" | "client";
-  inputFormat:
-    | "simple"
-    | "contextual"
-    | "alignment"
-    | "alignment_context"
-    | "cognitive";
+  speakerType: SpeakerType;  // ✅ Utilise le type étendu
+  inputFormat: InputFormat;
   requiresNextTurn: boolean;
   requiresPrevContext: boolean;
+  description?: string;
 }
 
 // ========================================================================
-// CONFIGS DES ALGORITHMES - NOUVEAU
+// CONFIGS DES ALGORITHMES - ✅ CORRIGÉ
 // ========================================================================
 
-export const ALGORITHM_CONFIGS: Record<string, AlgorithmConfig> = {
+export const ALGORITHM_CONFIGS: Record<string, UnifiedAlgorithmConfig> = {
   // === VARIABLE X ===
   RegexXClassifier: {
     target: "X",
     speakerType: "conseiller",
-    inputFormat: "simple", // string simple
+    inputFormat: "simple",
     requiresNextTurn: false,
     requiresPrevContext: false,
   },
   OpenAIXClassifier: {
     target: "X",
     speakerType: "conseiller",
-    inputFormat: "simple", // string simple
+    inputFormat: "simple",
     requiresNextTurn: false,
     requiresPrevContext: false,
   },
   OpenAI3TXClassifier: {
     target: "X",
     speakerType: "conseiller",
-    inputFormat: "contextual", // Utilise 3 tours dans useLevel1Testing
+    inputFormat: "contextual",
     requiresNextTurn: false,
-    requiresPrevContext: true, // ✅ UTILISE prev1/prev2 existants
+    requiresPrevContext: true,
   },
   SpacyXClassifier: {
     target: "X",
     speakerType: "conseiller",
-    inputFormat: "simple", // string simple
+    inputFormat: "simple",
     requiresNextTurn: false,
     requiresPrevContext: false,
   },
@@ -444,7 +456,7 @@ export const ALGORITHM_CONFIGS: Record<string, AlgorithmConfig> = {
   RegexYClassifier: {
     target: "Y",
     speakerType: "client",
-    inputFormat: "simple", // string simple
+    inputFormat: "simple",
     requiresNextTurn: false,
     requiresPrevContext: false,
   },
@@ -452,8 +464,8 @@ export const ALGORITHM_CONFIGS: Record<string, AlgorithmConfig> = {
   // === VARIABLE M1 ===
   M1ActionVerbCounter: {
     target: "M1",
-    speakerType: "conseiller",
-    inputFormat: "simple", // string simple vers M1Input
+    speakerType: "M1",  // ✅ "M1" au lieu de "conseiller"
+    inputFormat: "simple",
     requiresNextTurn: false,
     requiresPrevContext: false,
   },
@@ -461,55 +473,40 @@ export const ALGORITHM_CONFIGS: Record<string, AlgorithmConfig> = {
   // === VARIABLE M2 ===
   M2LexicalAlignment: {
     target: "M2",
-    speakerType: "conseiller", // Part du conseiller
-    inputFormat: "alignment", // {t0, t1} depuis useLevel1Testing
-    requiresNextTurn: true, // ✅ OBLIGATOIRE next_turn_verbatim
+    speakerType: "M2",  // ✅ "M2" au lieu de "conseiller"
+    inputFormat: "alignment",
+    requiresNextTurn: true,
     requiresPrevContext: false,
   },
   M2SemanticAlignment: {
     target: "M2",
-    speakerType: "conseiller",
-    inputFormat: "alignment", // {t0, t1}
-    requiresNextTurn: true, // ✅ OBLIGATOIRE next_turn_verbatim
+    speakerType: "M2",  // ✅ "M2" au lieu de "conseiller"
+    inputFormat: "alignment",
+    requiresNextTurn: true,
     requiresPrevContext: false,
   },
   M2CompositeAlignment: {
     target: "M2",
-    speakerType: "conseiller",
-    inputFormat: "alignment_context", // {t0, t1, prev1, prev2}
-    requiresNextTurn: true, // ✅ OBLIGATOIRE next_turn_verbatim
-    requiresPrevContext: true, // ✅ UTILISE prev1/prev2 existants
+    speakerType: "M2",  // ✅ "M2" au lieu de "conseiller"
+    inputFormat: "alignment_context",
+    requiresNextTurn: true,
+    requiresPrevContext: true,
   },
+
   // === VARIABLE M3 ===
   PausesM3Calculator: {
-    speakerType: "client" as const, // M3 = tours client
     target: "M3",
-    inputFormat: "cognitive" as const, // { segment, ... }
+    speakerType: "M3",  // ✅ "M3" au lieu de "client"
+    inputFormat: "cognitive",
     requiresNextTurn: false,
     requiresPrevContext: false,
   },
 };
 
-// Types pour le système unifié
-export type SpeakerType = "conseiller" | "client";
-export type InputFormat =
-  | "simple" // string simple
-  | "contextual" // contexte 3 tours
-  | "alignment" // {t0, t1}
-  | "alignment_context" // {t0, t1, prev1, prev2}
-  | "cognitive"; // M3Input {segment, options}
+// ========================================================================
+// FONCTIONS UTILITAIRES - INCHANGÉ
+// ========================================================================
 
-// Interface pour la configuration unifiée (renommée pour éviter conflit avec votre AlgorithmConfig existant)
-export interface UnifiedAlgorithmConfig {
-  target: VariableTarget;
-  speakerType: SpeakerType;
-  inputFormat: InputFormat;
-  requiresNextTurn: boolean;
-  requiresPrevContext: boolean;
-  description?: string;
-}
-
-// Fonctions utilitaires pour la configuration
 export const getAlgorithmsByTarget = (target: VariableTarget): string[] => {
   return Object.entries(ALGORITHM_CONFIGS)
     .filter(([, config]) => config.target === target)

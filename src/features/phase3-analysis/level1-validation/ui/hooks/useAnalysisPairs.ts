@@ -18,6 +18,24 @@ export interface AnalysisPair {
   // Timestamps
   conseiller_start_time: number;
   conseiller_end_time: number;
+  prev3_verbatim?: string;
+prev3_speaker?: string;
+prev3_tag?: string;
+prev2_verbatim?: string;
+prev2_speaker?: string;
+prev2_tag?: string;
+prev1_verbatim?: string;
+prev1_speaker?: string;
+prev1_tag?: string;
+next1_verbatim?: string;
+next1_speaker?: string;
+next1_tag?: string;
+next2_verbatim?: string;
+next2_speaker?: string;
+next2_tag?: string;
+next3_verbatim?: string;
+next3_speaker?: string;
+next3_tag?: string;
   
   // Contexte étendu (JSONB)
   context?: {
@@ -166,4 +184,3 @@ export const useAnalysisPairs = (filters?: UseAnalysisPairsFilters) => {
 // Alias pour compatibilité avec l'ancien code
 export type H2AnalysisPair = AnalysisPair;
 export const useH2Data = useAnalysisPairs;
-

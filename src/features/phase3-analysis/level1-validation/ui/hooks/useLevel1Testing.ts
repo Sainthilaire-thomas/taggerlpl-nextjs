@@ -123,58 +123,7 @@ const toYDetails = (out: ClassificationResult): YDetails => {
   };
 };
 
-// 🆕 NOUVELLE FONCTION : Convertit H2 en GoldStandard
-const mapH2ToGoldStandard = (pairs: AnalysisPair[]): GoldStandardSample[] => {
-  console.log(`🔄 mapH2ToGoldStandard: Conversion de ${pairs.length} paires`);
-  
-  const samples: GoldStandardSample[] = pairs.map(pair => ({
-    verbatim: pair.conseiller_verbatim,
-    expectedTag: normalizeXLabelStrict(pair.strategy_tag),
-    metadata: {
-      target: 'conseiller',
-      callId: pair.call_id,
-      turnId: pair.conseiller_turn_id,
-      pairId: pair.pair_id, // ✅ CRUCIAL : référence h2
-      
-      // Contexte client (pour M2/M3)
-      client_verbatim: pair.client_verbatim,
-      reaction_tag: pair.reaction_tag,
-      
-      // Timestamps
-      start: pair.conseiller_start_time,
-      end: pair.conseiller_end_time,
-      
-      // Annotations
-      annotations: Array.isArray(pair.annotations) ? pair.annotations : [],
-      
-      // Résultats existants (si déjà calculés)
-      existing_results: {
-        m1_verb_density: pair.m1_verb_density,
-        m2_global_alignment: pair.m2_global_alignment,
-        m3_cognitive_score: pair.m3_cognitive_score,
-        next_turn_tag_auto: pair.next_turn_tag_auto,
-      },
-      
-      // Versioning
-      algorithm_version: pair.algorithm_version,
-      computation_status: pair.computation_status,
-      
-      // ✅ Champ pour affichage universel
-      current_turn_verbatim: pair.conseiller_verbatim,
-    }
-  }));
-  
-  // Statistiques
-  const totalAnnotations = samples.reduce(
-    (total, sample) => total + (sample.metadata?.annotations?.length || 0),
-    0
-  );
-  
-  console.log(`✅ ${samples.length} échantillons créés`);
-  console.log(`📝 ${totalAnnotations} annotations transmises`);
-  
-  return samples;
-};
+
 
 // 🆕 NOUVELLE FONCTION : Update H2 avec results
 const updateH2WithResults = async (
@@ -373,6 +322,152 @@ const computeKappa = (cm: Record<string, Record<string, number>>): number => {
 // ----------------- Hook -----------------
 
 export const useLevel1Testing = () => {
+  // 🆕 NOUVELLE FONCTION : Convertit H2 en GoldStandard
+const mapH2ToGoldStandard = useCallback(
+  (pairs: AnalysisPair[]): GoldStandardSample[] => {
+    console.log(`🔄 mapH2ToGoldStandard: Conversion de ${pairs.length} paires`);
+    
+    const samples: GoldStandardSample[] = [];
+    
+    pairs.forEach(pair => {
+      // ✅ DEBUG : Vérifier le contexte
+      console.log('🔍 CONTEXT CHECK:', {
+        prev2: pair.prev2_verbatim ? '✅' : '❌',
+        prev1: pair.prev1_verbatim ? '✅' : '❌',
+        next1: pair.next1_verbatim ? '✅' : '❌',
+        next1_value: pair.next1_verbatim
+      });
+      
+      // 1️⃣ SAMPLE CONSEILLER (pour algos X, M1)
+      samples.push({
+        verbatim: pair.conseiller_verbatim,
+        expectedTag: normalizeXLabelStrict(pair.strategy_tag),
+        metadata: {
+          target: 'conseiller',
+          callId: pair.call_id,
+          turnId: pair.conseiller_turn_id,
+          pairId: pair.pair_id,
+          
+          // Contexte client (pour M2/M3)
+          client_verbatim: pair.client_verbatim,
+          reaction_tag: pair.reaction_tag,
+          
+          // Timestamps
+          start: pair.conseiller_start_time,
+          end: pair.conseiller_end_time,
+          
+          // Annotations
+          annotations: Array.isArray(pair.annotations) ? pair.annotations : [],
+          
+          // Résultats existants
+          existing_results: {
+            m1_verb_density: pair.m1_verb_density,
+            m2_global_alignment: pair.m2_global_alignment,
+            m3_cognitive_score: pair.m3_cognitive_score,
+            next_turn_tag_auto: pair.next_turn_tag_auto,
+          },
+          
+          // Versioning
+          algorithm_version: pair.algorithm_version,
+          computation_status: pair.computation_status,
+          
+          // Champ pour affichage universel
+          current_turn_verbatim: pair.conseiller_verbatim,
+          
+          // CONTEXTE : tours précédents/suivants
+          prev3_turn_verbatim: pair.prev3_verbatim,
+          prev2_turn_verbatim: pair.prev2_verbatim,
+          prev1_turn_verbatim: pair.prev1_verbatim,
+          next1_turn_verbatim: pair.next1_verbatim,
+          next2_turn_verbatim: pair.next2_verbatim,
+          next3_turn_verbatim: pair.next3_verbatim,
+        }
+      });
+      
+      // 2️⃣ SAMPLE CLIENT (pour algos Y)
+      samples.push({
+        verbatim: pair.client_verbatim,
+        expectedTag: pair.reaction_tag, // CLIENT_POSITIF, CLIENT_NEUTRE, CLIENT_NEGATIF
+        metadata: {
+          target: 'client',
+          callId: pair.call_id,
+          turnId: pair.client_turn_id,
+          pairId: pair.pair_id,
+          
+          // Contexte conseiller
+          conseiller_verbatim: pair.conseiller_verbatim,
+          strategy_tag: pair.strategy_tag,
+          
+          // Timestamps
+          start: pair.conseiller_start_time,
+          end: pair.conseiller_end_time,
+          
+          // Annotations
+          annotations: Array.isArray(pair.annotations) ? pair.annotations : [],
+          
+          // Versioning
+          algorithm_version: pair.algorithm_version,
+          computation_status: pair.computation_status,
+          
+          // Champ pour affichage universel
+          current_turn_verbatim: pair.client_verbatim,
+          
+          // CONTEXTE : tours précédents/suivants
+          prev3_turn_verbatim: pair.prev3_verbatim,
+          prev2_turn_verbatim: pair.prev2_verbatim,
+          prev1_turn_verbatim: pair.prev1_verbatim,
+          next1_turn_verbatim: pair.next1_verbatim,
+          next2_turn_verbatim: pair.next2_verbatim,
+          next3_turn_verbatim: pair.next3_verbatim,
+        }
+      });
+
+      // 3️⃣ SAMPLE MÉDIATEUR M2 (pour alignement conseiller-client)
+      samples.push({
+        verbatim: pair.conseiller_verbatim,
+        expectedTag: normalizeXLabelStrict(pair.strategy_tag),
+        metadata: {
+          target: 'M2' as any, // Type cast pour éviter erreur TypeScript
+          callId: pair.call_id,
+          turnId: pair.conseiller_turn_id,
+          pairId: pair.pair_id,
+          
+          // 🎯 CRUCIAL : Les deux verbatims pour M2
+          t0: pair.conseiller_verbatim,
+          t1: pair.client_verbatim,
+          
+          // Aussi pour compatibilité
+          conseiller_verbatim: pair.conseiller_verbatim,
+          client_verbatim: pair.client_verbatim,
+          
+          // Tags
+          strategy_tag: pair.strategy_tag,
+          reaction_tag: pair.reaction_tag,
+          
+          // Timestamps
+          start: pair.conseiller_start_time,
+          end: pair.conseiller_end_time,
+          
+          // Champ pour affichage universel
+          current_turn_verbatim: pair.conseiller_verbatim,
+          
+          // CONTEXTE
+          prev3_turn_verbatim: pair.prev3_verbatim,
+          prev2_turn_verbatim: pair.prev2_verbatim,
+          prev1_turn_verbatim: pair.prev1_verbatim,
+          next1_turn_verbatim: pair.next1_verbatim,
+          next2_turn_verbatim: pair.next2_verbatim,
+          next3_turn_verbatim: pair.next3_verbatim,
+        }
+      });
+    });
+    
+    console.log(`✅ ${samples.length} samples créés (${pairs.length} × 3: conseiller + client + M2)`);
+    return samples;
+  },
+  []
+);
+
   // 🆕 UTILISE useAnalysisPairs pour charger les paires d'analyse
   const { analysisPairs, loading: h2Loading, error: h2Error } = useAnalysisPairs();
   const [error, setError] = useState<string | null>(null);
@@ -440,9 +535,23 @@ export const useLevel1Testing = () => {
 
       // 1) Filtrer le corpus selon l'algo
       const filteredBase = filterCorpusForAlgorithm(
-        goldStandardData,
-        classifierName
-      );
+  goldStandardData,
+  classifierName
+);
+
+// 🔍 DEBUG : Logs pour comprendre le filtrage
+console.log(`🔍 [DEBUG] goldStandardData total:`, goldStandardData.length);
+console.log(`🔍 [DEBUG] Samples par target:`, {
+  conseiller: goldStandardData.filter(s => s.metadata?.target === 'conseiller').length,
+  client: goldStandardData.filter(s => s.metadata?.target === 'client').length,
+  M2: goldStandardData.filter(s => s.metadata?.target === 'M2').length,
+  undefined: goldStandardData.filter(s => !s.metadata?.target).length
+});
+console.log(`🔍 [DEBUG] Premier sample M2:`, 
+  goldStandardData.find(s => s.metadata?.target === 'M2')
+);
+console.log(`🔍 [DEBUG] Config pour ${classifierName}:`, config);
+console.log(`🔍 [DEBUG] filteredBase après filtre:`, filteredBase.length);
       if (filteredBase.length === 0) {
         throw new Error(
           `Aucune donnée compatible pour ${classifierName} (cible=${config.target}).`
@@ -803,7 +912,3 @@ export const useAlgorithmValidation = (target: string) => {
     totalSamples: Object.values(samplesPerAlgorithm).reduce((a, b) => a + b, 0),
   };
 };
-
-
-
-

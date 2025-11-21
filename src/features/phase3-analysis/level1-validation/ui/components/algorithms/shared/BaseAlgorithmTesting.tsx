@@ -431,7 +431,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       {h2UpdateProgress && (
         <Box sx={{ mt: -2, mb: 2 }}>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            📝 Mise à jour h2_analysis_pairs: {h2UpdateProgress.current} / {h2UpdateProgress.total} paires
+            📝 Mise à jour analysis_pairs: {h2UpdateProgress.current} / {h2UpdateProgress.total} paires
           </Typography>
           <LinearProgress
             variant="determinate"
@@ -530,3 +530,4 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     </Box>
   );
 };
+

@@ -22,8 +22,8 @@ export const prepareInputsForAlgorithm = (
 
       case "alignment":
         return {
-          t0: sample.verbatim,
-          t1: sample.metadata?.next_turn_verbatim,
+          t0: sample.metadata?.t0 || sample.verbatim,
+          t1: sample.metadata?.t1 || sample.metadata?.client_verbatim,
           conseillerTurn: sample.verbatim,
           clientTurn: sample.metadata?.next_turn_verbatim,
         };
