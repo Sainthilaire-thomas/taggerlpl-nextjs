@@ -144,13 +144,10 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     return getRelevantCountFor(selectedModelId);
   }, [getRelevantCountFor, selectedModelId]);
 
-  const goldCount = React.useMemo(() => {
-    const pairsCount = (level1Testing as any)?.goldStandardPairsCount;
-    const dataCount = Array.isArray(level1Testing.goldStandardData)
-      ? level1Testing.goldStandardData.length
-      : 0;
-    return typeof pairsCount === "number" ? pairsCount : dataCount;
-  }, [level1Testing]);
+ const goldCount = React.useMemo(() => {
+  // Utiliser directement le nombre de paires analysis_pairs
+  return (level1Testing as any)?.analysisPairs?.length ?? 0;
+}, [level1Testing]);
 
   // --- 🆕 VALIDATION AVEC CAPTURE AUTO DE VERSION + UPDATE H2 ---
   const runValidation = React.useCallback(async () => {
@@ -530,4 +527,3 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     </Box>
   );
 };
-

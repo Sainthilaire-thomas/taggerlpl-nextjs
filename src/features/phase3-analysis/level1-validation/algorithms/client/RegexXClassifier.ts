@@ -10,6 +10,7 @@ import type { XDetails } from "@/app/(protected)/analysis/components/AlgorithmLa
 
 export class RegexXClassifier implements UniversalAlgorithm {
   private config: { retourRefletDetaille: boolean };
+  private version = "1.0.0";
 
   constructor(config: Partial<{ retourRefletDetaille: boolean }> = {}) {
     this.config = {
@@ -21,7 +22,7 @@ export class RegexXClassifier implements UniversalAlgorithm {
     return {
       name: "RegexXClassifier",
       displayName: "Règles – X (conseiller)",
-      version: "1.0.0",
+      version: this.version,
       type: "rule-based",
       target: "X",
       batchSupported: true,
@@ -47,14 +48,25 @@ export class RegexXClassifier implements UniversalAlgorithm {
           prediction: "EXPLICATION",
           confidence: 0,
           processingTime: Date.now() - startTime,
-          algorithmVersion: "1.0.0",
+          algorithmVersion: this.version,
           metadata: {
             target: "X",
             inputType: "string",
             executionPath: ["sanitize", "empty_fallback"],
+            pairId: (input as any)?.pairId,
+            
+            // ✅ STRUCTURE UNIFIÉE : Colonnes DB
+            dbColumns: {
+              x_predicted_tag: "EXPLICATION",
+              x_confidence: 0,
+              x_algorithm_key: "RegexXClassifier",
+              x_algorithm_version: this.version,
+              x_computed_at: new Date().toISOString(),
+              computation_status: 'complete'
+            },
+            
             details: {
               family: "EXPLICATION",
-
               evidences: [],
             },
           },
@@ -72,14 +84,25 @@ export class RegexXClassifier implements UniversalAlgorithm {
         prediction: result.prediction,
         confidence: result.confidence,
         processingTime: Date.now() - startTime,
-        algorithmVersion: "1.0.0",
+        algorithmVersion: this.version,
         metadata: {
           target: "X",
           inputType: "string",
           executionPath: ["sanitize", "regex_analysis", "classification"],
+          pairId: (input as any)?.pairId,
+          
+          // ✅ STRUCTURE UNIFIÉE : Colonnes DB
+          dbColumns: {
+            x_predicted_tag: result.prediction,
+            x_confidence: result.confidence,
+            x_algorithm_key: "RegexXClassifier",
+            x_algorithm_version: this.version,
+            x_computed_at: new Date().toISOString(),
+            computation_status: 'complete'
+          },
+          
           details: {
             family: this.familyFromX(result.prediction),
-
             evidences: Object.keys(this.getMatchedPatterns(text)),
           },
         },
@@ -89,14 +112,25 @@ export class RegexXClassifier implements UniversalAlgorithm {
         prediction: "EXPLICATION",
         confidence: 0,
         processingTime: Date.now() - startTime,
-        algorithmVersion: "1.0.0",
+        algorithmVersion: this.version,
         metadata: {
           target: "X",
           inputType: "string",
           executionPath: ["error"],
+          pairId: (input as any)?.pairId,
+          
+          // ✅ STRUCTURE UNIFIÉE : Colonnes DB
+          dbColumns: {
+            x_predicted_tag: "EXPLICATION",
+            x_confidence: 0,
+            x_algorithm_key: "RegexXClassifier",
+            x_algorithm_version: this.version,
+            x_computed_at: new Date().toISOString(),
+            computation_status: 'error'
+          },
+          
           details: {
             family: "EXPLICATION",
-
             evidences: [],
           },
           error: String(e?.message ?? e),
