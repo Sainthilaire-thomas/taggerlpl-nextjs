@@ -3,11 +3,11 @@ import type {
   UniversalAlgorithm,
   AlgorithmDescriptor,
   UniversalResult,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base";
+} from "@/types/algorithm-lab/algorithms/base";
 import type {
   VariableY,
   YTag,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+} from "@/types/algorithm-lab";
 
 type YConfig = {
   seuilPositif: number;

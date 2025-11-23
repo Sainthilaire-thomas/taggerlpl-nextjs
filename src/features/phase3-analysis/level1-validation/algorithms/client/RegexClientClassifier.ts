@@ -182,7 +182,7 @@ export class RegexClientClassifier {
 }
 
 // utils/metricsCalculation.ts - VERSION CORRIGÉE
-import { AlgorithmResult, ValidationMetrics } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import { AlgorithmResult, ValidationMetrics } from "@/types/algorithm-lab";
 
 export function calculateValidationMetrics(
   results: AlgorithmResult[]

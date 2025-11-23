@@ -4,7 +4,7 @@ import type {
   M3Input,
   CalculationResult,
   CalculationMetadata,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+} from "@/types/algorithm-lab";
 
 export abstract class BaseM3Calculator {
   abstract calculate(input: M3Input): Promise<CalculationResult<M3Details>>;

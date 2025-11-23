@@ -3,11 +3,11 @@ import type {
   UniversalAlgorithm,
   AlgorithmDescriptor,
   UniversalResult,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base";
+} from "@/types/algorithm-lab/algorithms/base";
 import type {
   M2Input,
   M2Details,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+} from "@/types/algorithm-lab";
 
 import M2LexicalAlignmentCalculator from "./M2LexicalAlignmentCalculator";
 import M2SemanticAlignmentCalculator from "./M2SemanticAlignmentCalculator";

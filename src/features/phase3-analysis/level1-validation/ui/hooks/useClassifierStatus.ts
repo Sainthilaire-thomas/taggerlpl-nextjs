@@ -1,6 +1,6 @@
 ﻿"use client";
 import * as React from "react";
-import { algorithmRegistry } from "@/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared";
+import { algorithmRegistry } from "@/features/phase3-analysis/level1-validation/algorithms/shared";
 
 export type ClassifierItem = {
   registryName: string;

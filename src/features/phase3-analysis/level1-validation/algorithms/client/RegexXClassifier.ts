@@ -3,10 +3,10 @@ import type {
   UniversalAlgorithm,
   AlgorithmDescriptor,
   UniversalResult,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base";
-import type { VariableX } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
-import type { CalculationResult } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
-import type { XDetails } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+} from "@/types/algorithm-lab/algorithms/base";
+import type { VariableX } from "@/types/algorithm-lab";
+import type { CalculationResult } from "@/types/algorithm-lab";
+import type { XDetails } from "@/types/algorithm-lab";
 
 export class RegexXClassifier implements UniversalAlgorithm {
   private config: { retourRefletDetaille: boolean };

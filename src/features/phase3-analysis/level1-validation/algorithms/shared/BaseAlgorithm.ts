@@ -1,7 +1,7 @@
-import type { VariableTarget } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+import type { VariableTarget } from "@/types/algorithm-lab";
 import type {
   AlgorithmType, // <-- vient des types universels (inclut "metric")
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base";
+} from "@/types/algorithm-lab/algorithms/base";
 /** Typologie des algorithmes */
 
 /** Métadonnées unifiées (affichées dans l’UI + logs) */

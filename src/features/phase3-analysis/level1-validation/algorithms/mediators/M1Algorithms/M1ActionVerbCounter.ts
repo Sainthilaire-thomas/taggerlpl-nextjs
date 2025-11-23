@@ -3,7 +3,7 @@ import type {
   UniversalAlgorithm,
   AlgorithmDescriptor,
   UniversalResult,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base";
+} from "@/types/algorithm-lab/algorithms/base";
 
 /**
  * M1 = densité de verbes d'action dans le tour conseiller (T0).

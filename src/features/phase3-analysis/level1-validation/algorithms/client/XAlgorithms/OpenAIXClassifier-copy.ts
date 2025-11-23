@@ -4,7 +4,7 @@ import type {
   UniversalAlgorithm,
   AlgorithmDescriptor,
   UniversalResult,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types/algorithms/base";
+} from "@/types/algorithm-lab/algorithms/base";
 
 type OpenAIConfig = {
   apiKey?: string; // MAJ à chaud possible via updateConfig()

@@ -1,4 +1,4 @@
-﻿// components/Level1/EnhancedErrorAnalysis.tsx - Version corrigée
+// components/Level1/EnhancedErrorAnalysis.tsx - Version corrig�e
 import React, { useState, useCallback } from "react";
 import {
   Box,
@@ -36,8 +36,8 @@ import { generateSignedUrl } from "@/components/utils/signedUrls";
 import {
   TaggingModal,
   ProcessingModal,
-} from "@/app/(protected)/supervision/components";
-import type { SupervisionTurnTagged } from "@/app/(protected)/supervision/types";
+} from "@/features/phase2-annotation/supervision/ui/components";
+import type { SupervisionTurnTagged } from "@/features/phase2-annotation/supervision/ui/types";
 import type {
   AlgorithmResult,
   EnhancedAlgorithmResult,
@@ -68,7 +68,7 @@ const formatTime = (seconds?: number): string => {
     .padStart(2, "0")}.${ms.toString().padStart(2, "0")}`;
 };
 
-// Composant pour afficher les tags avec flèche
+// Composant pour afficher les tags avec fl�che
 const TagChain: React.FC<{
   mainTag: string;
   mainColor?: string;
@@ -102,7 +102,7 @@ const TagChain: React.FC<{
       />
       {nextTag && (
         <Chip
-          label={`→ ${nextTag}`}
+          label={`? ${nextTag}`}
           size="small"
           variant="outlined"
           sx={{
@@ -262,7 +262,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
   results,
   algorithmName,
 }) => {
-  // États pour les modals supervision
+  // �tats pour les modals supervision
   const [selectedError, setSelectedError] =
     useState<SupervisionTurnTagged | null>(null);
   const [isTaggingModalOpen, setIsTaggingModalOpen] = useState(false);
@@ -278,7 +278,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
   const { selectTaggingCall, fetchTaggingTranscription, fetchTaggedTurns } =
     useTaggingData();
 
-  // ✅ CORRECTION PRINCIPALE : Requêtes Supabase optimisées et sécurisées
+  // ? CORRECTION PRINCIPALE : Requ�tes Supabase optimis�es et s�curis�es
   React.useEffect(() => {
     const loadContextualData = async () => {
       if (results.length === 0) return;
@@ -287,11 +287,11 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
       const errors = results.filter((r) => !r.correct).slice(0, 20);
       const enhanced: EnhancedAlgorithmResult[] = [];
 
-      // Regrouper les requêtes par call_id pour éviter les doublons
+      // Regrouper les requ�tes par call_id pour �viter les doublons
       const uniqueCallIds = [...new Set(errors.map((e) => e.callId))];
 
       try {
-        // ✅ Requête groupée pour les données d'appels
+        // ? Requ�te group�e pour les donn�es d'appels
         const { data: callsData, error: callsError } = await supabase
           .from("call")
           .select("callid, filename, filepath, audiourl")
@@ -299,12 +299,12 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
 
         if (callsError) {
           console.error(
-            "Erreur lors de la récupération des appels:",
+            "Erreur lors de la r�cup�ration des appels:",
             callsError
           );
         }
 
-        // ✅ Requête groupée pour les transcriptions
+        // ? Requ�te group�e pour les transcriptions
         const { data: transcriptsData, error: transcriptsError } =
           await supabase
             .from("transcript")
@@ -313,12 +313,12 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
 
         if (transcriptsError) {
           console.error(
-            "Erreur lors de la récupération des transcriptions:",
+            "Erreur lors de la r�cup�ration des transcriptions:",
             transcriptsError
           );
         }
 
-        // ✅ Requête groupée pour les tours taggés (contexte client)
+        // ? Requ�te group�e pour les tours tagg�s (contexte client)
         let turnsData = null;
         if (algorithmName === "client_classification") {
           const turnsQuery = errors.map((e) => ({
@@ -326,7 +326,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
             start_time: e.startTime,
           }));
 
-          // Construction d'une requête OR pour tous les tours
+          // Construction d'une requ�te OR pour tous les tours
           const orConditions = turnsQuery
             .map(
               (t) =>
@@ -341,7 +341,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
 
           if (turnsError) {
             console.error(
-              "Erreur lors de la récupération des tours:",
+              "Erreur lors de la r�cup�ration des tours:",
               turnsError
             );
           } else {
@@ -349,7 +349,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
           }
         }
 
-        // Créer des maps pour un accès rapide
+        // Cr�er des maps pour un acc�s rapide
         const callsMap = new Map((callsData || []).map((c) => [c.callid, c]));
         const transcriptsMap = new Set(
           (transcriptsData || []).map((t) => t.callid)
@@ -358,7 +358,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
           (turnsData || []).map((t) => [`${t.call_id}_${t.start_time}`, t])
         );
 
-        // ✅ Construire les résultats enrichis
+        // ? Construire les r�sultats enrichis
         for (const error of errors) {
           const callData = callsMap.get(error.callId);
           const hasTranscript = transcriptsMap.has(error.callId);
@@ -376,10 +376,10 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
         }
 
         setEnhancedResults(enhanced);
-        console.log(`✅ ${enhanced.length} erreurs enrichies avec succès`);
+        console.log(`? ${enhanced.length} erreurs enrichies avec succ�s`);
       } catch (err) {
-        console.error("Erreur lors de l'enrichissement des données:", err);
-        // En cas d'erreur, utiliser les données de base
+        console.error("Erreur lors de l'enrichissement des donn�es:", err);
+        // En cas d'erreur, utiliser les donn�es de base
         setEnhancedResults(
           errors.map((e) => ({
             ...e,
@@ -395,14 +395,14 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
     loadContextualData();
   }, [results, algorithmName]);
 
-  // ✅ CORRECTION : Gestionnaire de clic optimisé avec gestion d'erreurs
+  // ? CORRECTION : Gestionnaire de clic optimis� avec gestion d'erreurs
   const handleRowClick = useCallback(
     async (error: EnhancedAlgorithmResult): Promise<void> => {
       setIsLoading(true);
       try {
-        // Garde-fous stricts pour satisfaire TS et éviter les surprises runtime
+        // Garde-fous stricts pour satisfaire TS et �viter les surprises runtime
         if (error.callId === undefined || error.startTime === undefined) {
-          alert("Données incomplètes (callId ou startTime manquant).");
+          alert("Donn�es incompl�tes (callId ou startTime manquant).");
           return;
         }
 
@@ -412,7 +412,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
           return;
         }
 
-        // ✅ Requête sécurisée avec vérification d'existence
+        // ? Requ�te s�curis�e avec v�rification d'existence
         const { data: turnData, error: turnError } = await supabase
           .from("turntagged")
           .select(
@@ -423,15 +423,15 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
         `
           )
           .eq("call_id", error.callId)
-          .gte("start_time", start - 0.1) // Tolérance pour les timestamps
+          .gte("start_time", start - 0.1) // Tol�rance pour les timestamps
           .lte("start_time", start + 0.1)
           .limit(1)
           .single();
 
         if (turnError) {
-          console.error("Erreur lors de la récupération du turn:", turnError);
+          console.error("Erreur lors de la r�cup�ration du turn:", turnError);
 
-          // ✅ Fallback : essayer avec une requête moins stricte
+          // ? Fallback : essayer avec une requ�te moins stricte
           const { data: fallbackData, error: fallbackError } = await supabase
             .from("turntagged")
             .select(
@@ -448,13 +448,13 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
 
           if (fallbackError || !fallbackData) {
             throw new Error(
-              `Turn non trouvé pour call_id: ${String(
+              `Turn non trouv� pour call_id: ${String(
                 error.callId
               )}, start_time: ${String(error.startTime)}`
             );
           }
 
-          // Utiliser les données de fallback
+          // Utiliser les donn�es de fallback
           const { data: callFallback } = await supabase
             .from("call")
             .select("filename, filepath, audiourl")
@@ -483,7 +483,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
           hasTranscript: true,
         };
 
-        console.log("✅ Données récupérées pour supervision:", supervisionRow);
+        console.log("? Donn�es r�cup�r�es pour supervision:", supervisionRow);
 
         // Ouvrir le bon modal selon les ressources disponibles
         if (supervisionRow.hasAudio && supervisionRow.hasTranscript) {
@@ -496,14 +496,14 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
               const audioUrl = await generateSignedUrl(turnData.call.filepath);
               setTaggingAudioUrl(audioUrl);
             } catch (audioError) {
-              console.error("Erreur génération URL audio:", audioError);
+              console.error("Erreur g�n�ration URL audio:", audioError);
               setTaggingAudioUrl(turnData.call?.audiourl || "");
             }
           } else {
             setTaggingAudioUrl(turnData.call?.audiourl || "");
           }
 
-          // Préparer pour le tagging (APIs qui attendent des strings)
+          // Pr�parer pour le tagging (APIs qui attendent des strings)
           try {
             selectTaggingCall({
               callid: String(error.callId),
@@ -518,14 +518,14 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
               fetchTaggedTurns(String(error.callId)),
             ]);
           } catch (taggingError) {
-            console.error("Erreur préparation tagging:", taggingError);
+            console.error("Erreur pr�paration tagging:", taggingError);
           }
         } else {
           setSelectedError(supervisionRow);
           setIsProcessingModalOpen(true);
         }
       } catch (error) {
-        console.error("Erreur lors de la préparation:", error);
+        console.error("Erreur lors de la pr�paration:", error);
         alert(
           `Erreur: ${
             error instanceof Error ? error.message : "Erreur inconnue"
@@ -551,7 +551,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
   }, []);
 
   const handleProcessingComplete = useCallback(() => {
-    console.log("Traitement terminé avec succès");
+    console.log("Traitement termin� avec succ�s");
   }, []);
 
   if (isLoading) {
@@ -568,7 +568,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
   if (enhancedResults.length === 0) {
     return (
       <Alert severity="success" sx={{ mt: 3 }}>
-        Aucune erreur de classification détectée - Performance parfaite!
+        Aucune erreur de classification d�tect�e - Performance parfaite!
       </Alert>
     );
   }
@@ -598,8 +598,8 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
                   <TableCell sx={{ minWidth: 350 }}>Tours de Parole</TableCell>
                   <TableCell sx={{ minWidth: 80 }}>Temps</TableCell>
                   <TableCell sx={{ minWidth: 80 }}>Statut</TableCell>
-                  <TableCell sx={{ minWidth: 100 }}>Prédit</TableCell>
-                  <TableCell sx={{ minWidth: 100 }}>Réel</TableCell>
+                  <TableCell sx={{ minWidth: 100 }}>Pr�dit</TableCell>
+                  <TableCell sx={{ minWidth: 100 }}>R�el</TableCell>
                   <TableCell sx={{ minWidth: 80 }}>Confiance</TableCell>
                   <TableCell sx={{ minWidth: 60 }}>Action</TableCell>
                 </TableRow>
@@ -617,7 +617,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
                   >
                     <TableCell>
                       <TagChain
-                        mainTag={error.goldStandard ?? ""} // 👈 repli string
+                        mainTag={error.goldStandard ?? ""} // ?? repli string
                         nextTag={error.next_turn_tag ?? undefined}
                         predicted={error.predicted ?? undefined}
                         goldStandard={error.goldStandard ?? undefined}
@@ -643,11 +643,11 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
 
                     <TableCell>
                       <VerbatimDisplay
-                        verbatim={error.input ?? error.verbatim ?? ""} // 👈 repli string
+                        verbatim={error.input ?? error.verbatim ?? ""} // ?? repli string
                         nextVerbatim={error.next_turn_verbatim ?? undefined}
-                        speaker={error.speaker ?? ""} // 👈 repli string
+                        speaker={error.speaker ?? ""} // ?? repli string
                         isPredicted={true}
-                        confidence={error.confidence ?? 0} // 👈 repli number
+                        confidence={error.confidence ?? 0} // ?? repli number
                       />
                     </TableCell>
 
@@ -670,7 +670,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
                         {typeof error.endTime === "number" &&
                         typeof error.startTime === "number"
                           ? `${Math.round(error.endTime - error.startTime)}s`
-                          : "—"}
+                          : "�"}
                       </Typography>
                     </TableCell>
 
@@ -721,7 +721,7 @@ export const EnhancedErrorAnalysis: React.FC<EnhancedErrorAnalysisProps> = ({
         </CardContent>
       </Card>
 
-      {/* Modals supervision réutilisés */}
+      {/* Modals supervision r�utilis�s */}
       <TaggingModal
         open={isTaggingModalOpen}
         onClose={closeTaggingModal}

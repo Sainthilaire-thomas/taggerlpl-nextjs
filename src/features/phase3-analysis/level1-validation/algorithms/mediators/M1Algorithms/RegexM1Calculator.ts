@@ -3,8 +3,8 @@ import type {
   M1Input,
   CalculationResult,
   CalculationMetadata,
-} from "@/app/(protected)/analysis/components/AlgorithmLab/types";
-import type { M1Details } from "@/app/(protected)/analysis/components/AlgorithmLab/types";
+} from "@/types/algorithm-lab";
+import type { M1Details } from "@/types/algorithm-lab";
 
 // ⚠️ Minimaliste : on part sur regex + comptage ; on remplacera par lemmatisation/pos plus tard
 const ACTION_VERBS = [
