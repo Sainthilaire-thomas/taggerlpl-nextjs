@@ -116,6 +116,7 @@ typescript-errors.txt
 |   |   |-- ARCHITECTURE_ETAT_MIGRATION_16_nov.md
 |   |   |-- ARCHITECTURE_ETAT_MIGRATION_17_nov.md
 |   |   |-- ARCHITECTURE_ETAT_MIGRATION_PHASE_3.md
+|   |   |-- ARCHITECTURE_TYPES_STRUCTURE.md
 |   |   |-- BILAN_SESSION_PHASE3_14NOV.md
 |   |   |-- ETAPE_0.5_TYPES_SOLIDIFICATION.md
 |   |   |-- ETAPE_0_5_COMPLETEE.md
@@ -137,6 +138,7 @@ typescript-errors.txt
 |   |   |-- POINT_MIGRATION_10_NOV_11h.md
 |   |   |-- PROPERTY_ERRORS_DETAILS.txt
 |   |   |-- PROPOSITION_RESTRUCTURATION.md
+|   |   |-- PROPOSITION_STRUCTURE_UNIFIEE.md
 |   |   |-- README.md
 |   |   +-- SESSION_ARCHITECTURE_REFACTORING.md
 |   |-- calls/
@@ -152,11 +154,16 @@ typescript-errors.txt
 |   |   +-- transcriptionauto.md
 |   |-- migration-pair-analysis/
 |   |   |-- ANALYSE_WORKFLOW_COMPLET.md
+|   |   |-- ARCHITECTURE_ALGORITHMES_ANALYSIS_PAIRS.md
 |   |   |-- MIGRATION_PAIR_ANALYSIS.md
+|   |   |-- PROJECT_STATE.json
 |   |   |-- RATIONALISATION_ANALYSIS_PAIRS.md
 |   |   |-- RECAP_ALGO_FINAL.md
 |   |   |-- SESSION_MIGRATION_ANALYSIS_PAIRS_FINAL.md
-|   |   +-- SESSION_MIGRATION_ANALYSIS_PAIRS_PHASE4.md
+|   |   |-- SESSION_MIGRATION_ANALYSIS_PAIRS_PHASE4.md
+|   |   +-- SESSION_MIGRATION_M2_BILAN.md
+|   |-- tuning/
+|   |   +-- TUNING_ALGORITHMES_M1M2M3.md
 |   |-- calls_ddd_tree.txt
 |   |-- complete_project_tree.txt
 |   |-- project_tree.txt
@@ -640,6 +647,16 @@ typescript-errors.txt
 |   |   |   |   |   +-- algorithm-lab/
 |   |   |   |   |       +-- page.tsx
 |   |   |   |   +-- level2/
+|   |   |   |       |-- h0-baseline/
+|   |   |   |       |   +-- page.tsx
+|   |   |   |       |-- h1-correlation/
+|   |   |   |       |   |-- page.tsx
+|   |   |   |       |   +-- page_v2.tsx
+|   |   |   |       |-- h2-mediation/
+|   |   |   |       |   |-- page.tsx
+|   |   |   |       |   +-- page_onglet3.txt
+|   |   |   |       |-- test/
+|   |   |   |       |   +-- page.tsx
 |   |   |   |       +-- page.tsx
 |   |   |   |-- shared/
 |   |   |   |   +-- TurnWithContext.tsx
@@ -1142,8 +1159,24 @@ typescript-errors.txt
 |   |   |   +-- level2-hypotheses/
 |   |   |       |-- config/
 |   |   |       |   +-- hypotheses.ts
+|   |   |       |-- h2-mediation/
+|   |   |       |   |-- hooks/
+|   |   |       |   |   +-- useH2MediationData.ts
+|   |   |       |   +-- statistics/
+|   |   |       |       +-- domain/
+|   |   |       |           +-- services/
+|   |   |       |               |-- H2DescriptiveStatsService.ts
+|   |   |       |               |-- H2MediationService.ts
+|   |   |       |               +-- H2PathAnalysisService.ts
 |   |   |       |-- hooks/
-|   |   |       |   +-- useH1Analysis.ts
+|   |   |       |   |-- useH1Analysis.ts
+|   |   |       |   +-- useLevel2Data.ts
+|   |   |       |-- statistics/
+|   |   |       |   +-- domain/
+|   |   |       |       +-- services/
+|   |   |       |           |-- H1StatisticsService.ts
+|   |   |       |           |-- H1StrategyAnalysisService.ts
+|   |   |       |           +-- H1TagAnalysisService.ts
 |   |   |       |-- ui/
 |   |   |       |   +-- components/
 |   |   |       |       |-- H2AlignmentValidation.tsx
@@ -1217,6 +1250,7 @@ typescript-errors.txt
 |   |   |   |-- ThesisVariables.ts
 |   |   |   |-- ThesisVariables.x.ts
 |   |   |   |-- ThesisVariables.y.ts
+|   |   |   |-- UniversalResultExtended.ts
 |   |   |   |-- validation.ts
 |   |   |   +-- ValidationTypes.ts
 |   |   |-- analysis/
