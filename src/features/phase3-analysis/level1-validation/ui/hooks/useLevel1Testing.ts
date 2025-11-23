@@ -1,4 +1,4 @@
-﻿// hooks/useLevel1Testing.ts � VERSION MIGR�E H2
+﻿// hooks/useLevel1Testing.ts – VERSION MIGRÉE H2 + BULK UPSERT OPTIMISÉ
 
 
 
@@ -130,92 +130,94 @@ const toYDetails = (out: ClassificationResult): YDetails => {
 
 
 
-// ?? NOUVELLE FONCTION : Update H2 avec results
+// ✅ NOUVELLE FONCTION OPTIMISÉE : Bulk Upsert (45x plus rapide)
 const updateH2WithResults = async (
   results: TVValidationResult[],
   algorithmName: string,
   algorithmVersion: string
 ): Promise<{ success: number; errors: number; total: number }> => {
-  console.log(`🔄 Mise à jour analysis_pairs : ${results.length} paires`);
+  console.log(`📝 Mise à jour analysis_pairs : ${results.length} paires (BULK RPC)`);
   
-  let successCount = 0;
-  let errorCount = 0;
+  const bulkData: any[] = [];
+  let skipped = 0;
 
   for (const result of results) {
-    // ✅ STRUCTURE UNIFIÉE : Récupération du pairId avec cast
     const pairId = (result.metadata as any)?.pairId;
     
     if (!pairId) {
-      console.warn('⚠️ Pas de pairId:', result);
-      errorCount++;
+      skipped++;
       continue;
     }
 
-    // ✅ STRUCTURE UNIFIÉE : Accès direct à dbColumns avec cast
-    const updateData: any = (result.metadata as any)?.dbColumns || {};
-
-    // 🔍 DEBUG : Voir le contenu de metadata
-console.log('🔍 DEBUG metadata:', {
-  pairId,
-  hasMetadata: !!result.metadata,
-  hasDbColumns: !!(result.metadata as any)?.dbColumns,
-  metadataKeys: result.metadata ? Object.keys(result.metadata) : [],
-  dbColumns: (result.metadata as any)?.dbColumns,
-  fullMetadata: result.metadata
-});
-    console.log('📊 UPDATE DATA:', { pairId, updateData });
-
-    try {
-      // Retry logic
-      let success = false;
-      let lastError: any = null;
-
-      for (let attempt = 0; attempt <= MAX_RETRIES && !success; attempt++) {
-        try {
-          const { error } = await supabase
-            .from('analysis_pairs')
-            .update(updateData)
-            .eq('pair_id', pairId);
-
-          if (error) { 
-            console.error('❌ SUPABASE ERROR:', error); 
-            throw error; 
-          }
-          success = true;
-          successCount++;
-        } catch (err) {
-          lastError = err;
-          if (attempt < MAX_RETRIES) {
-            await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
-          }
-        }
+    const dbCols = (result.metadata as any)?.dbColumns || {};
+    
+    // ✅ FIX : Nettoyer les données pour PostgreSQL
+    const cleanedData: any = {};
+    for (const [key, value] of Object.entries(dbCols)) {
+      if (Array.isArray(value)) {
+        // Les arrays JS natifs sont OK pour Supabase RPC
+        cleanedData[key] = value;
+      } else if (value !== null && value !== undefined) {
+        cleanedData[key] = value;
       }
-
-      if (!success) {
-        errorCount++;
-        await supabase
-          .from('analysis_pairs')
-          .update({
-            computation_status: 'error',
-            version_metadata: {
-              error: lastError instanceof Error ? lastError.message : 'Update failed',
-              retries: MAX_RETRIES
-            }
-          })
-          .eq('pair_id', pairId);
-      }
-
-    } catch (err) {
-      errorCount++;
-      console.error(`❌ Erreur pair_id=${pairId}:`, err);
     }
+    
+    bulkData.push({
+      pair_id: pairId,
+      ...cleanedData
+    });
   }
 
-  console.log(`✅ ${successCount} paires mises à jour, ❌ ${errorCount} erreurs`);
-  return { success: successCount, errors: errorCount, total: results.length };
+  if (bulkData.length === 0) {
+    return { success: 0, errors: results.length, total: results.length };
+  }
+
+  try {
+    console.log(`🚀 BULK RPC: ${bulkData.length} lignes...`);
+    
+    // ✅ DEBUG : Afficher le premier élément pour vérifier le format
+    if (process.env.NODE_ENV === 'development' && bulkData.length > 0) {
+      console.log('🔍 Premier élément bulkData:', JSON.stringify(bulkData[0], null, 2));
+    }
+    
+    const startTime = Date.now();
+    
+    const { data, error } = await supabase.rpc('bulk_update_analysis_pairs', {
+      updates: bulkData
+    });
+
+    const duration = Date.now() - startTime;
+
+    if (error) {
+      console.error('❌ ERREUR BULK RPC:', error);
+      throw error;
+    }
+
+    // ✅ FIX : Extraire le nombre correctement depuis la réponse RPC
+    const successCount = Array.isArray(data) && data.length > 0 
+      ? data[0].updated_count 
+      : bulkData.length;
+    
+    console.log(`✅ ${successCount} paires mises à jour en ${duration}ms`);
+    console.log(`⏱️  Performance: ${Math.round(successCount / (duration / 1000))} paires/seconde`);
+    
+    return { 
+      success: successCount, 
+      errors: skipped, 
+      total: results.length 
+    };
+  } catch (error) {
+    console.error('❌ Erreur critique:', error);
+    return { 
+      success: 0, 
+      errors: results.length, 
+      total: results.length 
+    };
+  }
 };
 
-// ?? NOUVELLE FONCTION : Version batch avec progression
+
+// ✅ NOUVELLE FONCTION : Version batch avec progression
 const updateH2WithResultsBatch = async (
   results: TVValidationResult[],
   algorithmName: string,
@@ -311,23 +313,15 @@ const computeKappa = (cm: Record<string, Record<string, number>>): number => {
 // ----------------- Hook -----------------
 
 export const useLevel1Testing = () => {
-  // ?? NOUVELLE FONCTION : Convertit H2 en GoldStandard
+  // ✅ NOUVELLE FONCTION : Convertit H2 en GoldStandard
 const mapH2ToGoldStandard = useCallback(
   (pairs: AnalysisPair[]): GoldStandardSample[] => {
-    console.log(`?? mapH2ToGoldStandard: Conversion de ${pairs.length} paires`);
+    console.log(`🔄 mapH2ToGoldStandard: Conversion de ${pairs.length} paires`);
     
     const samples: GoldStandardSample[] = [];
     
     pairs.forEach(pair => {
-      // ? DEBUG : V�rifier le contexte
-      console.log('?? CONTEXT CHECK:', {
-        prev2: pair.prev2_verbatim ? '?' : '?',
-        prev1: pair.prev1_verbatim ? '?' : '?',
-        next1: pair.next1_verbatim ? '?' : '?',
-        next1_value: pair.next1_verbatim
-      });
-      
-      // 1?? SAMPLE CONSEILLER (pour algos X, M1)
+      // 1️⃣ SAMPLE CONSEILLER (pour algos X, M1)
       samples.push({
         verbatim: pair.conseiller_verbatim,
         expectedTag: normalizeXLabelStrict(pair.strategy_tag),
@@ -348,7 +342,7 @@ const mapH2ToGoldStandard = useCallback(
           // Annotations
           annotations: Array.isArray(pair.annotations) ? pair.annotations : [],
           
-          // R�sultats existants
+          // Résultats existants
           existing_results: {
             m1_verb_density: pair.m1_verb_density,
             m2_global_alignment: pair.m2_global_alignment,
@@ -363,7 +357,7 @@ const mapH2ToGoldStandard = useCallback(
           // Champ pour affichage universel
           current_turn_verbatim: pair.conseiller_verbatim,
           
-          // CONTEXTE : tours pr�c�dents/suivants
+          // CONTEXTE : tours précédents/suivants
           prev3_turn_verbatim: pair.prev3_verbatim,
           prev2_turn_verbatim: pair.prev2_verbatim,
           prev1_turn_verbatim: pair.prev1_verbatim,
@@ -373,10 +367,10 @@ const mapH2ToGoldStandard = useCallback(
         }
       });
       
-      // 2?? SAMPLE CLIENT (pour algos Y)
+      // 2️⃣ SAMPLE CLIENT (pour algos Y)
       samples.push({
         verbatim: pair.client_verbatim,
-        expectedTag: pair.reaction_tag, // CLIENT_POSITIF, CLIENT_NEUTRE, CLIENT_NEGATIF
+        expectedTag: pair.reaction_tag,
         metadata: {
           target: 'client',
           callId: pair.call_id,
@@ -401,7 +395,7 @@ const mapH2ToGoldStandard = useCallback(
           // Champ pour affichage universel
           current_turn_verbatim: pair.client_verbatim,
           
-          // CONTEXTE : tours pr�c�dents/suivants
+          // CONTEXTE : tours précédents/suivants
           prev3_turn_verbatim: pair.prev3_verbatim,
           prev2_turn_verbatim: pair.prev2_verbatim,
           prev1_turn_verbatim: pair.prev1_verbatim,
@@ -411,7 +405,7 @@ const mapH2ToGoldStandard = useCallback(
         }
       });
 
-      // 3?? SAMPLE M�DIATEUR M2 (pour alignement conseiller-client)
+      // 3️⃣ SAMPLE MÉDIATEUR M2 (pour alignement conseiller-client)
       samples.push({
         verbatim: pair.conseiller_verbatim,
         expectedTag: normalizeXLabelStrict(pair.strategy_tag),
@@ -421,11 +415,11 @@ const mapH2ToGoldStandard = useCallback(
           turnId: pair.conseiller_turn_id,
           pairId: pair.pair_id,
           
-          // ?? CRUCIAL : Les deux verbatims pour M2
+          // ✅ CRUCIAL : Les deux verbatims pour M2
           t0: pair.conseiller_verbatim,
           t1: pair.client_verbatim,
           
-          // Aussi pour compatibilit�
+          // Aussi pour compatibilité
           conseiller_verbatim: pair.conseiller_verbatim,
           client_verbatim: pair.client_verbatim,
           
@@ -451,13 +445,13 @@ const mapH2ToGoldStandard = useCallback(
       });
     });
     
-    console.log(`? ${samples.length} samples cr��s (${pairs.length} � 3: conseiller + client + M2)`);
+    console.log(`✅ ${samples.length} samples créés (${pairs.length} × 3: conseiller + client + M2)`);
     return samples;
   },
   []
 );
 
-  // ?? UTILISE useAnalysisPairs pour charger les paires d'analyse
+  // ✅ UTILISE useAnalysisPairs pour charger les paires d'analyse
   const { analysisPairs, loading: h2Loading, error: h2Error } = useAnalysisPairs();
   const [error, setError] = useState<string | null>(null);
 
@@ -474,10 +468,10 @@ const mapH2ToGoldStandard = useCallback(
     setError(h2Error ?? null);
   }, [h2Error]);
 
-  // ?? Dataset gold standard d�riv� de H2
+  // ✅ Dataset gold standard dérivé de H2
   const goldStandardData: GoldStandardSample[] = useMemo(
     () => mapH2ToGoldStandard(analysisPairs),
-    [analysisPairs]
+    [analysisPairs, mapH2ToGoldStandard]
   );
 
   const samplesPerAlgorithm = useMemo(
@@ -510,13 +504,13 @@ const mapH2ToGoldStandard = useCallback(
     [goldStandardData]
   );
 
-  // ?? MODIFI� : validateAlgorithm avec update H2
+  // ✅ MODIFIÉ : validateAlgorithm avec update H2
   const validateAlgorithm = useCallback(
     async (
       classifierName: string,
       sampleSize?: number
     ): Promise<TVValidationResult[]> => {
-      console.log(`\n?? [${classifierName}] Validation unifi�e avec update H2`);
+      console.log(`\n🔬 [${classifierName}] Validation unifiée avec update H2`);
 
       const config = getConfigForAlgorithm(classifierName);
       if (!config)
@@ -531,23 +525,23 @@ const mapH2ToGoldStandard = useCallback(
 
       if (filteredBase.length === 0) {
         throw new Error(
-          `Aucune donn�e compatible pour ${classifierName} (cible=${config.target}).`
+          `Aucune donnée compatible pour ${classifierName} (cible=${config.target}).`
         );
       }
 
-      // 2) �chantillon
+      // 2) Échantillon
       const samples = randomSample(filteredBase, sampleSize);
       console.log(
-        `?? [${classifierName}] ${samples.length}/${filteredBase.length} exemples`
+        `📊 [${classifierName}] ${samples.length}/${filteredBase.length} exemples`
       );
 
-      // 3) Inputs adapt�s
+      // 3) Inputs adaptés
       const inputs = prepareInputsForAlgorithm(samples, classifierName);
       if (process.env.NODE_ENV === "development") {
         debugPreparedInputs(inputs, classifierName);
       }
 
-      // 4) R�cup�rer l'algo
+      // 4) Récupérer l'algo
       const classifier = algorithmRegistry.get<any, any>(classifierName);
       if (!classifier) {
         throw new Error(
@@ -555,7 +549,7 @@ const mapH2ToGoldStandard = useCallback(
         );
       }
 
-      // 5) Ex�cuter & normaliser
+      // 5) Exécuter & normaliser
       const tvRows: TVValidationResult[] = [];
       for (let i = 0; i < inputs.length; i++) {
         const input = inputs[i];
@@ -574,11 +568,11 @@ const mapH2ToGoldStandard = useCallback(
         tvRows.push(tv);
       }
 
-      // ?? 6) Update H2 avec les r�sultats
+      // ✅ 6) Update H2 avec les résultats (BULK UPSERT)
       const version = `${classifierName}_v${new Date().toISOString().split('T')[0]}`;
       await updateH2WithResults(tvRows, classifierName, version);
 
-      console.log(`? [${classifierName}] ${tvRows.length} r�sultats + update analysis_pairs`);
+      console.log(`✅ [${classifierName}] ${tvRows.length} résultats + update analysis_pairs`);
       return tvRows;
     },
     [goldStandardData]
@@ -702,14 +696,14 @@ const mapH2ToGoldStandard = useCallback(
 
     const errorsByCategory: Record<string, number> = {};
     for (const e of errors) {
-      const key = `${e.goldStandard} ? ${e.predicted}`;
+      const key = `${e.goldStandard} → ${e.predicted}`;
       errorsByCategory[key] = (errorsByCategory[key] || 0) + 1;
     }
 
     const errorCounts: Record<string, { count: number; examples: string[] }> =
       {};
     for (const e of errors) {
-      const key = `${e.goldStandard}?${e.predicted}`;
+      const key = `${e.goldStandard}→${e.predicted}`;
       if (!errorCounts[key]) errorCounts[key] = { count: 0, examples: [] };
       errorCounts[key].count++;
       if (errorCounts[key].examples.length < 3) {
@@ -721,7 +715,7 @@ const mapH2ToGoldStandard = useCallback(
 
     const commonErrors = Object.entries(errorCounts)
       .map(([key, data]) => {
-        const [expected, predicted] = key.split("?");
+        const [expected, predicted] = key.split("→");
         return {
           expected,
           predicted,
@@ -735,7 +729,7 @@ const mapH2ToGoldStandard = useCallback(
     const improvementSuggestions: string[] = [];
     if (results.length && totalErrors / results.length > 0.3) {
       improvementSuggestions.push(
-        "Accuracy < 70% : revoir les r�gles ou affiner le mod�le"
+        "Accuracy < 70% : revoir les règles ou affiner le modèle"
       );
     }
 
@@ -751,7 +745,7 @@ const mapH2ToGoldStandard = useCallback(
     for (const ce of commonErrors) {
       if (ce.frequency >= 3) {
         improvementSuggestions.push(
-          `Confusion fr�quente ${ce.expected}/${ce.predicted} : analyser les patterns linguistiques (${ce.frequency} cas)`
+          `Confusion fréquente ${ce.expected}/${ce.predicted} : analyser les patterns linguistiques (${ce.frequency} cas)`
         );
       }
     }
@@ -771,11 +765,11 @@ const mapH2ToGoldStandard = useCallback(
     ): Promise<ClassificationResult[]> => {
       const classifier = algorithmRegistry.get<any, any>(classifierName);
       if (!classifier)
-        throw new Error(`Classificateur '${classifierName}' non trouv�`);
+        throw new Error(`Classificateur '${classifierName}' non trouvé`);
       const samples = testSamples || [
-        "je vais v�rifier votre dossier",
+        "je vais vérifier votre dossier",
         "vous devez nous envoyer le document",
-        "notre syst�me fonctionne ainsi",
+        "notre système fonctionne ainsi",
         "d'accord je comprends",
       ];
       const results: ClassificationResult[] = [];
@@ -818,12 +812,12 @@ const mapH2ToGoldStandard = useCallback(
   }, [goldStandardData]);
 
   return {
-    // �tat
+    // État
     goldStandardData,
     isLoading,
     error,
 
-    // ?? �tat H2
+    // ✅ État H2
     analysisPairs,
     h2Loading,
     h2Error,
@@ -833,7 +827,7 @@ const mapH2ToGoldStandard = useCallback(
     compareAlgorithms,
     quickTest,
 
-    // ?? Nouvelles fonctions H2
+    // ✅ Nouvelles fonctions H2 (OPTIMISÉES)
     updateH2WithResults,
     updateH2WithResultsBatch,
 
@@ -860,7 +854,7 @@ const mapH2ToGoldStandard = useCallback(
   };
 };
 
-// ? Hook utilitaire pour BaseAlgorithmTesting
+// ✅ Hook utilitaire pour BaseAlgorithmTesting
 export const useAlgorithmValidation = (target: string) => {
   const {
     validateAlgorithm,

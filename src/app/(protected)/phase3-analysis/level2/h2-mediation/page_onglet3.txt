@@ -1,0 +1,162 @@
+﻿      {tabValue === 2 && (
+        <>
+          <Paper sx={{ p: 3, mb: 3 }}>
+            <Typography variant='h6' gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <AccountTree /> Chemins Causaux : Stratégie → Médiateurs → Réactions
+            </Typography>
+            <Alert severity='info' sx={{ mb: 3 }}>
+              <Typography variant='body2'>
+                <strong>Objectif H2 :</strong> Expliquer POURQUOI certaines stratégies sont efficaces (H1 validée)
+                <br/>
+                <strong>Question :</strong> Les stratégies efficaces utilisent-elles plus de verbes d'action (M1↑) ?
+              </Typography>
+            </Alert>
+
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Stratégie</TableCell>
+                    <TableCell align='center'>Profil</TableCell>
+                    <TableCell align='center'>n</TableCell>
+                    <TableCell align='center'>M1 Moyen<br/>(Verbes Action)</TableCell>
+                    <TableCell align='center'>M2 Moyen<br/>(Alignement)</TableCell>
+                    <TableCell align='center'>M3 Moyen<br/>(Charge Cogn.)</TableCell>
+                    <TableCell align='center'>% Positif<br/>(de H1)</TableCell>
+                    <TableCell align='center'>% Négatif<br/>(de H1)</TableCell>
+                    <TableCell align='center'>Efficacité H1<br/>(Pos - Nég)</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {pathAnalysis.map(path => {
+                    const bgColor = path.profile === 'ACTION' ? 'rgba(76, 175, 80, 0.1)' : 
+                                    path.profile === 'EXPLANATION' ? 'rgba(244, 67, 54, 0.1)' : 'transparent';
+                    
+                    return (
+                      <TableRow key={path.strategy} sx={{ backgroundColor: bgColor }}>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{path.strategy}</TableCell>
+                        <TableCell align='center'>
+                          <Chip 
+                            label={path.profile} 
+                            color={path.profile === 'ACTION' ? 'success' : path.profile === 'EXPLANATION' ? 'error' : 'default'}
+                            size='small'
+                          />
+                        </TableCell>
+                        <TableCell align='center'>{path.n}</TableCell>
+                        <TableCell align='center' sx={{ fontWeight: path.profile === 'ACTION' ? 'bold' : 'normal', fontSize: '1.1rem' }}>
+                          {path.m1_mean.toFixed(2)}
+                        </TableCell>
+                        <TableCell align='center'>{path.m2_mean.toFixed(3)}</TableCell>
+                        <TableCell align='center'>{path.m3_mean.toFixed(2)}</TableCell>
+                        <TableCell align='center'>
+                          <Typography color='success.main'>{path.positif_pct.toFixed(1)}%</Typography>
+                        </TableCell>
+                        <TableCell align='center'>
+                          <Typography color='error.main'>{path.negatif_pct.toFixed(1)}%</Typography>
+                        </TableCell>
+                        <TableCell align='center'>
+                          <Typography 
+                            variant='h6' 
+                            color={path.effectiveness > 0 ? 'success.main' : 'error.main'}
+                          >
+                            {path.effectiveness > 0 ? '+' : ''}{path.effectiveness.toFixed(1)}%
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            <Alert severity='success' sx={{ mt: 2 }}>
+              <Typography variant='body2'>
+                <strong>Observation :</strong> Les stratégies les plus efficaces (H1) sont celles avec le plus de verbes d'action (M1).
+                <br/>
+                • OUVERTURE (efficacité +39%) : M1 = 3.02
+                <br/>
+                • ENGAGEMENT (efficacité +13%) : M1 = 4.87
+                <br/>
+                • EXPLICATION (efficacité -78%) : M1 = 0.87
+              </Typography>
+            </Alert>
+          </Paper>
+
+          <Paper sx={{ p: 3 }}>
+            <Typography variant='h6' gutterBottom>Validation Hypothèse H2</Typography>
+            
+            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+              <Card 
+                variant='outlined' 
+                sx={{ 
+                  flex: 1,
+                  backgroundColor: h2Validation.h2a_validated ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)',
+                  border: h2Validation.h2a_validated ? '2px solid #4caf50' : '2px solid #f44336'
+                }}
+              >
+                <CardContent>
+                  <Typography variant='caption' color='text.secondary'>H2a - Médiateur M1</Typography>
+                  <Typography variant='body2' sx={{ mt: 1, mb: 2 }}>
+                    Les stratégies efficaces (H1) ont-elles M1↑ ?
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {h2Validation.h2a_validated ? (
+                      <CheckCircle sx={{ fontSize: 40, color: 'success.main' }} />
+                    ) : (
+                      <Cancel sx={{ fontSize: 40, color: 'error.main' }} />
+                    )}
+                    <Typography variant='h6' sx={{ fontWeight: 'bold' }}>
+                      {h2Validation.h2a_validated ? 'VALIDÉE' : 'NON VALIDÉE'}
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+
+              <Card 
+                variant='outlined' 
+                sx={{ 
+                  flex: 1,
+                  backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                  border: '2px solid #ff9800'
+                }}
+              >
+                <CardContent>
+                  <Typography variant='caption' color='text.secondary'>H2b - Pouvoir prédictif M1</Typography>
+                  <Typography variant='body2' sx={{ mt: 1, mb: 2 }}>
+                    M1↑ prédit-il CLIENT_POSITIF ?
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <ArrowForward sx={{ fontSize: 40, color: 'warning.main' }} />
+                    <Typography variant='h6' sx={{ fontWeight: 'bold' }}>
+                      VOIR ONGLET 2
+                    </Typography>
+                  </Box>
+                  <Typography variant='caption' color='text.secondary' sx={{ mt: 1, display: 'block' }}>
+                    Corrélation M1→Y = 0.146 (p=0.010)
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Box>
+
+            <Alert severity='info'>
+              <Typography variant='body2' sx={{ whiteSpace: 'pre-line' }}>
+                {h2Validation.summary}
+              </Typography>
+            </Alert>
+
+            <Alert severity='warning' sx={{ mt: 2 }}>
+              <Typography variant='body2'>
+                <strong>Distinction H1 vs H2 :</strong>
+                <br/>
+                • <strong>H1</strong> établit que les stratégies ACTION sont efficaces (validé avec χ² = 304, p &lt; 0.001)
+                <br/>
+                • <strong>H2a</strong> explique POURQUOI : car elles utilisent plus de verbes d'action (M1↑)
+                <br/>
+                • <strong>H2b</strong> teste si M1 seul prédit les réactions (corrélation faible r = 0.146)
+                <br/>
+                → <strong>Conclusion :</strong> M1 VARIE bien selon les stratégies, mais d'autres mécanismes sont aussi à l'œuvre
+              </Typography>
+            </Alert>
+          </Paper>
+        </>
+      )}

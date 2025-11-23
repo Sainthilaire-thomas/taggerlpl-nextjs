@@ -142,7 +142,9 @@ export class M1ActionVerbCounter implements UniversalAlgorithm {
           m1_verb_density: result.metadata.density,
           m1_verb_count: result.metadata.actionVerbCount,
           m1_total_words: result.metadata.totalTokens,
-          m1_action_verbs: result.metadata.verbsFound,
+          m1_action_verbs: Array.isArray(result.metadata.verbsFound) 
+  ? result.metadata.verbsFound 
+  : [],
           computation_status: 'complete'
         },
         
