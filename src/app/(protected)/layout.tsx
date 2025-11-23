@@ -59,7 +59,7 @@ const navigationStructure: MenuItem[] = [
       { name: "Import appels", icon: <UploadFileIcon />, path: "/phase1-corpus/import" },
       { name: "WorkDrive Explorer", icon: <FolderIcon />, path: "/phase1-corpus/workdrive" },
       { name: "Gestion corpus", icon: <DashboardIcon />, path: "/phase1-corpus/management" },
-      { name: "Gestion appels (Legacy)", icon: <PhoneIcon />, path: "/calls" },
+    
     ],
   },
   {
@@ -276,7 +276,3 @@ export default function AppLayout({ children }: AppLayoutProps) {
     </Box>
   );
 }
-
-
-
-
