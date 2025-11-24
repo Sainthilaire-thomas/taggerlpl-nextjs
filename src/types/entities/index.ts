@@ -1,4 +1,4 @@
-ï»¿/**
+/**
  * Entity types barrel export
  *
  * Import with: import { Call, Tag, TurnTagged, ... } from '@/types/entities'
@@ -22,29 +22,29 @@ export type {
   // Types de base H2
   H2AnalysisPairRow,
   
-  // StratÃ©gies et rÃ©actions
+  // Stratégies et réactions
   StrategyFamily,
   ConversationalStrategy,
   ReactionType,
   ClientReaction,
   
-  // MÃ©canismes de mÃ©diation
+  // Mécanismes de médiation
   M1ActionVerbs,
   M2LinguisticAlignment,
   M3CognitiveLoad,
   MediationMechanisms,
   
-  // EntitÃ© principale
+  // Entité principale
   ConversationalContext,
   StrategyReactionPair,
   
-  // RequÃªtes et filtres
+  // Requêtes et filtres
   PairFilter,
   PairsQueryResult,
   
   // Conversion
   ConversionOptions,
-  ConversionResult,
+  H2ConversionResult,
   
   // Statistiques
   H2DescriptiveStats,

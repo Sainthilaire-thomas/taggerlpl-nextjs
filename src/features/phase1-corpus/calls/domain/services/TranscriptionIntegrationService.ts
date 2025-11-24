@@ -1,8 +1,9 @@
-// src/components/calls/domain/services/TranscriptionIntegrationService.ts
+﻿// src/components/calls/domain/services/TranscriptionIntegrationService.ts
 // Service d'intégration nettoyé - utilise directement les API routes
 
 import { TranscriptionASRService } from "./TranscriptionASRService";
 import { DiarizationService } from "./DiarizationService";
+import { DiarizationApiClient } from "../../infrastructure/api/DiarizationApiClient";
 import { CallRepository } from "../repositories/CallRepository";
 import { StorageRepository } from "../repositories/StorageRepository";
 import { TranscriptionJson, Word } from "../../shared/types/TranscriptionTypes";
@@ -119,7 +120,7 @@ export class TranscriptionIntegrationService {
     validateTranscriptionConfig();
 
     this.asrService = new TranscriptionASRService();
-    this.diarizationService = new DiarizationService();
+    this.diarizationService = new DiarizationService(new DiarizationApiClient());
 
     console.log(
       "🚀 TranscriptionIntegrationService initialized (API routes mode)"

@@ -3,7 +3,7 @@ import {
   BaseClassifier,
   ClassificationResult,
   ClassifierMetadata,
-} from '../../shared/BaseClassifier';
+} from '../shared/BaseClassifier';
 
 interface OpenAIConfig {
   apiKey?: string;

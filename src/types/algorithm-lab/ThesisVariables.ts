@@ -166,7 +166,7 @@ export interface ValidationMetrics {
       precision: number;
       recall: number;
       f1: number;
-      support?: number;
+      support: number;
     }
   >;
 

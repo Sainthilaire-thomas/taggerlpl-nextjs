@@ -1,4 +1,4 @@
-// src/components/utils/callApiUtils.tsx - VERSION DDD FINALE
+﻿// src/components/utils/callApiUtils.tsx - VERSION DDD FINALE
 
 import { createServices } from "@/features/phase1-corpus/calls/infrastructure/ServiceFactory";
 import { ImportWorkflow } from "@/features/phase1-corpus/calls/domain/workflows/ImportWorkflow";
@@ -300,6 +300,18 @@ export const verifyFileExists = async (filePath: string): Promise<boolean> => {
     console.error("Erreur vérification fichier:", error);
     return false;
   }
+};
+
+
+// ===== UPLOAD AUDIO =====
+export const uploadAudio = async (file: File): Promise<string> => {
+  const { CallsServiceFactory } = await import(
+    "@/features/phase1-corpus/calls/infrastructure/ServiceFactory"
+  );
+  const factory = CallsServiceFactory.getInstance();
+  const storageService = factory.getStorageService();
+  const audioFile = await storageService.uploadAudio(file);
+  return audioFile.path;
 };
 
 // ===== EXPORTS POUR COMPATIBILITÉ LEGACY =====

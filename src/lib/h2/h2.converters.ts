@@ -1,7 +1,7 @@
-/**
- * Fonctions de conversion BDD → Entités métier H2
+﻿/**
+ * Fonctions de conversion BDD â†’ EntitÃ©s mÃ©tier H2
  * 
- * Transforme les rows Supabase en objets métier typés et validés
+ * Transforme les rows Supabase en objets mÃ©tier typÃ©s et validÃ©s
  */
 
 import type {
@@ -17,7 +17,7 @@ import type {
   StrategyFamily,
   ReactionType,
   ConversionOptions,
-  ConversionResult,
+  H2ConversionResult,
 } from '@/types/entities/h2.entities';
 
 // ============================================================================
@@ -25,21 +25,21 @@ import type {
 // ============================================================================
 
 /**
- * Valide qu'une famille de stratégie est valide
+ * Valide qu'une famille de stratÃ©gie est valide
  */
 function isValidStrategyFamily(family: string | null): family is StrategyFamily {
   return family === 'ENGAGEMENT' || family === 'OUVERTURE' || family === 'EXPLICATION';
 }
 
 /**
- * Valide qu'un type de réaction est valide
+ * Valide qu'un type de rÃ©action est valide
  */
 function isValidReactionType(tag: string): tag is ReactionType {
   return tag === 'CLIENT POSITIF' || tag === 'CLIENT NEGATIF' || tag === 'CLIENT NEUTRE';
 }
 
 /**
- * Parse un objet JSON de manière sécurisée
+ * Parse un objet JSON de maniÃ¨re sÃ©curisÃ©e
  */
 function safeJsonParse<T>(json: unknown, defaultValue: T): T {
   if (json === null || json === undefined) return defaultValue;
@@ -52,11 +52,11 @@ function safeJsonParse<T>(json: unknown, defaultValue: T): T {
 }
 
 // ============================================================================
-// CONVERSION - STRATÉGIE CONVERSATIONNELLE
+// CONVERSION - STRATÃ‰GIE CONVERSATIONNELLE
 // ============================================================================
 
 /**
- * Convertit les données de stratégie d'une row en entité ConversationalStrategy
+ * Convertit les donnÃ©es de stratÃ©gie d'une row en entitÃ© ConversationalStrategy
  */
 function convertToStrategy(row: H2AnalysisPairRow): ConversationalStrategy | null {
   // Validation de base
@@ -77,11 +77,11 @@ function convertToStrategy(row: H2AnalysisPairRow): ConversationalStrategy | nul
 }
 
 // ============================================================================
-// CONVERSION - RÉACTION CLIENT
+// CONVERSION - RÃ‰ACTION CLIENT
 // ============================================================================
 
 /**
- * Convertit les données de réaction d'une row en entité ClientReaction
+ * Convertit les donnÃ©es de rÃ©action d'une row en entitÃ© ClientReaction
  */
 function convertToReaction(row: H2AnalysisPairRow): ClientReaction | null {
   // Validation de base
@@ -100,14 +100,14 @@ function convertToReaction(row: H2AnalysisPairRow): ClientReaction | null {
 }
 
 // ============================================================================
-// CONVERSION - MÉCANISMES DE MÉDIATION
+// CONVERSION - MÃ‰CANISMES DE MÃ‰DIATION
 // ============================================================================
 
 /**
- * Convertit les données M1 d'une row en entité M1ActionVerbs
+ * Convertit les donnÃ©es M1 d'une row en entitÃ© M1ActionVerbs
  */
 function convertToM1(row: H2AnalysisPairRow): M1ActionVerbs | null {
-  // Si pas de données M1, retourner null
+  // Si pas de donnÃ©es M1, retourner null
   if (row.m1_verb_density === null || row.m1_verb_density === undefined) {
     return null;
   }
@@ -121,10 +121,10 @@ function convertToM1(row: H2AnalysisPairRow): M1ActionVerbs | null {
 }
 
 /**
- * Convertit les données M2 d'une row en entité M2LinguisticAlignment
+ * Convertit les donnÃ©es M2 d'une row en entitÃ© M2LinguisticAlignment
  */
 function convertToM2(row: H2AnalysisPairRow): M2LinguisticAlignment | null {
-  // Si pas de données M2, retourner null
+  // Si pas de donnÃ©es M2, retourner null
   if (row.m2_global_alignment === null || row.m2_global_alignment === undefined) {
     return null;
   }
@@ -138,15 +138,15 @@ function convertToM2(row: H2AnalysisPairRow): M2LinguisticAlignment | null {
 }
 
 /**
- * Convertit les données M3 d'une row en entité M3CognitiveLoad
+ * Convertit les donnÃ©es M3 d'une row en entitÃ© M3CognitiveLoad
  */
 function convertToM3(row: H2AnalysisPairRow): M3CognitiveLoad | null {
-  // Si pas de données M3, retourner null
+  // Si pas de donnÃ©es M3, retourner null
   if (row.m3_cognitive_score === null || row.m3_cognitive_score === undefined) {
     return null;
   }
 
-  // Déterminer le niveau de charge cognitive
+  // DÃ©terminer le niveau de charge cognitive
   let cognitiveLoad: 'LOW' | 'MEDIUM' | 'HIGH' = 'MEDIUM';
   if (row.m3_cognitive_load === 'LOW' || row.m3_cognitive_load === 'MEDIUM' || row.m3_cognitive_load === 'HIGH') {
     cognitiveLoad = row.m3_cognitive_load;
@@ -162,19 +162,19 @@ function convertToM3(row: H2AnalysisPairRow): M3CognitiveLoad | null {
 }
 
 /**
- * Convertit tous les mécanismes de médiation
+ * Convertit tous les mÃ©canismes de mÃ©diation
  */
 function convertToMediation(row: H2AnalysisPairRow): MediationMechanisms | null {
   const m1 = convertToM1(row);
   const m2 = convertToM2(row);
   const m3 = convertToM3(row);
 
-  // Si aucun mécanisme n'est disponible, retourner null
+  // Si aucun mÃ©canisme n'est disponible, retourner null
   if (!m1 && !m2 && !m3) {
     return null;
   }
 
-  // Créer des valeurs par défaut pour les mécanismes manquants
+  // CrÃ©er des valeurs par dÃ©faut pour les mÃ©canismes manquants
   return {
     m1: m1 ?? {
       totalWords: 0,
@@ -283,36 +283,36 @@ function convertToContext(row: H2AnalysisPairRow): ConversationalContext {
 // ============================================================================
 
 /**
- * Convertit une row de h2_analysis_pairs en entité StrategyReactionPair complète
+ * Convertit une row de h2_analysis_pairs en entitÃ© StrategyReactionPair complÃ¨te
  * 
  * @param row - La row depuis Supabase
  * @param options - Options de conversion
- * @returns Le résultat de la conversion avec erreurs éventuelles
+ * @returns Le rÃ©sultat de la conversion avec erreurs Ã©ventuelles
  */
 export function convertH2RowToPair(
   row: H2AnalysisPairRow,
   options: ConversionOptions = {}
-): ConversionResult {
+): H2ConversionResult {
   const { includeContext = true, validate = true } = options;
   
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  // Conversion de la stratégie
+  // Conversion de la stratÃ©gie
   const strategy = convertToStrategy(row);
   if (!strategy) {
     errors.push(`Invalid strategy family: ${row.strategy_family}`);
     return { pair: null, errors, warnings };
   }
 
-  // Conversion de la réaction
+  // Conversion de la rÃ©action
   const reaction = convertToReaction(row);
   if (!reaction) {
     errors.push(`Invalid reaction type: ${row.reaction_tag}`);
     return { pair: null, errors, warnings };
   }
 
-  // Conversion de la médiation
+  // Conversion de la mÃ©diation
   const mediation = convertToMediation(row);
   if (!mediation) {
     warnings.push('No mediation mechanisms available');
@@ -324,9 +324,9 @@ export function convertH2RowToPair(
     next: [],
   };
 
-  // Validation supplémentaire si demandée
+  // Validation supplÃ©mentaire si demandÃ©e
   if (validate) {
-    // Vérifier la cohérence temporelle
+    // VÃ©rifier la cohÃ©rence temporelle
     if (strategy.startTime >= strategy.endTime) {
       warnings.push(`Invalid strategy time range: ${strategy.startTime} >= ${strategy.endTime}`);
     }
@@ -334,13 +334,13 @@ export function convertH2RowToPair(
       warnings.push(`Invalid reaction time range: ${reaction.startTime} >= ${reaction.endTime}`);
     }
     
-    // Vérifier l'ordre chronologique
+    // VÃ©rifier l'ordre chronologique
     if (strategy.endTime > reaction.startTime) {
       warnings.push('Strategy ends after reaction starts - possible temporal overlap');
     }
   }
 
-  // Construire l'entité finale
+  // Construire l'entitÃ© finale
   const pair: StrategyReactionPair = {
     pairId: row.pair_id,
     pairIndex: row.pair_index,
@@ -364,7 +364,7 @@ export function convertH2RowToPair(
 }
 
 /**
- * Convertit plusieurs rows en entités
+ * Convertit plusieurs rows en entitÃ©s
  */
 export function convertH2RowsToPairs(
   rows: H2AnalysisPairRow[],
@@ -406,7 +406,7 @@ export function convertH2RowsToPairs(
 // ============================================================================
 
 /**
- * Filtre les paires selon des critères métier
+ * Filtre les paires selon des critÃ¨res mÃ©tier
  */
 export function filterPairs(
   pairs: StrategyReactionPair[],
@@ -418,21 +418,21 @@ export function filterPairs(
   }
 ): StrategyReactionPair[] {
   return pairs.filter(pair => {
-    // Filtrer par famille de stratégie
+    // Filtrer par famille de stratÃ©gie
     if (filter.strategyFamilies && filter.strategyFamilies.length > 0) {
       if (!filter.strategyFamilies.includes(pair.strategy.family)) {
         return false;
       }
     }
 
-    // Filtrer par type de réaction
+    // Filtrer par type de rÃ©action
     if (filter.reactionTypes && filter.reactionTypes.length > 0) {
       if (!filter.reactionTypes.includes(pair.reaction.tag)) {
         return false;
       }
     }
 
-    // Filtrer par présence de médiation
+    // Filtrer par prÃ©sence de mÃ©diation
     if (filter.hasMediation !== undefined) {
       const hasMediation = pair.mediation.m1.density > 0 || 
                           pair.mediation.m2.globalAlignment > 0 || 
@@ -455,7 +455,7 @@ export function filterPairs(
 }
 
 /**
- * Groupe les paires par critère
+ * Groupe les paires par critÃ¨re
  */
 export function groupPairs<K extends string>(
   pairs: StrategyReactionPair[],
@@ -472,14 +472,14 @@ export function groupPairs<K extends string>(
 }
 
 /**
- * Groupe par famille de stratégie
+ * Groupe par famille de stratÃ©gie
  */
 export function groupByStrategy(pairs: StrategyReactionPair[]): Record<StrategyFamily, StrategyReactionPair[]> {
   return groupPairs(pairs, p => p.strategy.family);
 }
 
 /**
- * Groupe par type de réaction
+ * Groupe par type de rÃ©action
  */
 export function groupByReaction(pairs: StrategyReactionPair[]): Record<ReactionType, StrategyReactionPair[]> {
   return groupPairs(pairs, p => p.reaction.tag);

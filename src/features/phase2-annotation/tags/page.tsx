@@ -3,11 +3,11 @@
 
 import { useState } from "react";
 import { Box, Typography, Tabs, Tab, Paper } from "@mui/material";
-import AppLayout from "../layout";
+import AppLayout from '@/app/(protected)/layout';
 
 // Composants existants de la page tags
-import TagManager from "./components/TagManager"; // Votre composant existant
-import TagExplorer from "./components/TagExplorer"; // Nouveau composant
+import TagManager from './ui/components/TagManager'; // Votre composant existant
+import TagExplorer from './ui/components/TagExplorer'; // Nouveau composant
 
 interface TabPanelProps {
   children?: React.ReactNode;

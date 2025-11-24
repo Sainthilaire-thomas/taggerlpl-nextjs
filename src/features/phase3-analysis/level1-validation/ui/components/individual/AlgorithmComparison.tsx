@@ -1,4 +1,4 @@
-ï»¿// components/AlgorithmLab/Level1/comparison/AlgorithmComparison.tsx
+// components/AlgorithmLab/Level1/comparison/AlgorithmComparison.tsx
 // Interface de comparaison multi-algorithmes
 
 import React, { useState, useEffect } from "react";
@@ -46,7 +46,7 @@ interface ComparisonResult {
 
 export const AlgorithmComparison: React.FC = () => {
   const [selectedClassifiers, setSelectedClassifiers] = useState<string[]>([
-    "RegexConseillerClassifier",
+    "RegexXClassifier",
   ]);
   const [isRunning, setIsRunning] = useState(false);
   const [comparisonResults, setComparisonResults] = useState<
@@ -59,7 +59,7 @@ export const AlgorithmComparison: React.FC = () => {
 
   const availableClassifiers = ClassifierRegistry.listRegistered();
 
-  // Gestion sÃ©lection classificateurs
+  // Gestion sélection classificateurs
   const handleClassifierToggle = (classifierName: string) => {
     setSelectedClassifiers((prev) =>
       prev.includes(classifierName)
@@ -71,7 +71,7 @@ export const AlgorithmComparison: React.FC = () => {
   // Lancement comparaison
   const runComparison = async () => {
     if (selectedClassifiers.length < 2) {
-      setError("SÃ©lectionnez au moins 2 classificateurs pour comparer");
+      setError("Sélectionnez au moins 2 classificateurs pour comparer");
       return;
     }
 
@@ -81,7 +81,7 @@ export const AlgorithmComparison: React.FC = () => {
 
     try {
       console.log(
-        `ðŸ”„ Comparaison de ${selectedClassifiers.length} classificateurs`
+        `?? Comparaison de ${selectedClassifiers.length} classificateurs`
       );
 
       const results = await compareAlgorithms(selectedClassifiers);
@@ -111,13 +111,13 @@ export const AlgorithmComparison: React.FC = () => {
         });
       }
 
-      // Tri par accuracy dÃ©croissante
+      // Tri par accuracy décroissante
       comparisonData.sort((a, b) => b.accuracy - a.accuracy);
       setComparisonResults(comparisonData);
 
-      console.log("ðŸ“Š Comparaison terminÃ©e:", comparisonData);
+      console.log("?? Comparaison terminée:", comparisonData);
     } catch (error) {
-      console.error("âŒ Erreur comparaison:", error);
+      console.error("? Erreur comparaison:", error);
       setError(error instanceof Error ? error.message : "Erreur inconnue");
     } finally {
       setIsRunning(false);
@@ -142,15 +142,15 @@ export const AlgorithmComparison: React.FC = () => {
       </Typography>
 
       <Typography variant="body1" sx={{ mb: 3, color: "text.secondary" }}>
-        Comparaison des performances de plusieurs classificateurs sur le mÃªme
-        Ã©chantillon gold standard
+        Comparaison des performances de plusieurs classificateurs sur le même
+        échantillon gold standard
       </Typography>
 
-      {/* SÃ©lection des classificateurs */}
+      {/* Sélection des classificateurs */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            SÃ©lection des Classificateurs Ã  Comparer
+            Sélection des Classificateurs à Comparer
           </Typography>
 
           <FormGroup row>
@@ -198,8 +198,8 @@ export const AlgorithmComparison: React.FC = () => {
             sx={{ mt: 2 }}
           >
             <Typography variant="body2" color="text.secondary">
-              {selectedClassifiers.length} classificateur(s) sÃ©lectionnÃ©(s) â€¢
-              Ã‰chantillon: {goldStandardData?.length || 0} paires adjacentes
+              {selectedClassifiers.length} classificateur(s) sélectionné(s) •
+              Échantillon: {goldStandardData?.length || 0} paires adjacentes
             </Typography>
 
             <Button
@@ -230,7 +230,7 @@ export const AlgorithmComparison: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* RÃ©sultats de comparaison */}
+      {/* Résultats de comparaison */}
       {comparisonResults.length > 0 && (
         <Card sx={{ mb: 3 }}>
           <CardContent>
@@ -240,7 +240,7 @@ export const AlgorithmComparison: React.FC = () => {
               sx={{ display: "flex", alignItems: "center" }}
             >
               <AssessmentIcon sx={{ mr: 1 }} />
-              RÃ©sultats Comparatifs
+              Résultats Comparatifs
             </Typography>
 
             <TableContainer component={Paper} variant="outlined">
@@ -266,7 +266,7 @@ export const AlgorithmComparison: React.FC = () => {
                       <strong>Confiance</strong>
                     </TableCell>
                     <TableCell align="center">
-                      <strong>RÃ©sultats</strong>
+                      <strong>Résultats</strong>
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -335,7 +335,7 @@ export const AlgorithmComparison: React.FC = () => {
                               color="warning.main"
                               display="block"
                             >
-                              âš¡ API
+                              ? API
                             </Typography>
                           )}
                       </TableCell>
@@ -375,7 +375,7 @@ export const AlgorithmComparison: React.FC = () => {
                 Analyse Comparative
               </Typography>
 
-              {/* PrÃ©-calculs sans mutation */}
+              {/* Pré-calculs sans mutation */}
               {(() => {
                 const bySpeed = [...comparisonResults].sort(
                   (a, b) => a.avgProcessingTime - b.avgProcessingTime
@@ -427,12 +427,12 @@ export const AlgorithmComparison: React.FC = () => {
                     <Alert severity="info" sx={{ mt: 2 }}>
                       <Typography variant="body2">
                         <strong>Recommandations :</strong>
-                        <br />â€¢ Pour la <strong>production</strong> :
-                        privilÃ©gier {best?.metadata.name} (meilleur accuracy)
-                        <br />â€¢ Pour le <strong>temps rÃ©el</strong> :
-                        privilÃ©gier les classificateurs &lt;50ms
-                        <br />â€¢ Pour la <strong>recherche</strong> : analyser
-                        les erreurs des diffÃ©rents algorithmes
+                        <br />• Pour la <strong>production</strong> :
+                        privilégier {best?.metadata.name} (meilleur accuracy)
+                        <br />• Pour le <strong>temps réel</strong> :
+                        privilégier les classificateurs &lt;50ms
+                        <br />• Pour la <strong>recherche</strong> : analyser
+                        les erreurs des différents algorithmes
                       </Typography>
                     </Alert>
                   </>

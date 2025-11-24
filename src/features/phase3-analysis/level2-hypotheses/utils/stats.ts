@@ -7,7 +7,7 @@ import {
   H1Summary,
   StrategyKey,
   StrategyStats,
-} from "./types";
+} from "../ui/components/types";
 import {
   DEFAULT_H1_THRESHOLDS,
   H1Thresholds,

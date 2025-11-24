@@ -29,7 +29,7 @@ import type {
   AlgorithmVersionId,
   AlgorithmVersionMetadata,
   Level1ValidationMetrics,
-} from "../../../types";
+} from "@/types/algorithm-lab";
 
 import { VersionSelector } from '@/features/phase3-analysis/level1-validation/ui/components/shared/VersionSelector';
 import { useAlgorithmVersioning } from '@/features/phase3-analysis/level1-validation/ui/hooks/useAlgorithmVersioning';

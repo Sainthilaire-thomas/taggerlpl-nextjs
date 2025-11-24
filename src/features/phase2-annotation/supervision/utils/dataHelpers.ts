@@ -1,8 +1,8 @@
-import type {
+﻿import type {
   SupervisionTurnTagged,
   TagGroupStats,
   SupervisionMetrics,
-} from "../types";
+} from "../domain/types";
 
 export const calculateStats = (
   data: SupervisionTurnTagged[]
@@ -11,7 +11,7 @@ export const calculateStats = (
   const withTranscript = data.filter((item) => item.hasTranscript);
   const modifiable = data.filter((item) => item.hasAudio && item.hasTranscript);
 
-  // ← NOUVEAUX CALCULS
+  // â† NOUVEAUX CALCULS
   const uniqueCallIds = new Set(data.map((item) => item.call_id));
 
   // Calculer les statistiques d'appels
@@ -34,13 +34,13 @@ export const calculateStats = (
   return {
     total: data.length,
     uniqueTags: new Set(data.map((item) => item.tag)).size,
-    uniqueCallIds: uniqueCallIds.size, // ← NOUVEAU
+    uniqueCallIds: uniqueCallIds.size, // â† NOUVEAU
     withAudio: withAudio.length,
     withTranscript: withTranscript.length,
     modifiable: modifiable.length,
     needsProcessing: data.length - modifiable.length,
-    avgTagsPerCall: Math.round(avgTagsPerCall * 10) / 10, // ← NOUVEAU
-    callsWithMultipleTags, // ← NOUVEAU
+    avgTagsPerCall: Math.round(avgTagsPerCall * 10) / 10, // â† NOUVEAU
+    callsWithMultipleTags, // â† NOUVEAU
   };
 };
 
@@ -63,7 +63,7 @@ export const calculateTagStats = (
       });
     }
 
-    // ← NOUVEAU : Compter le next_turn_tag s'il existe
+    // â† NOUVEAU : Compter le next_turn_tag s'il existe
     if (item.next_turn_tag && item.next_turn_tag !== item.tag) {
       const nextKey = item.next_turn_tag;
       if (statsMap.has(nextKey)) {
@@ -73,7 +73,7 @@ export const calculateTagStats = (
           label: item.next_turn_tag,
           count: 1,
           color: item.next_turn_color || "#9e9e9e",
-          family: "TRANSITION", // Famille spéciale pour les next_turn_tags
+          family: "TRANSITION", // Famille spÃ©ciale pour les next_turn_tags
         });
       }
     }
@@ -106,13 +106,13 @@ export const enrichTurntaggedData = (
       const color = tagData?.color || "#999";
       const family = tagData?.family || "AUTRE";
 
-      // Gérer next_turn_tag
+      // GÃ©rer next_turn_tag
       const nextTurnTagInfo =
         item.next_turn_tag && lpltagMap
           ? lpltagMap.get(item.next_turn_tag)
           : null;
 
-      // Déterminer les ressources manquantes
+      // DÃ©terminer les ressources manquantes
       const missingResources: ("audio" | "transcript")[] = [];
       if (!hasAudio) missingResources.push("audio");
       if (!hasTranscript) missingResources.push("transcript");
@@ -131,7 +131,7 @@ export const enrichTurntaggedData = (
         next_turn_color: nextTurnTagInfo?.color || "#9e9e9e",
         family,
         filename: callData?.filename,
-        origine: callData?.origine, // ← NOUVEAU : Ajouter l'origine depuis les données d'appel
+        origine: callData?.origine, // â† NOUVEAU : Ajouter l'origine depuis les donnÃ©es d'appel
         hasTranscript,
         hasAudio,
         duration: callData?.duree,

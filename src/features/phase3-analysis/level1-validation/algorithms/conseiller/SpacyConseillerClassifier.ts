@@ -4,7 +4,7 @@ import {
   BaseClassifier,
   ClassificationResult,
   ClassifierMetadata,
-} from '../../shared/BaseClassifier';
+} from '../shared/BaseClassifier';
 
 export interface SpacyClassifierConfig {
   apiUrl?: string;

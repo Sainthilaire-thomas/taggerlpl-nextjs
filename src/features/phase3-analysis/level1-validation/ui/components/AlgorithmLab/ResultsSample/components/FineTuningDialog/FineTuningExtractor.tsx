@@ -113,7 +113,7 @@ L'algorithme a ${
         context,
         predicted: result.predicted,
         goldStandard: result.goldStandard,
-        confidence: result.confidence,
+        confidence: result.confidence ?? 0,
         annotations: expertComments,
         algo: {
           classifier: m.classifier || "unknown",

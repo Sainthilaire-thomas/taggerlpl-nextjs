@@ -5,8 +5,7 @@
 import type {
   TVValidationResultCore as CoreTVValidationResult,
   TVMetadataCore as CoreTVMetadata,
-} from "AlgorithmLab/types/core"; // <-- sinon ex: "../../../../types/core"
-
+} from "@/types/algorithm-lab";
 // =========================
 //   Auxiliaires UI locaux
 // =========================

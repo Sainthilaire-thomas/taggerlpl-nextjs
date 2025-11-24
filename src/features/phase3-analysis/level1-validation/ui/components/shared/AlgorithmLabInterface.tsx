@@ -1,4 +1,4 @@
-ï»¿// Interface principale - components/shared/AlgorithmLabInterface.tsx
+// Interface principale - components/shared/AlgorithmLabInterface.tsx
 import React from "react";
 import {
   Box,
@@ -19,11 +19,11 @@ import {
 } from "@mui/icons-material";
 import { useWorkflowManagement } from '@/features/phase3-analysis/level1-validation/ui/hooks/useWorkflowManagement';
 import { NavigationTabs } from "./NavigationTabs";
-// import { InterAnnotatorAgreement } from '../Level0/InterAnnotatorAgreement';
+import { InterAnnotatorAgreement } from '@/features/phase3-analysis/level0-gold/ui/components/InterAnnotatorAgreement';
 import { Level1Interface } from '../AlgorithmLab/Level1Interface';
-// import { Level2Interface } from '../Level2/Level2Interface';
+import { Level2Interface } from '@/features/phase3-analysis/level2-hypotheses/ui/components/Level2Interface';
 // import { initializeAlgorithms } from "@/features/phase3-analysis/level1-validation/algorithms/shared/initializeAlgorithms";
-// import { algorithmRegistry } from "@/features/phase3-analysis/level1-validation/algorithms/shared/AlgorithmRegistry"; // Props pour l'intÃ©gration dans la page analysis
+// import { algorithmRegistry } from "@/features/phase3-analysis/level1-validation/algorithms/shared/AlgorithmRegistry"; // Props pour l'intégration dans la page analysis
 interface AlgorithmLabInterfaceProps {
   selectedOrigin?: string | null;
   availableDomains?: string[];
@@ -112,7 +112,7 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
   };
 
   // React.useEffect(() => {
-  //   // Peupler le registre cÃ´tÃ© client si vide
+  //   // Peupler le registre côté client si vide
   //   if (algorithmRegistry.list().length === 0) {
   //     initializeAlgorithms();
   //   }
@@ -120,7 +120,7 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
 
   return (
     <Box sx={styles.mainContainer}>
-      {/* Header adaptÃ© pour intÃ©gration */}
+      {/* Header adapté pour intégration */}
       <Paper elevation={1} sx={styles.headerPaper}>
         <Box sx={{ p: 3 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
@@ -164,7 +164,7 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
                 />
               </Box>
               <Typography variant="body1" color="text.secondary">
-                Framework de validation scientifique Ã  3 niveaux - IntÃ©grÃ© au
+                Framework de validation scientifique à 3 niveaux - Intégré au
                 Centre d'Analyse
               </Typography>
               {selectedOrigin && (
@@ -172,7 +172,7 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
                   variant="body2"
                   sx={{ color: theme.palette.primary.main, mt: 0.5 }}
                 >
-                  Origine sÃ©lectionnÃ©e: <strong>{selectedOrigin}</strong>
+                  Origine sélectionnée: <strong>{selectedOrigin}</strong>
                 </Typography>
               )}
             </Box>
@@ -193,7 +193,7 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
       {/* Contenu */}
       <Box sx={{ px: 3 }}>{renderCurrentLevel()}</Box>
 
-      {/* Footer adaptÃ© */}
+      {/* Footer adapté */}
       <Paper elevation={1} sx={styles.footerPaper}>
         <Box sx={{ textAlign: "center" }}>
           <Typography
@@ -201,8 +201,8 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
             color="text.secondary"
             sx={{ mb: 1, display: "block" }}
           >
-            <strong>Validation sÃ©quentielle :</strong> Gold Standard â†’
-            Performance Technique â†’ HypothÃ¨ses Scientifiques
+            <strong>Validation séquentielle :</strong> Gold Standard ?
+            Performance Technique ? Hypothèses Scientifiques
           </Typography>
           <Box
             sx={{
@@ -224,7 +224,7 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
                 Niveau 0: Accord inter-annotateur
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Kappa de Cohen, rÃ©solution dÃ©saccords
+                Kappa de Cohen, résolution désaccords
               </Typography>
             </Box>
             <Box sx={styles.gridItem}>
@@ -251,10 +251,10 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
                   color: theme.palette.text.primary,
                 }}
               >
-                Niveau 2: Tests hypothÃ¨ses
+                Niveau 2: Tests hypothèses
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                H1 (EfficacitÃ©), H2 (Cognitif), H3 (Pratique)
+                H1 (Efficacité), H2 (Cognitif), H3 (Pratique)
               </Typography>
             </Box>
           </Box>
@@ -264,5 +264,5 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
   );
 };
 
-// Export unique par dÃ©faut pour l'intÃ©gration
+// Export unique par défaut pour l'intégration
 export default AlgorithmLabInterface;

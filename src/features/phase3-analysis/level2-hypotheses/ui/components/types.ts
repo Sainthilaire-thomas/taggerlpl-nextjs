@@ -1,5 +1,5 @@
 // app/(protected)/analysis/components/AlgorithmLab/shared/types.ts
-import { H1ValidationStatus, H1Thresholds } from "../config/hypotheses";
+import { H1ValidationStatus, H1Thresholds } from "../../config/hypotheses";
 
 export type StrategyKey =
   | "ENGAGEMENT"

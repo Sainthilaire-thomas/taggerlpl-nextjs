@@ -46,8 +46,7 @@ export default function MetricsPanelClassification({
     const accuracy = (correct / total) * 100;
     const avgProcessingTime =
       results.reduce((s, r) => s + (r.processingTime || 0), 0) / total;
-    const avgConfidence = results.reduce((s, r) => s + r.confidence, 0) / total;
-
+    const avgConfidence = results.reduce((s, r) => s + (r.confidence ?? 0), 0) / total;
     const classes = Array.from(
       new Set([
         ...results.map((r) => r.goldStandard),

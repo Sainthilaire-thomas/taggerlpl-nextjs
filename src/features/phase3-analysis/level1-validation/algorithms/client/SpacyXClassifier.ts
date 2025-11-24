@@ -1,4 +1,4 @@
-import type { BaseAlgorithm, AlgorithmMetadata } from "../../shared/BaseAlgorithm";
+﻿import type { BaseAlgorithm, AlgorithmMetadata } from "../shared/BaseAlgorithm";
 import { SpacyConseillerClassifier } from "../conseiller/SpacyConseillerClassifier";
 
 type SpacyXConfig = {
@@ -27,7 +27,7 @@ export class SpacyXClassifier implements BaseAlgorithm<string, any> {
     const meta = this.legacy.getMetadata?.();
     return {
       name: "SpacyXClassifier",
-      displayName: "spaCy – X (conseiller)",
+      displayName: "spaCy â€“ X (conseiller)",
       type: (meta?.type as any) ?? "ml",
       target: "X",
       version: meta?.version ?? "1.0.0",

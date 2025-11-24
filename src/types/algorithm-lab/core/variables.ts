@@ -68,13 +68,21 @@ export interface XDetails {
     nextTurnLabel?: string;
   };
   label?: string;
-
   // ✅ NOUVELLES propriétés optionnelles pour useLevel1Testing
-  confidence?: number; // Erreur ligne 94
-  matchedPatterns?: string[]; // Utilisé ligne 96
-  rationale?: string; // Utilisé ligne 97
-  probabilities?: any; // Utilisé ligne 98
-  spans?: any; // Utilisé ligne 99
+  confidence?: number;
+  matchedPatterns?: string[];
+  rationale?: string;
+  probabilities?: any;
+  spans?: any;
+  // ✅ AJOUTER CES LIGNES pour OpenAI classifiers
+  rawResponse?: string;
+  reason?: string;
+  parseMethod?: string;
+  contextUsed?: boolean | {
+  hasPrevContext: boolean;
+  tMinus2Present: boolean;
+  tMinus1Present: boolean;
+};
 }
 
 export interface YDetails {

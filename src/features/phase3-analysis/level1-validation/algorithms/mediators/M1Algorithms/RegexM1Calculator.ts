@@ -1,4 +1,4 @@
-import { BaseM1Calculator } from "./shared/BaseM1Calculator";
+﻿import { BaseM1Calculator } from "./shared/BaseM1Calculator";
 import type {
   M1Input,
   CalculationResult,
@@ -46,13 +46,16 @@ function tokenize(text: string): string[] {
 export class RegexM1Calculator extends BaseM1Calculator {
   getMetadata(): CalculationMetadata {
     return {
-      // ✅ CORRECTION: Utiliser les propriétés correctes de CalculationMetadata
+      // Proprietes obligatoires
+      algorithmVersion: "0.2.0",
+      inputSignature: "verbatim:string",
+      executionPath: ["RegexM1Calculator", "calculate"],
+      // Proprietes optionnelles
       id: "RegexM1Calculator",
-      label: "M1 Regex Calculator", // 'label' au lieu de 'name'
-      target: "M1", // Ajouter target requis
-      algorithmKind: "rule-based", // Ajouter algorithmKind requis
+      label: "M1 Regex Calculator",
+      target: "M1",
+      algorithmKind: "rule-based",
       version: "0.2.0",
-      // 'description' et 'type' n'existent pas dans CalculationMetadata
       tags: ["regex", "action-verbs", "density"],
     };
   }

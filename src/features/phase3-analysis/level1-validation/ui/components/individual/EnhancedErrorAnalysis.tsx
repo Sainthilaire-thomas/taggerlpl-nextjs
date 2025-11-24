@@ -37,7 +37,7 @@ import {
   TaggingModal,
   ProcessingModal,
 } from "@/features/phase2-annotation/supervision/ui/components";
-import type { SupervisionTurnTagged } from "@/features/phase2-annotation/supervision/ui/types";
+import type { SupervisionTurnTagged } from "@/features/phase2-annotation/supervision/domain/types";
 import type {
   AlgorithmResult,
   EnhancedAlgorithmResult,
