@@ -1,4 +1,4 @@
-﻿// src/features/phase3-analysis/level1-validation/ui/components/algorithms/shared/BaseAlgorithmTesting.tsx
+// src/features/phase3-analysis/level1-validation/ui/components/algorithms/shared/BaseAlgorithmTesting.tsx
 "use client";
 
 import React from "react";
@@ -44,13 +44,22 @@ import { algorithmRegistry } from '@/features/phase3-analysis/level1-validation/
 import { useLevel1Testing } from "../../../hooks/useLevel1Testing";
 import { useAlgorithmVersioning } from "../../../hooks/useAlgorithmVersioning";
 import { usePostValidationVersioning } from "../../../hooks/usePostValidationVersioning";
+// ========== NOUVEAUX IMPORTS - VERSIONING & INVESTIGATION ==========
+import { useTestRuns } from '../../../hooks/useTestRuns';
+import { useInvestigation } from '../../../hooks/useInvestigation';
+import { useVersionValidation } from '../../../hooks/useVersionValidation';
 
 import RunPanel from '@/features/phase3-analysis/level1-validation/ui/components/AlgorithmLab/RunPanel';
 import { ResultsPanel } from "@/features/phase3-analysis/level1-validation/ui/components/AlgorithmLab/ResultsSample/ResultsPanel";
 import { VersionSelector } from '@/features/phase3-analysis/level1-validation/ui/components/shared/VersionSelector';
 import { VersionComparator } from '@/features/phase3-analysis/level1-validation/ui/components/shared/VersionComparator';
+// Composants Versioning
+import { TestDecisionPanel } from '../../TestDecision';
+import { InvestigationBanner } from '../../Investigation';
+import { InvestigationSummaryDialog } from '../../Investigation';
+import { VersionValidationDialog } from '../../VersionValidation';
 
-// 🆕 Import Level2Preview
+// ?? Import Level2Preview
 import { Level2PreviewPanel } from '../../../components/Level2Preview';
 
 import type {
@@ -60,6 +69,10 @@ import type {
   TargetKind,
   AlgorithmVersionId,
 } from '@/types/algorithm-lab';
+
+// Types Versioning
+import type { TestRun, TestOutcome } from '@/types/algorithm-lab/versioning';
+import type { ValidationMetrics } from '@/types/algorithm-lab/core/validation';
 
 // ============================================================================
 // TYPES
@@ -88,21 +101,74 @@ type BaseAlgorithmTestingProps = {
 };
 
 const DEFAULT_CLASSIFIER = undefined as unknown as string;
+// ============================================================================
+// HELPERS - TYPE ADAPTERS
+// ============================================================================
+
+/** Convertit ClassificationMetrics ? ValidationMetrics pour TestDecisionPanel */
+const toValidationMetrics = (
+  metrics: ClassificationMetrics,
+  results: TVValidationResultCore[]
+): ValidationMetrics => {
+  const tags = Object.keys(metrics.precision);
+  const totalSupport = results.length;
+  
+  // Moyennes pond�r�es
+  const precisionWeighted = tags.reduce((sum, tag) => {
+    const support = results.filter(r => r.goldStandard === tag).length;
+    return sum + (metrics.precision[tag] || 0) * support;
+  }, 0) / totalSupport;
+  
+  const recallWeighted = tags.reduce((sum, tag) => {
+    const support = results.filter(r => r.goldStandard === tag).length;
+    return sum + (metrics.recall[tag] || 0) * support;
+  }, 0) / totalSupport;
+  
+  const f1Weighted = tags.reduce((sum, tag) => {
+    const support = results.filter(r => r.goldStandard === tag).length;
+    return sum + (metrics.f1Score[tag] || 0) * support;
+  }, 0) / totalSupport;
+
+  // classMetrics au format Record
+  const classMetrics: Record<string, { precision: number; recall: number; f1Score: number; support: number }> = {};
+  tags.forEach(tag => {
+    classMetrics[tag] = {
+      precision: metrics.precision[tag] || 0,
+      recall: metrics.recall[tag] || 0,
+      f1Score: metrics.f1Score[tag] || 0,
+      support: results.filter(r => r.goldStandard === tag).length,
+    };
+  });
+
+  return {
+    accuracy: metrics.accuracy / 100,
+    precision: precisionWeighted,
+    recall: recallWeighted,
+    f1Score: f1Weighted,
+    kappa: metrics.kappa,
+    classMetrics,
+    confusionMatrix: metrics.confusionMatrix || {},
+    totalSamples: results.length,
+    correctPredictions: results.filter(r => r.correct).length,
+    executionTime: metrics.avgProcessingTime,
+  };
+};
+
 
 // ============================================================================
 // SUB-COMPONENTS
 // ============================================================================
 
-/** Panneau des métriques globales */
+/** Panneau des m�triques globales */
 const GlobalMetricsPanel: React.FC<{ metrics: ClassificationMetrics | null }> = ({ metrics }) => {
   if (!metrics) return null;
 
   const getKappaInterpretation = (kappa: number): { label: string; color: string } => {
     if (kappa >= 0.8) return { label: 'Excellent', color: 'success.main' };
     if (kappa >= 0.6) return { label: 'Bon', color: 'success.light' };
-    if (kappa >= 0.4) return { label: 'Modéré', color: 'warning.main' };
+    if (kappa >= 0.4) return { label: 'Mod�r�', color: 'warning.main' };
     if (kappa >= 0.2) return { label: 'Faible', color: 'error.light' };
-    return { label: 'Très faible', color: 'error.main' };
+    return { label: 'Tr�s faible', color: 'error.main' };
   };
 
   const kappaInfo = metrics.kappa !== undefined ? getKappaInterpretation(metrics.kappa) : null;
@@ -145,7 +211,7 @@ const GlobalMetricsPanel: React.FC<{ metrics: ClassificationMetrics | null }> = 
   );
 };
 
-/** Panneau des métriques par tag */
+/** Panneau des m�triques par tag */
 const TagMetricsPanel: React.FC<{ metrics: ClassificationMetrics | null }> = ({ metrics }) => {
   if (!metrics) return null;
 
@@ -157,7 +223,7 @@ const TagMetricsPanel: React.FC<{ metrics: ClassificationMetrics | null }> = ({ 
         <TableHead>
           <TableRow>
             <TableCell><strong>Tag</strong></TableCell>
-            <TableCell align="right"><strong>Précision</strong></TableCell>
+            <TableCell align="right"><strong>Pr�cision</strong></TableCell>
             <TableCell align="right"><strong>Rappel</strong></TableCell>
             <TableCell align="right"><strong>F1-Score</strong></TableCell>
           </TableRow>
@@ -201,7 +267,7 @@ const ConfusionMatrixPanel: React.FC<{ metrics: ClassificationMetrics | null }> 
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell><strong>Réel \ Prédit</strong></TableCell>
+            <TableCell><strong>R�el \ Pr�dit</strong></TableCell>
             {labels.map((label) => (
               <TableCell key={label} align="center">
                 <Chip label={label} size="small" />
@@ -259,21 +325,21 @@ const ErrorAnalysisPanel: React.FC<{
   return (
     <Stack spacing={2}>
       <Alert severity={errorAnalysis.totalErrors > 0 ? 'warning' : 'success'}>
-        <strong>{errorAnalysis.totalErrors}</strong> erreurs détectées
+        <strong>{errorAnalysis.totalErrors}</strong> erreurs d�tect�es
       </Alert>
 
       {errorAnalysis.commonErrors.length > 0 && (
         <Box>
           <Typography variant="subtitle2" gutterBottom>
-            Confusions fréquentes
+            Confusions fr�quentes
           </Typography>
           <TableContainer component={Paper} variant="outlined">
             <Table size="small">
               <TableHead>
                 <TableRow>
                   <TableCell>Attendu</TableCell>
-                  <TableCell>Prédit</TableCell>
-                  <TableCell align="right">Fréquence</TableCell>
+                  <TableCell>Pr�dit</TableCell>
+                  <TableCell align="right">Fr�quence</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -293,11 +359,11 @@ const ErrorAnalysisPanel: React.FC<{
       {errorAnalysis.improvementSuggestions.length > 0 && (
         <Box>
           <Typography variant="subtitle2" gutterBottom>
-            💡 Suggestions d'amélioration
+            ?? Suggestions d'am�lioration
           </Typography>
           {errorAnalysis.improvementSuggestions.map((suggestion, idx) => (
             <Typography key={idx} variant="body2" sx={{ ml: 1 }}>
-              • {suggestion}
+              � {suggestion}
             </Typography>
           ))}
         </Box>
@@ -315,7 +381,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
   defaultClassifier = DEFAULT_CLASSIFIER,
   target = "X",
 }) => {
-  // --- ÉTATS LOCAUX ---
+  // --- �TATS LOCAUX ---
   const [sampleSizeInitialized, setSampleSizeInitialized] = React.useState(false);
   const [selectedModelId, setSelectedModelId] = React.useState<string>("");
   const [testResults, setTestResults] = React.useState<TVValidationResultCore[]>([]);
@@ -323,11 +389,11 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
   const [error, setError] = React.useState<string | null>(null);
   const [sampleSize, setSampleSize] = React.useState<number>(100);
 
-  // --- ÉTATS MÉTRIQUES ---
+  // --- �TATS M�TRIQUES ---
   const [metrics, setMetrics] = React.useState<ClassificationMetrics | null>(null);
   const [errorAnalysis, setErrorAnalysis] = React.useState<any>(null);
 
-  // --- ÉTATS VERSIONING ---
+  // --- �TATS VERSIONING ---
   const [selectedVersionId, setSelectedVersionId] = React.useState<AlgorithmVersionId>();
   const [showVersionDialog, setShowVersionDialog] = React.useState(false);
   const [showComparator, setShowComparator] = React.useState(false);
@@ -336,13 +402,13 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
   const [versionDescription, setVersionDescription] = React.useState("");
   const [changelog, setChangelog] = React.useState("");
 
-  // --- ÉTAT H2 UPDATE PROGRESS ---
+  // --- �TAT H2 UPDATE PROGRESS ---
   const [h2UpdateProgress, setH2UpdateProgress] = React.useState<{
     current: number;
     total: number;
   } | null>(null);
 
-  // --- ÉTATS ACCORDIONS ---
+  // --- �TATS ACCORDIONS ---
   const [expandedAccordions, setExpandedAccordions] = React.useState<Record<string, boolean>>({
     selection: true,
     execution: true,
@@ -351,6 +417,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     confusionMatrix: false,
     errorAnalysis: false,
     results: false,
+    decision: false,
     level2Preview: false,
   });
 
@@ -388,14 +455,41 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
   const chipColor = typeLabel === "rule-based" ? "primary" : "secondary";
   const versionLabel = meta.version;
   const supportsBatch = true;
-  const domainLabel = meta.description ?? "Général";
+  const domainLabel = meta.description ?? "G�n�ral";
   const isConfigValid = true;
+   // ========== NOUVEAUX �TATS - TEST RUNS & INVESTIGATION ==========
+  const [currentRunId, setCurrentRunId] = React.useState<string | null>(null);
+  const [currentTestRun, setCurrentTestRun] = React.useState<TestRun | null>(null);
+  const [showDecisionPanel, setShowDecisionPanel] = React.useState(false);
+  const [showInvestigationSummary, setShowInvestigationSummary] = React.useState(false);
+  const [showVersionValidationDialog, setShowVersionValidationDialog] = React.useState(false);
 
   const goldStandardData = level1Testing.goldStandardData;
   const validateAlgorithm = level1Testing.validateAlgorithm;
   const calculateMetrics = level1Testing.calculateMetrics;
   const analyzeErrors = level1Testing.analyzeErrors;
   const getRelevantCountFor = level1Testing.getRelevantCountFor;
+
+  // ========== NOUVEAUX HOOKS - VERSIONING & INVESTIGATION ==========
+  const { 
+    createTestRun, 
+    updateOutcome, 
+    getBaselineForTarget,
+  
+  } = useTestRuns();
+
+  const { 
+    state: investigationState,
+    startInvestigation,
+    completeInvestigation,
+    getAnnotationsForRun,
+    generateSummary
+  } = useInvestigation();
+
+  const { 
+    promoteToVersion: promoteRunToVersion,
+    getCurrentGitCommit 
+  } = useVersionValidation();
 
   React.useEffect(() => {
     if (sampleSizeInitialized) return;
@@ -426,7 +520,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       const results = await validateAlgorithm(selectedModelId, sampleSize);
       setTestResults(results as TVValidationResultCore[]);
 
-      // Calculer les métriques
+      // Calculer les m�triques
       if (calculateMetrics) {
         const m = calculateMetrics(results);
         setMetrics(m);
@@ -439,7 +533,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       }
 
       // UPDATE H2 avec progression
-      console.log(`📝 Mise à jour H2 pour ${results.length} résultats...`);
+      console.log(`?? Mise � jour H2 pour ${results.length} r�sultats...`);
       const updateStats = await level1Testing.updateH2WithResultsBatch(
         results,
         selectedModelId,
@@ -448,10 +542,60 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
           setH2UpdateProgress({ current, total });
         }
       );
-      console.log(`✅ Update H2 terminé:`, updateStats);
+      console.log(`? Update H2 termin�:`, updateStats);
       setH2UpdateProgress(null);
 
-      // Capture automatique de la version
+// ========== CR�ATION TEST RUN ==========
+    // ========== CR�ATION TEST RUN ==========
+      try {
+        // R�cup�rer la baseline pour comparaison
+        const baseline = await getBaselineForTarget(target);
+        
+        // Calculer baseline diff si baseline existe et metrics disponibles
+        let baselineDiff = null;
+        if (baseline && metrics) {
+          baselineDiff = {
+            accuracy_delta: metrics.accuracy - (baseline.level1_metrics?.accuracy || 0),
+            kappa_delta: (metrics.kappa || 0) - (baseline.level1_metrics?.kappa || 0),
+            f1_deltas: {},
+            errors_delta: 0,
+            corrections: 0,
+            regressions: 0,
+          };
+        }
+
+        // Extraire les pair_id en erreur avec typage s�curis�
+        const errorPairs = results
+          .filter(r => !r.correct)
+          .map(r => {
+            const metadata = r.metadata as any;
+            return metadata?.pairId;
+          })
+          .filter(Boolean) as number[];
+
+        // Cr�er l'entr�e test_runs
+        const runId = await createTestRun({
+          algorithm_key: selectedModelId,
+          algorithm_version: `v${meta.version ?? '1.0.0'}`,
+          target: target,
+          sample_size: sampleSize,
+          metrics: metrics,
+          error_pairs: errorPairs,
+          outcome: 'pending',
+          // baseline_version_id et baseline_diff sont optionnels
+          ...(baseline && { baseline_version_id: baseline.version_id }),
+          ...(baselineDiff && { baseline_diff: baselineDiff }),
+        });
+
+        console.log(`? Test run cr��: ${runId}`);
+        setCurrentRunId(runId);
+        setShowDecisionPanel(true);
+
+      } catch (err) {
+        console.error("? Erreur cr�ation test run:", err);
+      }
+
+      // Capture automatique de la version (existant)
       const newVersionId = await captureVersionAfterTest(
         results as TVValidationResultCore[],
         selectedModelId,
@@ -459,18 +603,8 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       );
       setCapturedVersionId(newVersionId);
 
-      // Ouvrir les accordions pertinents
-      setExpandedAccordions(prev => ({
-        ...prev,
-        globalMetrics: true,
-        tagMetrics: true,
-        level2Preview: true,
-      }));
-
-      setShowVersionDialog(true);
-
     } catch (e: any) {
-      console.error("❌ Validation error:", e);
+      console.error("? Validation error:", e);
       setError(e?.message || "Erreur inconnue");
       setH2UpdateProgress(null);
     } finally {
@@ -502,7 +636,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       setVersionDescription("");
       setChangelog("");
     } catch (err) {
-      console.error("❌ Erreur enrichissement version:", err);
+      console.error("? Erreur enrichissement version:", err);
     }
   };
 
@@ -513,7 +647,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       // ... logique de chargement existante
       setSelectedVersionId(versionId);
     } catch (err) {
-      console.error("❌ Erreur chargement version:", err);
+      console.error("? Erreur chargement version:", err);
     }
   };
 
@@ -521,9 +655,9 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     if (!capturedVersionId) return;
     try {
       await setActiveVersion(capturedVersionId);
-      alert(`Version ${capturedVersionId} définie comme active !`);
+      alert(`Version ${capturedVersionId} d�finie comme active !`);
     } catch (err) {
-      console.error("❌ Erreur activation version:", err);
+      console.error("? Erreur activation version:", err);
     }
   };
 
@@ -531,12 +665,12 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
   if (!level1Testing) {
     return (
       <Box sx={{ p: 3, textAlign: "center" }}>
-        <Typography variant="h6" color="text.secondary">Chargement…</Typography>
+        <Typography variant="h6" color="text.secondary">Chargement�</Typography>
       </Box>
     );
   }
 
-  // Préparer les métriques pour Level2Preview
+  // Pr�parer les m�triques pour Level2Preview
   const metricsForPreview = metrics ? {
     accuracy: metrics.accuracy,
     kappa: metrics.kappa,
@@ -549,10 +683,10 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     <Box sx={{ p: 3 }}>
       {/* HEADER */}
       <Typography variant="h4" gutterBottom>
-        {variableLabel} — Test individuel
+        {variableLabel} � Test individuel
       </Typography>
       <Typography variant="body1" sx={{ mb: 3, color: "text.secondary" }}>
-        Lance un test contre le gold standard et inspecte les résultats.
+        Lance un test contre le gold standard et inspecte les r�sultats.
       </Typography>
 
       {/* VERSIONING TOOLBAR */}
@@ -567,7 +701,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
         </Button>
         {capturedVersionId && (
           <Chip
-            label={`Version capturée: ${capturedVersionId.split('-').pop()}`}
+            label={`Version captur�e: ${capturedVersionId.split('-').pop()}`}
             color="success"
             size="small"
             onDelete={handleActivateVersion}
@@ -588,7 +722,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       {/* ACCORDIONS */}
       {/* ============================================================ */}
 
-      {/* 1. SÉLECTION & CONFIGURATION */}
+      {/* 1. S�LECTION & CONFIGURATION */}
       <Accordion
         expanded={expandedAccordions.selection}
         onChange={() => toggleAccordion('selection')}
@@ -596,7 +730,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">🎯 Sélection de l'Algorithme</Typography>
+            <Typography variant="h6">?? S�lection de l'Algorithme</Typography>
             <Chip label={selectedDisplayName} color={chipColor as any} size="small" />
             {versionLabel && <Chip label={`v${versionLabel}`} variant="outlined" size="small" />}
           </Stack>
@@ -626,7 +760,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
         </AccordionDetails>
       </Accordion>
 
-      {/* 2. EXÉCUTION */}
+      {/* 2. EX�CUTION */}
       <Accordion
         expanded={expandedAccordions.execution}
         onChange={() => toggleAccordion('execution')}
@@ -634,11 +768,11 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">▶️ Exécution</Typography>
+            <Typography variant="h6">?? Ex�cution</Typography>
             {isRunning && <Chip label="En cours..." color="warning" size="small" />}
             {hasResults && !isRunning && (
               <Chip
-                label={`${testResults.length} résultats`}
+                label={`${testResults.length} r�sultats`}
                 color="success"
                 size="small"
                 icon={<CheckCircleIcon />}
@@ -660,7 +794,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
           {h2UpdateProgress && (
             <Box sx={{ mt: 2 }}>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                📝 Mise à jour analysis_pairs: {h2UpdateProgress.current} / {h2UpdateProgress.total}
+                ?? Mise � jour analysis_pairs: {h2UpdateProgress.current} / {h2UpdateProgress.total}
               </Typography>
               <LinearProgress
                 variant="determinate"
@@ -672,14 +806,14 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
             <Box sx={{ mt: 2 }}>
               <LinearProgress />
               <Typography variant="body2" sx={{ mt: 1, textAlign: "center" }}>
-                Traitement... {testResults.length} échantillons analysés
+                Traitement... {testResults.length} �chantillons analys�s
               </Typography>
             </Box>
           )}
         </AccordionDetails>
       </Accordion>
 
-      {/* 3. MÉTRIQUES GLOBALES */}
+      {/* 3. M�TRIQUES GLOBALES */}
       <Accordion
         expanded={expandedAccordions.globalMetrics}
         onChange={() => toggleAccordion('globalMetrics')}
@@ -688,7 +822,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">📊 Métriques Globales</Typography>
+            <Typography variant="h6">?? M�triques Globales</Typography>
             {metrics && (
               <Chip
                 label={`Accuracy: ${metrics.accuracy.toFixed(1)}%`}
@@ -703,7 +837,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
         </AccordionDetails>
       </Accordion>
 
-      {/* 4. MÉTRIQUES PAR TAG */}
+      {/* 4. M�TRIQUES PAR TAG */}
       <Accordion
         expanded={expandedAccordions.tagMetrics}
         onChange={() => toggleAccordion('tagMetrics')}
@@ -712,7 +846,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">📋 Métriques par Tag</Typography>
+            <Typography variant="h6">?? M�triques par Tag</Typography>
           </Stack>
         </AccordionSummary>
         <AccordionDetails>
@@ -729,7 +863,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">🔀 Matrice de Confusion</Typography>
+            <Typography variant="h6">?? Matrice de Confusion</Typography>
             {!['X', 'Y'].includes(target) && (
               <Chip label="X/Y uniquement" size="small" variant="outlined" />
             )}
@@ -749,7 +883,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">❌ Analyse des Erreurs</Typography>
+            <Typography variant="h6">? Analyse des Erreurs</Typography>
             {errorAnalysis && (
               <Chip
                 label={`${errorAnalysis.totalErrors} erreurs`}
@@ -764,7 +898,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
         </AccordionDetails>
       </Accordion>
 
-      {/* 7. ÉCHANTILLON DE RÉSULTATS */}
+      {/* 7. �CHANTILLON DE R�SULTATS */}
       <Accordion
         expanded={expandedAccordions.results}
         onChange={() => toggleAccordion('results')}
@@ -773,9 +907,9 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">📝 Échantillon de Résultats</Typography>
+            <Typography variant="h6">?? �chantillon de R�sultats</Typography>
             {hasResults && (
-              <Chip label={`${testResults.length} résultats`} size="small" variant="outlined" />
+              <Chip label={`${testResults.length} r�sultats`} size="small" variant="outlined" />
             )}
           </Stack>
         </AccordionSummary>
@@ -789,7 +923,49 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
         </AccordionDetails>
       </Accordion>
 
-      {/* 8. LEVEL 2 PREVIEW 🆕 */}
+      {/* 8. D�CISION POST-TEST ?? */}
+      <Accordion
+        expanded={expandedAccordions.decision}
+        onChange={() => toggleAccordion('decision')}
+        sx={{
+          mb: 1,
+          display: showDecisionPanel ? 'block' : 'none',
+          border: '2px solid',
+          borderColor: 'warning.main',
+        }}
+      >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Typography variant="h6">?? D�cision post-test</Typography>
+            <Chip label="Action requise" color="warning" size="small" />
+          </Stack>
+        </AccordionSummary>
+        <AccordionDetails>
+          {currentRunId && metrics && (
+            <TestDecisionPanel
+              runId={currentRunId}
+              metrics={toValidationMetrics(metrics, testResults)}
+              baselineDiff={null}
+              onDecision={async (decision) => {
+  if (decision === 'discarded') {
+    await updateOutcome(currentRunId, 'discarded');
+    setShowDecisionPanel(false);
+    setCurrentRunId(null);
+  } else if (decision === 'investigating') {
+    await updateOutcome(currentRunId, 'investigating');
+    await startInvestigation(currentRunId);
+    setShowDecisionPanel(false);
+  } else if (decision === 'promoted') {
+    setShowVersionValidationDialog(true);
+  }
+}}
+            />
+          )}
+        </AccordionDetails>
+      </Accordion>
+
+
+      {/* 8. LEVEL 2 PREVIEW ?? */}
       <Accordion
         expanded={expandedAccordions.level2Preview}
         onChange={() => toggleAccordion('level2Preview')}
@@ -801,9 +977,9 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">🚀 Prévisualisation Level 2</Typography>
+            <Typography variant="h6">?? Pr�visualisation Level 2</Typography>
             {!hasResults && (
-              <Chip label="Exécuter d'abord" size="small" variant="outlined" />
+              <Chip label="Ex�cuter d'abord" size="small" variant="outlined" />
             )}
           </Stack>
         </AccordionSummary>
@@ -822,11 +998,11 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
 
       {/* DIALOG VERSIONING */}
       <Dialog open={showVersionDialog} onClose={() => setShowVersionDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>📝 Documenter la Version</DialogTitle>
+        <DialogTitle>?? Documenter la Version</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Alert severity="info">
-              Version capturée: <strong>{capturedVersionId}</strong>
+              Version captur�e: <strong>{capturedVersionId}</strong>
             </Alert>
             <TextField
               label="Nom de la version"
