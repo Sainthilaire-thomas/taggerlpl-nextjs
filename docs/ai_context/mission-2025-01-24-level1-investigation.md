@@ -1,132 +1,219 @@
-﻿# 🎯 Mission: Investigation Phase 3 Level 1 - Préparation Level 2
+﻿
+# 🎯 Mission: Investigation Level 1 → Level 2 Integration
 
-*Session planifiée pour le 2025-01-24*
+*Session du 2025-01-24*
 
 ## Objectif
 
-Investiguer et documenter le système de validation des algorithmes (Level 1) pour s'assurer que Level 2 produira des rapports statistiques pertinents sur les hypothèses H1 et H2.
+Enrichir l'interface Level 1 pour afficher dès la validation algorithmique les indicateurs qui seront pertinents pour Level 2, évitant ainsi les allers-retours incessants entre niveaux.
+
+**Problématique** : Actuellement, il faut valider les algorithmes en Level 1, puis passer à Level 2 pour découvrir si les résultats sont exploitables pour les hypothèses H1/H2.
 
 ---
 
-## 📊 Contexte
+## ✅ Travail accompli
 
-### Hypothèses de thèse à valider
+### Investigation complète de l'architecture
 
-**H1** : Les stratégies orientées action (ENGAGEMENT, OUVERTURE) génèrent plus de réactions positives que EXPLICATION
-
-**H2** : Cet effet est médié par :
-- M1 (densité de verbes d'action)
-- M2 (alignement lexical conseiller-client)
-- M3 (charge cognitive)
-
-### Tables Supabase clés
-
-#### `analysis_pairs` (930+ paires)
-| Colonnes | Description |
-|----------|-------------|
-| `strategy_tag`, `reaction_tag` | Tags annotés manuellement |
-| `x_predicted_tag`, `x_confidence` | Prédiction algorithme X |
-| `y_predicted_tag`, `y_confidence` | Prédiction algorithme Y |
-| `m1_verb_density`, `m1_verb_count` | Médiateur M1 |
-| `m2_global_alignment` | Médiateur M2 |
-| `m3_cognitive_score` | Médiateur M3 |
-
-#### `algorithm_version_registry`
-- Registre des versions avec métriques Level 1
-
-### Algorithmes disponibles (10)
-
-| Algorithme | Cible | Type |
-|------------|-------|------|
-| RegexXClassifier | X | rule-based |
-| SpacyXClassifier | X | ml |
-| OpenAIXClassifier | X | llm |
-| OpenAI3TXClassifier | X | llm (3 tours) |
-| RegexYClassifier | Y | rule-based |
-| RegexM1Calculator | M1 | metric |
-| M2LexicalAlignmentCalculator | M2 | rule-based |
-| M2SemanticAlignmentCalculator | M2 | rule-based |
-| M2CompositeAlignmentCalculator | M2 | hybrid |
-| PauseM3Calculator | M3 | metric |
+1. **Exploration Level 2** via PowerShell :
+   * Seuils H1 dans `config/hypotheses.ts` (3 modes : STRICT/REALISTIC/EMPIRICAL)
+   * Services statistiques : `H1StatisticsService.ts`, `H2MediationService.ts`
+   * Interface principale : `Level2Interface.tsx`
+   * Calculs H1 : `utils/stats.ts` (computeH1Analysis, summarizeH1, evaluateH1Criteria)
+2. **Exploration Level 1** :
+   * Composant principal : `BaseAlgorithmTesting.tsx`
+   * Hook central : `useLevel1Testing.ts`
+   * Système de versioning : `useAlgorithmVersioning.ts`
+   * Update H2 optimisé : `updateH2WithResultsBatch()` (bulk RPC)
+3. **Documentation des seuils statistiques** :
+   * Critères H1 : 6 critères (taux positif/négatif actions/explications, écart empirique, significativité)
+   * Médiation H2 : Baron-Kenny, Sobel Test, effets directs/indirects
 
 ---
 
-## ❓ Questions à investiguer
+## 📁 Fichiers analysés (non modifiés)
 
-### 1. Qualité des algorithmes X
-- [ ] Quel algorithme X a le meilleur F1 ?
-- [ ] Accuracy suffisante (>80%) pour Level 2 ?
-- [ ] Biais par catégorie ?
-
-### 2. Couverture des médiateurs
-- [ ] Combien de paires ont M1, M2, M3 calculés ?
-- [ ] Valeurs dans des plages exploitables ?
-
-### 3. Versioning et comparaison
-- [ ] Comment fonctionne le système de versions ?
-- [ ] Peut-on comparer 2 versions ?
-
-### 4. Préparation Level 2
-- [ ] Données prêtes pour H1 (contingence X×Y) ?
-- [ ] Données prêtes pour H2 (médiation) ?
+| Fichier                                                                             | Analyse | Informations extraites         |
+| ----------------------------------------------------------------------------------- | ------- | ------------------------------ |
+| `level2-hypotheses/config/hypotheses.ts`                                          | Lecture | Seuils H1 (3 modes)            |
+| `level2-hypotheses/statistics/domain/services/H1StatisticsService.ts`             | Lecture | Chi², V de Cramér            |
+| `level2-hypotheses/h2-mediation/statistics/domain/services/H2MediationService.ts` | Lecture | Baron-Kenny, Sobel             |
+| `level2-hypotheses/utils/stats.ts`                                                | Lecture | computeH1Analysis, summarizeH1 |
+| `level2-hypotheses/hooks/useLevel2Data.ts`                                        | Lecture | Couverture M1/M2/M3            |
+| `level1-validation/ui/components/algorithms/shared/BaseAlgorithmTesting.tsx`      | Lecture | Point d'intégration           |
+| `level1-validation/ui/hooks/useLevel1Testing.ts`                                  | Lecture | validateAlgorithm, updateH2    |
 
 ---
 
-## 📁 Fichiers clés
+## 📋 Spécification Level 2 Preview Component
+
+### Architecture proposée
+
 ```
-src/features/phase3-analysis/level1-validation/
-├── algorithms/          # Classificateurs X, Y, M1, M2, M3
-├── ui/hooks/
-│   ├── useLevel1Testing.ts    # Exécution des tests
-│   ├── useAnalysisPairs.ts    # Chargement données
-│   └── useAlgorithmVersioning.ts
-└── utils/
-    └── metricsCalculation.ts  # Calcul F1, kappa
-
-src/features/phase3-analysis/level2-hypotheses/
-├── config/hypotheses.ts       # Seuils validation
-├── hooks/useLevel2Data.ts
-└── statistics/domain/services/
-    ├── H1StatisticsService.ts
-    └── H2MediationService.ts
+src/features/phase3-analysis/level1-validation/ui/components/Level2Preview/
+├── Level2PreviewPanel.tsx      # Container principal
+├── H1ReadinessIndicator.tsx    # Indicateur H1 avec checklist
+├── H2ReadinessIndicator.tsx    # Indicateur H2 avec couverture
+├── ThresholdChecklist.tsx      # Liste critères avec ✅/❌
+└── QuickActionsBar.tsx         # Boutons navigation Level 2
 ```
 
+### Données à calculer
+
+**H1 Preview** :
+
+```typescript
+interface H1PreviewData {
+  // Qualité algorithme X
+  xAccuracy: number;
+  xF1Macro: number;
+  xKappa: number;
+  
+  // Simulation Chi² (sur prédictions)
+  estimatedChiSquare: number;
+  estimatedCramersV: number;
+  estimatedPValue: number;
+  
+  // Écarts empiriques
+  actionsPositiveRate: number;
+  explanationsPositiveRate: number;
+  empiricalDifference: number;
+  
+  // Score global
+  h1ReadinessScore: number; // 0-100
+  h1ReadinessLevel: 'READY' | 'PARTIAL' | 'INSUFFICIENT';
+}
+```
+
+**H2 Preview** :
+
+```typescript
+interface H2PreviewData {
+  // Couverture médiateurs
+  m1Coverage: number;
+  m2Coverage: number;
+  m3Coverage: number;
+  
+  // Corrélations préliminaires
+  m1Correlation: number;
+  m2Correlation: number;
+  m3Correlation: number;
+  
+  // Score global
+  h2ReadinessScore: number;
+  h2ReadinessLevel: 'READY' | 'PARTIAL' | 'INSUFFICIENT';
+}
+```
+
+### UI cible
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ 📊 Prévisualisation Level 2 - Prêt pour Hypothèses     │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│ ✅ H1 Readiness: 85/100 (READY)                        │
+│ ├─ ✅ Accuracy X: 87% (seuil: 70%)                     │
+│ ├─ ✅ F1 Macro: 0.82 (seuil: 0.65)                     │
+│ ├─ ✅ Chi² estimé: p<0.001 (significatif)              │
+│ ├─ ✅ V Cramér: 0.45 (effet fort)                      │
+│ └─ ✅ Écart empirique: +52% (seuil: 50%)               │
+│                                                         │
+│ ⚠️ H2 Readiness: 65/100 (PARTIAL)                      │
+│ ├─ ✅ M1 Coverage: 95% (seuil: 90%)                    │
+│ ├─ ✅ M2 Coverage: 93% (seuil: 90%)                    │
+│ ├─ ❌ M3 Coverage: 45% (seuil: 90%) ⚠️ INSUFFISANT     │
+│ ├─ ✅ M1 Corrélation: r=0.42 (p<0.01)                  │
+│ └─ ⚠️ M2 Corrélation: r=0.18 (p=0.08)                  │
+│                                                         │
+│ 💡 Recommandations:                                     │
+│ • Exécuter M3Calculator sur les paires manquantes      │
+│ • Vérifier qualité M2 (alignement faible)              │
+│                                                         │
+│ [🚀 Passer à Level 2] [📋 Rapport Détaillé]            │
+└─────────────────────────────────────────────────────────┘
+```
+
 ---
 
-## ✅ Actions planifiées
+## ⏳ Reste à faire
 
-### Phase 1 : Diagnostic
-- [ ] Lancer tests sur chaque algo X
-- [ ] Vérifier couverture M1/M2/M3
-- [ ] Identifier paires incomplètes
+### Phase 1 : Création Services Calcul (2-3h)
 
-### Phase 2 : Comparaison
-- [ ] Comparer F1 des algorithmes X
-- [ ] Identifier le meilleur candidat
+* [ ] `Level2PreviewService.ts` : Calcul H1/H2 preview
+* [ ] `useLevel2Preview.ts` : Hook intégration
+* [ ] Tests unitaires seuils
 
-### Phase 3 : Validation Level 2
-- [ ] Exécuter analyse H1
-- [ ] Vérifier significativité statistique
+### Phase 2 : Composants UI (3-4h)
 
----
+* [ ] `Level2PreviewPanel.tsx` : Container principal
+* [ ] `H1ReadinessIndicator.tsx` : Indicateur H1 avec checklist
+* [ ] `H2ReadinessIndicator.tsx` : Indicateur H2 avec couverture
+* [ ] `ThresholdChecklist.tsx` : Liste critères avec ✅/❌
+* [ ] `QuickActionsBar.tsx` : Boutons navigation Level 2
 
-## 📈 Critères de succès
+### Phase 3 : Intégration BaseAlgorithmTesting (1-2h)
 
-| Critère | Minimum | Idéal |
-|---------|---------|-------|
-| Accuracy algo X | >70% | >85% |
-| F1 macro | >0.65 | >0.80 |
-| Paires avec M1 | >90% | 100% |
-| p-value H1 | <0.05 | <0.01 |
+* [ ] Appel `useLevel2Preview()` après validation
+* [ ] Affichage conditionnel `Level2PreviewPanel`
+* [ ] Tests E2E
 
----
+### Phase 4 : Documentation (1h)
 
-## 🔗 Prérequis
-
-- ✅ Build production fonctionne
-- ✅ 10 algorithmes configurés
-- ✅ Table analysis_pairs peuplée
+* [ ] Guide utilisateur
+* [ ] Exemples interprétation scores
+* [ ] Troubleshooting
 
 ---
 
-*Préparé le 2025-01-23*
+## 📝 Notes pour la prochaine session
+
+### Fichiers clés à modifier
+
+**Level 1 (à modifier)** :
+
+* `src/features/phase3-analysis/level1-validation/ui/components/algorithms/shared/BaseAlgorithmTesting.tsx`
+* `src/features/phase3-analysis/level1-validation/ui/hooks/useLevel1Testing.ts`
+
+**Level 2 (référence, ne pas modifier)** :
+
+* `src/features/phase3-analysis/level2-hypotheses/config/hypotheses.ts`
+* `src/features/phase3-analysis/level2-hypotheses/statistics/domain/services/H1StatisticsService.ts`
+* `src/features/phase3-analysis/level2-hypotheses/utils/stats.ts`
+
+**À créer** :
+
+* `src/features/phase3-analysis/level1-validation/ui/components/Level2Preview/` (nouveau dossier)
+
+### Calculs techniques
+
+**Chi² estimé** : Utiliser les prédictions de l'algorithme X pour simuler la table de contingence X×Y, puis appliquer `H1StatisticsService.calculateChiSquare()`.
+
+**Couverture M1/M2/M3** :
+
+```sql
+SELECT 
+  COUNT(*) FILTER (WHERE m1_verb_density IS NOT NULL) * 100.0 / COUNT(*) as m1_coverage,
+  COUNT(*) FILTER (WHERE m2_global_alignment IS NOT NULL) * 100.0 / COUNT(*) as m2_coverage,
+  COUNT(*) FILTER (WHERE m3_cognitive_score IS NOT NULL) * 100.0 / COUNT(*) as m3_coverage
+FROM analysis_pairs;
+```
+
+**Corrélations préliminaires** : Pearson entre M1/M2/M3 et Y (codé numériquement : POSITIF=1, NEUTRE=0, NEGATIF=-1).
+
+---
+
+## 🔗 Continuité
+
+Cette session a préparé le terrain pour l'implémentation. La prochaine session devrait :
+
+1. Commencer par créer `Level2PreviewService.ts` avec les calculs
+2. Créer le hook `useLevel2Preview.ts`
+3. Puis implémenter les composants UI
+4. Enfin intégrer dans `BaseAlgorithmTesting.tsx`
+
+**Temps estimé total** : 8-10h de développement
+
+---
+
+*Mission d'investigation terminée - Prêt pour implémentation*

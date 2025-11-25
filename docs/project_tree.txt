@@ -106,6 +106,11 @@ tsconfig.json
 |   |-- Flux-donnees-taggerLPL.md
 |   +-- schema.sql
 |-- docs/
+|   |-- ai_context/
+|   |   |-- AI-CONTEXT-WORKFLOW-SPEC.md
+|   |   |-- base-context.md
+|   |   |-- mission-2025-01-23-typescript-cleanup.md
+|   |   +-- mission-2025-01-24-level1-investigation.md
 |   |-- architecture/
 |   |   |-- ARCHITECTURE_CIBLE_WORKFLOW.md
 |   |   |-- ARCHITECTURE_TYPES_STRUCTURE.md
@@ -523,7 +528,6 @@ tsconfig.json
 |   |   |   |   |   |   |   +-- OpenAIXClassifier-copy.ts
 |   |   |   |   |   |   |-- OpenAI3TXClassifier.ts
 |   |   |   |   |   |   |-- OpenAIXClassifier.ts
-|   |   |   |   |   |   |-- RegexClientClassifier.ts
 |   |   |   |   |   |   |-- RegexXClassifier.ts
 |   |   |   |   |   |   +-- SpacyXClassifier.ts
 |   |   |   |   |   |-- conseiller/
@@ -533,7 +537,6 @@ tsconfig.json
 |   |   |   |   |   |   |-- MistralConseillerClassifier.ts
 |   |   |   |   |   |   |-- OpenAIConseillerClassifier.ts
 |   |   |   |   |   |   |-- ProxyOpenAIConseillerClassifier.ts
-|   |   |   |   |   |   |-- RegexConseillerClassifier.ts
 |   |   |   |   |   |   |-- RegexYClassifier.ts
 |   |   |   |   |   |   +-- SpacyConseillerClassifier.ts
 |   |   |   |   |   |-- mediators/
@@ -559,6 +562,7 @@ tsconfig.json
 |   |   |   |   |       |-- BaseClassifier.ts
 |   |   |   |   |       |-- ClassifierComparator.ts
 |   |   |   |   |       |-- ClassifierRegistry.ts
+|   |   |   |   |       |-- index.ts
 |   |   |   |   |       |-- initializeAlgorithms.ts
 |   |   |   |   |       +-- PerformanceMetrics.ts
 |   |   |   |   |-- ui/
@@ -603,8 +607,6 @@ tsconfig.json
 |   |   |   |   |   |   |   |-- MetricsPanel.numeric.tsx
 |   |   |   |   |   |   |   |-- MetricsPanel.tsx
 |   |   |   |   |   |   |   |-- ResultsTableBase.tsx
-|   |   |   |   |   |   |   |-- ResultsTableM1.tsx
-|   |   |   |   |   |   |   |-- ResultsTableX.tsx
 |   |   |   |   |   |   |   |-- RunPanel.tsx
 |   |   |   |   |   |   |   +-- TechnicalBenchmark.tsx
 |   |   |   |   |   |   |-- algorithms/
@@ -632,7 +634,6 @@ tsconfig.json
 |   |   |   |   |   |   |   |-- EnhancedErrorAnalysis.tsx
 |   |   |   |   |   |   |   |-- EnsembleTuning.tsx
 |   |   |   |   |   |   |   |-- ParameterOptimization.tsx
-|   |   |   |   |   |   |   |-- TechnicalValidation.tsx
 |   |   |   |   |   |   |   +-- TechnicalValidationFixed.tsx
 |   |   |   |   |   |   +-- shared/
 |   |   |   |   |   |       |-- atoms/

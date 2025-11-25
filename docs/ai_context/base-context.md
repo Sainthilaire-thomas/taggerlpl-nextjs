@@ -1,6 +1,7 @@
+
 # TaggerLPL NextJS - Contexte de base
 
-*Généré le 2025-01-23*
+*Généré le 2025-01-24*
 
 ## Vue d'ensemble
 
@@ -9,11 +10,12 @@
 **Description** : Système de tagging et d'analyse de transcriptions d'appels de centres d'appels, permettant de valider des hypothèses scientifiques sur l'influence des stratégies conversationnelles des conseillers sur les réactions clients.
 
 **Stack technique** :
-- Framework : Next.js 14+ (App Router)
-- Langage : TypeScript (strict mode)
-- Base de données : Supabase (PostgreSQL)
-- UI : React + Material-UI (MUI v6)
-- Authentification : Supabase Auth
+
+* Framework : Next.js 14+ (App Router)
+* Langage : TypeScript (strict mode)
+* Base de données : Supabase (PostgreSQL)
+* UI : React + Material-UI (MUI v6)
+* Authentification : Supabase Auth
 
 ## Architecture globale - 3 Phases de recherche
 
@@ -27,34 +29,98 @@ PHASE 1: Gestion Corpus      →  PHASE 2: Annotation         →  PHASE 3: Anal
 └─────────────────────────┘     └─────────────────────────┘     └─────────────────────────┘
 ```
 
-## Structure des dossiers clés
+---
+
+## Structure Phase 3 - Analysis
+
+### Level 1 : Validation Algorithmique
+
+**Chemin** : `src/features/phase3-analysis/level1-validation/`
 
 ```
-src/
-├── app/(protected)/           # Pages par phase
-│   ├── phase1-corpus/         # Import, WorkDrive, Management
-│   ├── phase2-annotation/     # Transcript, Tags, Supervision
-│   └── phase3-analysis/       # Level0, Level1 (AlgorithmLab), Level2
+level1-validation/
+├── algorithms/
+│   ├── client/                    # Algorithmes universels
+│   │   ├── RegexXClassifier.ts    # X rule-based
+│   │   ├── OpenAIXClassifier.ts   # X LLM (gpt-4o)
+│   │   ├── OpenAI3TXClassifier.ts # X LLM contextuel (3 tours)
+│   │   ├── SpacyXClassifier.ts    # X ML
+│   │   └── RegexYClassifier.ts    # Y rule-based (client)
+│   ├── conseiller/                # Legacy classifiers
+│   ├── mediators/
+│   │   ├── M1Algorithms/          # Densité verbes d'action
+│   │   ├── M2Algorithms/          # Alignement lexical/sémantique
+│   │   └── M3Algorithms/          # Charge cognitive (pauses)
+│   └── shared/
+│       ├── AlgorithmRegistry.ts   # Registre centralisé
+│       ├── BaseAlgorithm.ts       # Interface universelle
+│       └── initializeAlgorithms.ts
 │
-├── features/                  # Logique métier (DDD)
-│   ├── phase1-corpus/calls/   # Gestion appels (domain/infrastructure/ui)
-│   ├── phase2-annotation/     # Annotation et supervision
-│   └── phase3-analysis/       # Algorithmes et validation
-│       └── level1-validation/
-│           ├── algorithms/    # X, Y, M1, M2, M3 classifiers
-│           └── ui/            # AlgorithmLab components
-│
-├── types/                     # Types centralisés
-│   ├── database.types.ts      # Types Supabase auto-générés
-│   ├── entities/              # Call, Turn, Tag, AnalysisPair
-│   ├── algorithm-lab/         # Types AlgorithmLab
-│   │   ├── core/              # variables.ts, validation.ts
-│   │   ├── algorithms/        # base.ts, configs
-│   │   └── utils/             # corpusFilters, inputPreparation
-│   └── index.ts               # Exports centralisés
-│
-└── components/                # Composants legacy (en migration)
+├── ui/
+│   ├── components/
+│   │   ├── AlgorithmLab/
+│   │   │   ├── Level1Interface.tsx    # Interface principale
+│   │   │   ├── RunPanel.tsx           # Lancement tests
+│   │   │   ├── MetricsPanel.tsx       # Affichage métriques
+│   │   │   └── ResultsSample/         # Tableau résultats
+│   │   ├── algorithms/
+│   │   │   ├── shared/BaseAlgorithmTesting.tsx  # Composant générique
+│   │   │   ├── XClassifiers/XValidationInterface.tsx
+│   │   │   ├── YClassifiers/YValidationInterface.tsx
+│   │   │   ├── M1Calculators/M1ValidationInterface.tsx
+│   │   │   ├── M2Calculators/M2ValidationInterface.tsx
+│   │   │   └── M3Calculators/M3ValidationInterface.tsx
+│   │   └── shared/
+│   │       ├── AlgorithmSelector.tsx
+│   │       ├── VersionSelector.tsx
+│   │       └── VersionComparator.tsx
+│   └── hooks/
+│       ├── useLevel1Testing.ts        # Hook principal validation
+│       ├── useAnalysisPairs.ts        # Chargement analysis_pairs
+│       ├── useAlgorithmVersioning.ts  # Gestion versions
+│       └── normalizeUniversalToTV.ts  # Normalisation résultats
 ```
+
+### Level 2 : Validation Hypothèses
+
+**Chemin** : `src/features/phase3-analysis/level2-hypotheses/`
+
+```
+level2-hypotheses/
+├── config/
+│   └── hypotheses.ts              # ⭐ Seuils H1 (3 modes: STRICT/REALISTIC/EMPIRICAL)
+│
+├── h1/                            # Hypothèse H1 (X → Y)
+├── h2/                            # Hypothèse H2 (médiation)
+├── h2-mediation/
+│   ├── hooks/useH2MediationData.ts
+│   └── statistics/domain/services/
+│       ├── H2MediationService.ts      # Baron-Kenny, Sobel Test
+│       ├── H2DescriptiveStatsService.ts
+│       └── H2PathAnalysisService.ts
+│
+├── statistics/domain/services/
+│   ├── H1StatisticsService.ts         # Chi², V de Cramér
+│   ├── H1StrategyAnalysisService.ts
+│   └── H1TagAnalysisService.ts
+│
+├── hooks/
+│   ├── useLevel2Data.ts               # Chargement données Level 2
+│   └── useH1Analysis.ts
+│
+├── ui/components/
+│   ├── Level2Interface.tsx            # ⭐ Interface principale H1
+│   ├── StatisticalTestsPanel.tsx
+│   ├── StatisticalSummary.tsx
+│   ├── H2AlignmentValidation.tsx
+│   └── H3ApplicationValidation.tsx
+│
+└── utils/
+    ├── stats.ts                       # ⭐ Calculs H1 (Chi², Fisher, ANOVA)
+    └── DataProcessing.ts
+```
+
+---
 
 ## Types fondamentaux
 
@@ -66,26 +132,23 @@ interface AnalysisPair {
   call_id: string;
   
   // Gold Standard (annotations manuelles)
-  strategy_tag: string;      // Variable X (ENGAGEMENT, OUVERTURE, REFLET_*, EXPLICATION)
-  reaction_tag: string;      // Variable Y (CLIENT_POSITIF, CLIENT_NEUTRE, CLIENT_NEGATIF)
-  strategy_family: string;   // Famille de stratégie
+  strategy_tag: string;      // Variable X
+  reaction_tag: string;      // Variable Y
+  strategy_family: string;
   
   // Verbatims
   conseiller_verbatim: string;
   client_verbatim: string;
   
-  // Contexte étendu (prev3 → next3)
+  // Contexte étendu
   prev1_verbatim?: string;
   next1_verbatim?: string;
-  // ...
   
-  // Résultats algorithmes X
+  // Résultats algorithmes
   x_predicted_tag?: string;
   x_confidence?: number;
   x_algorithm_key?: string;
-  x_evidences?: jsonb;
   
-  // Résultats algorithmes Y
   y_predicted_tag?: string;
   y_confidence?: number;
   
@@ -99,90 +162,136 @@ interface AnalysisPair {
 }
 ```
 
-### Variables de thèse (VariableDetails)
+### Variables de thèse
 
 ```typescript
 type VariableTarget = "X" | "Y" | "M1" | "M2" | "M3";
 
 type XTag = "ENGAGEMENT" | "EXPLICATION" | "REFLET_ACQ" | "REFLET_JE" | "REFLET_VOUS" | "OUVERTURE";
 type YTag = "CLIENT_POSITIF" | "CLIENT_NEGATIF" | "CLIENT_NEUTRE";
-
-interface XDetails {
-  family?: string;
-  matchedPatterns?: string[];
-  rationale?: string;
-  confidence?: number;
-  rawResponse?: string;
-  reason?: string;
-  // ...
-}
-
-interface YDetails {
-  sentiment?: "POSITIVE" | "NEGATIVE" | "NEUTRAL";
-  cues?: string[];
-  scores?: Record<string, number>;
-  rawResponse?: string;
-  reason?: string;
-  // ...
-}
-
-type VariableDetails = XDetails | YDetails | M1Details | M2Details | M3Details;
 ```
 
-### SpeakerType et AlgorithmConfig
+---
+
+## Seuils de validation H1 (config/hypotheses.ts)
+
+### Mode REALISTIC (par défaut)
 
 ```typescript
-type SpeakerType = 'conseiller' | 'client' | 'M1' | 'M2' | 'M3';
-
-interface AlgorithmConfig {
-  target: SpeakerType;
-  inputFormat: 'string' | 'alignment' | 'segment';
-  outputType: 'classification' | 'numeric';
-  displayName: string;
-}
+const REALISTIC_H1_THRESHOLDS = {
+  actions: {
+    minPositiveRate: 35.0,   // ENGAGEMENT+OUVERTURE ≥ 35% positif
+    maxNegativeRate: 30.0,   // ENGAGEMENT+OUVERTURE ≤ 30% négatif
+  },
+  explanations: {
+    maxPositiveRate: 10.0,   // EXPLICATION ≤ 10% positif
+    minNegativeRate: 60.0,   // EXPLICATION ≥ 60% négatif
+  },
+  empirical: {
+    minDifference: 20.0,     // Écart Actions-Explications ≥ 20 pts
+    substantialThreshold: 35.0,
+  },
+  statistical: {
+    alphaLevel: 0.05,        // p < 0.05
+    cramersVThreshold: 0.25, // V > 0.25 effet fort
+    cramersVModerate: 0.15,  // V > 0.15 effet modéré
+  },
+  validation: {
+    minScoreForValidated: 4, // 4/6 critères pour VALIDATED
+    minScoreForPartial: 2,   // 2/6 pour PARTIALLY_VALIDATED
+    maxCriteria: 6,
+  },
+};
 ```
 
-## Configuration TypeScript
+### Critères H1 évalués (6 critères)
 
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
-  }
-}
-```
+1. **Actions → Positif** : taux positif ≥ seuil
+2. **Actions → Négatif** : taux négatif ≤ seuil
+3. **Explications → Positif** : taux positif ≤ seuil
+4. **Explications → Négatif** : taux négatif ≥ seuil
+5. **Écart Empirique** : différence ≥ seuil
+6. **Significativité Stats** : p < alpha ET V ≥ seuil
 
-## Conventions de nommage
+---
 
-### Préfixes par variable (colonnes DB)
-- **x_** : Variable X (stratégie conseiller)
-- **y_** : Variable Y (réaction client)
-- **m1_** : Médiateur M1 (verbes d'action)
-- **m2_** : Médiateur M2 (alignement linguistique)
-- **m3_** : Médiateur M3 (charge cognitive)
+## Services statistiques
 
-### Suffixes
-- **_tag** : Tag prédit (string)
-- **_confidence** : Niveau de confiance [0-1]
-- **_score** : Score numérique
-- **_count** : Comptage (integer)
-
-## Imports types recommandés
+### H1StatisticsService
 
 ```typescript
-// Types centralisés
-import type { AnalysisPair } from '@/types/entities/h2.entities';
-import type { TVGoldStandardSample } from '@/types/algorithm-lab/utils/corpusFilters';
-import type { SpeakerType, AlgorithmConfig } from '@/types/algorithm-lab/algorithms';
-import type { VariableDetails, XDetails, YDetails } from '@/types/algorithm-lab/core/variables';
+class H1StatisticsService {
+  static calculateChiSquare(observed, expected): { chiSquare, df, pValue }
+  static calculateCramersV(chiSquare, n, rows, cols): number
+  static calculateExpectedFrequencies(observed): number[][]
+  static interpretCramersV(v): string  // 'Très faible'|'Faible'|'Moyenne'|'Forte'
+}
 ```
+
+### H2MediationService (Baron-Kenny)
+
+```typescript
+interface MediationPath {
+  mediator: 'M1' | 'M2' | 'M3';
+  a: number;           // X → M
+  b: number;           // M → Y
+  c: number;           // X → Y (effet total)
+  cPrime: number;      // X → Y (effet direct)
+  indirectEffect: number;  // a × b
+  sobelZ: number;
+  sobelP: number;
+  mediationType: 'full' | 'partial' | 'none';
+}
+```
+
+---
+
+## Algorithmes disponibles (10)
+
+| Algorithme                     | Cible | Type       | Description                  |
+| ------------------------------ | ----- | ---------- | ---------------------------- |
+| RegexXClassifier               | X     | rule-based | Patterns regex conseiller    |
+| SpacyXClassifier               | X     | ml         | Classification spaCy         |
+| OpenAIXClassifier              | X     | llm        | GPT-4o classification        |
+| OpenAI3TXClassifier            | X     | llm        | GPT-4o avec contexte 3 tours |
+| RegexYClassifier               | Y     | rule-based | Dictionnaires client         |
+| M1ActionVerbCounter            | M1    | metric     | Densité verbes d'action     |
+| M2LexicalAlignmentCalculator   | M2    | rule-based | Jaccard tokens               |
+| M2SemanticAlignmentCalculator  | M2    | rule-based | Patterns sémantiques        |
+| M2CompositeAlignmentCalculator | M2    | hybrid     | Fusion lex+sém              |
+| PausesM3Calculator             | M3    | metric     | Hésitations, pauses         |
+
+---
+
+## Flux de données Level 1 → Level 2
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         LEVEL 1                                  │
+├─────────────────────────────────────────────────────────────────┤
+│  useLevel1Testing.validateAlgorithm(algorithmName, sampleSize)  │
+│       ↓                                                          │
+│  TVValidationResult[] (prediction, goldStandard, correct, ...)  │
+│       ↓                                                          │
+│  updateH2WithResults() → UPDATE analysis_pairs (BULK RPC)       │
+│       ↓                                                          │
+│  calculateMetrics() → accuracy, F1, kappa, confusion matrix     │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                         LEVEL 2                                  │
+├─────────────────────────────────────────────────────────────────┤
+│  useLevel2Data() → lecture analysis_pairs avec X/Y/M1/M2/M3     │
+│       ↓                                                          │
+│  computeH1Analysis() → H1StrategyData[] par stratégie           │
+│       ↓                                                          │
+│  summarizeH1() → validation critères + Chi² + Fisher + ANOVA    │
+│       ↓                                                          │
+│  H2MediationService.analyzeH2Mediation() → paths médiation      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
 
 ## Commandes utiles
 
@@ -195,8 +304,14 @@ npx tsc --noEmit 2>&1 | Select-String "error TS" | Measure-Object
 
 # Build production
 npm run build
+
+# Explorer Level 1
+Get-ChildItem -Path ".\src\features\phase3-analysis\level1-validation" -Recurse -Name
+
+# Explorer Level 2
+Get-ChildItem -Path ".\src\features\phase3-analysis\level2-hypotheses" -Recurse -Name
 ```
 
 ---
 
-*Dernière mise à jour : 2025-01-23*
+*Dernière mise à jour : 2025-01-24*

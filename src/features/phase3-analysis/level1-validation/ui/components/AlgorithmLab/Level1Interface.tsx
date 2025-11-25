@@ -1,150 +1,123 @@
-﻿// components/AlgorithmLab/Level1Interface.tsx
+﻿// src/features/phase3-analysis/level1-validation/ui/components/AlgorithmLab/Level1Interface.tsx
 "use client";
-import React, { useMemo, useState } from "react";
-import { Box, Tabs, Tab, Typography, Divider } from "@mui/material";
 
-// UI “par variable”
+import React, { useState } from "react";
+import { Box, Tabs, Tab, Typography, Divider, Paper } from "@mui/material";
+
+// UI par variable
 import XValidationInterface from "../algorithms/XClassifiers/XValidationInterface";
 import YValidationInterface from "../algorithms/YClassifiers/YValidationInterface";
 import M1ValidationInterface from "../algorithms/M1Calculators/M1ValidationInterface";
 import M2ValidationInterface from "../algorithms/M2Calculators/M2ValidationInterface";
 import M3ValidationInterface from "../algorithms/M3Calculators/M3ValidationInterface";
 
-// Onglets historiques qui restent surtout pertinents pour X/Y
-import { ConfusionMatrix } from '@/features/phase3-analysis/level1-validation/ui/components/individual/ConfusionMatrix';
-import { EnhancedErrorAnalysis } from '@/features/phase3-analysis/level1-validation/ui/components/individual/EnhancedErrorAnalysis';
-import { ParameterOptimization } from '@/features/phase3-analysis/level1-validation/ui/components/individual/ParameterOptimization';
-import { TechnicalBenchmark } from "./TechnicalBenchmark";
-import type { ValidationMetrics } from "@/types/algorithm-lab";
-// (optionnel) métriques si tu veux réutiliser la matrice pour X/Y
-// import { useXAlgorithmTesting } from "../hooks/level1/useXAlgorithmTesting";
-
 type Variable = "X" | "Y" | "M1" | "M2" | "M3";
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
-  <div role="tabpanel" hidden={value !== index} id={`level1-tabpanel-${index}`}>
-    {value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
-  </div>
-);
+const VARIABLE_CONFIG: Record<Variable, { label: string; description: string; icon: string }> = {
+  X: {
+    label: "X (Stratégies Conseiller)",
+    description: "Classification des stratégies conversationnelles du conseiller",
+    icon: "🎯",
+  },
+  Y: {
+    label: "Y (Réactions Client)",
+    description: "Classification des réactions émotionnelles du client",
+    icon: "💬",
+  },
+  M1: {
+    label: "M1 (Verbes d'action)",
+    description: "Calcul de la densité de verbes d'action dans le discours conseiller",
+    icon: "📊",
+  },
+  M2: {
+    label: "M2 (Alignement X→Y)",
+    description: "Mesure de l'alignement linguistique entre conseiller et client",
+    icon: "🔗",
+  },
+  M3: {
+    label: "M3 (Charge Client)",
+    description: "Évaluation de la charge cognitive du client (hésitations, pauses)",
+    icon: "🧠",
+  },
+};
 
 export const Level1Interface: React.FC = () => {
-  const [mainTab, setMainTab] = useState(0); // onglets haut (Validation, Matrice, etc.)
-  const [variable, setVariable] = useState<Variable>("X"); // sélecteur de variable
+  const [variable, setVariable] = useState<Variable>("X");
 
-  const showXYOnly = variable === "X" || variable === "Y";
-  const EMPTY_VALIDATION_METRICS: ValidationMetrics = {
-    // selon ton type exact, ces clés existent (le message d’erreur les cite)
-    confusionMatrix: { labels: [], matrix: [] } as any,
-    classMetrics: {}, // ex: { label: { precision, recall, f1, support } }
-    totalSamples: 0,
-    correctPredictions: 0,
-    executionTime: 0, // en ms
-  } as ValidationMetrics;
+  const currentConfig = VARIABLE_CONFIG[variable];
 
   return (
     <Box sx={{ width: "100%" }}>
+      {/* HEADER */}
       <Typography variant="h3" gutterBottom>
         Niveau 1 : Validation Technique
       </Typography>
       <Typography variant="body1" sx={{ mb: 3, color: "text.secondary" }}>
         Tests par variable (X, Y, M1, M2, M3) alignés avec la thèse.
+        Chaque section utilise des <strong>Accordions</strong> pour organiser les résultats.
       </Typography>
 
-      <Divider sx={{ mb: 2 }} />
+      <Divider sx={{ mb: 3 }} />
 
-      {/* Sélecteur de variable (X/Y/M1/M2/M3) */}
-      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+      {/* SÉLECTEUR DE VARIABLE */}
+      <Paper sx={{ mb: 3 }}>
         <Tabs
           value={variable}
           onChange={(_, v) => setVariable(v)}
           aria-label="Variable cible"
           variant="scrollable"
+          scrollButtons="auto"
+          sx={{
+            '& .MuiTab-root': {
+              minHeight: 64,
+              textTransform: 'none',
+            },
+          }}
         >
-          <Tab label="X (Stratégies Conseiller)" value="X" />
-          <Tab label="Y (Réactions Client)" value="Y" />
-          <Tab label="M1 (Verbes d’action)" value="M1" />
-          <Tab label="M2 (Alignement X→Y)" value="M2" />
-          <Tab label="M3 (Charge Client)" value="M3" />
+          {(Object.keys(VARIABLE_CONFIG) as Variable[]).map((v) => (
+            <Tab
+              key={v}
+              label={
+                <Box sx={{ textAlign: 'left' }}>
+                  <Typography variant="subtitle2">
+                    {VARIABLE_CONFIG[v].icon} {v}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {v === 'X' ? 'Stratégies' : 
+                     v === 'Y' ? 'Réactions' :
+                     v === 'M1' ? 'Verbes' :
+                     v === 'M2' ? 'Alignement' : 'Charge'}
+                  </Typography>
+                </Box>
+              }
+              value={v}
+              sx={{
+                borderBottom: variable === v ? 3 : 0,
+                borderColor: 'primary.main',
+              }}
+            />
+          ))}
         </Tabs>
-      </Box>
+      </Paper>
 
-      {/* Navigation principale (analyse / matrice / erreurs / opti / benchmark) */}
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-        <Tabs value={mainTab} onChange={(_, v) => setMainTab(v)}>
-          <Tab label="Validation Technique" />
-          <Tab label="Matrice Confusion" />
-          <Tab label="Analyse Erreurs" />
-          <Tab label="Optimisation" />
-          <Tab label="─────────" disabled sx={{ minWidth: 20, opacity: 0.3 }} />
-          <Tab label="Benchmark Global" />
-        </Tabs>
-      </Box>
+      {/* DESCRIPTION DE LA VARIABLE SÉLECTIONNÉE */}
+      <Paper sx={{ p: 2, mb: 3, bgcolor: 'action.hover' }}>
+        <Typography variant="h6">
+          {currentConfig.icon} {currentConfig.label}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {currentConfig.description}
+        </Typography>
+      </Paper>
 
-      {/* 0) Validation Technique : rendu par variable */}
-      <TabPanel value={mainTab} index={0}>
+      {/* CONTENU PAR VARIABLE */}
+      <Box>
         {variable === "X" && <XValidationInterface />}
         {variable === "Y" && <YValidationInterface />}
         {variable === "M1" && <M1ValidationInterface />}
         {variable === "M2" && <M2ValidationInterface />}
         {variable === "M3" && <M3ValidationInterface />}
-      </TabPanel>
-
-      {/* 1) Matrice Confusion (pertinent pour X/Y) */}
-      <TabPanel value={mainTab} index={1}>
-        {showXYOnly ? (
-          <ConfusionMatrix metrics={EMPTY_VALIDATION_METRICS} />
-        ) : (
-          <Typography color="text.secondary">
-            La matrice de confusion n’est pas applicable aux calculateurs
-            M1/M2/M3.
-          </Typography>
-        )}
-      </TabPanel>
-
-      {/* 2) Analyse Erreurs (surtout X/Y) */}
-      <TabPanel value={mainTab} index={2}>
-        {showXYOnly ? (
-          <EnhancedErrorAnalysis results={[]} algorithmName={"—"} />
-        ) : (
-          <Typography color="text.secondary">
-            Une analyse dédiée sera proposée pour M1/M2/M3 (markers,
-            distributions).
-          </Typography>
-        )}
-      </TabPanel>
-
-      {/* 3) Optimisation (surtout X/Y) */}
-      <TabPanel value={mainTab} index={3}>
-        {showXYOnly ? (
-          <ParameterOptimization
-            algorithm={{
-              name: "—",
-              description: "",
-              parameters: {},
-              type: "rule-based",
-              enabled: true,
-            }}
-            onParametersChange={() => {}}
-            onTestWithParameters={async () => ({ success: true, results: [] })}
-          />
-        ) : (
-          <Typography color="text.secondary">
-            Les calculateurs M1/M2/M3 n’exposent pas (encore) d’hyperparamètres
-            ici.
-          </Typography>
-        )}
-      </TabPanel>
-
-      {/* 5) Benchmark Global (à raccorder plus tard) */}
-      <TabPanel value={mainTab} index={5}>
-        <TechnicalBenchmark benchmarkResults={[]} />
-      </TabPanel>
+      </Box>
     </Box>
   );
 };
