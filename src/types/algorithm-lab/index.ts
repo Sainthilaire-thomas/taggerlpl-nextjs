@@ -39,6 +39,9 @@ export type {
 // Validation & mÃ©triques
 export * from "./core/validation";
 
+// Versioning & Investigation
+export * from "./versioning";
+
 // ========================================================================
 // EXPORTS ALGORITHMES (sÃ©lectifs pour Ã©viter conflits)
 // ========================================================================
@@ -201,3 +204,4 @@ export {
 
 // Export H2 helpers
 export { getH2Property } from "./h2Types";
+
