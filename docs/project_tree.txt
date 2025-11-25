@@ -12,10 +12,12 @@ next.config.ts
 next-env.d.ts
 package.json
 package-lock.json
+phase4-changes.patch
 postcss.config.mjs
 README.md
 tsconfig.algorithmlab.json
 tsconfig.json
+useAnalysisPairs-working.txt
 |-- .vscode/
 |   |-- settings.json
 |   +-- tasks.json
@@ -107,10 +109,19 @@ tsconfig.json
 |   +-- schema.sql
 |-- docs/
 |   |-- ai_context/
+|   |   |-- specs/
+|   |   |   +-- SPEC-VERSIONING-INVESTIGATION.md
+|   |   |-- versioning/
+|   |   |   |-- base-context-versioning-complement.md
+|   |   |   +-- mission-2025-11-24-versioning-investigation.md
 |   |   |-- AI-CONTEXT-WORKFLOW-SPEC.md
 |   |   |-- base-context.md
 |   |   |-- mission-2025-01-23-typescript-cleanup.md
-|   |   +-- mission-2025-01-24-level1-investigation.md
+|   |   |-- mission-2025-01-24-level1-investigation.md
+|   |   |-- mission-2025-11-24-versioning-investigation-avancement.md
+|   |   |-- SESSION_2025-11-25_BILAN_PHASE1-2-3.md
+|   |   |-- session-reprise-2025-11-25-phase4-debugging.md
+|   |   +-- USER_GUIDE_Phase4_Versioning_Investigation.md
 |   |-- architecture/
 |   |   |-- ARCHITECTURE_CIBLE_WORKFLOW.md
 |   |   |-- ARCHITECTURE_TYPES_STRUCTURE.md
@@ -223,6 +234,9 @@ tsconfig.json
 |   |   |   |   |-- old_transcribe.ts.disabled
 |   |   |   |   |-- prepare-batch.ts
 |   |   |   |   +-- stats.ts
+|   |   |   |-- git/
+|   |   |   |   +-- current-commit/
+|   |   |   |       +-- route.ts
 |   |   |   +-- zoho/
 |   |   |       |-- auth/
 |   |   |       |   +-- route.tsx
@@ -619,6 +633,7 @@ tsconfig.json
 |   |   |   |   |   |   |   |   +-- M3ValidationInterface.tsx
 |   |   |   |   |   |   |   |-- shared/
 |   |   |   |   |   |   |   |   |-- BaseAlgorithmTesting.tsx
+|   |   |   |   |   |   |   |   |-- BaseAlgorithmTesting.tsx.backup
 |   |   |   |   |   |   |   |   +-- ClassificationValidationTable.tsx
 |   |   |   |   |   |   |   |-- XClassifiers/
 |   |   |   |   |   |   |   |   |-- XAlgorithmTesting.tsx
@@ -635,27 +650,46 @@ tsconfig.json
 |   |   |   |   |   |   |   |-- EnsembleTuning.tsx
 |   |   |   |   |   |   |   |-- ParameterOptimization.tsx
 |   |   |   |   |   |   |   +-- TechnicalValidationFixed.tsx
-|   |   |   |   |   |   +-- shared/
-|   |   |   |   |   |       |-- atoms/
-|   |   |   |   |   |       |   +-- AlgorithmChip.tsx
-|   |   |   |   |   |       |-- AlgorithmLabInterface.tsx
-|   |   |   |   |   |       |-- AlgorithmSelector.tsx
-|   |   |   |   |   |       |-- ClassifierSelector.tsx
-|   |   |   |   |   |       |-- NavigationTabs.tsx
-|   |   |   |   |   |       |-- PerformanceDashBoard.tsx
-|   |   |   |   |   |       |-- VersionComparator.tsx
-|   |   |   |   |   |       +-- VersionSelector.tsx
-|   |   |   |   |   +-- hooks/
-|   |   |   |   |       |-- index.ts
-|   |   |   |   |       |-- normalizeUniversalToTV.ts
-|   |   |   |   |       |-- useAlgorithmVersioning.ts
-|   |   |   |   |       |-- useAnalysisPairs.ts
-|   |   |   |   |       |-- useClassifierConfiguration.ts
-|   |   |   |   |       |-- useClassifierStatus.ts
-|   |   |   |   |       |-- useLevel1Testing.ts
-|   |   |   |   |       |-- useMultiAlgorithmComparison.ts
-|   |   |   |   |       |-- usePostValidationVersioning.ts
-|   |   |   |   |       +-- useWorkflowManagement.ts
+|   |   |   |   |   |   |-- Investigation/
+|   |   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   |-- InvestigationBanner.tsx
+|   |   |   |   |   |   |   +-- InvestigationSummaryDialog.tsx
+|   |   |   |   |   |   |-- Level2Preview/
+|   |   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   +-- Level2PreviewPanel.tsx
+|   |   |   |   |   |   |-- shared/
+|   |   |   |   |   |   |   |-- atoms/
+|   |   |   |   |   |   |   |   +-- AlgorithmChip.tsx
+|   |   |   |   |   |   |   |-- AlgorithmLabInterface.tsx
+|   |   |   |   |   |   |   |-- AlgorithmSelector.tsx
+|   |   |   |   |   |   |   |-- ClassifierSelector.tsx
+|   |   |   |   |   |   |   |-- NavigationTabs.tsx
+|   |   |   |   |   |   |   |-- PerformanceDashBoard.tsx
+|   |   |   |   |   |   |   |-- VersionComparator.tsx
+|   |   |   |   |   |   |   +-- VersionSelector.tsx
+|   |   |   |   |   |   |-- TestDecision/
+|   |   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   +-- TestDecisionPanel.tsx
+|   |   |   |   |   |   +-- VersionValidation/
+|   |   |   |   |   |       |-- index.ts
+|   |   |   |   |   |       +-- VersionValidationDialog.tsx
+|   |   |   |   |   |-- hooks/
+|   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |-- normalizeUniversalToTV.ts
+|   |   |   |   |   |   |-- useAlgorithmVersioning.ts
+|   |   |   |   |   |   |-- useAnalysisPairs.ts
+|   |   |   |   |   |   |-- useClassifierConfiguration.ts
+|   |   |   |   |   |   |-- useClassifierStatus.ts
+|   |   |   |   |   |   |-- useInvestigation.ts
+|   |   |   |   |   |   |-- useLevel1Testing.ts
+|   |   |   |   |   |   |-- useLevel2Preview.ts
+|   |   |   |   |   |   |-- useMultiAlgorithmComparison.ts
+|   |   |   |   |   |   |-- usePostValidationVersioning.ts
+|   |   |   |   |   |   |-- useTestRuns.ts
+|   |   |   |   |   |   |-- useVersionValidation.ts
+|   |   |   |   |   |   +-- useWorkflowManagement.ts
+|   |   |   |   |   +-- services/
+|   |   |   |   |       +-- Level2PreviewService.tsx
 |   |   |   |   +-- utils/
 |   |   |   |       |-- metricsCalculation.ts
 |   |   |   |       +-- versionGenerator.ts
@@ -751,7 +785,8 @@ tsconfig.json
 |   |   |   |-- ThesisVariables.y.ts
 |   |   |   |-- UniversalResultExtended.ts
 |   |   |   |-- validation.ts
-|   |   |   +-- ValidationTypes.ts
+|   |   |   |-- ValidationTypes.ts
+|   |   |   +-- versioning.ts
 |   |   |-- analysis/
 |   |   |   |-- index.ts
 |   |   |   +-- types.ts

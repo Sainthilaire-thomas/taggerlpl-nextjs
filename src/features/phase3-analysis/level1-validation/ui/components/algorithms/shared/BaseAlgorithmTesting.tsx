@@ -1,4 +1,4 @@
-// src/features/phase3-analysis/level1-validation/ui/components/algorithms/shared/BaseAlgorithmTesting.tsx
+﻿// src/features/phase3-analysis/level1-validation/ui/components/algorithms/shared/BaseAlgorithmTesting.tsx
 "use client";
 
 import React from "react";
@@ -159,7 +159,7 @@ const toValidationMetrics = (
 // SUB-COMPONENTS
 // ============================================================================
 
-/** Panneau des m�triques globales */
+/** Panneau des Métriques globales */
 const GlobalMetricsPanel: React.FC<{ metrics: ClassificationMetrics | null }> = ({ metrics }) => {
   if (!metrics) return null;
 
@@ -211,7 +211,7 @@ const GlobalMetricsPanel: React.FC<{ metrics: ClassificationMetrics | null }> = 
   );
 };
 
-/** Panneau des m�triques par tag */
+/** Panneau des Métriques par tag */
 const TagMetricsPanel: React.FC<{ metrics: ClassificationMetrics | null }> = ({ metrics }) => {
   if (!metrics) return null;
 
@@ -223,7 +223,7 @@ const TagMetricsPanel: React.FC<{ metrics: ClassificationMetrics | null }> = ({ 
         <TableHead>
           <TableRow>
             <TableCell><strong>Tag</strong></TableCell>
-            <TableCell align="right"><strong>Pr�cision</strong></TableCell>
+            <TableCell align="right"><strong>Précision</strong></TableCell>
             <TableCell align="right"><strong>Rappel</strong></TableCell>
             <TableCell align="right"><strong>F1-Score</strong></TableCell>
           </TableRow>
@@ -267,7 +267,7 @@ const ConfusionMatrixPanel: React.FC<{ metrics: ClassificationMetrics | null }> 
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell><strong>R�el \ Pr�dit</strong></TableCell>
+            <TableCell><strong>Réel \ Prédit</strong></TableCell>
             {labels.map((label) => (
               <TableCell key={label} align="center">
                 <Chip label={label} size="small" />
@@ -338,7 +338,7 @@ const ErrorAnalysisPanel: React.FC<{
               <TableHead>
                 <TableRow>
                   <TableCell>Attendu</TableCell>
-                  <TableCell>Pr�dit</TableCell>
+                  <TableCell>Prédit</TableCell>
                   <TableCell align="right">Fr�quence</TableCell>
                 </TableRow>
               </TableHead>
@@ -363,7 +363,7 @@ const ErrorAnalysisPanel: React.FC<{
           </Typography>
           {errorAnalysis.improvementSuggestions.map((suggestion, idx) => (
             <Typography key={idx} variant="body2" sx={{ ml: 1 }}>
-              � {suggestion}
+              • {suggestion}
             </Typography>
           ))}
         </Box>
@@ -381,7 +381,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
   defaultClassifier = DEFAULT_CLASSIFIER,
   target = "X",
 }) => {
-  // --- �TATS LOCAUX ---
+  // --- ÉTATS LOCAUX ---
   const [sampleSizeInitialized, setSampleSizeInitialized] = React.useState(false);
   const [selectedModelId, setSelectedModelId] = React.useState<string>("");
   const [testResults, setTestResults] = React.useState<TVValidationResultCore[]>([]);
@@ -389,11 +389,11 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
   const [error, setError] = React.useState<string | null>(null);
   const [sampleSize, setSampleSize] = React.useState<number>(100);
 
-  // --- �TATS M�TRIQUES ---
+  // --- ÉTATS Métriques ---
   const [metrics, setMetrics] = React.useState<ClassificationMetrics | null>(null);
   const [errorAnalysis, setErrorAnalysis] = React.useState<any>(null);
 
-  // --- �TATS VERSIONING ---
+  // --- ÉTATS VERSIONING ---
   const [selectedVersionId, setSelectedVersionId] = React.useState<AlgorithmVersionId>();
   const [showVersionDialog, setShowVersionDialog] = React.useState(false);
   const [showComparator, setShowComparator] = React.useState(false);
@@ -408,7 +408,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     total: number;
   } | null>(null);
 
-  // --- �TATS ACCORDIONS ---
+  // --- ÉTATS ACCORDIONS ---
   const [expandedAccordions, setExpandedAccordions] = React.useState<Record<string, boolean>>({
     selection: true,
     execution: true,
@@ -457,7 +457,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
   const supportsBatch = true;
   const domainLabel = meta.description ?? "G�n�ral";
   const isConfigValid = true;
-   // ========== NOUVEAUX �TATS - TEST RUNS & INVESTIGATION ==========
+   // ========== NOUVEAUX ÉTATS - TEST RUNS & INVESTIGATION ==========
   const [currentRunId, setCurrentRunId] = React.useState<string | null>(null);
   const [currentTestRun, setCurrentTestRun] = React.useState<TestRun | null>(null);
   const [showDecisionPanel, setShowDecisionPanel] = React.useState(false);
@@ -520,10 +520,11 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       const results = await validateAlgorithm(selectedModelId, sampleSize);
       setTestResults(results as TVValidationResultCore[]);
 
-      // Calculer les m�triques
+      let calculatedMetrics: ClassificationMetrics | null = null;
+      // Calculer les Métriques
       if (calculateMetrics) {
-        const m = calculateMetrics(results);
-        setMetrics(m);
+        calculatedMetrics = calculateMetrics(results);
+        setMetrics(calculatedMetrics);
       }
 
       // Analyser les erreurs
@@ -533,7 +534,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       }
 
       // UPDATE H2 avec progression
-      console.log(`?? Mise � jour H2 pour ${results.length} r�sultats...`);
+      console.log(`?? Mise • jour H2 pour ${results.length} résultats...`);
       const updateStats = await level1Testing.updateH2WithResultsBatch(
         results,
         selectedModelId,
@@ -553,10 +554,10 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
         
         // Calculer baseline diff si baseline existe et metrics disponibles
         let baselineDiff = null;
-        if (baseline && metrics) {
+        if (baseline && calculatedMetrics) {
           baselineDiff = {
-            accuracy_delta: metrics.accuracy - (baseline.level1_metrics?.accuracy || 0),
-            kappa_delta: (metrics.kappa || 0) - (baseline.level1_metrics?.kappa || 0),
+            accuracy_delta: calculatedMetrics.accuracy - (baseline.level1_metrics?.accuracy || 0),
+            kappa_delta: (calculatedMetrics.kappa || 0) - (baseline.level1_metrics?.kappa || 0),
             f1_deltas: {},
             errors_delta: 0,
             corrections: 0,
@@ -579,7 +580,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
           algorithm_version: `v${meta.version ?? '1.0.0'}`,
           target: target,
           sample_size: sampleSize,
-          metrics: metrics,
+          metrics: calculatedMetrics,
           error_pairs: errorPairs,
           outcome: 'pending',
           // baseline_version_id et baseline_diff sont optionnels
@@ -670,7 +671,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     );
   }
 
-  // Pr�parer les m�triques pour Level2Preview
+  // Préparer les Métriques pour Level2Preview
   const metricsForPreview = metrics ? {
     accuracy: metrics.accuracy,
     kappa: metrics.kappa,
@@ -683,10 +684,10 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     <Box sx={{ p: 3 }}>
       {/* HEADER */}
       <Typography variant="h4" gutterBottom>
-        {variableLabel} � Test individuel
+        {variableLabel} • Test individuel
       </Typography>
       <Typography variant="body1" sx={{ mb: 3, color: "text.secondary" }}>
-        Lance un test contre le gold standard et inspecte les r�sultats.
+        Lance un test contre le gold standard et inspecte les résultats.
       </Typography>
 
       {/* VERSIONING TOOLBAR */}
@@ -717,27 +718,12 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
           <Divider sx={{ my: 2 }} />
         </Box>
       )}
-         {/* INVESTIGATION BANNER */}
-      {investigationState.isActive && investigationState.currentRunId && (
-        <Box sx={{ mb: 3 }}>
-          <InvestigationBanner
-            investigationId={investigationState.currentRunId}
-            startedAt={investigationState.startedAt || new Date()}
-            annotationCount={investigationState.annotationCount}
-            onViewSummary={() => setShowInvestigationSummary(true)}
-            onComplete={async () => {
-              const summary = await generateSummary(investigationState.currentRunId!);
-              setShowInvestigationSummary(true);
-            }}
-          />
-        </Box>
-      )}
 
       {/* ============================================================ */}
       {/* ACCORDIONS */}
       {/* ============================================================ */}
 
-      {/* 1. S�LECTION & CONFIGURATION */}
+      {/* 1. Sélection & CONFIGURATION */}
       <Accordion
         expanded={expandedAccordions.selection}
         onChange={() => toggleAccordion('selection')}
@@ -745,7 +731,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">?? S�lection de l'Algorithme</Typography>
+            <Typography variant="h6">🔧 Sélection de l'Algorithme</Typography>
             <Chip label={selectedDisplayName} color={chipColor as any} size="small" />
             {versionLabel && <Chip label={`v${versionLabel}`} variant="outlined" size="small" />}
           </Stack>
@@ -775,7 +761,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
         </AccordionDetails>
       </Accordion>
 
-      {/* 2. EX�CUTION */}
+      {/* 2. Exécution */}
       <Accordion
         expanded={expandedAccordions.execution}
         onChange={() => toggleAccordion('execution')}
@@ -783,11 +769,11 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">?? Ex�cution</Typography>
+            <Typography variant="h6">▶️ Exécution</Typography>
             {isRunning && <Chip label="En cours..." color="warning" size="small" />}
             {hasResults && !isRunning && (
               <Chip
-                label={`${testResults.length} r�sultats`}
+                label={`${testResults.length} résultats`}
                 color="success"
                 size="small"
                 icon={<CheckCircleIcon />}
@@ -809,7 +795,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
           {h2UpdateProgress && (
             <Box sx={{ mt: 2 }}>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                ?? Mise � jour analysis_pairs: {h2UpdateProgress.current} / {h2UpdateProgress.total}
+                ?? Mise • jour analysis_pairs: {h2UpdateProgress.current} / {h2UpdateProgress.total}
               </Typography>
               <LinearProgress
                 variant="determinate"
@@ -821,14 +807,14 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
             <Box sx={{ mt: 2 }}>
               <LinearProgress />
               <Typography variant="body2" sx={{ mt: 1, textAlign: "center" }}>
-                Traitement... {testResults.length} �chantillons analys�s
+                Traitement... {testResults.length} Échantillons analysés
               </Typography>
             </Box>
           )}
         </AccordionDetails>
       </Accordion>
 
-      {/* 3. M�TRIQUES GLOBALES */}
+      {/* 3. Métriques GLOBALES */}
       <Accordion
         expanded={expandedAccordions.globalMetrics}
         onChange={() => toggleAccordion('globalMetrics')}
@@ -837,7 +823,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">?? M�triques Globales</Typography>
+            <Typography variant="h6">📊 Métriques Globales</Typography>
             {metrics && (
               <Chip
                 label={`Accuracy: ${metrics.accuracy.toFixed(1)}%`}
@@ -852,7 +838,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
         </AccordionDetails>
       </Accordion>
 
-      {/* 4. M�TRIQUES PAR TAG */}
+      {/* 4. Métriques PAR TAG */}
       <Accordion
         expanded={expandedAccordions.tagMetrics}
         onChange={() => toggleAccordion('tagMetrics')}
@@ -861,7 +847,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">?? M�triques par Tag</Typography>
+            <Typography variant="h6">📊 Métriques par Tag</Typography>
           </Stack>
         </AccordionSummary>
         <AccordionDetails>
@@ -878,7 +864,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">?? Matrice de Confusion</Typography>
+            <Typography variant="h6">📊 Matrice de Confusion</Typography>
             {!['X', 'Y'].includes(target) && (
               <Chip label="X/Y uniquement" size="small" variant="outlined" />
             )}
@@ -898,7 +884,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">? Analyse des Erreurs</Typography>
+            <Typography variant="h6">❌ Analyse des Erreurs</Typography>
             {errorAnalysis && (
               <Chip
                 label={`${errorAnalysis.totalErrors} erreurs`}
@@ -913,7 +899,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
         </AccordionDetails>
       </Accordion>
 
-      {/* 7. �CHANTILLON DE R�SULTATS */}
+      {/* 7. Échantillon DE RESULTATS */}
       <Accordion
         expanded={expandedAccordions.results}
         onChange={() => toggleAccordion('results')}
@@ -922,9 +908,9 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">?? �chantillon de R�sultats</Typography>
+            <Typography variant="h6">📋 Échantillon de Résultats</Typography>
             {hasResults && (
-              <Chip label={`${testResults.length} r�sultats`} size="small" variant="outlined" />
+              <Chip label={`${testResults.length} résultats`} size="small" variant="outlined" />
             )}
           </Stack>
         </AccordionSummary>
@@ -938,7 +924,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
         </AccordionDetails>
       </Accordion>
 
-      {/* 8. D�CISION POST-TEST ?? */}
+      {/* 8. Décision POST-TEST ?? */}
       <Accordion
         expanded={expandedAccordions.decision}
         onChange={() => toggleAccordion('decision')}
@@ -951,7 +937,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">?? D�cision post-test</Typography>
+            <Typography variant="h6">🎯 Décision post-test</Typography>
             <Chip label="Action requise" color="warning" size="small" />
           </Stack>
         </AccordionSummary>
@@ -974,7 +960,6 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     setShowVersionValidationDialog(true);
   }
 }}
-
             />
           )}
         </AccordionDetails>
@@ -993,7 +978,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">?? Pr�visualisation Level 2</Typography>
+            <Typography variant="h6">🎯 Prévisualisation Level 2</Typography>
             {!hasResults && (
               <Chip label="Ex�cuter d'abord" size="small" variant="outlined" />
             )}
@@ -1014,7 +999,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
 
       {/* DIALOG VERSIONING */}
       <Dialog open={showVersionDialog} onClose={() => setShowVersionDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>?? Documenter la Version</DialogTitle>
+        <DialogTitle>📝 Documenter la Version</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Alert severity="info">
@@ -1052,45 +1037,6 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
-         {/* DIALOG INVESTIGATION SUMMARY */}
-      <InvestigationSummaryDialog
-        open={showInvestigationSummary}
-        onClose={() => setShowInvestigationSummary(false)}
-        runId={investigationState.currentRunId || ''}
-        annotations={[]}
-        onComplete={async (summary: Record<string, any>) => {
-          if (investigationState.currentRunId) {
-            await completeInvestigation(summary);
-            await updateOutcome(investigationState.currentRunId, 'investigated');
-          }
-          setShowInvestigationSummary(false);
-        }}
-      />
-
-     {/* DIALOG VERSION VALIDATION */}
-      {metrics && currentRunId && (
-        <VersionValidationDialog
-          open={showVersionValidationDialog}
-          onClose={() => setShowVersionValidationDialog(false)}
-          runId={currentRunId}
-          algorithmKey={selectedModelId}
-          target={target}
-          metrics={toValidationMetrics(metrics, testResults)}
-          onValidate={async (versionData) => {
-            if (currentRunId) {
-              const gitCommit = await getCurrentGitCommit();
-              await promoteRunToVersion(currentRunId, {
-                ...versionData,
-                git_commit_hash: gitCommit || undefined,
-              });
-              await updateOutcome(currentRunId, 'promoted');
-            }
-            setShowVersionValidationDialog(false);
-            setShowDecisionPanel(false);
-            setCurrentRunId(null);
-          }}
-        />
-      )}
     </Box>
   );
 };

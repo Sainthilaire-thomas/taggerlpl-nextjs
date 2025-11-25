@@ -36,28 +36,43 @@ export function useTestRuns() {
         baselineDiff = calculateDiff(input.metrics, baseline.level1_metrics);
       }
 
+      // 🔍 DEBUG: Voir exactement ce qu'on envoie
+      const payload = {
+        algorithm_key: input.algorithm_key,
+        algorithm_version: input.algorithm_version,
+        target: input.target,
+        sample_size: input.sample_size,
+        metrics: input.metrics,
+        error_pairs: input.error_pairs,
+        outcome: 'pending',
+        baseline_version_id: baseline?.version_id,
+        baseline_diff: baselineDiff,
+        run_duration_ms: input.run_duration_ms,
+        created_by: input.created_by,
+        annotation_count: 0,
+      };
+      
+      console.log('🔍 DEBUG createTestRun - Input:', JSON.stringify(input, null, 2));
+      console.log('🔍 DEBUG createTestRun - Payload:', JSON.stringify(payload, null, 2));
+
       // Insérer le test run
       const { data, error: insertError } = await supabase
         .from('test_runs')
-        .insert({
-          algorithm_key: input.algorithm_key,
-          algorithm_version: input.algorithm_version,
-          target: input.target,
-          sample_size: input.sample_size,
-          metrics: input.metrics,
-          error_pairs: input.error_pairs,
-          outcome: 'pending',
-          baseline_version_id: baseline?.version_id,
-          baseline_diff: baselineDiff,
-          run_duration_ms: input.run_duration_ms,
-          created_by: input.created_by,
-          annotation_count: 0,
-        })
+        .insert(payload)
         .select('run_id')
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('🔍 DEBUG createTestRun - Error details:', {
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint,
+          code: insertError.code
+        });
+        throw insertError;
+      }
 
+      console.log('✅ Test run créé avec succès:', data.run_id);
       return data.run_id;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur lors de la création du test run';
@@ -206,13 +221,14 @@ export function useTestRuns() {
         .not(targetKeyField, 'is', null)
         .order('validation_date', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();  // ✅ Retourne null si aucune baseline (pas d'erreur 406)
 
-      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows
-        throw fetchError;
+      if (fetchError) {
+        console.warn('Warning fetching baseline:', fetchError.message);
+        return null;
       }
 
-      return data || null;
+      return data;
     } catch (err) {
       console.error('Error fetching baseline:', err);
       return null;
