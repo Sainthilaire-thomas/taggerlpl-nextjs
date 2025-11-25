@@ -717,6 +717,21 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
           <Divider sx={{ my: 2 }} />
         </Box>
       )}
+         {/* INVESTIGATION BANNER */}
+      {investigationState.isActive && investigationState.currentRunId && (
+        <Box sx={{ mb: 3 }}>
+          <InvestigationBanner
+            investigationId={investigationState.currentRunId}
+            startedAt={investigationState.startedAt || new Date()}
+            annotationCount={investigationState.annotationCount}
+            onViewSummary={() => setShowInvestigationSummary(true)}
+            onComplete={async () => {
+              const summary = await generateSummary(investigationState.currentRunId!);
+              setShowInvestigationSummary(true);
+            }}
+          />
+        </Box>
+      )}
 
       {/* ============================================================ */}
       {/* ACCORDIONS */}
@@ -959,6 +974,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     setShowVersionValidationDialog(true);
   }
 }}
+
             />
           )}
         </AccordionDetails>
@@ -1036,6 +1052,45 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+         {/* DIALOG INVESTIGATION SUMMARY */}
+      <InvestigationSummaryDialog
+        open={showInvestigationSummary}
+        onClose={() => setShowInvestigationSummary(false)}
+        runId={investigationState.currentRunId || ''}
+        annotations={[]}
+        onComplete={async (summary: Record<string, any>) => {
+          if (investigationState.currentRunId) {
+            await completeInvestigation(summary);
+            await updateOutcome(investigationState.currentRunId, 'investigated');
+          }
+          setShowInvestigationSummary(false);
+        }}
+      />
+
+     {/* DIALOG VERSION VALIDATION */}
+      {metrics && currentRunId && (
+        <VersionValidationDialog
+          open={showVersionValidationDialog}
+          onClose={() => setShowVersionValidationDialog(false)}
+          runId={currentRunId}
+          algorithmKey={selectedModelId}
+          target={target}
+          metrics={toValidationMetrics(metrics, testResults)}
+          onValidate={async (versionData) => {
+            if (currentRunId) {
+              const gitCommit = await getCurrentGitCommit();
+              await promoteRunToVersion(currentRunId, {
+                ...versionData,
+                git_commit_hash: gitCommit || undefined,
+              });
+              await updateOutcome(currentRunId, 'promoted');
+            }
+            setShowVersionValidationDialog(false);
+            setShowDecisionPanel(false);
+            setCurrentRunId(null);
+          }}
+        />
+      )}
     </Box>
   );
 };
