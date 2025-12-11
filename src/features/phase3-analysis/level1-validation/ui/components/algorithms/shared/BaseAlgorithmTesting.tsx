@@ -61,6 +61,14 @@ import { VersionValidationDialog } from '../../VersionValidation';
 
 // ?? Import Level2Preview
 import { Level2PreviewPanel } from '../../../components/Level2Preview';
+// ========== NOUVEAUX IMPORTS - RESULTS SECTIONS ==========
+import { 
+  PerformanceSection, 
+  H1ContributionSection, 
+  H2ContributionSection 
+} from '../../Results';
+import { useH1Comparison } from '../../../hooks/useH1Comparison';
+import { useH2Mediation } from '../../../hooks/useH2Mediation';
 
 import type {
   VariableTarget,
@@ -491,6 +499,19 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     getCurrentGitCommit 
   } = useVersionValidation();
 
+  // ========== NOUVEAUX HOOKS - H1/H2 COMPARISON ==========
+  const { 
+    comparisonData: h1ComparisonData, 
+    loading: h1Loading, 
+    calculate: calculateH1 
+  } = useH1Comparison({ targetKind: target as TargetKind, runId: currentRunId ?? undefined });
+
+  const { 
+    mediationData: h2MediationData, 
+    loading: h2Loading, 
+    calculate: calculateH2 
+  } = useH2Mediation({ targetKind: target as TargetKind, runId: currentRunId ?? undefined });
+
   React.useEffect(() => {
     if (sampleSizeInitialized) return;
     const total = goldStandardData?.length || 0;
@@ -814,6 +835,69 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
         </AccordionDetails>
       </Accordion>
 
+{/* ============================================================ */}
+      {/* NOUVELLE SECTION : RÉSULTATS STRUCTURÉS (4 sections) */}
+      {/* ============================================================ */}
+      {hasResults && (
+        <Paper sx={{ p: 2, mb: 2, border: '2px solid', borderColor: 'primary.main' }}>
+          <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            📊 Résultats Structurés
+            <Chip label="Nouveau" color="primary" size="small" />
+          </Typography>
+          
+          <Stack spacing={2}>
+            {/* Section A : Performance Intrinsèque */}
+            <PerformanceSection
+              targetKind={target as TargetKind}
+             classificationMetrics={metrics ? {
+                accuracy: metrics.accuracy / 100,
+                kappa: metrics.kappa,
+                f1Macro: Object.values(metrics.f1Score).reduce((a, b) => a + b, 0) / Object.keys(metrics.f1Score).length,
+                precision: metrics.precision,
+                recall: metrics.recall,
+                f1Score: metrics.f1Score,
+                confusionMatrix: metrics.confusionMatrix,
+                avgProcessingTime: metrics.avgProcessingTime,
+                avgConfidence: metrics.avgConfidence,
+                totalSamples: testResults.length,
+                correctPredictions: testResults.filter(r => r.correct).length,
+              } : undefined}
+             
+              loading={isRunning}
+              onAnnotateErrors={() => {
+                toggleAccordion('errorAnalysis');
+                setExpandedAccordions(prev => ({ ...prev, errorAnalysis: true }));
+              }}
+            />
+
+            {/* Section B : Contribution H1 (X et Y uniquement) */}
+            {(target === 'X' || target === 'Y') && (
+              <H1ContributionSection
+                targetKind={target as TargetKind}
+                comparisonData={h1ComparisonData}
+                runId={currentRunId ?? undefined}
+                loading={h1Loading}
+                onRefresh={calculateH1}
+                onNavigateToLevel2={() => {
+                  window.location.href = '/phase3-analysis/level2/hypotheses';
+                }}
+              />
+            )}
+
+            {/* Section C : Contribution H2 (Médiation) */}
+            <H2ContributionSection
+              targetKind={target as TargetKind}
+              mediationData={h2MediationData}
+              runId={currentRunId ?? undefined}
+              loading={h2Loading}
+              onRefresh={calculateH2}
+              onNavigateToLevel2={() => {
+                window.location.href = '/phase3-analysis/level2/hypotheses';
+              }}
+            />
+          </Stack>
+        </Paper>
+      )}
       {/* 3. Métriques GLOBALES */}
       <Accordion
         expanded={expandedAccordions.globalMetrics}
