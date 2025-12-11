@@ -9,8 +9,8 @@
  */
 
 export { PerformanceSection } from './PerformanceSection';
-// export { H1ContributionSection } from './H1ContributionSection';
-// export { H2ContributionSection } from './H2ContributionSection';
+export { H1ContributionSection } from './H1ContributionSection';
+ export { H2ContributionSection } from './H2ContributionSection';
 // export { NumericDistribution } from './NumericDistribution';
 // export { CalculationSampleTable } from './CalculationSampleTable';
 // export { MediationPathDiagram } from './MediationPathDiagram';
