@@ -59,8 +59,7 @@ import { InvestigationBanner } from '../../Investigation';
 import { InvestigationSummaryDialog } from '../../Investigation';
 import { VersionValidationDialog } from '../../VersionValidation';
 
-// ?? Import Level2Preview
-import { Level2PreviewPanel } from '../../../components/Level2Preview';
+
 // ========== NOUVEAUX IMPORTS - RESULTS SECTIONS ==========
 import { 
   PerformanceSection, 
@@ -167,152 +166,7 @@ const toValidationMetrics = (
 // SUB-COMPONENTS
 // ============================================================================
 
-/** Panneau des Métriques globales */
-const GlobalMetricsPanel: React.FC<{ metrics: ClassificationMetrics | null }> = ({ metrics }) => {
-  if (!metrics) return null;
 
-  const getKappaInterpretation = (kappa: number): { label: string; color: string } => {
-    if (kappa >= 0.8) return { label: 'Excellent', color: 'success.main' };
-    if (kappa >= 0.6) return { label: 'Bon', color: 'success.light' };
-    if (kappa >= 0.4) return { label: 'Mod�r�', color: 'warning.main' };
-    if (kappa >= 0.2) return { label: 'Faible', color: 'error.light' };
-    return { label: 'Tr�s faible', color: 'error.main' };
-  };
-
-  const kappaInfo = metrics.kappa !== undefined ? getKappaInterpretation(metrics.kappa) : null;
-
-  return (
-    <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-      <Paper sx={{ p: 2, flex: '1 1 150px', textAlign: 'center' }}>
-        <Typography variant="caption" color="text.secondary">Accuracy</Typography>
-        <Typography variant="h4" color={metrics.accuracy >= 70 ? 'success.main' : 'warning.main'}>
-          {metrics.accuracy.toFixed(1)}%
-        </Typography>
-      </Paper>
-
-      <Paper sx={{ p: 2, flex: '1 1 150px', textAlign: 'center' }}>
-        <Typography variant="caption" color="text.secondary">Kappa (Cohen)</Typography>
-        <Typography variant="h4" color={kappaInfo?.color || 'text.primary'}>
-          {metrics.kappa?.toFixed(3) ?? 'N/A'}
-        </Typography>
-        {kappaInfo && (
-          <Typography variant="caption" color={kappaInfo.color}>
-            {kappaInfo.label}
-          </Typography>
-        )}
-      </Paper>
-
-      <Paper sx={{ p: 2, flex: '1 1 150px', textAlign: 'center' }}>
-        <Typography variant="caption" color="text.secondary">Temps Moyen</Typography>
-        <Typography variant="h4">
-          {metrics.avgProcessingTime}ms
-        </Typography>
-      </Paper>
-
-      <Paper sx={{ p: 2, flex: '1 1 150px', textAlign: 'center' }}>
-        <Typography variant="caption" color="text.secondary">Confiance Moy.</Typography>
-        <Typography variant="h4">
-          {(metrics.avgConfidence * 100).toFixed(0)}%
-        </Typography>
-      </Paper>
-    </Box>
-  );
-};
-
-/** Panneau des Métriques par tag */
-const TagMetricsPanel: React.FC<{ metrics: ClassificationMetrics | null }> = ({ metrics }) => {
-  if (!metrics) return null;
-
-  const tags = Object.keys(metrics.precision);
-
-  return (
-    <TableContainer component={Paper}>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell><strong>Tag</strong></TableCell>
-            <TableCell align="right"><strong>Précision</strong></TableCell>
-            <TableCell align="right"><strong>Rappel</strong></TableCell>
-            <TableCell align="right"><strong>F1-Score</strong></TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {tags.map((tag) => {
-            const f1 = metrics.f1Score[tag] || 0;
-            const f1Color = f1 >= 0.7 ? 'success.main' : f1 >= 0.5 ? 'warning.main' : 'error.main';
-            
-            return (
-              <TableRow key={tag}>
-                <TableCell>
-                  <Chip label={tag} size="small" variant="outlined" />
-                </TableCell>
-                <TableCell align="right">
-                  {((metrics.precision[tag] || 0) * 100).toFixed(1)}%
-                </TableCell>
-                <TableCell align="right">
-                  {((metrics.recall[tag] || 0) * 100).toFixed(1)}%
-                </TableCell>
-                <TableCell align="right" sx={{ color: f1Color, fontWeight: 'bold' }}>
-                  {((f1) * 100).toFixed(1)}%
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </TableContainer>
-  );
-};
-
-/** Panneau de la matrice de confusion */
-const ConfusionMatrixPanel: React.FC<{ metrics: ClassificationMetrics | null }> = ({ metrics }) => {
-  if (!metrics || !metrics.confusionMatrix) return null;
-
-  const labels = Object.keys(metrics.confusionMatrix);
-
-  return (
-    <TableContainer component={Paper}>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell><strong>Réel \ Prédit</strong></TableCell>
-            {labels.map((label) => (
-              <TableCell key={label} align="center">
-                <Chip label={label} size="small" />
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {labels.map((actual) => (
-            <TableRow key={actual}>
-              <TableCell>
-                <Chip label={actual} size="small" variant="outlined" />
-              </TableCell>
-              {labels.map((predicted) => {
-                const count = metrics.confusionMatrix[actual]?.[predicted] || 0;
-                const isDiagonal = actual === predicted;
-                
-                return (
-                  <TableCell
-                    key={predicted}
-                    align="center"
-                    sx={{
-                      bgcolor: isDiagonal ? 'success.light' : count > 0 ? 'error.light' : 'transparent',
-                      fontWeight: isDiagonal ? 'bold' : 'normal',
-                    }}
-                  >
-                    {count}
-                  </TableCell>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
-  );
-};
 
 /** Panneau d'analyse des erreurs */
 const ErrorAnalysisPanel: React.FC<{
@@ -417,16 +271,12 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
   } | null>(null);
 
   // --- ÉTATS ACCORDIONS ---
-  const [expandedAccordions, setExpandedAccordions] = React.useState<Record<string, boolean>>({
+ const [expandedAccordions, setExpandedAccordions] = React.useState<Record<string, boolean>>({
     selection: true,
     execution: true,
-    globalMetrics: false,
-    tagMetrics: false,
-    confusionMatrix: false,
     errorAnalysis: false,
     results: false,
     decision: false,
-    level2Preview: false,
   });
 
   const toggleAccordion = (key: string) => {
@@ -715,14 +565,6 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     );
   }
 
-  // Préparer les Métriques pour Level2Preview
-  const metricsForPreview = metrics ? {
-    accuracy: metrics.accuracy,
-    kappa: metrics.kappa,
-    f1Score: metrics.f1Score,
-  } : undefined;
-
-  // const hasResults = testResults.length > 0;
 
   return (
     <Box sx={{ p: 3 }}>
@@ -921,66 +763,11 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
           </Stack>
         </Paper>
       )}
-      {/* 3. Métriques GLOBALES */}
-      <Accordion
-        expanded={expandedAccordions.globalMetrics}
-        onChange={() => toggleAccordion('globalMetrics')}
-        sx={{ mb: 1 }}
-        disabled={!hasResults}
-      >
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">📊 Métriques Globales</Typography>
-            {metrics && (
-              <Chip
-                label={`Accuracy: ${metrics.accuracy.toFixed(1)}%`}
-                color={metrics.accuracy >= 70 ? 'success' : 'warning'}
-                size="small"
-              />
-            )}
-          </Stack>
-        </AccordionSummary>
-        <AccordionDetails>
-          <GlobalMetricsPanel metrics={metrics} />
-        </AccordionDetails>
-      </Accordion>
+    
 
-      {/* 4. Métriques PAR TAG */}
-      <Accordion
-        expanded={expandedAccordions.tagMetrics}
-        onChange={() => toggleAccordion('tagMetrics')}
-        sx={{ mb: 1 }}
-        disabled={!hasResults}
-      >
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">📊 Métriques par Tag</Typography>
-          </Stack>
-        </AccordionSummary>
-        <AccordionDetails>
-          <TagMetricsPanel metrics={metrics} />
-        </AccordionDetails>
-      </Accordion>
+    
 
-      {/* 5. MATRICE DE CONFUSION */}
-      <Accordion
-        expanded={expandedAccordions.confusionMatrix}
-        onChange={() => toggleAccordion('confusionMatrix')}
-        sx={{ mb: 1 }}
-        disabled={!hasResults || !['X', 'Y'].includes(target)}
-      >
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">📊 Matrice de Confusion</Typography>
-            {!['X', 'Y'].includes(target) && (
-              <Chip label="X/Y uniquement" size="small" variant="outlined" />
-            )}
-          </Stack>
-        </AccordionSummary>
-        <AccordionDetails>
-          <ConfusionMatrixPanel metrics={metrics} />
-        </AccordionDetails>
-      </Accordion>
+    
 
       {/* 6. ANALYSE DES ERREURS */}
       <Accordion
@@ -1073,36 +860,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
       </Accordion>
 
 
-      {/* 8. LEVEL 2 PREVIEW ?? */}
-      <Accordion
-        expanded={expandedAccordions.level2Preview}
-        onChange={() => toggleAccordion('level2Preview')}
-        sx={{
-          mb: 1,
-          border: '2px solid',
-          borderColor: hasResults ? 'primary.main' : 'divider',
-        }}
-      >
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">🎯 Prévisualisation Level 2</Typography>
-            {!hasResults && (
-              <Chip label="Ex�cuter d'abord" size="small" variant="outlined" />
-            )}
-          </Stack>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Level2PreviewPanel
-            xMetrics={target === 'X' ? metricsForPreview : undefined}
-            yMetrics={target === 'Y' ? metricsForPreview : undefined}
-            autoCalculate={hasResults}
-            defaultExpanded={true}
-            onNavigateToLevel2={() => {
-              window.location.href = '/phase3-analysis/level2/hypotheses';
-            }}
-          />
-        </AccordionDetails>
-      </Accordion>
+   
 
       {/* DIALOG VERSIONING */}
       <Dialog open={showVersionDialog} onClose={() => setShowVersionDialog(false)} maxWidth="sm" fullWidth>
