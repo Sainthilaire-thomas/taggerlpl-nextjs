@@ -512,6 +512,29 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     calculate: calculateH2 
   } = useH2Mediation({ targetKind: target as TargetKind, runId: currentRunId ?? undefined });
 
+   const hasResults = testResults.length > 0;
+// ========== AUTO-CALCULATE H1/H2 AFTER TEST ==========
+// ========== AUTO-CALCULATE H1/H2 AFTER TEST ==========
+  const [h1h2Calculated, setH1h2Calculated] = React.useState(false);
+  
+  React.useEffect(() => {
+    if (hasResults && !isRunning && !h1h2Calculated) {
+      setH1h2Calculated(true);
+      // Déclencher les calculs H1/H2 après un test réussi
+      if (target === 'X' || target === 'Y') {
+        calculateH1();
+      }
+      calculateH2();
+    }
+  }, [hasResults, isRunning, h1h2Calculated, target]);
+
+  // Reset le flag quand on lance un nouveau test
+  React.useEffect(() => {
+    if (isRunning) {
+      setH1h2Calculated(false);
+    }
+  }, [isRunning]);
+
   React.useEffect(() => {
     if (sampleSizeInitialized) return;
     const total = goldStandardData?.length || 0;
@@ -699,7 +722,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
     f1Score: metrics.f1Score,
   } : undefined;
 
-  const hasResults = testResults.length > 0;
+  // const hasResults = testResults.length > 0;
 
   return (
     <Box sx={{ p: 3 }}>

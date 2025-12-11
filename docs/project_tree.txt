@@ -119,6 +119,7 @@ useAnalysisPairs-working.txt
 |   |   |-- mission-2025-01-23-typescript-cleanup.md
 |   |   |-- mission-2025-01-24-level1-investigation.md
 |   |   |-- mission-2025-11-24-versioning-investigation-avancement.md
+|   |   |-- mission-2025-11-25-versioning-avancement-post-debug.md
 |   |   |-- SESSION_2025-11-25_BILAN_PHASE1-2-3.md
 |   |   |-- session-reprise-2025-11-25-phase4-debugging.md
 |   |   +-- USER_GUIDE_Phase4_Versioning_Investigation.md

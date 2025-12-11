@@ -1,4 +1,4 @@
-// app/login/page.tsx
+﻿// app/login/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -36,7 +36,7 @@ export default function LoginPage() {
       });
 
       if (error) throw error;
-      router.push("/tagging");
+      router.push("/dashboard");
       router.refresh();
     } catch (error) {
       // ✅ Gestion correcte du type unknown dans catch
