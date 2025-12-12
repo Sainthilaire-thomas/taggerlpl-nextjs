@@ -531,6 +531,28 @@ export const H2ContributionSection: React.FC<H2ContributionSectionProps> = ({
   defaultExpanded = false,
 }) => {
   const [expandedMediator, setExpandedMediator] = useState<string | false>(false);
+// ========== FILTRAGE DES MÉDIATEURS SELON LE TARGET ==========
+  // Si on teste M1/M2/M3 → afficher uniquement ce médiateur
+  // Si on teste X/Y → afficher les 3 médiateurs (vue globale)
+  const isNumericTarget = ['M1', 'M2', 'M3'].includes(targetKind);
+  
+  const filteredMediators = React.useMemo(() => {
+    if (!mediationData?.mediators) return [];
+    if (isNumericTarget) {
+      // Filtrer pour n'afficher que le médiateur correspondant au target
+      return mediationData.mediators.filter(m => m.mediator === targetKind);
+    }
+    // Pour X/Y, afficher tous les médiateurs
+    return mediationData.mediators;
+  }, [mediationData?.mediators, targetKind, isNumericTarget]);
+
+  const filteredComparisons = React.useMemo(() => {
+    if (!mediationData?.comparisons) return [];
+    if (isNumericTarget) {
+      return mediationData.comparisons.filter(c => c.mediator === targetKind);
+    }
+    return mediationData.comparisons;
+  }, [mediationData?.comparisons, targetKind, isNumericTarget]);
 
   const handleAccordionChange = (mediator: string) => (
     _event: React.SyntheticEvent,
@@ -540,9 +562,12 @@ export const H2ContributionSection: React.FC<H2ContributionSectionProps> = ({
   };
 
   // Compter les médiations significatives
-  const significantCount = mediationData?.mediators.filter(
+// Compter les médiations significatives (sur les médiateurs filtrés)
+  const significantCount = filteredMediators.filter(
     m => m.verdict === 'substantial' || m.verdict === 'partial'
-  ).length || 0;
+  ).length;
+  
+  const totalMediatorsShown = filteredMediators.length;
 
   return (
     <Card>
@@ -555,10 +580,10 @@ export const H2ContributionSection: React.FC<H2ContributionSectionProps> = ({
               Section C : Contribution à H2 (Médiation)
             </Typography>
             <Chip label={targetKind} color="primary" size="small" />
-            {mediationData && (
+            {mediationData && filteredMediators.length > 0 && (
               <Chip
                 icon={significantCount > 0 ? <CheckCircleIcon /> : <WarningIcon />}
-                label={`${significantCount}/3 significatifs`}
+                label={`${significantCount}/${totalMediatorsShown} significatif${significantCount > 1 ? 's' : ''}`}
                 color={significantCount >= 2 ? 'success' : significantCount >= 1 ? 'warning' : 'error'}
                 size="small"
                 variant="outlined"
@@ -595,8 +620,19 @@ export const H2ContributionSection: React.FC<H2ContributionSectionProps> = ({
         {/* Rappel H2 */}
         <Alert severity="info" sx={{ mb: 2 }} icon={<InfoIcon />}>
           <Typography variant="body2">
-            <strong>H2 (Médiation) :</strong> L'effet X → Y passe par des médiateurs. 
-            M1 = densité verbes d'action, M2 = alignement linguistique, M3 = charge cognitive.
+            {isNumericTarget ? (
+              <>
+                <strong>Médiation {targetKind} :</strong> Analyse de la contribution de {targetKind} à la relation X → Y.
+                {targetKind === 'M1' && ' (densité verbes d\'action)'}
+                {targetKind === 'M2' && ' (alignement linguistique)'}
+                {targetKind === 'M3' && ' (charge cognitive)'}
+              </>
+            ) : (
+              <>
+                <strong>H2 (Médiation) :</strong> L'effet X → Y passe par des médiateurs.
+                M1 = densité verbes d'action, M2 = alignement linguistique, M3 = charge cognitive.
+              </>
+            )}
           </Typography>
         </Alert>
 
@@ -609,14 +645,14 @@ export const H2ContributionSection: React.FC<H2ContributionSectionProps> = ({
             <MediationLegend />
 
             {/* Tableau synthétique */}
-            <MediatorSummaryTable mediators={mediationData.mediators} />
+           <MediatorSummaryTable mediators={filteredMediators} />
 
             {/* Détails par médiateur (accordéons) */}
             <Typography variant="subtitle2" sx={{ mt: 3, mb: 1 }}>
               📊 Détail des paths de médiation
             </Typography>
             
-            {mediationData.mediators.map((m) => (
+            {filteredMediators.map((m) => (
               <Accordion
                 key={m.mediator}
                 expanded={expandedMediator === m.mediator}
@@ -645,7 +681,7 @@ export const H2ContributionSection: React.FC<H2ContributionSectionProps> = ({
             ))}
 
             {/* Comparaison avec versions précédentes */}
-            {mediationData.comparisons.length > 0 && (
+             {filteredComparisons.length > 0 && (
               <Accordion defaultExpanded={false} sx={{ mt: 2 }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography variant="subtitle2">
@@ -653,7 +689,7 @@ export const H2ContributionSection: React.FC<H2ContributionSectionProps> = ({
                   </Typography>
                 </AccordionSummary>
                 <AccordionDetails>
-                  <VersionComparisonTable comparisons={mediationData.comparisons} />
+                  <VersionComparisonTable comparisons={filteredComparisons} />
                 </AccordionDetails>
               </Accordion>
             )}

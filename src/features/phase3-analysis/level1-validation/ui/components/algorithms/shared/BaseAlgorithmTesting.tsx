@@ -76,6 +76,7 @@ import type {
   TargetKind,
   AlgorithmVersionId,
 } from '@/types/algorithm-lab';
+import type { NumericMetricsDisplay } from '@/types/algorithm-lab/ui/results';
 
 // Types Versioning
 import type { TestRun, TestOutcome } from '@/types/algorithm-lab/versioning';
@@ -363,7 +364,91 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
   } = useH2Mediation({ targetKind: target as TargetKind, runId: currentRunId ?? undefined });
 
    const hasResults = testResults.length > 0;
-// ========== AUTO-CALCULATE H1/H2 AFTER TEST ==========
+
+
+ // ========== CALCUL MÉTRIQUES NUMÉRIQUES (M1/M2/M3) ==========
+  const numericMetrics = React.useMemo((): NumericMetricsDisplay | undefined => {
+    // Seulement pour les targets numériques
+    if (!['M1', 'M2', 'M3'].includes(target)) return undefined;
+    
+    const pairs = (level1Testing as any)?.analysisPairs || [];
+    if (pairs.length === 0) return undefined;
+
+    // Extraire les valeurs selon le target
+    const getValue = (pair: any): number | null => {
+      if (target === 'M1') return pair.m1_verb_density ?? null;
+      if (target === 'M2') return pair.m2_global_alignment ?? null;
+      if (target === 'M3') return pair.m3_cognitive_score ?? null;
+      return null;
+    };
+
+    // Filtrer les paires avec des valeurs valides
+    const validPairs = pairs.filter((p: any) => getValue(p) !== null);
+    const values: number[] = validPairs.map((p: any) => getValue(p) as number);
+
+    if (values.length === 0) return undefined;
+
+    // Statistiques descriptives
+    const sorted = [...values].sort((a: number, b: number) => a - b);
+    const min = sorted[0];
+    const max = sorted[sorted.length - 1];
+    const mean = values.reduce((a: number, b: number) => a + b, 0) / values.length;
+    const median = sorted.length % 2 === 0
+      ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+      : sorted[Math.floor(sorted.length / 2)];
+    const variance = values.reduce((sum: number, v: number) => sum + Math.pow(v - mean, 2), 0) / values.length;
+    const stdDev = Math.sqrt(variance);
+
+    // Histogramme (10 bins)
+    const binCount = 10;
+    const binSize = (max - min) / binCount || 1;
+    const histogram: Array<{ bin: string; count: number; percentage: number }> = [];
+    for (let i = 0; i < binCount; i++) {
+      const binMin = min + i * binSize;
+      const binMax = min + (i + 1) * binSize;
+      const count = values.filter((v: number) => v >= binMin && (i === binCount - 1 ? v <= binMax : v < binMax)).length;
+      histogram.push({
+        bin: `${binMin.toFixed(2)}-${binMax.toFixed(2)}`,
+        count,
+        percentage: (count / values.length) * 100,
+      });
+    }
+
+    // Stats par stratégie
+    const strategies = ['ENGAGEMENT', 'OUVERTURE', 'REFLET', 'EXPLICATION'] as const;
+    const byStrategy: Record<string, { mean: number; count: number; stdDev?: number; min?: number; max?: number }> = {};
+    
+    for (const strat of strategies) {
+      const stratPairs = validPairs.filter((p: any) => {
+        const family = p.strategy_family || p.strategy_tag || '';
+        return family.toUpperCase().includes(strat);
+      });
+      const stratValues: number[] = stratPairs.map((p: any) => getValue(p) as number);
+      
+      if (stratValues.length > 0) {
+        const stratMean = stratValues.reduce((a: number, b: number) => a + b, 0) / stratValues.length;
+        const stratVariance = stratValues.reduce((sum: number, v: number) => sum + Math.pow(v - stratMean, 2), 0) / stratValues.length;
+        const stratSorted = [...stratValues].sort((a: number, b: number) => a - b);
+        byStrategy[strat] = {
+          mean: stratMean,
+          count: stratValues.length,
+          stdDev: Math.sqrt(stratVariance),
+          min: stratSorted[0],
+          max: stratSorted[stratSorted.length - 1],
+        };
+      } else {
+        byStrategy[strat] = { mean: 0, count: 0 };
+      }
+    }
+
+    return {
+      distribution: { min, max, mean, median, stdDev, histogram },
+      byStrategy: byStrategy as any,
+      totalSamples: pairs.length,
+      coverage: (validPairs.length / pairs.length) * 100,
+    };
+  }, [target, level1Testing]);
+
 // ========== AUTO-CALCULATE H1/H2 AFTER TEST ==========
   const [h1h2Calculated, setH1h2Calculated] = React.useState(false);
   
@@ -714,6 +799,7 @@ export const BaseAlgorithmTesting: React.FC<BaseAlgorithmTestingProps> = ({
             {/* Section A : Performance Intrinsèque */}
             <PerformanceSection
               targetKind={target as TargetKind}
+               numericMetrics={numericMetrics}
              classificationMetrics={metrics ? {
                 accuracy: metrics.accuracy / 100,
                 kappa: metrics.kappa,
