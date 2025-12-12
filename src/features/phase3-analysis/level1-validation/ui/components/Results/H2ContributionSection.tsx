@@ -945,6 +945,322 @@ const BivariateCorrelationsPanel: React.FC<BivariateCorrelationsPanelProps> = ({
   );
 };
 
+/**
+ * Panel de variance intra-stratégie (test si M1 a un effet propre)
+ */
+interface IntraStrategyVariancePanelProps {
+  data: NonNullable<H2MediationData['intraStrategyVariance']>;
+}
+
+const IntraStrategyVariancePanel: React.FC<IntraStrategyVariancePanelProps> = ({ data }) => {
+  const theme = useTheme();
+  
+  // Vérifier si au moins une corrélation intra-stratégie est significative
+  const anySignificant = data.some(d => d.m1ToYCorrelation.isSignificant);
+  const hasEnoughVariance = data.some(d => d.coefficientOfVariation > 0.5);
+  
+  return (
+    <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+      <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        🔬 Analyse intra-stratégie : M1 a-t-il un effet propre ?
+      </Typography>
+      
+      <Alert severity="info" sx={{ mb: 2 }} icon={<InfoIcon />}>
+        <Typography variant="body2">
+          Cette analyse teste si, <strong>à stratégie égale</strong>, la variation de M1 prédit la réaction.
+          Si oui → M1 est un vrai médiateur. Si non → M1 est un indicateur redondant de X.
+        </Typography>
+      </Alert>
+      
+      <TableContainer>
+        <Table size="small">
+          <TableHead>
+            <TableRow sx={{ bgcolor: 'action.hover' }}>
+              <TableCell><strong>Stratégie</strong></TableCell>
+              <TableCell align="right"><strong>N</strong></TableCell>
+              <TableCell align="right"><strong>M1 moyen</strong></TableCell>
+              <TableCell align="right"><strong>Écart-type</strong></TableCell>
+              <TableCell align="right"><strong>CV</strong></TableCell>
+              <TableCell align="center"><strong>r(M1→Y)</strong></TableCell>
+              <TableCell align="center"><strong>p-value</strong></TableCell>
+              <TableCell align="center"><strong>Effet propre ?</strong></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {data.map((row) => {
+              const hasVariance = row.coefficientOfVariation > 0.3;
+              const enoughData = row.count >= 30;
+              const canTest = hasVariance && enoughData;
+              
+              return (
+                <TableRow key={row.strategy}>
+                  <TableCell>
+                    <Chip 
+                      label={row.strategy} 
+                      size="small" 
+                      color={row.strategy === 'ENGAGEMENT' || row.strategy === 'OUVERTURE' ? 'success' : 'default'}
+                      variant="outlined"
+                    />
+                  </TableCell>
+                  <TableCell align="right">{row.count}</TableCell>
+                  <TableCell align="right">{row.mean.toFixed(2)}</TableCell>
+                  <TableCell align="right">{row.stdDev.toFixed(2)}</TableCell>
+                  <TableCell align="right">
+                    <Tooltip title="Coefficient de variation (écart-type / moyenne). > 0.5 = bonne variance">
+                      <Typography 
+                        variant="body2" 
+                        color={row.coefficientOfVariation > 0.5 ? 'success.main' : 'warning.main'}
+                        fontWeight={row.coefficientOfVariation > 0.5 ? 'bold' : 'normal'}
+                      >
+                        {(row.coefficientOfVariation * 100).toFixed(0)}%
+                      </Typography>
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell align="center">
+                    {canTest ? (
+                      <Typography 
+                        fontWeight="bold" 
+                        color={row.m1ToYCorrelation.r > 0 ? 'success.main' : 'error.main'}
+                      >
+                        {row.m1ToYCorrelation.r.toFixed(3)}
+                      </Typography>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">-</Typography>
+                    )}
+                  </TableCell>
+                  <TableCell align="center">
+                    {canTest ? (
+                      <Typography variant="body2">
+                        {row.m1ToYCorrelation.pValue < 0.001 ? '< 0.001' : row.m1ToYCorrelation.pValue.toFixed(3)}
+                      </Typography>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">-</Typography>
+                    )}
+                  </TableCell>
+                  <TableCell align="center">
+                    {!canTest ? (
+                      <Tooltip title={!hasVariance ? "Variance insuffisante" : "Pas assez de données (N < 30)"}>
+                        <Chip label="N/A" size="small" variant="outlined" />
+                      </Tooltip>
+                    ) : row.m1ToYCorrelation.isSignificant ? (
+                      <Chip 
+                        icon={<CheckCircleIcon />} 
+                        label="Oui" 
+                        size="small" 
+                        color="success" 
+                      />
+                    ) : (
+                      <Chip 
+                        icon={<ErrorIcon />} 
+                        label="Non" 
+                        size="small" 
+                        color="error" 
+                      />
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      
+      {/* Interprétation */}
+      <Alert 
+        severity={anySignificant ? 'success' : hasEnoughVariance ? 'error' : 'warning'} 
+        sx={{ mt: 2 }}
+        icon={anySignificant ? <CheckCircleIcon /> : <WarningIcon />}
+      >
+        <Typography variant="body2" fontWeight="bold" gutterBottom>
+          {anySignificant 
+            ? '✅ M1 a un effet propre dans au moins une stratégie'
+            : hasEnoughVariance 
+              ? '❌ M1 n\'a pas d\'effet propre (indicateur redondant de X)'
+              : '⚠️ Variance insuffisante pour conclure'
+          }
+        </Typography>
+        <Typography variant="body2">
+          {anySignificant ? (
+            <>
+              Au sein d'au moins une stratégie, la variation de M1 prédit la réaction.
+              M1 capture un mécanisme distinct de la stratégie elle-même.
+            </>
+          ) : hasEnoughVariance ? (
+            <>
+              À stratégie égale, M1 ne prédit pas la réaction (b ≈ 0 confirmé).
+              M1 est probablement un indicateur de la stratégie, pas un médiateur causal.
+            </>
+          ) : (
+            <>
+              Les stratégies ont peu de variance interne de M1, rendant impossible 
+              le test de l'effet propre. Plus de données seraient nécessaires.
+            </>
+          )}
+        </Typography>
+      </Alert>
+    </Paper>
+  );
+};
+
+/**
+ * Panel de test de médiation binaire (M1 présent vs absent)
+ */
+interface BinaryMediationPanelProps {
+  data: NonNullable<H2MediationData['binaryMediationTest']>;
+}
+
+const BinaryMediationPanel: React.FC<BinaryMediationPanelProps> = ({ data }) => {
+  const theme = useTheme();
+  
+  return (
+    <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+      <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        🔀 Test de médiation binaire : Présence vs Absence de verbes d'action
+      </Typography>
+      
+      <Alert severity="info" sx={{ mb: 2 }} icon={<InfoIcon />}>
+        <Typography variant="body2">
+          Ce test vérifie si l'effet de M1 est de type <strong>"interrupteur"</strong> (présence/absence) 
+          plutôt que <strong>"volume"</strong> (quantité). Baron-Kenny est recalculé avec M1 binaire (0 ou 1).
+        </Typography>
+      </Alert>
+      
+      {/* Comparaison des groupes */}
+      <Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>
+        📊 Comparaison des groupes
+      </Typography>
+      
+      <TableContainer>
+        <Table size="small">
+          <TableHead>
+            <TableRow sx={{ bgcolor: 'action.hover' }}>
+              <TableCell><strong>Groupe</strong></TableCell>
+              <TableCell align="right"><strong>N</strong></TableCell>
+              <TableCell align="right"><strong>Y moyen (réaction)</strong></TableCell>
+              <TableCell align="right"><strong>Écart-type</strong></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow>
+              <TableCell>
+                <Chip label="M1 > 0" size="small" color="success" variant="outlined" />
+                <Typography variant="caption" display="block" color="text.secondary">
+                  Avec verbes d'action
+                </Typography>
+              </TableCell>
+              <TableCell align="right">{data.withVerbs.count}</TableCell>
+              <TableCell align="right">
+                <Typography fontWeight="bold" color="success.main">
+                  {data.withVerbs.meanY.toFixed(3)}
+                </Typography>
+              </TableCell>
+              <TableCell align="right">{data.withVerbs.stdDevY.toFixed(3)}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>
+                <Chip label="M1 = 0" size="small" color="error" variant="outlined" />
+                <Typography variant="caption" display="block" color="text.secondary">
+                  Sans verbes d'action
+                </Typography>
+              </TableCell>
+              <TableCell align="right">{data.withoutVerbs.count}</TableCell>
+              <TableCell align="right">
+                <Typography fontWeight="bold" color="error.main">
+                  {data.withoutVerbs.meanY.toFixed(3)}
+                </Typography>
+              </TableCell>
+              <TableCell align="right">{data.withoutVerbs.stdDevY.toFixed(3)}</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableContainer>
+      
+      {/* Test t */}
+      <Box sx={{ mt: 2, p: 1.5, bgcolor: alpha(theme.palette.info.main, 0.05), borderRadius: 1 }}>
+        <Typography variant="subtitle2" gutterBottom>Test t de différence</Typography>
+        <Stack direction="row" spacing={3} alignItems="center" flexWrap="wrap">
+          <Typography variant="body2">
+            <strong>t</strong> = {data.tTest.t.toFixed(2)}
+          </Typography>
+          <Typography variant="body2">
+            <strong>p-value</strong> = {data.tTest.pValue < 0.001 ? '< 0.001' : data.tTest.pValue.toFixed(3)}
+          </Typography>
+          <Typography variant="body2">
+            <strong>Cohen's d</strong> = {data.tTest.cohenD.toFixed(2)}
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
+              ({Math.abs(data.tTest.cohenD) >= 0.8 ? 'fort' : Math.abs(data.tTest.cohenD) >= 0.5 ? 'moyen' : Math.abs(data.tTest.cohenD) >= 0.2 ? 'faible' : 'négligeable'})
+            </Typography>
+          </Typography>
+          <Chip 
+            icon={data.tTest.isSignificant ? <CheckCircleIcon /> : <ErrorIcon />}
+            label={data.tTest.isSignificant ? 'Significatif' : 'Non significatif'}
+            color={data.tTest.isSignificant ? 'success' : 'error'}
+            size="small"
+          />
+        </Stack>
+      </Box>
+      
+      {/* Baron-Kenny binaire */}
+      <Typography variant="subtitle2" sx={{ mt: 3, mb: 1 }}>
+        🔗 Baron-Kenny avec M1 binaire
+      </Typography>
+      
+      <Box sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 1 }}>
+        <Stack direction="row" spacing={4} alignItems="center" flexWrap="wrap" justifyContent="center">
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="caption" color="text.secondary">a (X → M1_bin)</Typography>
+            <Typography variant="h6">{data.binaryMediation.a.toFixed(3)}</Typography>
+          </Box>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="caption" color="text.secondary">b (M1_bin → Y | X)</Typography>
+            <Typography variant="h6" color={data.binaryMediation.b > 0.01 ? 'success.main' : 'error.main'}>
+              {data.binaryMediation.b.toFixed(3)}
+            </Typography>
+          </Box>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="caption" color="text.secondary">a × b</Typography>
+            <Typography variant="h6">{data.binaryMediation.indirectEffect.toFixed(3)}</Typography>
+          </Box>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="caption" color="text.secondary">% médiation</Typography>
+            <Typography variant="h6">{data.binaryMediation.percentMediation.toFixed(0)}%</Typography>
+          </Box>
+        </Stack>
+        
+        <Divider sx={{ my: 2 }} />
+        
+        <Stack direction="row" spacing={3} alignItems="center" justifyContent="center">
+          <Typography variant="body2">
+            <strong>Sobel Z</strong> = {data.binaryMediation.sobelZ.toFixed(2)}
+          </Typography>
+          <Typography variant="body2">
+            <strong>p-value</strong> = {data.binaryMediation.sobelP < 0.001 ? '< 0.001' : data.binaryMediation.sobelP.toFixed(3)}
+          </Typography>
+          <Chip 
+            icon={data.binaryMediation.isSignificant ? <CheckCircleIcon /> : <ErrorIcon />}
+            label={data.binaryMediation.isSignificant ? 'Médiation significative' : 'Non significatif'}
+            color={data.binaryMediation.isSignificant ? 'success' : 'error'}
+            size="small"
+          />
+        </Stack>
+      </Box>
+      
+      {/* Interprétation */}
+      <Alert 
+        severity={data.binaryMediation.isSignificant ? 'success' : data.tTest.isSignificant ? 'warning' : 'error'} 
+        sx={{ mt: 2 }}
+        icon={data.binaryMediation.isSignificant ? <CheckCircleIcon /> : <WarningIcon />}
+      >
+        <Typography variant="body2">
+          {data.interpretation}
+        </Typography>
+      </Alert>
+    </Paper>
+  );
+};
+
+
+
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
@@ -1098,12 +1414,22 @@ export const H2ContributionSection: React.FC<H2ContributionSectionProps> = ({
                   />
                 )}
                 
-                {/* 2. Corrélations bivariées (validation chaîne causale) */}
+                 {/* 2. Corrélations bivariées (validation chaîne causale) */}
                 {mediationData.bivariateCorrelations && (
                   <BivariateCorrelationsPanel correlations={mediationData.bivariateCorrelations} />
                 )}
                 
-                {/* 3. Médiation Baron-Kenny (informatif) */}
+                 {/* 3. Variance intra-stratégie (test effet propre M1) */}
+                {mediationData.intraStrategyVariance && mediationData.intraStrategyVariance.length > 0 && (
+                  <IntraStrategyVariancePanel data={mediationData.intraStrategyVariance} />
+                )}
+                
+                {/* 4. Test de médiation binaire (présence vs absence) */}
+                {mediationData.binaryMediationTest && (
+                  <BinaryMediationPanel data={mediationData.binaryMediationTest} />
+                )}
+                
+                {/* 5. Médiation Baron-Kenny (informatif) */}
                 <Accordion defaultExpanded={false} sx={{ mt: 2 }}>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <Typography variant="subtitle2">

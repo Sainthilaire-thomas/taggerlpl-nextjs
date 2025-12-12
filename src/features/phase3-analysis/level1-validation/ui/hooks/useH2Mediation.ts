@@ -230,6 +230,7 @@ export const useH2Mediation = (
         m2: number | null;
         m3: number | null;
         reaction: string; // Pour le calcul M par réaction
+        strategy: string; // Pour l'analyse intra-stratégie
       }> = [];
 
       analysisPairs.forEach(pair => {
@@ -237,13 +238,14 @@ export const useH2Mediation = (
         const y = encodeReaction(pair.reaction_tag);
         
           if (x !== null && y !== null) {
-          validPairs.push({
+           validPairs.push({
             x,
             y,
             m1: pair.m1_verb_density ?? null,
             m2: pair.m2_global_alignment ?? null,
             m3: pair.m3_cognitive_score ?? null,
             reaction: pair.reaction_tag || '',
+            strategy: pair.strategy_family || pair.strategy_tag || '',
           });
         }
       });
@@ -352,8 +354,11 @@ export const useH2Mediation = (
       // M par réaction (pour M1 uniquement)
       let mByReaction: H2MediationData['mByReaction'] | undefined;
       // Corrélations bivariées (pour M1 uniquement)
+      // Corrélations bivariées (pour M1 uniquement)
       let bivariateCorrelations: H2MediationData['bivariateCorrelations'] | undefined;
-      
+      let intraStrategyVariance: H2MediationData['intraStrategyVariance'] | undefined;
+      let binaryMediationTest: H2MediationData['binaryMediationTest'] | undefined;
+
       if (targetKind === 'M1') {
         const pairsWithM1 = validPairs
           .filter(p => p.m1 !== null)
@@ -370,14 +375,19 @@ export const useH2Mediation = (
           const m1Vals = pairsForCorr.map(p => p.m1!);
           
           bivariateCorrelations = {
-            xToM1: calculatePearsonCorrelation(xVals, m1Vals),
-            m1ToY: calculatePearsonCorrelation(m1Vals, yVals),
-            xToY: calculatePearsonCorrelation(xVals, yVals),
-          };
+              xToM1: calculatePearsonCorrelation(xVals, m1Vals),
+              m1ToY: calculatePearsonCorrelation(m1Vals, yVals),
+              xToY: calculatePearsonCorrelation(xVals, yVals),
+            };
+          }
+          
+          // Calculer variance intra-stratégie
+          intraStrategyVariance = calculateIntraStrategyVariance(validPairs);
+          
+          // Calculer test de médiation binaire (M1 présent vs absent)
+          binaryMediationTest = calculateBinaryMediationTest(validPairs);
         }
-      }
-
-      // Corrélations M1→M2 et M1→M3 (pour M2 et M3)
+        // Corrélations M1→M2 et M1→M3 (pour M2 et M3)
       let correlations: MediatorCorrelation[] | undefined;
       if (targetKind === 'M2' || targetKind === 'M3') {
         const pairsWithM1M2M3 = validPairs.filter(p => 
@@ -446,6 +456,8 @@ export const useH2Mediation = (
         // Nouveaux champs
         mByReaction,
         bivariateCorrelations,
+        intraStrategyVariance,
+        binaryMediationTest,
         correlations,
         controlledMediation,
       });
@@ -779,5 +791,164 @@ function calculateControlledMediation(
   };
 }
 
+/**
+ * Calcule la variance de M1 au sein de chaque stratégie
+ * et la corrélation M1 → Y intra-stratégie
+ */
+function calculateIntraStrategyVariance(
+  pairs: Array<{ x: number; y: number; m1: number | null; strategy: string }>
+): H2MediationData['intraStrategyVariance'] {
+  const strategies = ['ENGAGEMENT', 'OUVERTURE', 'REFLET', 'EXPLICATION'];
+  
+  return strategies.map(strategy => {
+    // Filtrer les paires pour cette stratégie avec M1 non null
+    const strategyPairs = pairs.filter(p => 
+      p.strategy.includes(strategy) && p.m1 !== null
+    );
+    
+    if (strategyPairs.length < 3) {
+      return {
+        strategy,
+        count: strategyPairs.length,
+        mean: 0,
+        stdDev: 0,
+        min: 0,
+        max: 0,
+        coefficientOfVariation: 0,
+        m1ToYCorrelation: { r: 0, pValue: 1, isSignificant: false, n: strategyPairs.length },
+      };
+    }
+    
+    const m1Values = strategyPairs.map(p => p.m1!);
+    const yValues = strategyPairs.map(p => p.y);
+    
+    // Stats descriptives
+    const mean = m1Values.reduce((a, b) => a + b, 0) / m1Values.length;
+    const variance = m1Values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / m1Values.length;
+    const stdDev = Math.sqrt(variance);
+    const sorted = [...m1Values].sort((a, b) => a - b);
+    const min = sorted[0];
+    const max = sorted[sorted.length - 1];
+    const coefficientOfVariation = mean > 0 ? stdDev / mean : 0;
+    
+    // Corrélation M1 → Y au sein de cette stratégie
+    const corr = calculatePearsonCorrelation(m1Values, yValues);
+    
+    return {
+      strategy,
+      count: strategyPairs.length,
+      mean,
+      stdDev,
+      min,
+      max,
+      coefficientOfVariation,
+      m1ToYCorrelation: { ...corr, n: strategyPairs.length },
+    };
+  }).filter(s => s.count > 0); // Ne garder que les stratégies avec des données
+}
+
+/**
+ * Calcule le test de médiation binaire (M1 présent vs absent)
+ */
+function calculateBinaryMediationTest(
+  pairs: Array<{ x: number; y: number; m1: number | null }>
+): H2MediationData['binaryMediationTest'] {
+  const pairsWithM1 = pairs.filter(p => p.m1 !== null);
+  
+  if (pairsWithM1.length < 30) {
+    return undefined;
+  }
+  
+  // Binariser M1 : présent (> 0) vs absent (= 0)
+  const withVerbs = pairsWithM1.filter(p => p.m1! > 0);
+  const withoutVerbs = pairsWithM1.filter(p => p.m1! === 0);
+  
+  if (withVerbs.length < 10 || withoutVerbs.length < 10) {
+    return undefined;
+  }
+  
+  // Stats descriptives
+  const meanYWith = withVerbs.reduce((sum, p) => sum + p.y, 0) / withVerbs.length;
+  const meanYWithout = withoutVerbs.reduce((sum, p) => sum + p.y, 0) / withoutVerbs.length;
+  
+  const varYWith = withVerbs.reduce((sum, p) => sum + Math.pow(p.y - meanYWith, 2), 0) / withVerbs.length;
+  const varYWithout = withoutVerbs.reduce((sum, p) => sum + Math.pow(p.y - meanYWithout, 2), 0) / withoutVerbs.length;
+  
+  const stdDevYWith = Math.sqrt(varYWith);
+  const stdDevYWithout = Math.sqrt(varYWithout);
+  
+  // Test t pour différence de moyennes
+  const n1 = withVerbs.length;
+  const n2 = withoutVerbs.length;
+  const pooledVar = ((n1 - 1) * varYWith + (n2 - 1) * varYWithout) / (n1 + n2 - 2);
+  const se = Math.sqrt(pooledVar * (1/n1 + 1/n2));
+  const tStat = se > 0 ? (meanYWith - meanYWithout) / se : 0;
+  const df = n1 + n2 - 2;
+  
+  // Approximation p-value (t-distribution)
+  const tPValue = 2 * (1 - normalCDF(Math.abs(tStat)));
+  
+  // Cohen's d
+  const pooledStdDev = Math.sqrt(pooledVar);
+  const cohenD = pooledStdDev > 0 ? (meanYWith - meanYWithout) / pooledStdDev : 0;
+  
+  // Baron-Kenny avec M1 binaire
+  const xValues = pairsWithM1.map(p => p.x);
+  const yValues = pairsWithM1.map(p => p.y);
+  const m1Binary = pairsWithM1.map(p => p.m1! > 0 ? 1 : 0);
+  
+  // Path a : X → M1_binary (régression logistique approximée par régression linéaire)
+  const regXM = simpleRegression(xValues, m1Binary);
+  const a = regXM.slope;
+  const seA = regXM.se;
+  
+  // Path b : M1_binary → Y | X (régression multiple)
+  const regMY = multipleRegression(xValues, m1Binary, yValues);
+  const b = regMY.b2;
+  const seB = regMY.se2;
+  
+  // Effet indirect
+  const indirectEffect = a * b;
+  
+  // Test de Sobel
+  const sobelZ = indirectEffect / Math.sqrt(b * b * seA * seA + a * a * seB * seB + 1e-10);
+  const sobelP = 2 * (1 - normalCDF(Math.abs(sobelZ)));
+  
+  // Effet total pour calculer % médiation
+  const regXY = simpleRegression(xValues, yValues);
+  const c = regXY.slope;
+  const percentMediation = c !== 0 ? (indirectEffect / c) * 100 : 0;
+  
+  // Interprétation
+  const isSignificant = sobelP < 0.05;
+  const tTestSignificant = tPValue < 0.05;
+  
+  let interpretation: string;
+  if (isSignificant && tTestSignificant) {
+    interpretation = `✅ Médiation binaire significative : La PRÉSENCE de verbes d'action (vs absence) médiatise ${percentMediation.toFixed(0)}% de l'effet X → Y. L'effet est de type "interrupteur" (présence/absence), pas "volume" (quantité).`;
+  } else if (tTestSignificant && !isSignificant) {
+    interpretation = `⚠️ Effet binaire présent mais médiation non significative : Les tours AVEC verbes d'action ont une meilleure réaction (d = ${cohenD.toFixed(2)}), mais le test de Sobel n'atteint pas la significativité.`;
+  } else if (!tTestSignificant) {
+    interpretation = `❌ Pas d'effet binaire : La présence/absence de verbes d'action ne différencie pas significativement les réactions.`;
+  } else {
+    interpretation = `Résultats non concluants.`;
+  }
+  
+  return {
+    withVerbs: { count: n1, meanY: meanYWith, stdDevY: stdDevYWith },
+    withoutVerbs: { count: n2, meanY: meanYWithout, stdDevY: stdDevYWithout },
+    tTest: { t: tStat, pValue: tPValue, isSignificant: tTestSignificant, cohenD },
+    binaryMediation: {
+      a,
+      b,
+      indirectEffect,
+      sobelZ,
+      sobelP,
+      isSignificant,
+      percentMediation,
+    },
+    interpretation,
+  };
+}
 
 export default useH2Mediation;

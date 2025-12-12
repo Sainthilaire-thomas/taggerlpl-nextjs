@@ -343,10 +343,44 @@ export interface H2MediationData {
  // Médiation contrôlée - utilisé par M2, M3
     controlledMediation?: ControlledMediationResult;
     // Corrélations bivariées (X↔M1, M1↔Y, X↔Y) - utilisé par M1
+    // Corrélations bivariées (X↔M1, M1↔Y, X↔Y) - utilisé par M1
     bivariateCorrelations?: {
       xToM1: { r: number; pValue: number; isSignificant: boolean };
       m1ToY: { r: number; pValue: number; isSignificant: boolean };
       xToY: { r: number; pValue: number; isSignificant: boolean };
+    };
+    // Variance intra-stratégie (pour M1) - test si M1 a un effet propre
+   // Variance intra-stratégie (pour M1) - test si M1 a un effet propre
+    intraStrategyVariance?: {
+      strategy: string;
+      count: number;
+      mean: number;
+      stdDev: number;
+      min: number;
+      max: number;
+      coefficientOfVariation: number; // stdDev / mean - mesure relative de variance
+      // Corrélation M1 → Y au sein de cette stratégie
+      m1ToYCorrelation: { r: number; pValue: number; isSignificant: boolean; n: number };
+    }[];
+    // Test de médiation binaire (M1 présent vs absent) - pour M1
+    binaryMediationTest?: {
+      // Distribution
+      withVerbs: { count: number; meanY: number; stdDevY: number };
+      withoutVerbs: { count: number; meanY: number; stdDevY: number };
+      // Test t de différence
+      tTest: { t: number; pValue: number; isSignificant: boolean; cohenD: number };
+      // Baron-Kenny avec M1 binaire
+      binaryMediation: {
+        a: number; // X → M1_binary
+        b: number; // M1_binary → Y | X
+        indirectEffect: number;
+        sobelZ: number;
+        sobelP: number;
+        isSignificant: boolean;
+        percentMediation: number;
+      };
+      // Interprétation
+      interpretation: string;
     };
   }
 
