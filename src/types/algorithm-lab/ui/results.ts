@@ -267,6 +267,62 @@ export interface H2VersionComparison {
 /**
  * Données complètes H2
  */
+/**
+ * Statistiques ANOVA pour M par réaction
+ */
+export interface MByReactionStats {
+  reaction: 'POSITIF' | 'NEUTRE' | 'NEGATIF';
+  mean: number;
+  stdDev: number;
+  count: number;
+  min?: number;
+  max?: number;
+}
+
+/**
+ * Résultat ANOVA
+ */
+export interface AnovaResult {
+  fStatistic: number;
+  pValue: number;
+  isSignificant: boolean;
+  dfBetween: number;
+  dfWithin: number;
+}
+
+/**
+ * Corrélation entre médiateurs
+ */
+export interface MediatorCorrelation {
+  from: 'M1';
+  to: 'M2' | 'M3';
+  pearsonR: number;
+  pValue: number;
+  isSignificant: boolean;
+  interpretation: string; // "positive", "negative", "none"
+}
+
+/**
+ * Médiation contrôlée (M2/M3 en contrôlant M1)
+ */
+export interface ControlledMediationResult {
+  mediator: 'M2' | 'M3';
+  // Sans contrôle
+  rawIndirectEffect: number;
+  rawSobelP: number;
+  rawIsSignificant: boolean;
+  // Avec M1 contrôlé
+  controlledIndirectEffect: number;
+  controlledSobelP: number;
+  controlledIsSignificant: boolean;
+  // Interprétation
+  effectDisappears: boolean; // true si l'effet disparaît quand M1 est contrôlé
+  interpretation: string;
+}
+
+/**
+ * Données complètes H2
+ */
 export interface H2MediationData {
   mediators: MediatorResult[];
   comparisons: H2VersionComparison[];
@@ -275,7 +331,24 @@ export interface H2MediationData {
     message: string;
     recommendations: string[];
   };
-}
+  // === NOUVEAUX CHAMPS ===
+  // M par réaction (pour ANOVA) - utilisé par M1
+  mByReaction?: {
+    data: MByReactionStats[];
+    anova: AnovaResult;
+  };
+  // Corrélations M1→M2, M1→M3 - utilisé par M2, M3
+  correlations?: MediatorCorrelation[];
+  // Médiation contrôlée - utilisé par M2, M3
+ // Médiation contrôlée - utilisé par M2, M3
+    controlledMediation?: ControlledMediationResult;
+    // Corrélations bivariées (X↔M1, M1↔Y, X↔Y) - utilisé par M1
+    bivariateCorrelations?: {
+      xToM1: { r: number; pValue: number; isSignificant: boolean };
+      m1ToY: { r: number; pValue: number; isSignificant: boolean };
+      xToY: { r: number; pValue: number; isSignificant: boolean };
+    };
+  }
 
 // ============================================================================
 // PROPS DES COMPOSANTS DE RÉSULTATS
@@ -410,4 +483,3 @@ export function getEvolutionDirection(delta: number, threshold: number = 0.01): 
   if (Math.abs(delta) < threshold) return 'stable';
   return delta > 0 ? 'up' : 'down';
 }
-

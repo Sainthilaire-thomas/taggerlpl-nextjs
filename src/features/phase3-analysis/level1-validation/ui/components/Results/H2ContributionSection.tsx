@@ -57,7 +57,10 @@ import type {
   MediationVerdict,
   MediationPaths,
   H2VersionComparison,
-  MEDIATION_VERDICT_CONFIG,
+  MByReactionStats,
+  AnovaResult,
+  MediatorCorrelation,
+  ControlledMediationResult,
 } from '@/types/algorithm-lab/ui/results';
 
 // ============================================================================
@@ -518,6 +521,431 @@ const MediationLegend: React.FC = () => (
 );
 
 // ============================================================================
+// NEW SUB-COMPONENTS - M BY REACTION, CORRELATIONS, CONTROLLED MEDIATION
+// ============================================================================
+
+/**
+ * Tableau M par réaction avec ANOVA (pour M1)
+ */
+interface MByReactionTableProps {
+  data: MByReactionStats[];
+  anova: AnovaResult;
+  mediatorLabel: string;
+}
+
+const MByReactionTable: React.FC<MByReactionTableProps> = ({ data, anova, mediatorLabel }) => {
+  const theme = useTheme();
+  
+  return (
+    <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+      <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        📊 Prérequis : {mediatorLabel} par Réaction (path b : M → Y)
+      </Typography>
+      
+      <TableContainer>
+        <Table size="small">
+          <TableHead>
+            <TableRow sx={{ bgcolor: 'action.hover' }}>
+              <TableCell><strong>Réaction</strong></TableCell>
+              <TableCell align="right"><strong>Moyenne</strong></TableCell>
+              <TableCell align="right"><strong>Écart-type</strong></TableCell>
+              <TableCell align="right"><strong>N</strong></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {data.map((row) => (
+              <TableRow key={row.reaction}>
+                <TableCell>
+                  <Chip 
+                    label={row.reaction} 
+                    size="small" 
+                    color={
+                      row.reaction === 'POSITIF' ? 'success' : 
+                      row.reaction === 'NEGATIF' ? 'error' : 'default'
+                    }
+                    variant="outlined"
+                  />
+                </TableCell>
+                <TableCell align="right">
+                  <Typography variant="body2" fontWeight="bold">
+                    {row.mean.toFixed(3)}
+                  </Typography>
+                </TableCell>
+                <TableCell align="right">{row.stdDev.toFixed(3)}</TableCell>
+                <TableCell align="right">{row.count}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      
+      {/* Résultat ANOVA */}
+      <Box sx={{ mt: 2, p: 1.5, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 1 }}>
+        <Stack direction="row" spacing={3} alignItems="center" flexWrap="wrap">
+          <Typography variant="body2">
+            <strong>ANOVA :</strong> F({anova.dfBetween}, {anova.dfWithin}) = {anova.fStatistic.toFixed(2)}
+          </Typography>
+          <Typography variant="body2">
+            <strong>p-value :</strong> {anova.pValue < 0.001 ? '< 0.001' : anova.pValue.toFixed(3)}
+          </Typography>
+          <Chip 
+            icon={anova.isSignificant ? <CheckCircleIcon /> : <ErrorIcon />}
+            label={anova.isSignificant ? 'Significatif' : 'Non significatif'}
+            color={anova.isSignificant ? 'success' : 'error'}
+            size="small"
+          />
+        </Stack>
+        {anova.isSignificant && (
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            ✅ Le médiateur influence significativement la réaction client (prérequis validé)
+          </Typography>
+        )}
+      </Box>
+    </Paper>
+  );
+};
+
+/**
+ * Panel de corrélation M1 → M2 ou M1 → M3
+ */
+interface CorrelationPanelProps {
+  correlation: MediatorCorrelation;
+}
+
+const CorrelationPanel: React.FC<CorrelationPanelProps> = ({ correlation }) => {
+  const theme = useTheme();
+  const isPositive = correlation.pearsonR > 0;
+  const strength = Math.abs(correlation.pearsonR) >= 0.5 ? 'forte' : 
+                   Math.abs(correlation.pearsonR) >= 0.3 ? 'modérée' : 'faible';
+  
+  return (
+    <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+      <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        🔗 Corrélation {correlation.from} → {correlation.to}
+      </Typography>
+      
+      <Box sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.05), borderRadius: 1 }}>
+        <Stack direction="row" spacing={4} alignItems="center" flexWrap="wrap">
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="caption" color="text.secondary">Pearson r</Typography>
+            <Typography 
+              variant="h5" 
+              fontWeight="bold"
+              color={isPositive ? 'success.main' : 'error.main'}
+            >
+              {correlation.pearsonR.toFixed(3)}
+            </Typography>
+          </Box>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="caption" color="text.secondary">p-value</Typography>
+            <Typography variant="h6">
+              {correlation.pValue < 0.001 ? '< 0.001' : correlation.pValue.toFixed(3)}
+            </Typography>
+          </Box>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="caption" color="text.secondary">Force</Typography>
+            <Chip 
+              label={strength}
+              color={Math.abs(correlation.pearsonR) >= 0.3 ? 'success' : 'warning'}
+              size="small"
+            />
+          </Box>
+          <Chip 
+            icon={correlation.isSignificant ? <CheckCircleIcon /> : <ErrorIcon />}
+            label={correlation.isSignificant ? 'Significatif' : 'Non significatif'}
+            color={correlation.isSignificant ? 'success' : 'error'}
+            size="small"
+          />
+        </Stack>
+        
+        <Alert 
+          severity={correlation.isSignificant ? (isPositive ? 'success' : 'info') : 'warning'} 
+          sx={{ mt: 2 }}
+          icon={isPositive ? <TrendingUpIcon /> : <TrendingDownIcon />}
+        >
+          <Typography variant="body2">
+            {correlation.interpretation}
+          </Typography>
+        </Alert>
+      </Box>
+    </Paper>
+  );
+};
+
+/**
+ * Panel de médiation contrôlée (M2 ou M3 en contrôlant M1)
+ */
+interface ControlledMediationPanelProps {
+  result: ControlledMediationResult;
+}
+
+const ControlledMediationPanel: React.FC<ControlledMediationPanelProps> = ({ result }) => {
+  const theme = useTheme();
+  
+  return (
+    <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+      <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        🔬 Test d'indépendance : {result.mediator} en contrôlant M1
+      </Typography>
+      
+      <TableContainer>
+        <Table size="small">
+          <TableHead>
+            <TableRow sx={{ bgcolor: 'action.hover' }}>
+              <TableCell><strong>Condition</strong></TableCell>
+              <TableCell align="right"><strong>Effet indirect</strong></TableCell>
+              <TableCell align="right"><strong>Sobel p</strong></TableCell>
+              <TableCell align="center"><strong>Significatif</strong></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow>
+              <TableCell>Sans contrôle (brut)</TableCell>
+              <TableCell align="right">{result.rawIndirectEffect.toFixed(4)}</TableCell>
+              <TableCell align="right">
+                {result.rawSobelP < 0.001 ? '< 0.001' : result.rawSobelP.toFixed(3)}
+              </TableCell>
+              <TableCell align="center">
+                <Chip 
+                  icon={result.rawIsSignificant ? <CheckCircleIcon /> : <ErrorIcon />}
+                  label={result.rawIsSignificant ? 'Oui' : 'Non'}
+                  color={result.rawIsSignificant ? 'success' : 'error'}
+                  size="small"
+                />
+              </TableCell>
+            </TableRow>
+            <TableRow sx={{ bgcolor: alpha(theme.palette.warning.main, 0.05) }}>
+              <TableCell>
+                <strong>En contrôlant M1</strong>
+              </TableCell>
+              <TableCell align="right">
+                <Typography fontWeight="bold">
+                  {result.controlledIndirectEffect.toFixed(4)}
+                </Typography>
+              </TableCell>
+              <TableCell align="right">
+                {result.controlledSobelP < 0.001 ? '< 0.001' : result.controlledSobelP.toFixed(3)}
+              </TableCell>
+              <TableCell align="center">
+                <Chip 
+                  icon={result.controlledIsSignificant ? <CheckCircleIcon /> : <ErrorIcon />}
+                  label={result.controlledIsSignificant ? 'Oui' : 'Non'}
+                  color={result.controlledIsSignificant ? 'success' : 'error'}
+                  size="small"
+                />
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableContainer>
+      
+      {/* Interprétation */}
+      <Alert 
+        severity={result.effectDisappears ? 'success' : 'warning'} 
+        sx={{ mt: 2 }}
+        icon={result.effectDisappears ? <CheckCircleIcon /> : <WarningIcon />}
+      >
+        <Typography variant="body2" fontWeight="bold" gutterBottom>
+          {result.effectDisappears 
+            ? `✅ L'effet de ${result.mediator} disparaît quand M1 est contrôlé`
+            : `⚠️ ${result.mediator} conserve un effet même en contrôlant M1`
+          }
+        </Typography>
+        <Typography variant="body2">
+          {result.interpretation}
+        </Typography>
+      </Alert>
+    </Paper>
+  );
+};
+
+/**
+ * Panel des corrélations bivariées (X↔M1, M1↔Y, X↔Y) pour M1
+ */
+interface BivariateCorrelationsPanelProps {
+  correlations: {
+    xToM1: { r: number; pValue: number; isSignificant: boolean };
+    m1ToY: { r: number; pValue: number; isSignificant: boolean };
+    xToY: { r: number; pValue: number; isSignificant: boolean };
+  };
+}
+
+const BivariateCorrelationsPanel: React.FC<BivariateCorrelationsPanelProps> = ({ correlations }) => {
+  const theme = useTheme();
+  
+  const allSignificant = correlations.xToM1.isSignificant && 
+                         correlations.m1ToY.isSignificant && 
+                         correlations.xToY.isSignificant;
+  
+  const allPositive = correlations.xToM1.r > 0 && 
+                      correlations.m1ToY.r > 0 && 
+                      correlations.xToY.r > 0;
+  
+  const chainValidated = allSignificant && allPositive;
+
+  const getStrength = (r: number): string => {
+    const absR = Math.abs(r);
+    if (absR >= 0.5) return 'forte';
+    if (absR >= 0.3) return 'modérée';
+    if (absR >= 0.1) return 'faible';
+    return 'très faible';
+  };
+
+  const formatCorrelation = (corr: { r: number; pValue: number; isSignificant: boolean }) => ({
+    r: corr.r.toFixed(3),
+    p: corr.pValue < 0.001 ? '< 0.001' : corr.pValue.toFixed(3),
+    strength: getStrength(corr.r),
+    isSignificant: corr.isSignificant,
+  });
+
+  const xToM1 = formatCorrelation(correlations.xToM1);
+  const m1ToY = formatCorrelation(correlations.m1ToY);
+  const xToY = formatCorrelation(correlations.xToY);
+
+  return (
+    <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+      <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        📊 Corrélations bivariées (validation de la chaîne causale)
+      </Typography>
+      
+      <TableContainer>
+        <Table size="small">
+          <TableHead>
+            <TableRow sx={{ bgcolor: 'action.hover' }}>
+              <TableCell><strong>Relation</strong></TableCell>
+              <TableCell align="center"><strong>Pearson r</strong></TableCell>
+              <TableCell align="center"><strong>Force</strong></TableCell>
+              <TableCell align="center"><strong>p-value</strong></TableCell>
+              <TableCell align="center"><strong>Significatif</strong></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow>
+              <TableCell>
+                <strong>X → M1</strong>
+                <Typography variant="caption" display="block" color="text.secondary">
+                  Stratégies → Verbes d'action
+                </Typography>
+              </TableCell>
+              <TableCell align="center">
+                <Typography 
+                  fontWeight="bold" 
+                  color={correlations.xToM1.r > 0 ? 'success.main' : 'error.main'}
+                >
+                  {xToM1.r}
+                </Typography>
+              </TableCell>
+              <TableCell align="center">{xToM1.strength}</TableCell>
+              <TableCell align="center">{xToM1.p}</TableCell>
+              <TableCell align="center">
+                <Chip 
+                  icon={xToM1.isSignificant ? <CheckCircleIcon /> : <ErrorIcon />}
+                  label={xToM1.isSignificant ? '✓' : '✗'}
+                  color={xToM1.isSignificant ? 'success' : 'error'}
+                  size="small"
+                />
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>
+                <strong>M1 → Y</strong>
+                <Typography variant="caption" display="block" color="text.secondary">
+                  Verbes d'action → Réaction
+                </Typography>
+              </TableCell>
+              <TableCell align="center">
+                <Typography 
+                  fontWeight="bold" 
+                  color={correlations.m1ToY.r > 0 ? 'success.main' : 'error.main'}
+                >
+                  {m1ToY.r}
+                </Typography>
+              </TableCell>
+              <TableCell align="center">{m1ToY.strength}</TableCell>
+              <TableCell align="center">{m1ToY.p}</TableCell>
+              <TableCell align="center">
+                <Chip 
+                  icon={m1ToY.isSignificant ? <CheckCircleIcon /> : <ErrorIcon />}
+                  label={m1ToY.isSignificant ? '✓' : '✗'}
+                  color={m1ToY.isSignificant ? 'success' : 'error'}
+                  size="small"
+                />
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>
+                <strong>X → Y</strong>
+                <Typography variant="caption" display="block" color="text.secondary">
+                  Stratégies → Réaction (effet total)
+                </Typography>
+              </TableCell>
+              <TableCell align="center">
+                <Typography 
+                  fontWeight="bold" 
+                  color={correlations.xToY.r > 0 ? 'success.main' : 'error.main'}
+                >
+                  {xToY.r}
+                </Typography>
+              </TableCell>
+              <TableCell align="center">{xToY.strength}</TableCell>
+              <TableCell align="center">{xToY.p}</TableCell>
+              <TableCell align="center">
+                <Chip 
+                  icon={xToY.isSignificant ? <CheckCircleIcon /> : <ErrorIcon />}
+                  label={xToY.isSignificant ? '✓' : '✗'}
+                  color={xToY.isSignificant ? 'success' : 'error'}
+                  size="small"
+                />
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableContainer>
+      
+      {/* Interprétation */}
+      <Alert 
+        severity={chainValidated ? 'success' : 'warning'} 
+        sx={{ mt: 2 }}
+        icon={chainValidated ? <CheckCircleIcon /> : <WarningIcon />}
+      >
+        <Typography variant="body2" fontWeight="bold" gutterBottom>
+          {chainValidated 
+            ? '✅ Chaîne causale X → M1 → Y validée'
+            : '⚠️ Chaîne causale partiellement validée'
+          }
+        </Typography>
+        <Typography variant="body2">
+          {chainValidated ? (
+            <>
+              Les 3 corrélations sont positives et significatives. 
+              Les stratégies d'action (ENGAGEMENT, OUVERTURE) génèrent plus de verbes d'action, 
+              qui sont associés à des réactions plus positives.
+            </>
+          ) : (
+            <>
+              {!correlations.xToM1.isSignificant && 'X → M1 non significatif. '}
+              {!correlations.m1ToY.isSignificant && 'M1 → Y non significatif. '}
+              {!correlations.xToY.isSignificant && 'X → Y non significatif. '}
+              {correlations.xToM1.r <= 0 && 'X → M1 non positif. '}
+              {correlations.m1ToY.r <= 0 && 'M1 → Y non positif. '}
+            </>
+          )}
+        </Typography>
+      </Alert>
+      
+      {/* Note sur Baron-Kenny */}
+      <Alert severity="info" sx={{ mt: 1 }} icon={<InfoIcon />}>
+        <Typography variant="caption">
+          <strong>Note :</strong> Le test de Sobel peut échouer en cas de forte colinéarité X ↔ M1 
+          (a = forte corrélation). Les corrélations bivariées offrent une validation alternative 
+          de la chaîne causale.
+        </Typography>
+      </Alert>
+    </Paper>
+  );
+};
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -639,35 +1067,83 @@ export const H2ContributionSection: React.FC<H2ContributionSectionProps> = ({
         {/* Contenu */}
         {loading ? (
           <H2LoadingSkeleton />
+        ) : !isNumericTarget ? (
+          /* X/Y : Section non applicable en Level 1 */
+          <Alert severity="info" sx={{ mt: 2 }}>
+            <Typography variant="body2" gutterBottom>
+              <strong>Section non applicable pour {targetKind}</strong>
+            </Typography>
+            <Typography variant="body2">
+              La validation H2 (médiation) concerne les variables M1, M2 et M3.
+              Pour {targetKind}, consultez la Section B (Contribution à H1).
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
+              💡 Pour voir l'analyse complète de médiation, testez les algorithmes M1, M2 ou M3.
+            </Typography>
+          </Alert>
         ) : mediationData ? (
           <>
-            {/* Légende */}
-            <MediationLegend />
-
-            {/* Tableau synthétique */}
-           <MediatorSummaryTable mediators={filteredMediators} />
-
-            {/* Détails par médiateur (accordéons) */}
-            <Typography variant="subtitle2" sx={{ mt: 3, mb: 1 }}>
-              📊 Détail des paths de médiation
-            </Typography>
+            {/* ========== CONTENU SPÉCIFIQUE SELON LE TARGET ========== */}
             
-            {filteredMediators.map((m) => (
-              <Accordion
-                key={m.mediator}
-                expanded={expandedMediator === m.mediator}
-                onChange={handleAccordionChange(m.mediator)}
-                sx={{ mb: 1 }}
-              >
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Stack direction="row" alignItems="center" spacing={2}>
-                    <Chip label={m.mediator} size="small" color="primary" />
-                    <Typography variant="body2">{m.label}</Typography>
-                    <VerdictChip verdict={m.verdict} />
-                  </Stack>
-                </AccordionSummary>
-                <AccordionDetails>
+           {targetKind === 'M1' && (
+              <>
+                {/* M1 : Prérequis (M1 par réaction) + Corrélations + Médiation */}
+                
+                {/* 1. M par réaction (ANOVA) */}
+                {mediationData.mByReaction && (
+                  <MByReactionTable
+                    data={mediationData.mByReaction.data}
+                    anova={mediationData.mByReaction.anova}
+                    mediatorLabel="M1 (Densité verbes d'action)"
+                  />
+                )}
+                
+                {/* 2. Corrélations bivariées (validation chaîne causale) */}
+                {mediationData.bivariateCorrelations && (
+                  <BivariateCorrelationsPanel correlations={mediationData.bivariateCorrelations} />
+                )}
+                
+                {/* 3. Médiation Baron-Kenny (informatif) */}
+                <Accordion defaultExpanded={false} sx={{ mt: 2 }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography variant="subtitle2">
+                      🔗 Médiation Baron-Kenny (détail technique)
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    {filteredMediators.map((m) => (
+                      <MediationPathDiagram
+                        key={m.mediator}
+                        mediator={m.mediator}
+                        mediatorLabel={m.label}
+                        paths={m.paths}
+                        percentMediation={m.percentMediation}
+                        sobelZ={m.sobelZ}
+                        sobelP={m.sobelP}
+                        verdict={m.verdict}
+                      />
+                    ))}
+                  </AccordionDetails>
+                </Accordion>
+              </>
+            )}
+            
+            {(targetKind === 'M2' || targetKind === 'M3') && (
+              <>
+                {/* M2/M3 : Corrélation avec M1 + Médiation brute + Médiation contrôlée */}
+                
+                {/* 1. Corrélation M1 → M2/M3 */}
+                {mediationData.correlations?.map((corr) => (
+                  <CorrelationPanel key={`${corr.from}-${corr.to}`} correlation={corr} />
+                ))}
+                
+                {/* 2. Médiation brute */}
+                <Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>
+                  🔗 Médiation brute : X → {targetKind} → Y
+                </Typography>
+                {filteredMediators.map((m) => (
                   <MediationPathDiagram
+                    key={m.mediator}
                     mediator={m.mediator}
                     mediatorLabel={m.label}
                     paths={m.paths}
@@ -676,12 +1152,17 @@ export const H2ContributionSection: React.FC<H2ContributionSectionProps> = ({
                     sobelP={m.sobelP}
                     verdict={m.verdict}
                   />
-                </AccordionDetails>
-              </Accordion>
-            ))}
-
-            {/* Comparaison avec versions précédentes */}
-             {filteredComparisons.length > 0 && (
+                ))}
+                
+                {/* 3. Médiation contrôlée */}
+                {mediationData.controlledMediation && (
+                  <ControlledMediationPanel result={mediationData.controlledMediation} />
+                )}
+              </>
+            )}
+            
+            {/* Comparaison avec versions précédentes (pour tous) */}
+            {filteredComparisons.length > 0 && (
               <Accordion defaultExpanded={false} sx={{ mt: 2 }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography variant="subtitle2">
@@ -693,7 +1174,7 @@ export const H2ContributionSection: React.FC<H2ContributionSectionProps> = ({
                 </AccordionDetails>
               </Accordion>
             )}
-
+            
             {/* Interprétation globale */}
             <OverallInterpretation interpretation={mediationData.overallInterpretation} />
           </>

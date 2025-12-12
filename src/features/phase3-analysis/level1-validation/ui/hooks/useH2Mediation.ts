@@ -16,6 +16,10 @@ import type {
   MediationVerdict,
   MediationPaths,
   H2VersionComparison,
+  MByReactionStats,
+  AnovaResult,
+  MediatorCorrelation,
+  ControlledMediationResult,
 } from '@/types/algorithm-lab/ui/results';
 
 // ============================================================================
@@ -88,9 +92,9 @@ const MEDIATION_THRESHOLDS = {
  */
 const encodeStrategy = (strategy?: string): number | null => {
   if (!strategy) return null;
+  // Actions (verbes d'action) = 1, Non-Actions = 0
   if (strategy.includes('ENGAGEMENT') || strategy.includes('OUVERTURE')) return 1;
-  if (strategy.includes('EXPLICATION')) return 0;
-  if (strategy.includes('REFLET')) return 0.5; // Neutre
+  if (strategy.includes('EXPLICATION') || strategy.includes('REFLET')) return 0;
   return null;
 };
 
@@ -219,25 +223,27 @@ export const useH2Mediation = (
 
     try {
       // Préparer les données
-      const validPairs: Array<{
+     const validPairs: Array<{
         x: number;
         y: number;
         m1: number | null;
         m2: number | null;
         m3: number | null;
+        reaction: string; // Pour le calcul M par réaction
       }> = [];
 
       analysisPairs.forEach(pair => {
         const x = encodeStrategy(pair.strategy_family || pair.strategy_tag);
         const y = encodeReaction(pair.reaction_tag);
         
-        if (x !== null && y !== null) {
+          if (x !== null && y !== null) {
           validPairs.push({
             x,
             y,
             m1: pair.m1_verb_density ?? null,
             m2: pair.m2_global_alignment ?? null,
             m3: pair.m3_cognitive_score ?? null,
+            reaction: pair.reaction_tag || '',
           });
         }
       });
@@ -331,7 +337,8 @@ export const useH2Mediation = (
       }
 
       // Comparaisons (pour l'instant vide, à implémenter avec les versions)
-     const comparisons: H2VersionComparison[] = mediatorResults.map(m => ({
+    // Comparaisons (pour l'instant vide, à implémenter avec les versions)
+      const comparisons: H2VersionComparison[] = mediatorResults.map(m => ({
         mediator: m.mediator,
         gold: null,
         baseline: null,
@@ -340,10 +347,107 @@ export const useH2Mediation = (
         vsBaseline: null,
       }));
 
+      // ========== NOUVEAUX CALCULS SELON LE TARGET ==========
+      
+      // M par réaction (pour M1 uniquement)
+      let mByReaction: H2MediationData['mByReaction'] | undefined;
+      // Corrélations bivariées (pour M1 uniquement)
+      let bivariateCorrelations: H2MediationData['bivariateCorrelations'] | undefined;
+      
+      if (targetKind === 'M1') {
+        const pairsWithM1 = validPairs
+          .filter(p => p.m1 !== null)
+          .map(p => ({ m: p.m1!, reaction: p.reaction }));
+        if (pairsWithM1.length > 0) {
+          mByReaction = calculateMByReaction(pairsWithM1);
+        }
+        
+        // Calculer les corrélations bivariées X↔M1, M1↔Y, X↔Y
+        const pairsForCorr = validPairs.filter(p => p.m1 !== null);
+        if (pairsForCorr.length >= 10) {
+          const xVals = pairsForCorr.map(p => p.x);
+          const yVals = pairsForCorr.map(p => p.y);
+          const m1Vals = pairsForCorr.map(p => p.m1!);
+          
+          bivariateCorrelations = {
+            xToM1: calculatePearsonCorrelation(xVals, m1Vals),
+            m1ToY: calculatePearsonCorrelation(m1Vals, yVals),
+            xToY: calculatePearsonCorrelation(xVals, yVals),
+          };
+        }
+      }
+
+      // Corrélations M1→M2 et M1→M3 (pour M2 et M3)
+      let correlations: MediatorCorrelation[] | undefined;
+      if (targetKind === 'M2' || targetKind === 'M3') {
+        const pairsWithM1M2M3 = validPairs.filter(p => 
+          p.m1 !== null && p.m2 !== null && p.m3 !== null
+        );
+        
+        if (pairsWithM1M2M3.length >= 10) {
+          const m1Values = pairsWithM1M2M3.map(p => p.m1!);
+          const m2Values = pairsWithM1M2M3.map(p => p.m2!);
+          const m3Values = pairsWithM1M2M3.map(p => p.m3!);
+
+          if (targetKind === 'M2') {
+            const corr = calculatePearsonCorrelation(m1Values, m2Values);
+            correlations = [{
+              from: 'M1',
+              to: 'M2',
+              pearsonR: corr.r,
+              pValue: corr.pValue,
+              isSignificant: corr.isSignificant,
+              interpretation: corr.r > 0 
+                ? 'Corrélation positive : plus de verbes d\'action → plus d\'alignement'
+                : 'Corrélation négative ou nulle',
+            }];
+          } else {
+            const corr = calculatePearsonCorrelation(m1Values, m3Values);
+            correlations = [{
+              from: 'M1',
+              to: 'M3',
+              pearsonR: corr.r,
+              pValue: corr.pValue,
+              isSignificant: corr.isSignificant,
+              interpretation: corr.r < 0 
+                ? 'Corrélation négative : plus de verbes d\'action → moins de charge cognitive'
+                : 'Corrélation positive ou nulle (inattendu)',
+            }];
+          }
+        }
+      }
+
+      // Médiation contrôlée (pour M2 et M3)
+      let controlledMediation: ControlledMediationResult | undefined;
+      if (targetKind === 'M2' || targetKind === 'M3') {
+        const pairsWithAll = validPairs.filter(p => 
+          p.m1 !== null && p.m2 !== null && p.m3 !== null
+        );
+        
+        if (pairsWithAll.length >= 30) {
+          const xVals = pairsWithAll.map(p => p.x);
+          const yVals = pairsWithAll.map(p => p.y);
+          const m1Vals = pairsWithAll.map(p => p.m1!);
+          
+          if (targetKind === 'M2') {
+            const m2Vals = pairsWithAll.map(p => p.m2!);
+            controlledMediation = calculateControlledMediation(xVals, yVals, m2Vals, m1Vals, 'M2');
+          } else {
+            const m3Vals = pairsWithAll.map(p => p.m3!);
+            controlledMediation = calculateControlledMediation(xVals, yVals, m3Vals, m1Vals, 'M3');
+          }
+        }
+      }
+
       setMediationData({
         mediators: mediatorResults,
         comparisons,
         overallInterpretation,
+        // Nouveaux champs
+        mByReaction,
+        bivariateCorrelations,
+        correlations,
+        controlledMediation,
       });
 
     } catch (err) {
@@ -459,5 +563,221 @@ function normalCDF(z: number): number {
   
   return 0.5 * (1.0 + sign * y);
 }
+
+// ============================================================================
+// NEW STATISTICAL HELPERS - M BY REACTION, CORRELATIONS, CONTROLLED MEDIATION
+// ============================================================================
+
+/**
+ * Calcule les statistiques M par réaction (pour tableau ANOVA)
+ */
+function calculateMByReaction(
+  pairs: Array<{ m: number; reaction: string }>,
+): { data: MByReactionStats[]; anova: AnovaResult } {
+  const reactions = ['POSITIF', 'NEUTRE', 'NEGATIF'] as const;
+  const groups: Record<string, number[]> = {
+    POSITIF: [],
+    NEUTRE: [],
+    NEGATIF: [],
+  };
+
+  // Grouper les valeurs par réaction
+  pairs.forEach(p => {
+    if (p.reaction.includes('POSITIF')) groups.POSITIF.push(p.m);
+    else if (p.reaction.includes('NEUTRE')) groups.NEUTRE.push(p.m);
+    else if (p.reaction.includes('NEGATIF')) groups.NEGATIF.push(p.m);
+  });
+
+  // Calculer les stats pour chaque groupe
+  const data: MByReactionStats[] = reactions.map(reaction => {
+    const values = groups[reaction];
+    if (values.length === 0) {
+      return { reaction, mean: 0, stdDev: 0, count: 0 };
+    }
+    const mean = values.reduce((a, b) => a + b, 0) / values.length;
+    const variance = values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
+    const stdDev = Math.sqrt(variance);
+    const sorted = [...values].sort((a, b) => a - b);
+    return {
+      reaction,
+      mean,
+      stdDev,
+      count: values.length,
+      min: sorted[0],
+      max: sorted[sorted.length - 1],
+    };
+  });
+
+  // Calcul ANOVA
+  const allValues = [...groups.POSITIF, ...groups.NEUTRE, ...groups.NEGATIF];
+  const grandMean = allValues.length > 0 
+    ? allValues.reduce((a, b) => a + b, 0) / allValues.length 
+    : 0;
+
+  // Sum of Squares Between (SSB)
+  let ssb = 0;
+  reactions.forEach(reaction => {
+    const groupMean = data.find(d => d.reaction === reaction)?.mean || 0;
+    const groupCount = groups[reaction].length;
+    ssb += groupCount * Math.pow(groupMean - grandMean, 2);
+  });
+
+  // Sum of Squares Within (SSW)
+  let ssw = 0;
+  reactions.forEach(reaction => {
+    const groupMean = data.find(d => d.reaction === reaction)?.mean || 0;
+    groups[reaction].forEach(value => {
+      ssw += Math.pow(value - groupMean, 2);
+    });
+  });
+
+  // Degrés de liberté
+  const k = reactions.filter(r => groups[r].length > 0).length; // nombre de groupes non vides
+  const n = allValues.length;
+  const dfBetween = k - 1;
+  const dfWithin = n - k;
+
+  // F-statistic
+  const msb = dfBetween > 0 ? ssb / dfBetween : 0;
+  const msw = dfWithin > 0 ? ssw / dfWithin : 0;
+  const fStatistic = msw > 0 ? msb / msw : 0;
+
+  // Approximation de la p-value (via distribution F simplifiée)
+  const pValue = approximateFPValue(fStatistic, dfBetween, dfWithin);
+
+  const anova: AnovaResult = {
+    fStatistic,
+    pValue,
+    isSignificant: pValue < 0.05,
+    dfBetween,
+    dfWithin,
+  };
+
+  return { data, anova };
+}
+
+/**
+ * Approximation de la p-value pour distribution F
+ */
+function approximateFPValue(f: number, df1: number, df2: number): number {
+  if (f <= 0 || df1 <= 0 || df2 <= 0) return 1;
+  // Approximation simple basée sur la transformation en chi-square
+  const x = (df1 * f) / (df1 * f + df2);
+  // Beta incomplete function approximation
+  // Pour une approximation rapide, utilisons une heuristique
+  if (f > 10) return 0.001;
+  if (f > 5) return 0.01;
+  if (f > 3) return 0.05;
+  if (f > 2) return 0.1;
+  return 0.5;
+}
+
+/**
+ * Calcule la corrélation de Pearson entre deux séries
+ */
+function calculatePearsonCorrelation(
+  x: number[],
+  y: number[]
+): { r: number; pValue: number; isSignificant: boolean } {
+  const n = x.length;
+  if (n < 3) return { r: 0, pValue: 1, isSignificant: false };
+
+  const meanX = x.reduce((a, b) => a + b, 0) / n;
+  const meanY = y.reduce((a, b) => a + b, 0) / n;
+
+  let sumXY = 0;
+  let sumX2 = 0;
+  let sumY2 = 0;
+
+  for (let i = 0; i < n; i++) {
+    const dx = x[i] - meanX;
+    const dy = y[i] - meanY;
+    sumXY += dx * dy;
+    sumX2 += dx * dx;
+    sumY2 += dy * dy;
+  }
+
+  const denom = Math.sqrt(sumX2 * sumY2);
+  const r = denom > 0 ? sumXY / denom : 0;
+
+  // Test de significativité (t-test)
+  const t = r * Math.sqrt((n - 2) / (1 - r * r + 1e-10));
+  const pValue = 2 * (1 - normalCDF(Math.abs(t)));
+
+  return {
+    r,
+    pValue,
+    isSignificant: pValue < 0.05,
+  };
+}
+
+/**
+ * Calcule la médiation contrôlée (M2 ou M3 en contrôlant M1)
+ */
+function calculateControlledMediation(
+  xValues: number[],
+  yValues: number[],
+  targetMValues: number[], // M2 ou M3
+  controlMValues: number[], // M1
+  mediatorName: 'M2' | 'M3'
+): ControlledMediationResult {
+  const n = xValues.length;
+
+  // 1. Médiation brute (sans contrôle)
+  const rawRegXM = simpleRegression(xValues, targetMValues);
+  const rawRegMY = multipleRegression(xValues, targetMValues, yValues);
+  const rawA = rawRegXM.slope;
+  const rawB = rawRegMY.b2;
+  const rawIndirectEffect = rawA * rawB;
+  const rawSeA = rawRegXM.se;
+  const rawSeB = rawRegMY.se2;
+  const rawSobelZ = rawIndirectEffect / Math.sqrt(rawB * rawB * rawSeA * rawSeA + rawA * rawA * rawSeB * rawSeB + 1e-10);
+  const rawSobelP = 2 * (1 - normalCDF(Math.abs(rawSobelZ)));
+
+  // 2. Médiation contrôlée (en résidualisant M1)
+  // Régression de targetM sur controlM pour obtenir les résidus
+  const regMM = simpleRegression(controlMValues, targetMValues);
+  const targetMResiduals = targetMValues.map((m, i) => m - (regMM.slope * controlMValues[i] + regMM.intercept));
+
+  // Médiation avec les résidus
+  const ctrlRegXM = simpleRegression(xValues, targetMResiduals);
+  const ctrlRegMY = multipleRegression(xValues, targetMResiduals, yValues);
+  const ctrlA = ctrlRegXM.slope;
+  const ctrlB = ctrlRegMY.b2;
+  const ctrlIndirectEffect = ctrlA * ctrlB;
+  const ctrlSeA = ctrlRegXM.se;
+  const ctrlSeB = ctrlRegMY.se2;
+  const ctrlSobelZ = ctrlIndirectEffect / Math.sqrt(ctrlB * ctrlB * ctrlSeA * ctrlSeA + ctrlA * ctrlA * ctrlSeB * ctrlSeB + 1e-10);
+  const ctrlSobelP = 2 * (1 - normalCDF(Math.abs(ctrlSobelZ)));
+
+  // Interprétation
+  const rawIsSignificant = rawSobelP < 0.05;
+  const controlledIsSignificant = ctrlSobelP < 0.05;
+  const effectDisappears = rawIsSignificant && !controlledIsSignificant;
+
+  let interpretation: string;
+  if (effectDisappears) {
+    interpretation = `L'effet de médiation de ${mediatorName} disparaît quand M1 est contrôlé. ${mediatorName} n'est pas un médiateur indépendant.`;
+  } else if (!rawIsSignificant) {
+    interpretation = `${mediatorName} ne montre pas de médiation significative (brute ou contrôlée).`;
+  } else if (controlledIsSignificant) {
+    interpretation = `${mediatorName} conserve un effet de médiation même en contrôlant M1. ${mediatorName} pourrait être un médiateur indépendant.`;
+  } else {
+    interpretation = `Résultats non concluants pour ${mediatorName}.`;
+  }
+
+  return {
+    mediator: mediatorName,
+    rawIndirectEffect,
+    rawSobelP,
+    rawIsSignificant,
+    controlledIndirectEffect: ctrlIndirectEffect,
+    controlledSobelP: ctrlSobelP,
+    controlledIsSignificant,
+    effectDisappears,
+    interpretation,
+  };
+}
+
 
 export default useH2Mediation;
