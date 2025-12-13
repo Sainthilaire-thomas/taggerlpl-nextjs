@@ -18,10 +18,11 @@ import {
   Button,
   Stack,
   alpha,
-  useTheme,
+  useTheme,IconButton
 } from "@mui/material";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { TVValidationResult } from "../types";
 import AnnotationList from "./AnnotationList";
 import type { ExtraColumn } from "../../extraColumns";
@@ -57,13 +58,14 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
   const [draftComment, setDraftComment] = useState("");
 
   // Largeurs
-  const COL_WIDTHS = {
-    context: { minWidth: 420 }, // la colonne Contexte prendra le restant
-    tag: 160,
-    conf: 110,
-    time: 90,
-    annot: 64,
-  };
+ const COL_WIDTHS = {
+  context: { minWidth: 420 },
+  tag: 160,
+  conf: 110,
+  time: 90,
+  annot: 64,
+  actions: 64,  // ← Ajouter cette ligne
+};
 
   const saveComment = async (row: TVValidationResult) => {
     const m = (row.metadata || {}) as Record<string, any>;
@@ -166,6 +168,9 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
               <TableCell align="center" sx={{ width: COL_WIDTHS.annot }}>
                 Annot.
               </TableCell>
+              <TableCell align="center" sx={{ width: COL_WIDTHS.actions }}>
+  Appel
+</TableCell>
 
               {extraColumns.map((col) => (
                 <TableCell
@@ -214,7 +219,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                   {idx > 0 && (
                     <TableRow>
                       <TableCell
-                        colSpan={6 + extraColumns.length}
+                        colSpan={7 + extraColumns.length}
                         sx={{ p: 0, border: 0, height: 8 }}
                       />
                     </TableRow>
@@ -373,6 +378,24 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                         }}
                       />
                     </TableCell>
+                    {/* Lien vers l'appel */}
+<TableCell align="center" sx={{ py: 0.5 }}>
+  {m.callId ? (
+    <Tooltip title={`Ouvrir l'appel ${m.callId}`}>
+      <IconButton
+        size="small"
+        color="primary"
+        href={`/phase2-annotation/transcript/${m.callId}`}
+        target="_blank"
+        rel="noopener"
+      >
+        <OpenInNewIcon fontSize="small" />
+      </IconButton>
+    </Tooltip>
+  ) : (
+    <Typography variant="caption" color="text.disabled">—</Typography>
+  )}
+</TableCell>
 
                     {/* Colonnes dynamiques */}
                     {extraColumns.map((col, i) => (
@@ -402,7 +425,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                     }}
                   >
                     <TableCell
-                      colSpan={6 + extraColumns.length}
+                      colSpan={7 + extraColumns.length}
                       sx={{ p: 0, borderBottom: 0 }}
                     >
                       <Collapse
