@@ -18,6 +18,7 @@ import { M1ActionVerbCounter } from "../mediators/M1Algorithms/M1ActionVerbCount
 import M2LexicalAlignmentCalculator from "../mediators/M2Algorithms/M2LexicalAlignmentCalculator";
 import M2SemanticAlignmentCalculator from "../mediators/M2Algorithms/M2SemanticAlignmentCalculator";
 import M2CompositeAlignmentCalculator from "../mediators/M2Algorithms/M2CompositeAlignmentCalculator";
+import M2MultiDimensionCalculator from "../mediators/M2Algorithms/M2MultiDimensionCalculator";
 
 // --- M3 (charge cognitive)
 import { PausesM3Calculator } from "../mediators/M3Algorithms/PausesM3Calculator";
@@ -125,6 +126,11 @@ export function initializeAlgorithms(): void {
         threshold: 0.5,
         partialThreshold: 0.3,
       })
+    );
+
+    algorithmRegistry.register(
+      "M2MultiDimension",
+      new M2MultiDimensionCalculator()
     );
 
     // ===== M3 (calculateurs de charge cognitive) =====
