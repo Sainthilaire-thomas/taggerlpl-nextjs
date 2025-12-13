@@ -493,6 +493,14 @@ export const ALGORITHM_CONFIGS: Record<string, UnifiedAlgorithmConfig> = {
     requiresPrevContext: true,
   },
 
+    M2MultiDimension: {
+    target: "M2",
+    speakerType: "M2",
+    inputFormat: "alignment_context",
+    requiresNextTurn: true,
+    requiresPrevContext: true,
+  },
+  
   // === VARIABLE M3 ===
   PausesM3Calculator: {
     target: "M3",
