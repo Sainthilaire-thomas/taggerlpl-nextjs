@@ -6,6 +6,7 @@ import type {
   TVValidationResultCore as CoreTVValidationResult,
   TVMetadataCore as CoreTVMetadata,
 } from "@/types/algorithm-lab";
+import type { M2Scores, M2DetailsExtended } from "@/types/algorithm-lab";
 // =========================
 //   Auxiliaires UI locaux
 // =========================
@@ -73,6 +74,9 @@ export interface TVMetadata extends CoreTVMetadata {
     value?: string | number; // ex: catégorie ou score
     scale?: string; // ex: Likert, ouverture/fermeture
   };
+m2_scores?: M2Scores;
+  m2_details?: M2DetailsExtended;
+  
 
   m3?: {
     value?: number; // durée, pauses, etc.

@@ -158,30 +158,85 @@ const m1Cols: ExtraColumn[] = [
 /* -----------------------------
  * Colonnes M2 (classification, PAS de comptage de verbes)
  * ----------------------------- */
+/* -----------------------------
+ * Colonnes M2 (6 dimensions multi-niveaux)
+ * ----------------------------- */
 const m2Cols: ExtraColumn[] = [
   {
-    id: "m2-value",
-    header: <strong>M2 (valeur)</strong>,
-    width: 160,
+    id: "m2-global",
+    header: <strong>M2</strong>,
+    width: 70,
     align: "center",
     render: (r) => {
-      const v = r.metadata?.m2?.value;
+      const v = r.metadata?.m2_scores?.global ?? r.metadata?.m2?.value;
       return (
         <Chip
           size="small"
-          variant="outlined"
-          color="default"
-          label={v !== undefined && v !== null ? String(v) : "—"}
+          color="primary"
+          label={Number.isFinite(v) ? (v as number).toFixed(2) : "—"}
         />
       );
     },
   },
   {
-    id: "m2-scale",
-    header: <strong>Échelle</strong>,
-    width: 140,
+    id: "m2-lexical",
+    header: <strong>Lex.</strong>,
+    width: 60,
     align: "center",
-    render: (r) => r.metadata?.m2?.scale ?? "—",
+    render: (r) => {
+      const v = r.metadata?.m2_scores?.lexical;
+      return Number.isFinite(v) ? (v as number).toFixed(2) : "—";
+    },
+  },
+  {
+    id: "m2-semantic",
+    header: <strong>Sém.</strong>,
+    width: 60,
+    align: "center",
+    render: (r) => {
+      const v = r.metadata?.m2_scores?.semantic;
+      return Number.isFinite(v) ? (v as number).toFixed(2) : "—";
+    },
+  },
+  {
+    id: "m2-verb-rep",
+    header: <strong>Verb.</strong>,
+    width: 60,
+    align: "center",
+    render: (r) => {
+      const v = r.metadata?.m2_scores?.verb_repetition;
+      return Number.isFinite(v) ? (v as number).toFixed(2) : "—";
+    },
+  },
+  {
+    id: "m2-accept",
+    header: <strong>Acc.</strong>,
+    width: 50,
+    align: "center",
+    render: (r) => {
+      const v = r.metadata?.m2_scores?.pragmatic?.acceptance;
+      return v === 1 ? "✓" : v === 0 ? "✗" : "—";
+    },
+  },
+  {
+    id: "m2-compreh",
+    header: <strong>Cpr.</strong>,
+    width: 50,
+    align: "center",
+    render: (r) => {
+      const v = r.metadata?.m2_scores?.pragmatic?.comprehension;
+      return v === 1 ? "✓" : v === 0 ? "✗" : "—";
+    },
+  },
+  {
+    id: "m2-coop",
+    header: <strong>Cop.</strong>,
+    width: 50,
+    align: "center",
+    render: (r) => {
+      const v = r.metadata?.m2_scores?.pragmatic?.cooperation;
+      return v === 1 ? "✓" : v === 0 ? "✗" : "—";
+    },
   },
 ];
 

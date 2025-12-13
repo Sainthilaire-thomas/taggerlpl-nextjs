@@ -1,6 +1,7 @@
 ﻿// src/features/phase3-analysis/level1-validation/ui/hooks/useAnalysisPairs.ts
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import type { M2Scores, M2DetailsExtended } from "@/types/algorithm-lab";
 
 export interface AnalysisPair {
   pair_id: number;
@@ -89,6 +90,8 @@ next3_tag?: string;
   m2_shared_terms?: string[];
   m2_algorithm?: string;
   m2_algorithm_version?: string;
+   m2_scores?: M2Scores;
+  m2_details?: M2DetailsExtended;
   
   // M3: Charge cognitive
   m3_hesitation_count?: number;

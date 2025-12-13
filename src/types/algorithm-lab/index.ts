@@ -18,6 +18,8 @@ import type { ValidationMetrics, ValidationResult } from "./core/validation";
 
 // Variables & dÃ©tails
 export * from "./core/variables";
+// M2 multi-dimensions (JSONB)
+export * from "./ThesisVariables.m2";
 
 // Calculs & rÃ©sultats
 export type {
@@ -204,4 +206,3 @@ export {
 
 // Export H2 helpers
 export { getH2Property } from "./h2Types";
-
