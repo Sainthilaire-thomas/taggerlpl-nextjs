@@ -120,6 +120,11 @@ useAnalysisPairs-working.txt
 |   |   |-- mission-2025-01-24-level1-investigation.md
 |   |   |-- mission-2025-11-24-versioning-investigation-avancement.md
 |   |   |-- mission-2025-11-25-versioning-avancement-post-debug.md
+|   |   |-- mission-2025-12-10-level1-interface-evolution.md
+|   |   |-- mission-2025-12-11-level1-interface-evolution.md
+|   |   |-- mission-2025-12-12-level1-section-c-final.md
+|   |   |-- mission-next-M2-M3-tuning.md
+|   |   |-- mission-next-M2-M3-tuning-v3.md
 |   |   |-- SESSION_2025-11-25_BILAN_PHASE1-2-3.md
 |   |   |-- session-reprise-2025-11-25-phase4-debugging.md
 |   |   +-- USER_GUIDE_Phase4_Versioning_Investigation.md
@@ -658,6 +663,11 @@ useAnalysisPairs-working.txt
 |   |   |   |   |   |   |-- Level2Preview/
 |   |   |   |   |   |   |   |-- index.ts
 |   |   |   |   |   |   |   +-- Level2PreviewPanel.tsx
+|   |   |   |   |   |   |-- Results/
+|   |   |   |   |   |   |   |-- H1ContributionSection.tsx
+|   |   |   |   |   |   |   |-- H2ContributionSection.tsx
+|   |   |   |   |   |   |   |-- index.ts
+|   |   |   |   |   |   |   +-- PerformanceSection.tsx
 |   |   |   |   |   |   |-- shared/
 |   |   |   |   |   |   |   |-- atoms/
 |   |   |   |   |   |   |   |   +-- AlgorithmChip.tsx
@@ -681,6 +691,8 @@ useAnalysisPairs-working.txt
 |   |   |   |   |   |   |-- useAnalysisPairs.ts
 |   |   |   |   |   |   |-- useClassifierConfiguration.ts
 |   |   |   |   |   |   |-- useClassifierStatus.ts
+|   |   |   |   |   |   |-- useH1Comparison.ts
+|   |   |   |   |   |   |-- useH2Mediation.ts
 |   |   |   |   |   |   |-- useInvestigation.ts
 |   |   |   |   |   |   |-- useLevel1Testing.ts
 |   |   |   |   |   |   |-- useLevel2Preview.ts
@@ -759,6 +771,7 @@ useAnalysisPairs-working.txt
 |   |   |   |-- ui/
 |   |   |   |   |-- components.ts
 |   |   |   |   |-- index.ts
+|   |   |   |   |-- results.ts
 |   |   |   |   +-- validation.ts
 |   |   |   |-- utils/
 |   |   |   |   |-- converters.ts
