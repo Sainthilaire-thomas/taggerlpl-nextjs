@@ -1,4 +1,4 @@
-// src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms.ts
+﻿// src/app/(protected)/analysis/components/AlgorithmLab/algorithms/level1/shared/initializeAlgorithms.ts
 
 import { algorithmRegistry } from "./AlgorithmRegistry";
 
@@ -10,11 +10,12 @@ import { OpenAI3TXClassifier } from "../client/OpenAI3TXClassifier";
 
 // --- Y (Client)
 import { RegexYClassifier } from "../conseiller/RegexYClassifier";
+import { CharteYBClassifier } from "../conseiller/CharteYBClassifier";
 
-// --- M1 (Compteurs / métriques)
+// --- M1 (Compteurs / mÃ©triques)
 import { M1ActionVerbCounter } from "../mediators/M1Algorithms/M1ActionVerbCounter";
 
-// --- M2 (Alignement X→Y)
+// --- M2 (Alignement Xâ†’Y)
 import M2LexicalAlignmentCalculator from "../mediators/M2Algorithms/M2LexicalAlignmentCalculator";
 import M2SemanticAlignmentCalculator from "../mediators/M2Algorithms/M2SemanticAlignmentCalculator";
 import M2CompositeAlignmentCalculator from "../mediators/M2Algorithms/M2CompositeAlignmentCalculator";
@@ -28,14 +29,14 @@ let initialized = false;
 
 /**
  * Initialise et enregistre tous les algorithmes disponibles.
- * - S'exécute une seule fois
- * - Tous les algorithmes implémentent UniversalAlgorithm
- * - Configuration basée sur les variables d'environnement
+ * - S'exÃ©cute une seule fois
+ * - Tous les algorithmes implÃ©mentent UniversalAlgorithm
+ * - Configuration basÃ©e sur les variables d'environnement
  */
 export function initializeAlgorithms(): void {
   if (initialized) return;
 
-  console.log("🚀 Initialisation AlgorithmLab harmonisé...");
+  console.log("ðŸš€ Initialisation AlgorithmLab harmonisÃ©...");
 
   try {
     // Centralisation des variables d'environnement
@@ -50,7 +51,7 @@ export function initializeAlgorithms(): void {
     // ===== X (classifieurs conseiller) =====
     algorithmRegistry.register("RegexXClassifier", new RegexXClassifier());
 
-    // SpaCy avec configuration complète
+    // SpaCy avec configuration complÃ¨te
     if (spacyUrl || isDev) {
       const spacyX = new SpacyXClassifier({
         apiUrl: spacyUrl,
@@ -59,16 +60,16 @@ export function initializeAlgorithms(): void {
         confidenceThreshold: 0.6,
       });
       algorithmRegistry.register("SpacyXClassifier", spacyX);
-      console.log("✅ SpaCy X Classifier enregistré");
+      console.log("âœ… SpaCy X Classifier enregistrÃ©");
     } else {
-      console.log("⚠️ SpaCy X Classifier ignoré (pas de SPACY_API_URL)");
+      console.log("âš ï¸ SpaCy X Classifier ignorÃ© (pas de SPACY_API_URL)");
     }
 
-    // OpenAI classifieurs avec configuration optimisée
+    // OpenAI classifieurs avec configuration optimisÃ©e
     algorithmRegistry.register(
       "OpenAIXClassifier",
       new OpenAIXClassifier({
-        apiKey: openAIKey, // peut être vide → fallback côté run()
+        apiKey: openAIKey, // peut Ãªtre vide â†’ fallback cÃ´tÃ© run()
         model: "gpt-4o-mini",
         temperature: 0,
         maxTokens: 6,
@@ -87,15 +88,16 @@ export function initializeAlgorithms(): void {
       })
     );
 
-    console.log("🔎 OpenAI setup:", {
+    console.log("ðŸ”Ž OpenAI setup:", {
       hasKey: !!openAIKey,
       nodeEnv: process.env.NODE_ENV,
     });
-    console.log("✅ OpenAI X Classifiers enregistrés");
+    console.log("âœ… OpenAI X Classifiers enregistrÃ©s");
     // ===== Y (classifieurs client) =====
     algorithmRegistry.register("RegexYClassifier", new RegexYClassifier());
+    algorithmRegistry.register("CharteYBClassifier", new CharteYBClassifier());
 
-    // ===== M1 (compteurs / métriques) =====
+    // ===== M1 (compteurs / mÃ©triques) =====
     algorithmRegistry.register(
       "M1ActionVerbCounter",
       new M1ActionVerbCounter()
@@ -141,9 +143,9 @@ export function initializeAlgorithms(): void {
     // Log du statut final
     logAlgorithmStatus();
     const count = algorithmRegistry.list().length;
-    console.log(`✅ ${count} algorithmes harmonisés initialisés`);
+    console.log(`âœ… ${count} algorithmes harmonisÃ©s initialisÃ©s`);
   } catch (error) {
-    console.error("❌ Erreur lors de l'initialisation des algorithmes:", error);
+    console.error("âŒ Erreur lors de l'initialisation des algorithmes:", error);
     throw error; // Fail fast
   }
 }
@@ -154,15 +156,15 @@ function logAlgorithmStatus(): void {
   let validCount = 0;
   let totalCount = entries.length;
 
-  console.log("\n📊 Status des algorithmes:");
+  console.log("\nðŸ“Š Status des algorithmes:");
 
   for (const { key, meta } of entries) {
     const algo = algorithmRegistry.get(key) as any;
     if (!algo) continue;
 
-    // Gestion sécurisée des méthodes optionnelles
+    // Gestion sÃ©curisÃ©e des mÃ©thodes optionnelles
     const isValid = algo.validateConfig?.() ?? true;
-    const statusIcon = isValid ? "✅" : "⚠️";
+    const statusIcon = isValid ? "âœ…" : "âš ï¸";
 
     if (isValid) validCount++;
 
@@ -174,22 +176,22 @@ function logAlgorithmStatus(): void {
     );
 
     if (!isValid) {
-      console.log(`   ⚠️  Configuration manquante ou invalide`);
+      console.log(`   âš ï¸  Configuration manquante ou invalide`);
     }
   }
 
   console.log(
-    `\n📈 Résumé: ${validCount}/${totalCount} algorithmes configurés\n`
+    `\nðŸ“ˆ RÃ©sumÃ©: ${validCount}/${totalCount} algorithmes configurÃ©s\n`
   );
 }
 
-// Auto-init côté serveur uniquement
+// Auto-init cÃ´tÃ© serveur uniquement
 if (typeof window === "undefined") {
   initializeAlgorithms();
 }
 
 /**
- * Renvoie l'état des algorithmes pour l'API GET /api/algolab/classifiers
+ * Renvoie l'Ã©tat des algorithmes pour l'API GET /api/algolab/classifiers
  */
 export function getAlgorithmStatus(): Record<string, any> {
   if (!initialized) {
@@ -203,7 +205,7 @@ export function getAlgorithmStatus(): Record<string, any> {
     totalCount: entries.length,
     availableCount: entries.filter(({ key }) => {
       const algo = algorithmRegistry.get(key) as any;
-      return algo?.validateConfig?.() ?? true; // tolérant si non défini
+      return algo?.validateConfig?.() ?? true; // tolÃ©rant si non dÃ©fini
     }).length,
     algorithms: entries.map(({ key, meta }) => {
       const algo = algorithmRegistry.get(key) as any;
@@ -226,7 +228,7 @@ export function getAlgorithmStatus(): Record<string, any> {
       hasOpenAI: !!(
         process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY
       ),
-      spacyApiUrl: process.env.SPACY_API_URL || "non configuré",
+      spacyApiUrl: process.env.SPACY_API_URL || "non configurÃ©",
       nodeEnv: process.env.NODE_ENV,
     },
     recommendations: getRecommendations(),
@@ -252,7 +254,7 @@ function getRecommendations(): string[] {
     process.env.NEXT_PUBLIC_OPENAI_API_KEY
   ) {
     rec.push(
-      "⚠️  En production, utilisez OPENAI_API_KEY (server-side) plutôt que NEXT_PUBLIC_OPENAI_API_KEY"
+      "âš ï¸  En production, utilisez OPENAI_API_KEY (server-side) plutÃ´t que NEXT_PUBLIC_OPENAI_API_KEY"
     );
   }
 
@@ -261,7 +263,7 @@ function getRecommendations(): string[] {
 
 // ---- Helpers de test et debug -----------------------------------------------
 export async function testAllAlgorithms(
-  sampleVerbatim: string = "je vais vérifier votre dossier"
+  sampleVerbatim: string = "je vais vÃ©rifier votre dossier"
 ): Promise<Record<string, any>> {
   if (!initialized) {
     initializeAlgorithms();
@@ -293,7 +295,7 @@ export async function testAllAlgorithms(
       if (!result) {
         results[key] = {
           success: false,
-          error: "Aucun résultat retourné",
+          error: "Aucun rÃ©sultat retournÃ©",
           configured: true,
           target: meta.target,
         };
@@ -326,10 +328,10 @@ export async function testAllAlgorithms(
 
 export async function benchmarkAlgorithms(
   verbatims: string[] = [
-    "je vais vérifier votre dossier",
+    "je vais vÃ©rifier votre dossier",
     "vous allez recevoir un email",
     "je comprends votre situation",
-    "d'accord c'est noté",
+    "d'accord c'est notÃ©",
     "notre politique stipule que",
   ]
 ): Promise<Record<string, any>> {
@@ -358,7 +360,7 @@ export async function benchmarkAlgorithms(
       if (classifications.length === 0) {
         results[key] = {
           success: false,
-          error: "Aucune classification retournée",
+          error: "Aucune classification retournÃ©e",
           target: meta.target,
         };
         continue;
