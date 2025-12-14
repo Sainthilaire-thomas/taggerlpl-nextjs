@@ -406,6 +406,7 @@ const mapH2ToGoldStandard = useCallback(
       });
 
       // 3️⃣ SAMPLE MÉDIATEUR M2 (pour alignement conseiller-client)
+     // 3️⃣ SAMPLE MÉDIATEUR M2 (pour alignement conseiller-client)
       samples.push({
         verbatim: pair.conseiller_verbatim,
         expectedTag: normalizeXLabelStrict(pair.strategy_tag),
@@ -414,33 +415,27 @@ const mapH2ToGoldStandard = useCallback(
           callId: pair.call_id,
           turnId: pair.conseiller_turn_id,
           pairId: pair.pair_id,
-          
           // ✅ CRUCIAL : Les deux verbatims pour M2
           t0: pair.conseiller_verbatim,
           t1: pair.client_verbatim,
-          
           // Aussi pour compatibilité
           conseiller_verbatim: pair.conseiller_verbatim,
           client_verbatim: pair.client_verbatim,
-          
           // Tags
           strategy_tag: pair.strategy_tag,
           reaction_tag: pair.reaction_tag,
-          
           // Timestamps
           start: pair.conseiller_start_time,
           end: pair.conseiller_end_time,
-          
           // Champ pour affichage universel
           current_turn_verbatim: pair.conseiller_verbatim,
-          
-          // CONTEXTE
+          // ✅ CONTEXTE pour M2 : le +1 doit être la réponse client, pas next1
           prev3_turn_verbatim: pair.prev3_verbatim,
           prev2_turn_verbatim: pair.prev2_verbatim,
           prev1_turn_verbatim: pair.prev1_verbatim,
-          next1_turn_verbatim: pair.next1_verbatim,
-          next2_turn_verbatim: pair.next2_verbatim,
-          next3_turn_verbatim: pair.next3_verbatim,
+          next1_turn_verbatim: pair.client_verbatim,   // ✅ T+1 = réponse client
+          next2_turn_verbatim: pair.next1_verbatim,    // T+2 = ancien next1
+          next3_turn_verbatim: pair.next2_verbatim,    // T+3 = ancien next2
         }
       });
     });

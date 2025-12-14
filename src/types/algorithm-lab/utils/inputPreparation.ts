@@ -28,15 +28,17 @@ export const prepareInputsForAlgorithm = (
           clientTurn: sample.metadata?.next_turn_verbatim,
         };
 
-      case "alignment_context":
-        return {
-          t0: sample.verbatim,
-          t1: sample.metadata?.next_turn_verbatim,
-          prev1: sample.metadata?.prev1_turn_verbatim,
-          prev2: sample.metadata?.prev2_turn_verbatim,
-          conseillerTurn: sample.verbatim,
-          clientTurn: sample.metadata?.next_turn_verbatim,
-        };
+     case "alignment_context":
+  return {
+    t0: sample.verbatim,
+    t1: sample.metadata?.t1 || sample.metadata?.client_verbatim || sample.metadata?.next_turn_verbatim,  // ✅ FIX
+    prev1: sample.metadata?.prev1_turn_verbatim,
+    prev2: sample.metadata?.prev2_turn_verbatim,
+    conseillerTurn: sample.verbatim,
+    clientTurn: sample.metadata?.t1 || sample.metadata?.client_verbatim || sample.metadata?.next_turn_verbatim,  // ✅ FIX aussi
+    pairId: sample.metadata?.pairId,
+    ...sample.metadata,
+  };
 
       case "cognitive":
         return {

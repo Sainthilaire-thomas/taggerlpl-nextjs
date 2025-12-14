@@ -119,7 +119,7 @@ export function normalizeUniversalToTV(
       break;
     }
 
-    case "M2": {
+     case "M2": {
       const d = details as M2Details;
       baseMd.m2 = {
         value: d?.value ?? undefined,
@@ -130,6 +130,11 @@ export function normalizeUniversalToTV(
         overall: d?.overall ?? undefined,
         sharedTerms: d?.sharedTerms ?? undefined,
       } as M2Details;
+      
+      // ✅ NOUVEAU : Copier les structures JSONB multi-dimensions
+      baseMd.m2_scores = (uni.metadata as any)?.m2_scores ?? undefined;
+      baseMd.m2_details = (uni.metadata as any)?.m2_details ?? undefined;
+      
       break;
     }
 
