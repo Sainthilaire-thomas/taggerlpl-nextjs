@@ -332,6 +332,7 @@ const mapH2ToGoldStandard = useCallback(
           pairId: pair.pair_id,
           
           // Contexte client (pour M2/M3)
+          conseiller_verbatim: pair.conseiller_verbatim,
           client_verbatim: pair.client_verbatim,
           reaction_tag: pair.reaction_tag,
           
@@ -379,6 +380,7 @@ const mapH2ToGoldStandard = useCallback(
           
           // Contexte conseiller
           conseiller_verbatim: pair.conseiller_verbatim,
+          client_verbatim: pair.client_verbatim,
           strategy_tag: pair.strategy_tag,
           
           // Timestamps

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @fileoverview Types de base des algorithmes AlgorithmLab - VERSION FUSIONNÉE COMPATIBLE
  * - Préserve votre existant
  * - Ajoute les extensions nécessaires pour M2
@@ -460,7 +460,14 @@ export const ALGORITHM_CONFIGS: Record<string, UnifiedAlgorithmConfig> = {
     requiresNextTurn: false,
     requiresPrevContext: false,
   },
-
+ CharteYBClassifier: {
+    target: "Y",
+    speakerType: "client",
+    inputFormat: "simple",
+    requiresNextTurn: false,
+    requiresPrevContext: false,
+    description: "Charte Y-B: d'accord/oui = POSITIF, hm/mh = NEUTRE (Kappa 0.998)",
+  },
   // === VARIABLE M1 ===
   M1ActionVerbCounter: {
     target: "M1",

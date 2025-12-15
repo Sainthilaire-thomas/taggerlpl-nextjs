@@ -123,8 +123,11 @@ useAnalysisPairs-working.txt
 |   |   |-- mission-2025-12-10-level1-interface-evolution.md
 |   |   |-- mission-2025-12-11-level1-interface-evolution.md
 |   |   |-- mission-2025-12-12-level1-section-c-final.md
+|   |   |-- mission-level0-inter-annotator-agreement.md
 |   |   |-- mission-next-M2-M3-tuning.md
 |   |   |-- mission-next-M2-M3-tuning-v3.md
+|   |   |-- mission-next-M2-M3-tuning-v4.md
+|   |   |-- mission-next-M2-M3-tuning-v5-PAUSED.md
 |   |   |-- SESSION_2025-11-25_BILAN_PHASE1-2-3.md
 |   |   |-- session-reprise-2025-11-25-phase4-debugging.md
 |   |   +-- USER_GUIDE_Phase4_Versioning_Investigation.md
@@ -551,6 +554,7 @@ useAnalysisPairs-working.txt
 |   |   |   |   |   |   |-- RegexXClassifier.ts
 |   |   |   |   |   |   +-- SpacyXClassifier.ts
 |   |   |   |   |   |-- conseiller/
+|   |   |   |   |   |   |-- CharteYBClassifier.ts
 |   |   |   |   |   |   |-- CustomClassifier.ts
 |   |   |   |   |   |   |-- EnsembleConseillerClassifier.ts
 |   |   |   |   |   |   |-- HuggingFaceConseillerClassifier.ts
@@ -571,6 +575,7 @@ useAnalysisPairs-working.txt
 |   |   |   |   |   |   |   |   +-- m2-utils.ts
 |   |   |   |   |   |   |   |-- M2CompositeAlignmentCalculator.ts
 |   |   |   |   |   |   |   |-- M2LexicalAlignmentCalculator.ts
+|   |   |   |   |   |   |   |-- M2MultiDimensionCalculator.tsx
 |   |   |   |   |   |   |   +-- M2SemanticAlignmentCalculator.ts
 |   |   |   |   |   |   +-- M3Algorithms/
 |   |   |   |   |   |       |-- shared/
@@ -603,10 +608,10 @@ useAnalysisPairs-working.txt
 |   |   |   |   |   |   |   |   |   |-- AnnotationList.tsx
 |   |   |   |   |   |   |   |   |   |-- CommentDialog.tsx
 |   |   |   |   |   |   |   |   |   |-- ResultsFilters.tsx
+|   |   |   |   |   |   |   |   |   |-- ResultsTableBody.backup.tsx
 |   |   |   |   |   |   |   |   |   |-- ResultsTableBody.tsx
 |   |   |   |   |   |   |   |   |   |-- ResultsTableHeader.tsx
-|   |   |   |   |   |   |   |   |   |-- ResultsTableRow.tsx
-|   |   |   |   |   |   |   |   |   +-- ToneLine.tsx
+|   |   |   |   |   |   |   |   |   +-- ResultsTableRow.tsx
 |   |   |   |   |   |   |   |   |-- hooks/
 |   |   |   |   |   |   |   |   |   |-- useCommentManagement.ts
 |   |   |   |   |   |   |   |   |   |-- useFineTuningData.ts
@@ -745,6 +750,7 @@ useAnalysisPairs-working.txt
 |   |       |   +-- TaggingDataContext.tsx
 |   |       +-- ui/
 |   |           +-- components/
+|   |               |-- AnalysisPairContext.tsx
 |   |               |-- index.ts
 |   |               +-- TurnWithContext.tsx
 |   |-- lib/

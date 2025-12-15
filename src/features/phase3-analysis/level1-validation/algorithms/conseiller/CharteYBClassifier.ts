@@ -22,16 +22,17 @@ export class CharteYBClassifier implements UniversalAlgorithm {
   // PATTERNS CHARTE Y-B (validés par Kappa = 0.998)
   // ========================================================================
   
+  // ✅ POSITIF = Accord explicite fort (aligné sur Gold)
   private readonly POSITIF_PATTERNS = [
-    "d'accord", "oui", "ouais", "ok", "voilà",
-    "merci", "parfait", "très bien", "super", "excellent",
+    "d'accord", "ok", "parfait", "très bien", "super", "excellent",
     "ça marche", "entendu", "bien sûr", "tout à fait",
-    "je vous remercie", "avec plaisir", "absolument",
-    "certainement", "volontiers", "c'est bon", "c'est parfait",
-    "pas de problème", "formidable", "génial"
+    "avec plaisir", "absolument", "certainement", "volontiers",
+    "c'est bon", "c'est parfait", "pas de problème", "formidable", "génial"
   ];
 
+  // ✅ NEUTRE = Back-channel, confirmation simple (aligné sur Gold)
   private readonly NEUTRE_PATTERNS = [
+    "oui", "ouais", "voilà", "merci", "bon",
     "hm", "mh", "mmh", "hm hm", "mh mh"
   ];
 
@@ -185,19 +186,9 @@ export class CharteYBClassifier implements UniversalAlgorithm {
 
     const matchedPatterns: string[] = [];
 
-    // 1. Vérifier NEGATIF (priorité haute - patterns forts)
-    for (const pattern of this.NEGATIF_PATTERNS) {
-      if (text.includes(pattern.toLowerCase())) {
-        matchedPatterns.push(pattern);
-        return {
-          prediction: "CLIENT_NEGATIF",
-          confidence: 1.0,
-          matchedPatterns,
-        };
-      }
-    }
-
-    // 2. Vérifier POSITIF (patterns d'accord explicites)
+    // ✅ ORDRE CORRIGÉ (identique à la requête SQL validée)
+    
+    // 1. POSITIF d'abord (patterns d'accord explicites)
     for (const pattern of this.POSITIF_PATTERNS) {
       if (text.includes(pattern.toLowerCase())) {
         matchedPatterns.push(pattern);
@@ -209,14 +200,25 @@ export class CharteYBClassifier implements UniversalAlgorithm {
       }
     }
 
-    // 3. Vérifier NEUTRE (back-channel seul)
-    // Important : ne matcher que si c'est le seul contenu
+    // 2. NEUTRE ensuite (back-channel seul - exact match)
     const textTrimmed = text.trim();
     for (const pattern of this.NEUTRE_PATTERNS) {
       if (textTrimmed === pattern.toLowerCase()) {
         matchedPatterns.push(pattern);
         return {
           prediction: "CLIENT_NEUTRE",
+          confidence: 1.0,
+          matchedPatterns,
+        };
+      }
+    }
+
+    // 3. NEGATIF après (patterns de désaccord)
+    for (const pattern of this.NEGATIF_PATTERNS) {
+      if (text.includes(pattern.toLowerCase())) {
+        matchedPatterns.push(pattern);
+        return {
+          prediction: "CLIENT_NEGATIF",
           confidence: 1.0,
           matchedPatterns,
         };

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useState } from "react";
 import {
   Table,
@@ -26,7 +26,7 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { TVValidationResult } from "../types";
 import AnnotationList from "./AnnotationList";
 import type { ExtraColumn } from "../../extraColumns";
-import { AnalysisPairContext } from "@/features/shared/ui/components";
+import { ToneLine } from "@/features/shared/ui/components";
 
 
 
@@ -64,7 +64,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
   conf: 110,
   time: 90,
   annot: 64,
-  actions: 64,  // â† Ajouter cette ligne
+  actions: 64,  // ← Ajouter cette ligne
 };
 
   const saveComment = async (row: TVValidationResult) => {
@@ -76,7 +76,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
       note: draftComment,
       gold: row.goldStandard,
       predicted: row.predicted,
-      confidence: row.confidence ?? 0, // âœ… Fix: Handle undefined confidence
+      confidence: row.confidence ?? 0, // ✅ Fix: Handle undefined confidence
       context: {
         prev2: m.prev2_turn_verbatim || null,
         prev1: m.prev1_turn_verbatim || null,
@@ -109,7 +109,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
       setOpenCommentFor(null);
       setDraftComment("");
     } catch (e: any) {
-      alert(`Ã‰chec sauvegarde note: ${e?.message || e}`);
+      alert(`Échec sauvegarde note: ${e?.message || e}`);
     }
   };
 
@@ -118,7 +118,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
       <Paper variant="outlined">
         <Box sx={{ p: 4, textAlign: "center" }}>
           <Typography variant="h6" color="text.secondary">
-            Aucun rÃ©sultat ne correspond aux filtres.
+            Aucun résultat ne correspond aux filtres.
           </Typography>
         </Box>
       </Paper>
@@ -140,7 +140,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
         >
           <TableHead>
             <TableRow>
-              {/* Contexte â€” sticky Ã  gauche, court libellÃ©, fond fixÃ© */}
+              {/* Contexte — sticky à gauche, court libellé, fond fixé */}
               <TableCell
                 sx={{
                   minWidth: COL_WIDTHS.context.minWidth,
@@ -154,10 +154,10 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
               </TableCell>
 
               <TableCell align="center" sx={{ width: COL_WIDTHS.tag }}>
-                Sortie modÃ¨le (brut)
+                Sortie modèle (brut)
               </TableCell>
               <TableCell align="center" sx={{ width: COL_WIDTHS.tag }}>
-                RÃ©fÃ©rence (gold)
+                Référence (gold)
               </TableCell>
               <TableCell align="center" sx={{ width: COL_WIDTHS.conf }}>
                 Confiance
@@ -187,12 +187,20 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
           <TableBody>
             {pageItems.map((r, idx) => {
               const m = (r.metadata || {}) as Record<string, any>;
-            console.log('DEBUG metadata:', { 
-  target: m.target, 
-  conseiller_verbatim: m.conseiller_verbatim, 
-  client_verbatim: m.client_verbatim,
-  verbatim: r.verbatim 
-});
+              const prev2 = m.prev2_turn_verbatim as string | undefined;
+              const prev1 = m.prev1_turn_verbatim as string | undefined;
+              const next1 = m.next1_turn_verbatim as string | undefined;
+              // ✅ FOCUS UNIVERSEL - fonctionne pour X et Y
+              const focusVerbatim = m.current_turn_verbatim || r.verbatim;
+              const isClientTarget = m.target === "client";
+              const focusPrefix = isClientTarget
+                ? "0 [CLIENT]"
+                : "0 [CONSEILLER]";
+
+              const p2prefix = "−2"; // Toujours rang temporel
+              const p1prefix = "−1"; // Toujours rang temporel
+
+              const nextPrefix = "+1"; // Tour suivant
               const isOdd = idx % 2 === 1;
               const base = isOdd
                 ? theme.palette.primary.main
@@ -203,7 +211,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
               const groupBg = alpha(base, BG_ALPHA);
               const groupEdge = alpha(base, EDGE_ALPHA);
 
-              // âœ… Fix: Ensure confidence has a default value
+              // ✅ Fix: Ensure confidence has a default value
               const confidence = r.confidence ?? 0;
 
               return (
@@ -232,7 +240,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                       },
                     }}
                   >
-                    {/* Cellule Contexte â€” sticky Ã  gauche, fond alignÃ© au groupe */}
+                    {/* Cellule Contexte — sticky à gauche, fond aligné au groupe */}
                     <TableCell
                       sx={{
                         py: 0.75,
@@ -243,10 +251,39 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                         backgroundColor: groupBg,
                       }}
                     >
-                     <AnalysisPairContext pairId={m.pairId} />
+                      <Box sx={{ display: "grid", gap: 0.5 }}>
+                        <ToneLine
+                          text={prev2}
+                          prefix={p2prefix} // "−2"
+                          tone="A"
+                          italic
+                          tooltip={prev2 || ""}
+                        />
+                        <ToneLine
+                          text={prev1}
+                          prefix={p1prefix} // "−1"
+                          tone="B"
+                          tooltip={prev1 || ""}
+                        />
+                        <ToneLine
+                          text={focusVerbatim}
+                          prefix={focusPrefix} // "0"
+                          tone="CURRENT"
+                          strong
+                          lines={2}
+                          tooltip={`Tour courant: ${focusVerbatim || ""}`}
+                        />
+                        <ToneLine
+                          text={next1}
+                          prefix={nextPrefix} // "+1"
+                          tone="B"
+                          italic
+                          tooltip={next1 || ""}
+                        />
+                      </Box>
                     </TableCell>
 
-                    {/* Sortie modÃ¨le (brut) */}
+                    {/* Sortie modèle (brut) */}
                     <TableCell align="center" sx={{ py: 0.5 }}>
                       <Tooltip
                         title={
@@ -273,7 +310,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                       </Tooltip>
                     </TableCell>
 
-                    {/* RÃ©fÃ©rence (gold) */}
+                    {/* Référence (gold) */}
                     <TableCell align="center" sx={{ py: 0.5 }}>
                       <Chip
                         label={r.goldStandard}
@@ -356,7 +393,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
       </IconButton>
     </Tooltip>
   ) : (
-    <Typography variant="caption" color="text.disabled">â€”</Typography>
+    <Typography variant="caption" color="text.disabled">—</Typography>
   )}
 </TableCell>
 
@@ -405,7 +442,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                           }}
                         >
                           <Typography variant="caption" color="text.secondary">
-                            Ã‰crivez une courte interprÃ©tation du tour en
+                            Écrivez une courte interprétation du tour en
                             fonction du contexte (utile pour le fine-tuning et
                             le partage d'exemples).
                           </Typography>
@@ -413,7 +450,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                           <TextField
                             value={draftComment}
                             onChange={(e) => setDraftComment(e.target.value)}
-                            placeholder="Ex. Ici le conseiller acquiesce puis oriente vers une action clientâ€¦"
+                            placeholder="Ex. Ici le conseiller acquiesce puis oriente vers une action client…"
                             multiline
                             minRows={2}
                             maxRows={6}
@@ -493,8 +530,8 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
           }}
         >
           <Typography variant="body2" color="text.secondary">
-            ðŸ“Š Tous les rÃ©sultats affichÃ©s : <strong>{pageItems.length}</strong>
-            {pageItems.length > 100 && " â€¢ Scrollez pour naviguer"}
+            📊 Tous les résultats affichés : <strong>{pageItems.length}</strong>
+            {pageItems.length > 100 && " • Scrollez pour naviguer"}
           </Typography>
         </Box>
       )}
