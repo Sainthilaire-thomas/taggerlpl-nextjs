@@ -31,12 +31,19 @@ export function normalizeUniversalToTV(
     // on met aussi "details" à la racine pour les fallbacks des extra-colonnes
     details: (uni.metadata as any)?.details ?? {},
     // contexte pratique
-    pairId: sample.metadata?.pairId ?? undefined,
+     pairId: sample.metadata?.pairId ?? undefined,
     turnId: sample.metadata?.turnId ?? undefined,
     callId: sample.metadata?.callId ?? undefined,
+    // Timestamps pour affichage
+    start_time: sample.metadata?.start ?? undefined,
+    end_time: sample.metadata?.end ?? undefined,
+    // Contexte tours (tous les niveaux)
     prev1_turn_verbatim: sample.metadata?.prev1_turn_verbatim,
     prev2_turn_verbatim: sample.metadata?.prev2_turn_verbatim,
+    prev3_turn_verbatim: sample.metadata?.prev3_turn_verbatim,
     next1_turn_verbatim: sample.metadata?.next1_turn_verbatim,
+    next2_turn_verbatim: sample.metadata?.next2_turn_verbatim,
+    next3_turn_verbatim: sample.metadata?.next3_turn_verbatim,
   };
 
   // détails bruts fournis par l’algo

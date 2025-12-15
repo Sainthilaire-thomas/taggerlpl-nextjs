@@ -18,18 +18,21 @@ import {
   Button,
   Stack,
   alpha,
-  useTheme,IconButton
+  useTheme,
+  IconButton,
 } from "@mui/material";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import SpeedIcon from "@mui/icons-material/Speed";
+import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import { TVValidationResult } from "../types";
 import AnnotationList from "./AnnotationList";
 import type { ExtraColumn } from "../../extraColumns";
 import { AnalysisPairContext } from "@/features/shared/ui/components";
-
-
-
+import { formatTime } from "@/features/phase2-annotation/supervision/utils/formatters";
+import QuickTagEditDialog from "./QuickTagEditDialog";
+import { useQuickTagEdit } from "../hooks/useQuickTagEdit";
 export interface ResultsTableBodyProps {
   pageItems: TVValidationResult[];
   page: number;
@@ -39,6 +42,7 @@ export interface ResultsTableBodyProps {
   onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   showPagination?: boolean;
   extraColumns?: ExtraColumn[];
+  onDataRefresh?: () => void;  // 🆕 Remplace onQuickEdit
 }
 
 export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
@@ -50,22 +54,36 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
   onRowsPerPageChange,
   showPagination = true,
   extraColumns = [],
+  onDataRefresh
+
 }) => {
   const theme = useTheme();
+  // Hook pour l'édition rapide
+const quickEdit = useQuickTagEdit({
+  onSuccess: () => {
+    console.log("[ResultsTableBody] Tag mis à jour avec succès");
+    onDataRefresh?.();
+  },
+  onError: (error) => {
+    console.error("[ResultsTableBody] Erreur édition:", error);
+  },
+});
+
   const [openCommentFor, setOpenCommentFor] = useState<string | number | null>(
     null
   );
   const [draftComment, setDraftComment] = useState("");
 
-  // Largeurs
- const COL_WIDTHS = {
-  context: { minWidth: 420 },
-  tag: 160,
-  conf: 110,
-  time: 90,
-  annot: 64,
-  actions: 64,  // â† Ajouter cette ligne
-};
+  // Largeurs colonnes
+  const COL_WIDTHS = {
+    context: { minWidth: 420 },
+    tag: 140,
+    conf: 90,
+    proc: 70,
+    timestamp: 90,
+    annot: 56,
+    actions: 100,
+  };
 
   const saveComment = async (row: TVValidationResult) => {
     const m = (row.metadata || {}) as Record<string, any>;
@@ -76,7 +94,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
       note: draftComment,
       gold: row.goldStandard,
       predicted: row.predicted,
-      confidence: row.confidence ?? 0, // âœ… Fix: Handle undefined confidence
+      confidence: row.confidence ?? 0,
       context: {
         prev2: m.prev2_turn_verbatim || null,
         prev1: m.prev1_turn_verbatim || null,
@@ -109,7 +127,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
       setOpenCommentFor(null);
       setDraftComment("");
     } catch (e: any) {
-      alert(`Ã‰chec sauvegarde note: ${e?.message || e}`);
+      alert(`Échec sauvegarde note: ${e?.message || e}`);
     }
   };
 
@@ -118,12 +136,15 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
       <Paper variant="outlined">
         <Box sx={{ p: 4, textAlign: "center" }}>
           <Typography variant="h6" color="text.secondary">
-            Aucun rÃ©sultat ne correspond aux filtres.
+            Aucun résultat ne correspond aux filtres.
           </Typography>
         </Box>
       </Paper>
     );
   }
+
+  // Nombre de colonnes pour le colspan
+  const baseColCount = 8; // Contexte, Sortie, Ref, Conf, Proc, Timestamp, Annot, Actions
 
   return (
     <>
@@ -132,21 +153,20 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
         variant="outlined"
         sx={{ overflowX: "auto" }}
       >
-        {/* tableLayout AUTO pour laisser respirer le header Contexte */}
         <Table
           size="small"
           stickyHeader
-          sx={{ tableLayout: "auto", minWidth: 960 }}
+          sx={{ tableLayout: "auto", minWidth: 1100 }}
         >
           <TableHead>
             <TableRow>
-              {/* Contexte â€” sticky Ã  gauche, court libellÃ©, fond fixÃ© */}
+              {/* Contexte — sticky à gauche */}
               <TableCell
                 sx={{
                   minWidth: COL_WIDTHS.context.minWidth,
                   position: "sticky",
                   left: 0,
-                  zIndex: 3, // au-dessus des autres headers
+                  zIndex: 3,
                   bgcolor: "background.default",
                 }}
               >
@@ -154,23 +174,26 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
               </TableCell>
 
               <TableCell align="center" sx={{ width: COL_WIDTHS.tag }}>
-                Sortie modÃ¨le (brut)
+                Sortie modèle
               </TableCell>
               <TableCell align="center" sx={{ width: COL_WIDTHS.tag }}>
-                RÃ©fÃ©rence (gold)
+                Référence (gold)
               </TableCell>
               <TableCell align="center" sx={{ width: COL_WIDTHS.conf }}>
                 Confiance
               </TableCell>
-              <TableCell align="center" sx={{ width: COL_WIDTHS.time }}>
-                Temps
+              <TableCell align="center" sx={{ width: COL_WIDTHS.proc }}>
+                Proc.
+              </TableCell>
+              <TableCell align="center" sx={{ width: COL_WIDTHS.timestamp }}>
+                Timestamp
               </TableCell>
               <TableCell align="center" sx={{ width: COL_WIDTHS.annot }}>
                 Annot.
               </TableCell>
               <TableCell align="center" sx={{ width: COL_WIDTHS.actions }}>
-  Appel
-</TableCell>
+                Actions
+              </TableCell>
 
               {extraColumns.map((col) => (
                 <TableCell
@@ -187,12 +210,6 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
           <TableBody>
             {pageItems.map((r, idx) => {
               const m = (r.metadata || {}) as Record<string, any>;
-            console.log('DEBUG metadata:', { 
-  target: m.target, 
-  conseiller_verbatim: m.conseiller_verbatim, 
-  client_verbatim: m.client_verbatim,
-  verbatim: r.verbatim 
-});
               const isOdd = idx % 2 === 1;
               const base = isOdd
                 ? theme.palette.primary.main
@@ -203,15 +220,21 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
               const groupBg = alpha(base, BG_ALPHA);
               const groupEdge = alpha(base, EDGE_ALPHA);
 
-              // âœ… Fix: Ensure confidence has a default value
               const confidence = r.confidence ?? 0;
+              
+              // Timestamps
+              const startTime = m.start_time as number | undefined;
+              const endTime = m.end_time as number | undefined;
+              const duration = startTime != null && endTime != null 
+                ? Math.round(endTime - startTime) 
+                : null;
 
               return (
                 <React.Fragment key={idx}>
                   {idx > 0 && (
                     <TableRow>
                       <TableCell
-                        colSpan={7 + extraColumns.length}
+                        colSpan={baseColCount + extraColumns.length}
                         sx={{ p: 0, border: 0, height: 8 }}
                       />
                     </TableRow>
@@ -232,7 +255,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                       },
                     }}
                   >
-                    {/* Cellule Contexte â€” sticky Ã  gauche, fond alignÃ© au groupe */}
+                    {/* Contexte — sticky à gauche */}
                     <TableCell
                       sx={{
                         py: 0.75,
@@ -243,10 +266,10 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                         backgroundColor: groupBg,
                       }}
                     >
-                     <AnalysisPairContext pairId={m.pairId} />
+                      <AnalysisPairContext pairId={m.pairId} />
                     </TableCell>
 
-                    {/* Sortie modÃ¨le (brut) */}
+                    {/* Sortie modèle (brut) */}
                     <TableCell align="center" sx={{ py: 0.5 }}>
                       <Tooltip
                         title={
@@ -263,7 +286,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                           size="small"
                           color={r.correct ? "default" : "error"}
                           sx={{
-                            maxWidth: 160,
+                            maxWidth: 140,
                             "& .MuiChip-label": {
                               overflow: "hidden",
                               textOverflow: "ellipsis",
@@ -273,14 +296,14 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                       </Tooltip>
                     </TableCell>
 
-                    {/* RÃ©fÃ©rence (gold) */}
+                    {/* Référence (gold) */}
                     <TableCell align="center" sx={{ py: 0.5 }}>
                       <Chip
                         label={r.goldStandard}
                         size="small"
                         color="success"
                         sx={{
-                          maxWidth: 160,
+                          maxWidth: 140,
                           "& .MuiChip-label": {
                             overflow: "hidden",
                             textOverflow: "ellipsis",
@@ -289,6 +312,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                       />
                     </TableCell>
 
+                    {/* Confiance */}
                     <TableCell align="center" sx={{ py: 0.5 }}>
                       <Typography
                         variant="body2"
@@ -305,12 +329,48 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                       </Typography>
                     </TableCell>
 
+                    {/* Processing time */}
                     <TableCell align="center" sx={{ py: 0.5 }}>
-                      <Typography variant="caption">
+                      <Typography variant="caption" color="text.secondary">
                         {r.processingTime ?? 0} ms
                       </Typography>
                     </TableCell>
 
+                    {/* Timestamp */}
+                    <TableCell align="center" sx={{ py: 0.5 }}>
+                      {startTime != null ? (
+                        <Box>
+                          <Typography variant="caption" display="block">
+                            {formatTime(startTime)}
+                          </Typography>
+                          {endTime != null && (
+                            <Typography 
+                              variant="caption" 
+                              color="text.secondary" 
+                              display="block"
+                            >
+                              {formatTime(endTime)}
+                            </Typography>
+                          )}
+                          {duration != null && (
+                            <Typography 
+                              variant="caption" 
+                              color="primary" 
+                              display="block"
+                              fontWeight="bold"
+                            >
+                              {duration}s
+                            </Typography>
+                          )}
+                        </Box>
+                      ) : (
+                        <Typography variant="caption" color="text.disabled">
+                          —
+                        </Typography>
+                      )}
+                    </TableCell>
+
+                    {/* Annotations */}
                     <TableCell align="center">
                       <AnnotationList
                         turnId={Number(m.turnId ?? m.id ?? idx)}
@@ -341,23 +401,44 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                         }}
                       />
                     </TableCell>
-                    {/* Lien vers l'appel */}
+
+                   {/* Actions */}
 <TableCell align="center" sx={{ py: 0.5 }}>
-  {m.callId ? (
-    <Tooltip title={`Ouvrir l'appel ${m.callId}`}>
-      <IconButton
-        size="small"
-        color="primary"
-        href={`/phase2-annotation/transcript/${m.callId}`}
-        target="_blank"
-        rel="noopener"
-      >
-        <OpenInNewIcon fontSize="small" />
-      </IconButton>
-    </Tooltip>
-  ) : (
-    <Typography variant="caption" color="text.disabled">â€”</Typography>
-  )}
+  <Box sx={{ display: "flex", gap: 0.25, justifyContent: "center" }}>
+    {/* Édition rapide du tag */}
+<Tooltip title="Édition rapide du tag">
+  <IconButton
+    size="small"
+    color="primary"
+    onClick={(e) => {
+      e.stopPropagation();
+      quickEdit.openDialog(r);
+    }}
+  >
+    <SpeedIcon fontSize="small" />
+  </IconButton>
+</Tooltip>
+    
+
+    {/* Ouvrir dans TranscriptLPL au timestamp */}
+    {m.callId ? (
+      <Tooltip title={startTime != null ? `Ouvrir à ${formatTime(startTime)}` : `Ouvrir l'appel ${m.callId}`}>
+        <IconButton
+          size="small"
+          color="secondary"
+          href={`/phase2-annotation/transcript/${m.callId}${startTime != null ? `?t=${Math.floor(startTime)}` : ''}`}
+          target="_blank"
+          rel="noopener"
+        >
+          <OpenInNewIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    ) : (
+      <Typography variant="caption" color="text.disabled">
+        —
+      </Typography>
+    )}
+  </Box>
 </TableCell>
 
                     {/* Colonnes dynamiques */}
@@ -388,7 +469,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                     }}
                   >
                     <TableCell
-                      colSpan={7 + extraColumns.length}
+                      colSpan={baseColCount + extraColumns.length}
                       sx={{ p: 0, borderBottom: 0 }}
                     >
                       <Collapse
@@ -405,7 +486,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                           }}
                         >
                           <Typography variant="caption" color="text.secondary">
-                            Ã‰crivez une courte interprÃ©tation du tour en
+                            Écrivez une courte interprétation du tour en
                             fonction du contexte (utile pour le fine-tuning et
                             le partage d'exemples).
                           </Typography>
@@ -413,7 +494,7 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
                           <TextField
                             value={draftComment}
                             onChange={(e) => setDraftComment(e.target.value)}
-                            placeholder="Ex. Ici le conseiller acquiesce puis oriente vers une action clientâ€¦"
+                            placeholder="Ex. Ici le conseiller acquiesce puis oriente vers une action client…"
                             multiline
                             minRows={2}
                             maxRows={6}
@@ -493,11 +574,24 @@ export const ResultsTableBody: React.FC<ResultsTableBodyProps> = ({
           }}
         >
           <Typography variant="body2" color="text.secondary">
-            ðŸ“Š Tous les rÃ©sultats affichÃ©s : <strong>{pageItems.length}</strong>
-            {pageItems.length > 100 && " â€¢ Scrollez pour naviguer"}
+            📊 Tous les résultats affichés : <strong>{pageItems.length}</strong>
+            {pageItems.length > 100 && " • Scrollez pour naviguer"}
           </Typography>
         </Box>
       )}
+
+       {/* Dialog d'édition rapide */}
+      <QuickTagEditDialog
+        open={quickEdit.state.isOpen}
+        onClose={quickEdit.closeDialog}
+        row={quickEdit.state.row}
+        tagType={quickEdit.getTagType()}
+        availableTags={quickEdit.getAvailableTags()}
+        currentTag={quickEdit.state.row?.goldStandard ?? ""}
+        saving={quickEdit.state.saving}
+        error={quickEdit.state.error}
+        onSave={quickEdit.saveTag}
+      />
     </>
   );
 };
