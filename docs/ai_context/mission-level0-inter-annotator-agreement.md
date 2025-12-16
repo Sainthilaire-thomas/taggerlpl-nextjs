@@ -1,18 +1,110 @@
+
 # 🎯 Mission: Level 0 - Accord Inter-Annotateurs et Gestion des Chartes
 
-*Date de création : 14 décembre 2025*  
-*Statut : 🟢 EN COURS*  
+*Date de création : 14 décembre 2025*
+
+*Dernière mise à jour : 15 décembre 2025*
+
+*Statut : 🟢 EN COURS*
+
 *Priorité : HAUTE (prérequis pour tuning M2)*
 
 ---
 
 ## 📤 Documents à uploader pour les sessions
 
-| Document | Obligatoire | Contenu |
-|----------|-------------|---------|
-| `base-context.md` | ✅ Oui | Architecture globale, types, flux de données |
-| `base-context-versioning-complement.md` | ✅ Oui | Système versioning, tables, workflows |
-| `mission-level0-inter-annotator-agreement.md` | ✅ Oui | Ce document |
+| Document                                        | Obligatoire | Contenu                                       |
+| ----------------------------------------------- | ----------- | --------------------------------------------- |
+| `base-context.md`                             | ✅ Oui      | Architecture globale, types, flux de données |
+| `base-context-versioning-complement.md`       | ✅ Oui      | Système versioning, tables, workflows        |
+| `mission-level0-inter-annotator-agreement.md` | ✅ Oui      | Ce document                                   |
+
+---
+
+## 🛠️ Travaux préalables - Session 15 décembre 2025
+
+### Améliorations UI Level 1 (commits effectués)
+
+Avant de commencer la mission Level 0, plusieurs améliorations UI ont été apportées à Level 1 :
+
+#### 1. Composant AnalysisPairContext autonome ✅
+
+**Fichier** : `src/features/shared/ui/components/AnalysisPairContext.tsx`
+
+* Composant avec hook intégré qui fetch automatiquement via `pairId`
+* Mode dual : props directes OU pairId pour fetch auto depuis `analysis_pairs`
+* Affichage : prev1 → X (conseiller, fond bleu) → Y (client, fond orange) → next1
+* Toggle pour contexte étendu (prev3, prev2, next2, next3)
+* Fix typage Supabase (cast `as unknown as`)
+
+**Usage simplifié** :
+
+```tsx
+// Avant (bricolage avec fallbacks)
+<AnalysisPairContext
+  prev1={m.prev1_turn_verbatim}
+  conseiller={m.conseiller_verbatim || ...}
+  client={m.client_verbatim || ...}
+  next1={m.next1_turn_verbatim}
+/>
+
+// Après (autonome)
+<AnalysisPairContext pairId={m.pairId} />
+```
+
+#### 2. Colonnes enrichies dans ResultsTableBody ✅
+
+**Fichier** : `src/features/phase3-analysis/level1-validation/ui/components/AlgorithmLab/ResultsSample/components/ResultsTableBody.tsx`
+
+| Colonne             | Avant                | Après                                             |
+| ------------------- | -------------------- | -------------------------------------------------- |
+| Temps               | Processing time (ms) | Renommé → "Proc."                                |
+| **Timestamp** | 🆕                   | start_time / end_time / durée (format mm:ss)      |
+| Appel               | Juste icône lien    | Renommé → "Actions"                              |
+| **Actions**   | 🆕                   | Speed (édition rapide) + OpenInNew (au timestamp) |
+
+#### 3. Édition rapide des tags (Architecture OLTP/OLAP) ✅
+
+**Fichiers créés** :
+
+* `hooks/useQuickTagEdit.ts` - Hook de mise à jour
+* `components/QuickTagEditDialog.tsx` - Dialog d'édition
+
+**Flux de mise à jour (Approche A - architecturale)** :
+
+```
+1. Édition dans dialog (nouveau tag sélectionné)
+         ↓
+2. UPDATE turntagged SET tag = :newTag WHERE id = :turnId
+         ↓
+3. UPDATE analysis_pairs SET strategy_tag/reaction_tag = :newTag 
+   WHERE pair_id = :pairId (sync)
+         ↓
+4. Callback onDataRefresh pour refresh UI
+```
+
+**Principe respecté** : `turntagged` = source de vérité (OLTP), `analysis_pairs` = table analytique (OLAP)
+
+#### 4. Propagation timestamps dans normalizeUniversalToTV ✅
+
+**Fichier** : `src/features/phase3-analysis/level1-validation/ui/hooks/normalizeUniversalToTV.ts`
+
+Ajout dans `baseMd` :
+
+```typescript
+start_time: sample.metadata?.start ?? undefined,
+end_time: sample.metadata?.end ?? undefined,
+prev3_turn_verbatim: sample.metadata?.prev3_turn_verbatim,
+next2_turn_verbatim: sample.metadata?.next2_turn_verbatim,
+next3_turn_verbatim: sample.metadata?.next3_turn_verbatim,
+```
+
+### Commits effectués
+
+| Commit      | Description                                                              |
+| ----------- | ------------------------------------------------------------------------ |
+| `679902c` | feat(shared): composant AnalysisPairContext autonome avec hook intégré |
+| `03faf43` | feat(level1): édition rapide des tags + colonnes Timestamp/Actions      |
 
 ---
 
@@ -30,10 +122,11 @@ La session du 14 décembre a révélé :
 ### Objectif de la mission
 
 Implémenter un système permettant :
-- De définir plusieurs **chartes d'annotation** pour X et Y
-- De calculer le **Kappa de Cohen** entre algorithmes et Gold standard
-- De **sélectionner la référence Y** lors des tests Level 1 (M2)
-- De **documenter l'impact** des variations de chartes sur H1
+
+* De définir plusieurs **chartes d'annotation** pour X et Y
+* De calculer le **Kappa de Cohen** entre algorithmes et Gold standard
+* De **sélectionner la référence Y** lors des tests Level 1 (M2)
+* De **documenter l'impact** des variations de chartes sur H1
 
 ---
 
@@ -66,14 +159,14 @@ Implémenter un système permettant :
 
 ### Nomenclature des algorithmes
 
-| algorithm_key | Type | Description |
-|---------------|------|-------------|
-| **GoldX** | Référence | Lecture directe de strategy_tag (annotation manuelle) |
-| **GoldY** | Référence | Lecture directe de reaction_tag (annotation manuelle) |
-| **CharteX_A** | Algo | Sans contexte (classification isolée par tour) |
-| **CharteX_B** | Algo | Avec héritage contextuel (tours courts) |
-| **CharteY_B** | Algo | d'accord/oui/voilà = POSITIF, hm/mh = NEUTRE |
-| **CharteY_C** | Algo | Binaire (POSITIF vs NON-POSITIF) |
+| algorithm_key       | Type        | Description                                           |
+| ------------------- | ----------- | ----------------------------------------------------- |
+| **GoldX**     | Référence | Lecture directe de strategy_tag (annotation manuelle) |
+| **GoldY**     | Référence | Lecture directe de reaction_tag (annotation manuelle) |
+| **CharteX_A** | Algo        | Sans contexte (classification isolée par tour)       |
+| **CharteX_B** | Algo        | Avec héritage contextuel (tours courts)              |
+| **CharteY_B** | Algo        | d'accord/oui/voilà = POSITIF, hm/mh = NEUTRE         |
+| **CharteY_C** | Algo        | Binaire (POSITIF vs NON-POSITIF)                      |
 
 ---
 
@@ -81,26 +174,29 @@ Implémenter un système permettant :
 
 ### Kappa Cohen : Algorithmes vs Gold
 
-| Variable | Algo testé | Po (accord) | Pe (hasard) | **Kappa** | Désaccords |
-|----------|------------|-------------|-------------|-----------|------------|
-| **Y** | CharteY_B v1.0.0 | 99.89% | 43.09% | **0.998** | 1/901 |
-| **X** | CharteX_A v1.0.0 | 99.78% | 30.05% | **0.997** | 2/901 |
+| Variable    | Algo testé      | Po (accord) | Pe (hasard) | **Kappa** | Désaccords |
+| ----------- | ---------------- | ----------- | ----------- | --------------- | ----------- |
+| **Y** | CharteY_B v1.0.0 | 99.89%      | 43.09%      | **0.998** | 1/901       |
+| **X** | CharteX_A v1.0.0 | 99.78%      | 30.05%      | **0.997** | 2/901       |
 
 **Interprétation** (échelle Landis & Koch) : Accord quasi-parfait (>0.81)
 
 ### Cas de désaccord identifiés
 
 **Y (1 désaccord)** :
-- `"[AP] hm"` → Gold: POSITIF, Algo: NEUTRE (back-channel)
+
+* `"[AP] hm"` → Gold: POSITIF, Algo: NEUTRE (back-channel)
 
 **X (2 désaccords)** :
-- Tours courts type `"[TC] voilà"` tagués EXPLICATION (continuation) → Algo: REFLET_ACQ
+
+* Tours courts type `"[TC] voilà"` tagués EXPLICATION (continuation) → Algo: REFLET_ACQ
 
 ### Impact sur H1
 
 Testé avec CharteY_B :
-- **Actions** génèrent **34% positif** vs **0.5%** pour explications (ratio 68x)
-- H1 reste **robuste** quelle que soit la variation mineure de la charte Y
+
+* **Actions** génèrent **34% positif** vs **0.5%** pour explications (ratio 68x)
+* H1 reste **robuste** quelle que soit la variation mineure de la charte Y
 
 ---
 
@@ -172,44 +268,44 @@ Testé avec CharteY_B :
 
 ---
 
-## 🔄 Plan d'implémentation
+## 📄 Plan d'implémentation
 
 ### Phase 1 : Enregistrement des chartes (priorité haute)
 
-| # | Tâche | Statut |
-|---|-------|--------|
+| #  | Tâche                                                | Statut      |
+| -- | ----------------------------------------------------- | ----------- |
 | 1A | Insérer GoldX, GoldY dans algorithm_version_registry | 🔴 À faire |
-| 1B | Insérer CharteY_B v1.0.0 avec config JSONB | 🔴 À faire |
-| 1C | Insérer CharteX_A v1.0.0 avec config JSONB | 🔴 À faire |
-| 1D | Définir baseline pour Y (CharteY_B) et X (GoldX) | 🔴 À faire |
+| 1B | Insérer CharteY_B v1.0.0 avec config JSONB           | 🔴 À faire |
+| 1C | Insérer CharteX_A v1.0.0 avec config JSONB           | 🔴 À faire |
+| 1D | Définir baseline pour Y (CharteY_B) et X (GoldX)     | 🔴 À faire |
 
 ### Phase 2 : Algorithmes TypeScript
 
-| # | Tâche | Statut |
-|---|-------|--------|
-| 2A | Créer `GoldYClassifier.ts` (lecture reaction_tag) | 🔴 À faire |
-| 2B | Créer `CharteYBClassifier.ts` (patterns) | 🔴 À faire |
-| 2C | Créer `GoldXClassifier.ts` (lecture strategy_tag) | 🔴 À faire |
-| 2D | Créer `CharteXAClassifier.ts` (sans contexte) | 🔴 À faire |
-| 2E | Enregistrer dans AlgorithmRegistry | 🔴 À faire |
+| #  | Tâche                                              | Statut      |
+| -- | --------------------------------------------------- | ----------- |
+| 2A | Créer `GoldYClassifier.ts`(lecture reaction_tag) | 🔴 À faire |
+| 2B | Créer `CharteYBClassifier.ts`(patterns)          | 🔴 À faire |
+| 2C | Créer `GoldXClassifier.ts`(lecture strategy_tag) | 🔴 À faire |
+| 2D | Créer `CharteXAClassifier.ts`(sans contexte)     | 🔴 À faire |
+| 2E | Enregistrer dans AlgorithmRegistry                  | 🔴 À faire |
 
 ### Phase 3 : UI Level 0 - Accord Inter-Annotateurs
 
-| # | Tâche | Statut |
-|---|-------|--------|
-| 3A | Nouvel onglet "Accord" dans AlgorithmLab | 🔴 À faire |
-| 3B | Sélecteur : Gold vs Charte à comparer | 🔴 À faire |
+| #  | Tâche                                     | Statut      |
+| -- | ------------------------------------------ | ----------- |
+| 3A | Nouvel onglet "Accord" dans AlgorithmLab   | 🔴 À faire |
+| 3B | Sélecteur : Gold vs Charte à comparer    | 🔴 À faire |
 | 3C | Affichage Kappa, Po, Pe, matrice confusion | 🔴 À faire |
-| 3D | Liste des désaccords avec verbatims | 🔴 À faire |
-| 3E | Bouton "Valider comme baseline" | 🔴 À faire |
+| 3D | Liste des désaccords avec verbatims       | 🔴 À faire |
+| 3E | Bouton "Valider comme baseline"            | 🔴 À faire |
 
 ### Phase 4 : Intégration Level 1
 
-| # | Tâche | Statut |
-|---|-------|--------|
-| 4A | Sélecteur "Référence Y" dans tests M2 | 🔴 À faire |
+| #  | Tâche                                                 | Statut      |
+| -- | ------------------------------------------------------ | ----------- |
+| 4A | Sélecteur "Référence Y" dans tests M2               | 🔴 À faire |
 | 4B | Recalcul corrélations M2→Y selon référence choisie | 🔴 À faire |
-| 4C | Comparaison résultats entre chartes | 🔴 À faire |
+| 4C | Comparaison résultats entre chartes                   | 🔴 À faire |
 
 ---
 
@@ -231,12 +327,20 @@ src/features/phase3-analysis/level1-validation/
 └── ui/
     └── components/
         └── AlgorithmLab/
-            └── Level0Agreement/             # 🆕 Nouveau dossier
+            ├── ResultsSample/
+            │   ├── components/
+            │   │   ├── ResultsTableBody.tsx      # ✅ Enrichi (session 15/12)
+            │   │   ├── QuickTagEditDialog.tsx    # ✅ Créé (session 15/12)
+            │   │   └── AnnotationList.tsx
+            │   └── hooks/
+            │       └── useQuickTagEdit.ts        # ✅ Créé (session 15/12)
+            │
+            └── Level0Agreement/                  # 🆕 Nouveau dossier
                 ├── index.ts
-                ├── Level0AgreementPanel.tsx # Interface principale
-                ├── KappaDisplay.tsx         # Affichage métriques
-                ├── ConfusionMatrix.tsx      # Matrice de confusion
-                └── DisagreementList.tsx     # Liste des désaccords
+                ├── Level0AgreementPanel.tsx      # Interface principale
+                ├── KappaDisplay.tsx              # Affichage métriques
+                ├── ConfusionMatrix.tsx           # Matrice de confusion
+                └── DisagreementList.tsx          # Liste des désaccords
 ```
 
 ---
@@ -305,14 +409,14 @@ INSERT INTO algorithm_version_registry (
 
 ## 🎯 Critères de succès
 
-| # | Critère | Validation |
-|---|---------|------------|
-| 1 | Chartes X et Y enregistrées dans BDD | SQL vérifié |
-| 2 | Algorithmes TypeScript fonctionnels | Tests unitaires |
-| 3 | UI Level 0 affiche Kappa et matrice | Screenshot |
-| 4 | Baseline définie pour X et Y | is_baseline = true |
-| 5 | Sélecteur référence Y dans Level 1 | Fonctionnel |
-| 6 | Documentation thèse section 4.3.4 | Kappa documenté |
+| # | Critère                              | Validation         |
+| - | ------------------------------------- | ------------------ |
+| 1 | Chartes X et Y enregistrées dans BDD | SQL vérifié      |
+| 2 | Algorithmes TypeScript fonctionnels   | Tests unitaires    |
+| 3 | UI Level 0 affiche Kappa et matrice   | Screenshot         |
+| 4 | Baseline définie pour X et Y         | is_baseline = true |
+| 5 | Sélecteur référence Y dans Level 1 | Fonctionnel        |
+| 6 | Documentation thèse section 4.3.4    | Kappa documenté   |
 
 ---
 
@@ -320,14 +424,14 @@ INSERT INTO algorithm_version_registry (
 
 ### Échelle d'interprétation Kappa (Landis & Koch, 1977)
 
-| Kappa | Interprétation |
-|-------|----------------|
-| < 0.00 | Accord inférieur au hasard |
-| 0.00 - 0.20 | Accord faible |
-| 0.21 - 0.40 | Accord acceptable |
-| 0.41 - 0.60 | Accord modéré |
-| 0.61 - 0.80 | Accord substantiel |
-| **0.81 - 1.00** | **Accord quasi-parfait** ✅ |
+| Kappa                 | Interprétation                  |
+| --------------------- | -------------------------------- |
+| < 0.00                | Accord inférieur au hasard      |
+| 0.00 - 0.20           | Accord faible                    |
+| 0.21 - 0.40           | Accord acceptable                |
+| 0.41 - 0.60           | Accord modéré                  |
+| 0.61 - 0.80           | Accord substantiel               |
+| **0.81 - 1.00** | **Accord quasi-parfait**✅ |
 
 ### Formule Kappa de Cohen
 
@@ -343,12 +447,22 @@ où :
 
 ## 🔗 Lien avec autres missions
 
-| Mission | Dépendance |
-|---------|------------|
-| `mission-next-M2-M3-tuning-v5-PAUSED.md` | **Attend** cette mission |
-| `mission-2025-12-12-level1-section-c-final.md` | Conclusions M1 (référence) |
+| Mission                                          | Dépendance                   |
+| ------------------------------------------------ | ----------------------------- |
+| `mission-next-M2-M3-tuning-v5-PAUSED.md`       | **Attend**cette mission |
+| `mission-2025-12-12-level1-section-c-final.md` | Conclusions M1 (référence)  |
 
 ---
 
-*Prochaine étape : Phase 1A - Insertion des chartes dans BDD*  
-*Session : 14 décembre 2025*
+## 📅 Historique des sessions
+
+| Date       | Travaux réalisés                                                                             |
+| ---------- | ---------------------------------------------------------------------------------------------- |
+| 14/12/2025 | Création mission, calculs Kappa manuels, définition chartes                                  |
+| 15/12/2025 | Travaux préalables UI : AnalysisPairContext, colonnes Timestamp/Actions, édition rapide tags |
+
+---
+
+*Prochaine étape : Phase 1A - Insertion des chartes dans BDD*
+
+*Session : À planifier*

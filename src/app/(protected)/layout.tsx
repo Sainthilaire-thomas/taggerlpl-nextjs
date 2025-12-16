@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { ReactNode, useState } from "react";
 import {
@@ -74,7 +74,7 @@ const navigationStructure: MenuItem[] = [
     name: "Phase 3: Analyse",
     icon: <ScienceIcon />,
     children: [
-      { name: "Level 0: Gold Standard", icon: <CheckCircleIcon />, path: "/phase3-analysis/level0/inter-annotator" },
+      { name: "Level 0: Gold Standard", icon: <CheckCircleIcon />, path: "/phase3-analysis/level0/multi-chartes" },
       { name: "Level 1: AlgorithmLab", icon: <BiotechIcon />, path: "/phase3-analysis/level1/algorithm-lab" },
       { name: "Level 2: Hypotheses", icon: <ScienceIcon />, path: "/phase3-analysis/level2" },
       { name: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },

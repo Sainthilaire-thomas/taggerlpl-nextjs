@@ -154,6 +154,12 @@ useAnalysisPairs-working.txt
 |   |   |-- test-asr.md
 |   |   |-- transcription.json
 |   |   +-- transcriptionauto.md
+|   |-- missions/
+|   |   |-- mission-2025-12-15-level0-llm-ADDENDUM2-multi-chartes-optimization.md
+|   |   |-- mission-2025-12-15-level0-llm-ADDENDUM-reuse-level1-components.md
+|   |   |-- mission-2025-12-15-level0-llm-contra-annotation.md
+|   |   |-- mission-2025-12-15-level0-NOTE-tables-obligatoires-these.md
+|   |   +-- mission-2025-12-15-level0-SUPABASE-IMPACT.md
 |   |-- tuning/
 |   |   +-- TUNING_ALGORITHMES_M1M2M3.md
 |   |-- calls_ddd_tree.txt
@@ -246,6 +252,9 @@ useAnalysisPairs-working.txt
 |   |   |   |-- git/
 |   |   |   |   +-- current-commit/
 |   |   |   |       +-- route.ts
+|   |   |   |-- level0/
+|   |   |   |   +-- annotate/
+|   |   |   |       +-- route.ts
 |   |   |   +-- zoho/
 |   |   |       |-- auth/
 |   |   |       |   +-- route.tsx
@@ -255,6 +264,8 @@ useAnalysisPairs-working.txt
 |   |   |       |   +-- route.tsx
 |   |   |       +-- files/
 |   |   |           +-- route.tsx
+|   |   |-- level0/
+|   |   |   +-- page.tsx
 |   |   |-- login/
 |   |   |   +-- page.tsx
 |   |   |-- favicon.ico
@@ -539,10 +550,20 @@ useAnalysisPairs-working.txt
 |   |   |               +-- TurnTaggedTable.tsx
 |   |   |-- phase3-analysis/
 |   |   |   |-- level0-gold/
+|   |   |   |   |-- domain/
+|   |   |   |   |   +-- services/
+|   |   |   |   |       |-- CharteRegistry.ts
+|   |   |   |   |       |-- index.ts
+|   |   |   |   |       |-- KappaCalculationService.ts
+|   |   |   |   |       |-- MultiCharteAnnotator.ts
+|   |   |   |   |       |-- OpenAIAnnotatorService.ts
+|   |   |   |   |       +-- SupabaseLevel0Service.ts
 |   |   |   |   +-- ui/
 |   |   |   |       |-- components/
-|   |   |   |       |   +-- InterAnnotatorAgreement.tsx
+|   |   |   |       |   |-- InterAnnotatorAgreement.tsx
+|   |   |   |       |   +-- Level0Interface.tsx
 |   |   |   |       +-- hooks/
+|   |   |   |           |-- useLevel0Testing.ts
 |   |   |   |           +-- useLevel0Validation.ts
 |   |   |   |-- level1-validation/
 |   |   |   |   |-- algorithms/
@@ -607,6 +628,7 @@ useAnalysisPairs-working.txt
 |   |   |   |   |   |   |   |   |   |   +-- types.ts
 |   |   |   |   |   |   |   |   |   |-- AnnotationList.tsx
 |   |   |   |   |   |   |   |   |   |-- CommentDialog.tsx
+|   |   |   |   |   |   |   |   |   |-- QuickTagEditDialog.tsx
 |   |   |   |   |   |   |   |   |   |-- ResultsFilters.tsx
 |   |   |   |   |   |   |   |   |   |-- ResultsTableBody.backup.tsx
 |   |   |   |   |   |   |   |   |   |-- ResultsTableBody.tsx
@@ -615,6 +637,7 @@ useAnalysisPairs-working.txt
 |   |   |   |   |   |   |   |   |-- hooks/
 |   |   |   |   |   |   |   |   |   |-- useCommentManagement.ts
 |   |   |   |   |   |   |   |   |   |-- useFineTuningData.ts
+|   |   |   |   |   |   |   |   |   |-- useQuickTagEdit.ts
 |   |   |   |   |   |   |   |   |   |-- useResultsFiltering.ts
 |   |   |   |   |   |   |   |   |   +-- useResultsPagination.ts
 |   |   |   |   |   |   |   |   |-- utils/
@@ -797,6 +820,7 @@ useAnalysisPairs-working.txt
 |   |   |   |-- referencetypes.md
 |   |   |   |-- shared.ts
 |   |   |   |-- SharedTypes.ts
+|   |   |   |-- tags.ts
 |   |   |   |-- ThesisVariables.m1.ts
 |   |   |   |-- ThesisVariables.m2.ts
 |   |   |   |-- ThesisVariables.m3.ts

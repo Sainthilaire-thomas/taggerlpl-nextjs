@@ -8,7 +8,7 @@
  *   - Or run: npm run generate:types
  *   - Or run: .\scripts\generate-types.ps1
  * 
- * Generated on: 2025-11-18 10:47:34
+ * Generated on: 2025-12-16 08:17:52
  * Project ID: jregkxiwrnquslbocicz
  */
 export type Json =
@@ -197,7 +197,10 @@ export type Database = {
           created_at: string | null
           deprecated: boolean | null
           description: string | null
+          git_commit_hash: string | null
+          git_tag: string | null
           is_active: boolean | null
+          is_baseline: boolean | null
           level1_metrics: Json | null
           m1_config: Json | null
           m1_key: string | null
@@ -208,6 +211,9 @@ export type Database = {
           m3_config: Json | null
           m3_key: string | null
           m3_version: string | null
+          status: string | null
+          validation_date: string | null
+          validation_sample_size: number | null
           version_id: string
           version_name: string | null
           x_config: Json | null
@@ -222,7 +228,10 @@ export type Database = {
           created_at?: string | null
           deprecated?: boolean | null
           description?: string | null
+          git_commit_hash?: string | null
+          git_tag?: string | null
           is_active?: boolean | null
+          is_baseline?: boolean | null
           level1_metrics?: Json | null
           m1_config?: Json | null
           m1_key?: string | null
@@ -233,6 +242,9 @@ export type Database = {
           m3_config?: Json | null
           m3_key?: string | null
           m3_version?: string | null
+          status?: string | null
+          validation_date?: string | null
+          validation_sample_size?: number | null
           version_id: string
           version_name?: string | null
           x_config?: Json | null
@@ -247,7 +259,10 @@ export type Database = {
           created_at?: string | null
           deprecated?: boolean | null
           description?: string | null
+          git_commit_hash?: string | null
+          git_tag?: string | null
           is_active?: boolean | null
+          is_baseline?: boolean | null
           level1_metrics?: Json | null
           m1_config?: Json | null
           m1_key?: string | null
@@ -258,6 +273,9 @@ export type Database = {
           m3_config?: Json | null
           m3_key?: string | null
           m3_version?: string | null
+          status?: string | null
+          validation_date?: string | null
+          validation_sample_size?: number | null
           version_id?: string
           version_name?: string | null
           x_config?: Json | null
@@ -266,6 +284,324 @@ export type Database = {
           y_config?: Json | null
           y_key?: string | null
           y_version?: string | null
+        }
+        Relationships: []
+      }
+      analysis_pairs: {
+        Row: {
+          annotations: Json | null
+          call_id: string
+          client_end_time: number
+          client_speaker: string | null
+          client_start_time: number
+          client_turn_id: number
+          client_verbatim: string
+          computation_status: string | null
+          conseiller_end_time: number
+          conseiller_speaker: string | null
+          conseiller_start_time: number
+          conseiller_turn_id: number
+          conseiller_verbatim: string
+          created_at: string | null
+          extended_context: Json | null
+          level0_annotator_agreement: number | null
+          level0_gold_client: string | null
+          level0_gold_conseiller: string | null
+          level0_notes: string | null
+          level0_validated_at: string | null
+          level0_validated_by: string | null
+          m1_action_verbs: string[] | null
+          m1_algorithm_key: string | null
+          m1_algorithm_version: string | null
+          m1_computed_at: string | null
+          m1_total_words: number | null
+          m1_verb_count: number | null
+          m1_verb_density: number | null
+          m2_algorithm_key: string | null
+          m2_algorithm_version: string | null
+          m2_computed_at: string | null
+          m2_details: Json | null
+          m2_global_alignment: number | null
+          m2_lexical_alignment: number | null
+          m2_scores: Json | null
+          m2_semantic_alignment: number | null
+          m2_shared_terms: string[] | null
+          m3_algorithm_key: string | null
+          m3_algorithm_version: string | null
+          m3_clarification_count: number | null
+          m3_cognitive_load: string | null
+          m3_cognitive_score: number | null
+          m3_computed_at: string | null
+          m3_hesitation_count: number | null
+          m3_patterns: Json | null
+          next1_end_time: number | null
+          next1_speaker: string | null
+          next1_start_time: number | null
+          next1_tag: string | null
+          next1_turn_id: number | null
+          next1_verbatim: string | null
+          next2_end_time: number | null
+          next2_speaker: string | null
+          next2_start_time: number | null
+          next2_tag: string | null
+          next2_turn_id: number | null
+          next2_verbatim: string | null
+          next3_end_time: number | null
+          next3_speaker: string | null
+          next3_start_time: number | null
+          next3_tag: string | null
+          next3_turn_id: number | null
+          next3_verbatim: string | null
+          pair_id: number
+          pair_index: number
+          prev1_end_time: number | null
+          prev1_speaker: string | null
+          prev1_start_time: number | null
+          prev1_tag: string | null
+          prev1_turn_id: number | null
+          prev1_verbatim: string | null
+          prev2_end_time: number | null
+          prev2_speaker: string | null
+          prev2_start_time: number | null
+          prev2_tag: string | null
+          prev2_turn_id: number | null
+          prev2_verbatim: string | null
+          prev3_end_time: number | null
+          prev3_speaker: string | null
+          prev3_start_time: number | null
+          prev3_tag: string | null
+          prev3_turn_id: number | null
+          prev3_verbatim: string | null
+          reaction_tag: string
+          strategy_color: string | null
+          strategy_family: string
+          strategy_originespeaker: string | null
+          strategy_tag: string
+          updated_at: string | null
+          x_algorithm_key: string | null
+          x_algorithm_version: string | null
+          x_computation_time_ms: number | null
+          x_computed_at: string | null
+          x_confidence: number | null
+          x_evidences: Json | null
+          x_predicted_tag: string | null
+          y_algorithm_key: string | null
+          y_algorithm_version: string | null
+          y_computation_time_ms: number | null
+          y_computed_at: string | null
+          y_confidence: number | null
+          y_evidences: Json | null
+          y_predicted_tag: string | null
+        }
+        Insert: {
+          annotations?: Json | null
+          call_id: string
+          client_end_time: number
+          client_speaker?: string | null
+          client_start_time: number
+          client_turn_id: number
+          client_verbatim: string
+          computation_status?: string | null
+          conseiller_end_time: number
+          conseiller_speaker?: string | null
+          conseiller_start_time: number
+          conseiller_turn_id: number
+          conseiller_verbatim: string
+          created_at?: string | null
+          extended_context?: Json | null
+          level0_annotator_agreement?: number | null
+          level0_gold_client?: string | null
+          level0_gold_conseiller?: string | null
+          level0_notes?: string | null
+          level0_validated_at?: string | null
+          level0_validated_by?: string | null
+          m1_action_verbs?: string[] | null
+          m1_algorithm_key?: string | null
+          m1_algorithm_version?: string | null
+          m1_computed_at?: string | null
+          m1_total_words?: number | null
+          m1_verb_count?: number | null
+          m1_verb_density?: number | null
+          m2_algorithm_key?: string | null
+          m2_algorithm_version?: string | null
+          m2_computed_at?: string | null
+          m2_details?: Json | null
+          m2_global_alignment?: number | null
+          m2_lexical_alignment?: number | null
+          m2_scores?: Json | null
+          m2_semantic_alignment?: number | null
+          m2_shared_terms?: string[] | null
+          m3_algorithm_key?: string | null
+          m3_algorithm_version?: string | null
+          m3_clarification_count?: number | null
+          m3_cognitive_load?: string | null
+          m3_cognitive_score?: number | null
+          m3_computed_at?: string | null
+          m3_hesitation_count?: number | null
+          m3_patterns?: Json | null
+          next1_end_time?: number | null
+          next1_speaker?: string | null
+          next1_start_time?: number | null
+          next1_tag?: string | null
+          next1_turn_id?: number | null
+          next1_verbatim?: string | null
+          next2_end_time?: number | null
+          next2_speaker?: string | null
+          next2_start_time?: number | null
+          next2_tag?: string | null
+          next2_turn_id?: number | null
+          next2_verbatim?: string | null
+          next3_end_time?: number | null
+          next3_speaker?: string | null
+          next3_start_time?: number | null
+          next3_tag?: string | null
+          next3_turn_id?: number | null
+          next3_verbatim?: string | null
+          pair_id?: number
+          pair_index: number
+          prev1_end_time?: number | null
+          prev1_speaker?: string | null
+          prev1_start_time?: number | null
+          prev1_tag?: string | null
+          prev1_turn_id?: number | null
+          prev1_verbatim?: string | null
+          prev2_end_time?: number | null
+          prev2_speaker?: string | null
+          prev2_start_time?: number | null
+          prev2_tag?: string | null
+          prev2_turn_id?: number | null
+          prev2_verbatim?: string | null
+          prev3_end_time?: number | null
+          prev3_speaker?: string | null
+          prev3_start_time?: number | null
+          prev3_tag?: string | null
+          prev3_turn_id?: number | null
+          prev3_verbatim?: string | null
+          reaction_tag: string
+          strategy_color?: string | null
+          strategy_family: string
+          strategy_originespeaker?: string | null
+          strategy_tag: string
+          updated_at?: string | null
+          x_algorithm_key?: string | null
+          x_algorithm_version?: string | null
+          x_computation_time_ms?: number | null
+          x_computed_at?: string | null
+          x_confidence?: number | null
+          x_evidences?: Json | null
+          x_predicted_tag?: string | null
+          y_algorithm_key?: string | null
+          y_algorithm_version?: string | null
+          y_computation_time_ms?: number | null
+          y_computed_at?: string | null
+          y_confidence?: number | null
+          y_evidences?: Json | null
+          y_predicted_tag?: string | null
+        }
+        Update: {
+          annotations?: Json | null
+          call_id?: string
+          client_end_time?: number
+          client_speaker?: string | null
+          client_start_time?: number
+          client_turn_id?: number
+          client_verbatim?: string
+          computation_status?: string | null
+          conseiller_end_time?: number
+          conseiller_speaker?: string | null
+          conseiller_start_time?: number
+          conseiller_turn_id?: number
+          conseiller_verbatim?: string
+          created_at?: string | null
+          extended_context?: Json | null
+          level0_annotator_agreement?: number | null
+          level0_gold_client?: string | null
+          level0_gold_conseiller?: string | null
+          level0_notes?: string | null
+          level0_validated_at?: string | null
+          level0_validated_by?: string | null
+          m1_action_verbs?: string[] | null
+          m1_algorithm_key?: string | null
+          m1_algorithm_version?: string | null
+          m1_computed_at?: string | null
+          m1_total_words?: number | null
+          m1_verb_count?: number | null
+          m1_verb_density?: number | null
+          m2_algorithm_key?: string | null
+          m2_algorithm_version?: string | null
+          m2_computed_at?: string | null
+          m2_details?: Json | null
+          m2_global_alignment?: number | null
+          m2_lexical_alignment?: number | null
+          m2_scores?: Json | null
+          m2_semantic_alignment?: number | null
+          m2_shared_terms?: string[] | null
+          m3_algorithm_key?: string | null
+          m3_algorithm_version?: string | null
+          m3_clarification_count?: number | null
+          m3_cognitive_load?: string | null
+          m3_cognitive_score?: number | null
+          m3_computed_at?: string | null
+          m3_hesitation_count?: number | null
+          m3_patterns?: Json | null
+          next1_end_time?: number | null
+          next1_speaker?: string | null
+          next1_start_time?: number | null
+          next1_tag?: string | null
+          next1_turn_id?: number | null
+          next1_verbatim?: string | null
+          next2_end_time?: number | null
+          next2_speaker?: string | null
+          next2_start_time?: number | null
+          next2_tag?: string | null
+          next2_turn_id?: number | null
+          next2_verbatim?: string | null
+          next3_end_time?: number | null
+          next3_speaker?: string | null
+          next3_start_time?: number | null
+          next3_tag?: string | null
+          next3_turn_id?: number | null
+          next3_verbatim?: string | null
+          pair_id?: number
+          pair_index?: number
+          prev1_end_time?: number | null
+          prev1_speaker?: string | null
+          prev1_start_time?: number | null
+          prev1_tag?: string | null
+          prev1_turn_id?: number | null
+          prev1_verbatim?: string | null
+          prev2_end_time?: number | null
+          prev2_speaker?: string | null
+          prev2_start_time?: number | null
+          prev2_tag?: string | null
+          prev2_turn_id?: number | null
+          prev2_verbatim?: string | null
+          prev3_end_time?: number | null
+          prev3_speaker?: string | null
+          prev3_start_time?: number | null
+          prev3_tag?: string | null
+          prev3_turn_id?: number | null
+          prev3_verbatim?: string | null
+          reaction_tag?: string
+          strategy_color?: string | null
+          strategy_family?: string
+          strategy_originespeaker?: string | null
+          strategy_tag?: string
+          updated_at?: string | null
+          x_algorithm_key?: string | null
+          x_algorithm_version?: string | null
+          x_computation_time_ms?: number | null
+          x_computed_at?: string | null
+          x_confidence?: number | null
+          x_evidences?: Json | null
+          x_predicted_tag?: string | null
+          y_algorithm_key?: string | null
+          y_algorithm_version?: string | null
+          y_computation_time_ms?: number | null
+          y_computed_at?: string | null
+          y_confidence?: number | null
+          y_evidences?: Json | null
+          y_predicted_tag?: string | null
         }
         Relationships: []
       }
@@ -1279,6 +1615,279 @@ export type Database = {
         }
         Relationships: []
       }
+      h2_analysis_pairs_backup_20251120: {
+        Row: {
+          algorithm_version: string | null
+          annotations: Json | null
+          call_id: string | null
+          client_end_time: number | null
+          client_speaker: string | null
+          client_start_time: number | null
+          client_turn_id: number | null
+          client_verbatim: string | null
+          computation_status: string | null
+          computed_at: string | null
+          conseiller_end_time: number | null
+          conseiller_speaker: string | null
+          conseiller_start_time: number | null
+          conseiller_turn_id: number | null
+          conseiller_verbatim: string | null
+          created_at: string | null
+          m1_action_verbs: string[] | null
+          m1_total_words: number | null
+          m1_verb_count: number | null
+          m1_verb_density: number | null
+          m2_global_alignment: number | null
+          m2_lexical_alignment: number | null
+          m2_semantic_alignment: number | null
+          m2_shared_terms: string[] | null
+          m3_clarification_count: number | null
+          m3_cognitive_load: string | null
+          m3_cognitive_score: number | null
+          m3_hesitation_count: number | null
+          m3_patterns: Json | null
+          next_turn_tag_auto: string | null
+          next1_end_time: number | null
+          next1_speaker: string | null
+          next1_start_time: number | null
+          next1_tag: string | null
+          next1_turn_id: number | null
+          next1_verbatim: string | null
+          next2_end_time: number | null
+          next2_speaker: string | null
+          next2_start_time: number | null
+          next2_tag: string | null
+          next2_turn_id: number | null
+          next2_verbatim: string | null
+          next3_end_time: number | null
+          next3_speaker: string | null
+          next3_start_time: number | null
+          next3_tag: string | null
+          next3_turn_id: number | null
+          next3_verbatim: string | null
+          next4_end_time: number | null
+          next4_speaker: string | null
+          next4_start_time: number | null
+          next4_tag: string | null
+          next4_turn_id: number | null
+          next4_verbatim: string | null
+          pair_id: number | null
+          pair_index: number | null
+          prev1_end_time: number | null
+          prev1_speaker: string | null
+          prev1_start_time: number | null
+          prev1_tag: string | null
+          prev1_turn_id: number | null
+          prev1_verbatim: string | null
+          prev2_end_time: number | null
+          prev2_speaker: string | null
+          prev2_start_time: number | null
+          prev2_tag: string | null
+          prev2_turn_id: number | null
+          prev2_verbatim: string | null
+          prev3_end_time: number | null
+          prev3_speaker: string | null
+          prev3_start_time: number | null
+          prev3_tag: string | null
+          prev3_turn_id: number | null
+          prev3_verbatim: string | null
+          prev4_end_time: number | null
+          prev4_speaker: string | null
+          prev4_start_time: number | null
+          prev4_tag: string | null
+          prev4_turn_id: number | null
+          prev4_verbatim: string | null
+          reaction_tag: string | null
+          score_auto: number | null
+          strategy_color: string | null
+          strategy_family: string | null
+          strategy_originespeaker: string | null
+          strategy_tag: string | null
+          updated_at: string | null
+          version_metadata: Json | null
+        }
+        Insert: {
+          algorithm_version?: string | null
+          annotations?: Json | null
+          call_id?: string | null
+          client_end_time?: number | null
+          client_speaker?: string | null
+          client_start_time?: number | null
+          client_turn_id?: number | null
+          client_verbatim?: string | null
+          computation_status?: string | null
+          computed_at?: string | null
+          conseiller_end_time?: number | null
+          conseiller_speaker?: string | null
+          conseiller_start_time?: number | null
+          conseiller_turn_id?: number | null
+          conseiller_verbatim?: string | null
+          created_at?: string | null
+          m1_action_verbs?: string[] | null
+          m1_total_words?: number | null
+          m1_verb_count?: number | null
+          m1_verb_density?: number | null
+          m2_global_alignment?: number | null
+          m2_lexical_alignment?: number | null
+          m2_semantic_alignment?: number | null
+          m2_shared_terms?: string[] | null
+          m3_clarification_count?: number | null
+          m3_cognitive_load?: string | null
+          m3_cognitive_score?: number | null
+          m3_hesitation_count?: number | null
+          m3_patterns?: Json | null
+          next_turn_tag_auto?: string | null
+          next1_end_time?: number | null
+          next1_speaker?: string | null
+          next1_start_time?: number | null
+          next1_tag?: string | null
+          next1_turn_id?: number | null
+          next1_verbatim?: string | null
+          next2_end_time?: number | null
+          next2_speaker?: string | null
+          next2_start_time?: number | null
+          next2_tag?: string | null
+          next2_turn_id?: number | null
+          next2_verbatim?: string | null
+          next3_end_time?: number | null
+          next3_speaker?: string | null
+          next3_start_time?: number | null
+          next3_tag?: string | null
+          next3_turn_id?: number | null
+          next3_verbatim?: string | null
+          next4_end_time?: number | null
+          next4_speaker?: string | null
+          next4_start_time?: number | null
+          next4_tag?: string | null
+          next4_turn_id?: number | null
+          next4_verbatim?: string | null
+          pair_id?: number | null
+          pair_index?: number | null
+          prev1_end_time?: number | null
+          prev1_speaker?: string | null
+          prev1_start_time?: number | null
+          prev1_tag?: string | null
+          prev1_turn_id?: number | null
+          prev1_verbatim?: string | null
+          prev2_end_time?: number | null
+          prev2_speaker?: string | null
+          prev2_start_time?: number | null
+          prev2_tag?: string | null
+          prev2_turn_id?: number | null
+          prev2_verbatim?: string | null
+          prev3_end_time?: number | null
+          prev3_speaker?: string | null
+          prev3_start_time?: number | null
+          prev3_tag?: string | null
+          prev3_turn_id?: number | null
+          prev3_verbatim?: string | null
+          prev4_end_time?: number | null
+          prev4_speaker?: string | null
+          prev4_start_time?: number | null
+          prev4_tag?: string | null
+          prev4_turn_id?: number | null
+          prev4_verbatim?: string | null
+          reaction_tag?: string | null
+          score_auto?: number | null
+          strategy_color?: string | null
+          strategy_family?: string | null
+          strategy_originespeaker?: string | null
+          strategy_tag?: string | null
+          updated_at?: string | null
+          version_metadata?: Json | null
+        }
+        Update: {
+          algorithm_version?: string | null
+          annotations?: Json | null
+          call_id?: string | null
+          client_end_time?: number | null
+          client_speaker?: string | null
+          client_start_time?: number | null
+          client_turn_id?: number | null
+          client_verbatim?: string | null
+          computation_status?: string | null
+          computed_at?: string | null
+          conseiller_end_time?: number | null
+          conseiller_speaker?: string | null
+          conseiller_start_time?: number | null
+          conseiller_turn_id?: number | null
+          conseiller_verbatim?: string | null
+          created_at?: string | null
+          m1_action_verbs?: string[] | null
+          m1_total_words?: number | null
+          m1_verb_count?: number | null
+          m1_verb_density?: number | null
+          m2_global_alignment?: number | null
+          m2_lexical_alignment?: number | null
+          m2_semantic_alignment?: number | null
+          m2_shared_terms?: string[] | null
+          m3_clarification_count?: number | null
+          m3_cognitive_load?: string | null
+          m3_cognitive_score?: number | null
+          m3_hesitation_count?: number | null
+          m3_patterns?: Json | null
+          next_turn_tag_auto?: string | null
+          next1_end_time?: number | null
+          next1_speaker?: string | null
+          next1_start_time?: number | null
+          next1_tag?: string | null
+          next1_turn_id?: number | null
+          next1_verbatim?: string | null
+          next2_end_time?: number | null
+          next2_speaker?: string | null
+          next2_start_time?: number | null
+          next2_tag?: string | null
+          next2_turn_id?: number | null
+          next2_verbatim?: string | null
+          next3_end_time?: number | null
+          next3_speaker?: string | null
+          next3_start_time?: number | null
+          next3_tag?: string | null
+          next3_turn_id?: number | null
+          next3_verbatim?: string | null
+          next4_end_time?: number | null
+          next4_speaker?: string | null
+          next4_start_time?: number | null
+          next4_tag?: string | null
+          next4_turn_id?: number | null
+          next4_verbatim?: string | null
+          pair_id?: number | null
+          pair_index?: number | null
+          prev1_end_time?: number | null
+          prev1_speaker?: string | null
+          prev1_start_time?: number | null
+          prev1_tag?: string | null
+          prev1_turn_id?: number | null
+          prev1_verbatim?: string | null
+          prev2_end_time?: number | null
+          prev2_speaker?: string | null
+          prev2_start_time?: number | null
+          prev2_tag?: string | null
+          prev2_turn_id?: number | null
+          prev2_verbatim?: string | null
+          prev3_end_time?: number | null
+          prev3_speaker?: string | null
+          prev3_start_time?: number | null
+          prev3_tag?: string | null
+          prev3_turn_id?: number | null
+          prev3_verbatim?: string | null
+          prev4_end_time?: number | null
+          prev4_speaker?: string | null
+          prev4_start_time?: number | null
+          prev4_tag?: string | null
+          prev4_turn_id?: number | null
+          prev4_verbatim?: string | null
+          reaction_tag?: string | null
+          score_auto?: number | null
+          strategy_color?: string | null
+          strategy_family?: string | null
+          strategy_originespeaker?: string | null
+          strategy_tag?: string | null
+          updated_at?: string | null
+          version_metadata?: Json | null
+        }
+        Relationships: []
+      }
       h2_mediation_results: {
         Row: {
           analyzed_at: string | null
@@ -1361,6 +1970,65 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "word"
             referencedColumns: ["wordid"]
+          },
+        ]
+      }
+      investigation_annotations: {
+        Row: {
+          actionable: boolean | null
+          annotation_type: string
+          content: string
+          created_at: string | null
+          created_by: string | null
+          error_category: string | null
+          expected_tag: string | null
+          id: string
+          pair_id: number | null
+          predicted_tag: string | null
+          run_id: string
+          severity: string | null
+          turn_id: number | null
+          verbatim_excerpt: string | null
+        }
+        Insert: {
+          actionable?: boolean | null
+          annotation_type: string
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          error_category?: string | null
+          expected_tag?: string | null
+          id?: string
+          pair_id?: number | null
+          predicted_tag?: string | null
+          run_id: string
+          severity?: string | null
+          turn_id?: number | null
+          verbatim_excerpt?: string | null
+        }
+        Update: {
+          actionable?: boolean | null
+          annotation_type?: string
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          error_category?: string | null
+          expected_tag?: string | null
+          id?: string
+          pair_id?: number | null
+          predicted_tag?: string | null
+          run_id?: string
+          severity?: string | null
+          turn_id?: number | null
+          verbatim_excerpt?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investigation_annotations_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "test_runs"
+            referencedColumns: ["run_id"]
           },
         ]
       }
@@ -1985,6 +2653,83 @@ export type Database = {
           previous_data?: Json | null
         }
         Relationships: []
+      }
+      test_runs: {
+        Row: {
+          algorithm_key: string
+          algorithm_version: string | null
+          annotation_count: number | null
+          baseline_diff: Json | null
+          baseline_version_id: string | null
+          created_by: string | null
+          error_pairs: Json | null
+          investigation_completed_at: string | null
+          investigation_notes: string | null
+          investigation_started_at: string | null
+          investigation_summary: Json | null
+          metrics: Json
+          outcome: string | null
+          parent_run_id: string | null
+          promoted_to_version_id: string | null
+          run_date: string | null
+          run_duration_ms: number | null
+          run_id: string
+          sample_size: number
+          target: string
+        }
+        Insert: {
+          algorithm_key: string
+          algorithm_version?: string | null
+          annotation_count?: number | null
+          baseline_diff?: Json | null
+          baseline_version_id?: string | null
+          created_by?: string | null
+          error_pairs?: Json | null
+          investigation_completed_at?: string | null
+          investigation_notes?: string | null
+          investigation_started_at?: string | null
+          investigation_summary?: Json | null
+          metrics: Json
+          outcome?: string | null
+          parent_run_id?: string | null
+          promoted_to_version_id?: string | null
+          run_date?: string | null
+          run_duration_ms?: number | null
+          run_id?: string
+          sample_size: number
+          target: string
+        }
+        Update: {
+          algorithm_key?: string
+          algorithm_version?: string | null
+          annotation_count?: number | null
+          baseline_diff?: Json | null
+          baseline_version_id?: string | null
+          created_by?: string | null
+          error_pairs?: Json | null
+          investigation_completed_at?: string | null
+          investigation_notes?: string | null
+          investigation_started_at?: string | null
+          investigation_summary?: Json | null
+          metrics?: Json
+          outcome?: string | null
+          parent_run_id?: string | null
+          promoted_to_version_id?: string | null
+          run_date?: string | null
+          run_duration_ms?: number | null
+          run_id?: string
+          sample_size?: number
+          target?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_runs_parent_run_id_fkey"
+            columns: ["parent_run_id"]
+            isOneToOne: false
+            referencedRelation: "test_runs"
+            referencedColumns: ["run_id"]
+          },
+        ]
       }
       transcript: {
         Row: {
@@ -2661,6 +3406,12 @@ export type Database = {
         Args: { p_references: Json[] }
         Returns: undefined
       }
+      bulk_update_analysis_pairs: {
+        Args: { updates: Json }
+        Returns: {
+          updated_count: number
+        }[]
+      }
       bulk_upsert_domain_references: {
         Args: { p_references: Json[] }
         Returns: undefined
@@ -2774,7 +3525,22 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      increment_annotation_count: {
+        Args: { p_run_id: string }
+        Returns: undefined
+      }
       list_tables: { Args: never; Returns: string[] }
+      refresh_analysis_pairs: {
+        Args: { p_call_ids?: string[]; p_incremental?: boolean }
+        Returns: {
+          deleted: number
+          execution_time_ms: number
+          inserted: number
+          message: string
+          total_pairs: number
+          updated: number
+        }[]
+      }
       refresh_h2_analysis_pairs_v2: {
         Args: { p_call_ids?: string[]; p_incremental?: boolean }
         Returns: {
