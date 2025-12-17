@@ -1,278 +1,221 @@
 ﻿// ============================================================================
-// CharteRegistry - Définitions des chartes d'annotation
+// CharteRegistry - Wrapper vers base de données (v2.0)
+// Anciennement : Définitions en dur
+// Maintenant : Charge depuis level0_chartes via CharteManagementService
 // ============================================================================
 
 import { CharteDefinition } from "@/types/algorithm-lab/Level0Types";
+import { CharteManagementService } from "./CharteManagementService";
 
+/**
+ * Registry des chartes - Maintenant un wrapper vers la base de données
+ * 
+ * MIGRATION v1.0 → v2.0:
+ * - Avant : Chartes définies en dur dans ce fichier
+ * - Après : Chartes chargées depuis level0_chartes (Supabase)
+ * 
+ * Avantages v2.0:
+ * - Versioning explicite des chartes
+ * - Distinction philosophie/prompt
+ * - Modification sans recompilation
+ * - Historique en DB
+ */
 export class CharteRegistry {
+  // Cache en mémoire pour éviter requêtes répétées
+  private static cache: CharteDefinition[] | null = null;
+  private static cacheTimestamp: number | null = null;
+  private static CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
   /**
    * Retourne toutes les chartes définies
+   * (Charge depuis DB avec cache)
    */
-  static getAllChartes(): CharteDefinition[] {
-    return [
-      this.getCharteY_A(),
-      this.getCharteY_B(),
-      this.getCharteY_C(),
-      this.getCharteX_A(),
-      this.getCharteX_B(),
-    ];
+  static async getAllChartes(): Promise<CharteDefinition[]> {
+    // Vérifier cache
+    if (this.cache && this.cacheTimestamp) {
+      const age = Date.now() - this.cacheTimestamp;
+      if (age < this.CACHE_TTL_MS) {
+        console.log("[CharteRegistry] Retour depuis cache");
+        return this.cache;
+      }
+    }
+
+    // Charger depuis DB
+    console.log("[CharteRegistry] Chargement depuis DB");
+    const { data, error } = await CharteManagementService.getAllChartes();
+
+    if (error || !data) {
+      console.error("[CharteRegistry] Error loading chartes:", error);
+      // Fallback vers cache périmé si erreur
+      return this.cache || [];
+    }
+
+    // Mettre à jour cache
+    this.cache = data;
+    this.cacheTimestamp = Date.now();
+
+    return data;
   }
 
   /**
    * Retourne les chartes pour une variable spécifique
    */
-  static getChartesForVariable(variable: "X" | "Y"): CharteDefinition[] {
-    return this.getAllChartes().filter(c => c.variable === variable);
+  static async getChartesForVariable(
+    variable: "X" | "Y"
+  ): Promise<CharteDefinition[]> {
+    const { data, error } = await CharteManagementService.getChartesForVariable(
+      variable
+    );
+
+    if (error || !data) {
+      console.error(
+        `[CharteRegistry] Error loading chartes for variable ${variable}:`,
+        error
+      );
+      return [];
+    }
+
+    return data;
   }
 
   /**
    * Retourne une charte par son ID
    */
-  static getCharteById(charteId: string): CharteDefinition | undefined {
-    return this.getAllChartes().find(c => c.charte_id === charteId);
+  static async getCharteById(
+    charteId: string
+  ): Promise<CharteDefinition | undefined> {
+    const { data, error } = await CharteManagementService.getCharteById(charteId);
+
+    if (error || !data) {
+      console.error(
+        `[CharteRegistry] Error loading charte ${charteId}:`,
+        error
+      );
+      return undefined;
+    }
+
+    return data;
+  }
+
+  /**
+   * Retourne les chartes baseline (recommandées pour tests initiaux)
+   */
+  static async getBaselines(): Promise<CharteDefinition[]> {
+    const { data, error } = await CharteManagementService.getBaselines();
+
+    if (error || !data) {
+      console.error("[CharteRegistry] Error loading baselines:", error);
+      return [];
+    }
+
+    return data;
+  }
+
+  /**
+   * Retourne les chartes d'une philosophie donnée
+   */
+  static async getChartesByPhilosophy(
+    philosophy: string
+  ): Promise<CharteDefinition[]> {
+    const { data, error } = await CharteManagementService.getChartesByPhilosophy(
+      philosophy
+    );
+
+    if (error || !data) {
+      console.error(
+        `[CharteRegistry] Error loading chartes for philosophy ${philosophy}:`,
+        error
+      );
+      return [];
+    }
+
+    return data;
+  }
+
+  /**
+   * Retourne les philosophies disponibles pour une variable
+   */
+  static async getPhilosophies(variable?: "X" | "Y"): Promise<string[]> {
+    const { data, error } = await CharteManagementService.getPhilosophies(
+      variable
+    );
+
+    if (error || !data) {
+      console.error("[CharteRegistry] Error loading philosophies:", error);
+      return [];
+    }
+
+    return data;
+  }
+
+  /**
+   * Invalider le cache (forcer rechargement)
+   */
+  static invalidateCache(): void {
+    console.log("[CharteRegistry] Cache invalidé");
+    this.cache = null;
+    this.cacheTimestamp = null;
   }
 
   // ==========================================================================
-  // VARIABLE Y : Réaction Client
+  // Méthodes de compatibilité (pour code existant qui utilise sync)
   // ==========================================================================
 
   /**
-   * CharteY_A - Minimaliste (3 exemples par catégorie)
+   * Version synchrone - DÉPRÉCIÉE
+   * Utiliser getChartesForVariable() async à la place
+   * 
+   * Retourne cache s'il existe, tableau vide sinon
    */
-  static getCharteY_A(): CharteDefinition {
-    return {
-      charte_id: "CharteY_A_v1.0.0",
-      charte_name: "Charte A - Minimaliste",
-      charte_description: "Instructions minimales avec 3 exemples par catégorie",
-      variable: "Y",
-      definition: {
-        categories: {
-          CLIENT_POSITIF: {
-            description: "Le client exprime un accord ou une satisfaction",
-            examples: ["oui", "d'accord", "merci"]
-          },
-          CLIENT_NEGATIF: {
-            description: "Le client exprime un désaccord ou une insatisfaction",
-            examples: ["non", "mais", "pas normal"]
-          },
-          CLIENT_NEUTRE: {
-            description: "Le client donne une réponse neutre ou ambiguë",
-            examples: ["hm", "mh", "mmh"]
-          }
-        },
-        rules: {
-          approach: "few_shot",
-          examples_per_category: 3,
-          context_included: false
-        }
-      }
-    };
+  static getChartesForVariableSync(variable: "X" | "Y"): CharteDefinition[] {
+    console.warn(
+      "[CharteRegistry] getChartesForVariableSync est déprécié, utilisez async"
+    );
+
+    if (!this.cache) {
+      console.error(
+        "[CharteRegistry] Cache vide, appelez getAllChartes() d'abord"
+      );
+      return [];
+    }
+
+    return this.cache.filter((c) => c.variable === variable);
   }
 
   /**
-   * CharteY_B - Enrichie (recommandée, baseline)
+   * Précharger le cache au démarrage de l'app
    */
-  static getCharteY_B(): CharteDefinition {
-    return {
-      charte_id: "CharteY_B_v1.0.0",
-      charte_name: "Charte B - Enrichie",
-      charte_description: "d'accord/oui/voilà = POSITIF, seuls hm/mh = NEUTRE",
-      variable: "Y",
-      is_baseline: true,
-      definition: {
-        categories: {
-          CLIENT_POSITIF: {
-            description: "Le client exprime un accord clair ou une satisfaction",
-            patterns: [
-              "d'accord", "oui", "ouais", "ok", "voilà",
-              "merci", "parfait", "très bien", "super", "excellent",
-              "ça marche", "entendu", "bien sûr", "tout à fait",
-              "c'est bon", "impeccable", "génial", "top"
-            ],
-            rules: [
-              "Les marques d'accord explicites sont toujours POSITIF",
-              "Les remerciements sont POSITIF même s'ils sont brefs",
-              "Les évaluations positives (super, génial) sont POSITIF"
-            ]
-          },
-          CLIENT_NEGATIF: {
-            description: "Le client exprime un désaccord, une contestation ou une insatisfaction",
-            patterns: [
-              "mais", "non", "pas d'accord", "impossible",
-              "pas normal", "inadmissible", "scandaleux",
-              "j'hallucine", "vous rigolez", "c'est une blague",
-              "c'est pas possible", "ça va pas", "n'importe quoi"
-            ],
-            rules: [
-              "Le mot 'mais' en début de phrase est généralement NEGATIF",
-              "Les contestations explicites sont toujours NEGATIF",
-              "Les expressions d'indignation sont NEGATIF"
-            ]
-          },
-          CLIENT_NEUTRE: {
-            description: "Le client donne une réponse neutre, back-channel minimal, ou ambiguë",
-            patterns: ["hm", "mh", "mmh", "euh"],
-            rules: [
-              "SEULEMENT les back-channels minimaux (hm, mh) sont NEUTRE",
-              "Les acquiescements comme 'oui' ou 'd'accord' sont POSITIF, pas NEUTRE",
-              "En cas de doute entre POSITIF et NEUTRE, privilégier POSITIF"
-            ]
-          }
-        },
-        priority_rules: [
-          "Si accord explicite (oui, d'accord, voilà) → POSITIF",
-          "Si désaccord explicite (non, mais, pas normal) → NEGATIF",
-          "Si back-channel minimal uniquement (hm, mh) → NEUTRE"
-        ]
-      }
-    };
-  }
-
-  /**
-   * CharteY_C - Binaire (POSITIF vs NON-POSITIF)
-   */
-  static getCharteY_C(): CharteDefinition {
-    return {
-      charte_id: "CharteY_C_v1.0.0",
-      charte_name: "Charte C - Binaire",
-      charte_description: "Simplifié : POSITIF vs NON-POSITIF (NEGATIF + NEUTRE fusionnés)",
-      variable: "Y",
-      definition: {
-        categories: {
-          CLIENT_POSITIF: {
-            description: "Le client exprime un accord ou une satisfaction explicite",
-            examples: ["oui", "d'accord", "merci", "parfait", "ok"]
-          },
-          CLIENT_NON_POSITIF: {
-            description: "Le client n'exprime pas d'accord clair (désaccord, neutre, ambiguë)",
-            examples: ["non", "mais", "hm", "mh", "pas normal"]
-          }
-        },
-        rules: {
-          approach: "binary",
-          examples_per_category: 5,
-          context_included: true
-        }
-      }
-    };
-  }
-
-  // ==========================================================================
-  // VARIABLE X : Stratégie Conseiller
-  // ==========================================================================
-
-  /**
-   * CharteX_A - Sans contexte (classification isolée)
-   */
-  static getCharteX_A(): CharteDefinition {
-    return {
-      charte_id: "CharteX_A_v1.0.0",
-      charte_name: "Charte A - Sans contexte",
-      charte_description: "Classification basée uniquement sur le tour conseiller, sans contexte",
-      variable: "X",
-      definition: {
-        categories: {
-          ENGAGEMENT: {
-            description: "Verbes d'action mobilisant le client",
-            examples: ["vérifier", "regarder", "envoyer", "cliquer", "consulter"]
-          },
-          OUVERTURE: {
-            description: "Questions ouvertes favorisant l'expression",
-            examples: ["que se passe-t-il ?", "qu'en pensez-vous ?", "comment ça se passe ?"]
-          },
-          EXPLICATION: {
-            description: "Apport d'informations factuelles, procédures",
-            examples: ["il faut faire ceci", "la procédure est", "voici comment"]
-          },
-          REFLET_ACQ: {
-            description: "Reformulation avec acquiescement",
-            examples: ["d'accord", "je comprends", "je vois"]
-          },
-          REFLET_JE: {
-            description: "Reformulation centrée sur l'émotion du conseiller",
-            examples: ["je ressens que", "je constate que"]
-          },
-          REFLET_VOUS: {
-            description: "Reformulation centrée sur le client",
-            examples: ["vous me dites que", "vous ressentez"]
-          }
-        },
-        rules: {
-          approach: "isolated",
-          context_included: false
-        }
-      }
-    };
-  }
-
-  /**
-   * CharteX_B - Avec contexte (héritage tours courts)
-   */
-  static getCharteX_B(): CharteDefinition {
-    return {
-      charte_id: "CharteX_B_v1.0.0",
-      charte_name: "Charte B - Avec contexte",
-      charte_description: "Classification avec contexte conversationnel (prev1 + next1)",
-      variable: "X",
-      definition: {
-        categories: {
-          ENGAGEMENT: {
-            description: "Verbes d'action mobilisant le client",
-            patterns: [
-              "vérifier", "regarder", "envoyer", "cliquer", "consulter",
-              "pouvez-vous", "pourriez-vous", "je vous invite à"
-            ],
-            rules: [
-              "Les verbes d'action à l'impératif sont ENGAGEMENT",
-              "Les formules 'pouvez-vous + verbe' sont ENGAGEMENT"
-            ]
-          },
-          OUVERTURE: {
-            description: "Questions ouvertes favorisant l'expression",
-            patterns: [
-              "que se passe-t-il", "qu'en pensez-vous", "comment",
-              "pourquoi", "qu'est-ce qui", "parlez-moi de"
-            ],
-            rules: [
-              "Les questions commençant par 'comment', 'pourquoi', 'que' sont souvent OUVERTURE",
-              "Si le tour est très court (<5 mots), hériter du tour précédent si OUVERTURE"
-            ]
-          },
-          EXPLICATION: {
-            description: "Apport d'informations factuelles, procédures",
-            patterns: [
-              "il faut", "vous devez", "la procédure", "en fait",
-              "c'est-à-dire", "donc", "parce que"
-            ],
-            rules: [
-              "Les phrases avec 'il faut', 'vous devez' sont EXPLICATION",
-              "Les connecteurs logiques (donc, parce que) indiquent EXPLICATION"
-            ]
-          },
-          REFLET_ACQ: {
-            description: "Reformulation avec acquiescement",
-            examples: ["d'accord", "je comprends", "je vois", "très bien", "ok"]
-          },
-          REFLET_JE: {
-            description: "Reformulation centrée sur l'émotion du conseiller",
-            examples: ["je ressens que", "je constate que", "je vois que vous"]
-          },
-          REFLET_VOUS: {
-            description: "Reformulation centrée sur le client",
-            examples: ["vous me dites que", "vous ressentez", "vous êtes"]
-          }
-        },
-        priority_rules: [
-          "Si verbe d'action direct → ENGAGEMENT",
-          "Si question ouverte (comment, pourquoi) → OUVERTURE",
-          "Si information factuelle → EXPLICATION",
-          "Si reformulation → REFLET_*"
-        ],
-        rules: {
-          approach: "contextual",
-          context_included: true
-        }
-      }
-    };
+  static async preload(): Promise<void> {
+    console.log("[CharteRegistry] Préchargement des chartes...");
+    await this.getAllChartes();
+    console.log("[CharteRegistry] Préchargement terminé");
   }
 }
+
+// ==========================================================================
+// ANCIENNES MÉTHODES (v1.0) - COMMENTÉES POUR RÉFÉRENCE
+// ==========================================================================
+
+/*
+// Ces méthodes étaient dans v1.0, maintenant remplacées par DB
+
+static getCharteY_A(): CharteDefinition {
+  return {
+    charte_id: "CharteY_A_v1.0.0",
+    charte_name: "Charte A - Minimaliste",
+    ...
+  };
+}
+
+static getCharteY_B(): CharteDefinition {
+  return {
+    charte_id: "CharteY_B_v1.0.0",
+    charte_name: "Charte B - Enrichie",
+    ...
+  };
+}
+
+static getCharteY_C(): CharteDefinition { ... }
+static getCharteX_A(): CharteDefinition { ... }
+static getCharteX_B(): CharteDefinition { ... }
+*/

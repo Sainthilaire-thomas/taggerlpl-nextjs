@@ -33,7 +33,7 @@ export class MultiCharteAnnotator {
     onCharteProgress?: (charteName: string, current: number, total: number) => void,
     onCharteComplete?: (result: CharteTestResult) => void
   ): Promise<CharteTestResult[]> {
-    const chartes = CharteRegistry.getChartesForVariable(variable);
+    const chartes = await CharteRegistry.getChartesForVariable(variable);
     const results: CharteTestResult[] = [];
 
     for (const charte of chartes) {
@@ -114,7 +114,7 @@ export class MultiCharteAnnotator {
           temperature: 0.0,
           charte_name: charte.charte_name
         },
-        test_id: testId
+        test_id: null
       }));
 
       await AnnotationService.saveBatchAnnotations(annotationsToSave);
@@ -289,16 +289,16 @@ export class MultiCharteAnnotator {
   /**
    * Estime le coût et la durée totale pour tester toutes les chartes
    */
-  static estimateFullTest(
+  static async estimateFullTest(
     variable: "X" | "Y",
     pairCount: number
-  ): {
+  ): Promise<{
     chartesCount: number;
     totalCalls: number;
     estimatedCostUSD: number;
     estimatedDurationMinutes: number;
-  } {
-    const chartes = CharteRegistry.getChartesForVariable(variable);
+  }> {
+    const chartes = await CharteRegistry.getChartesForVariable(variable);
     const singleEstimate = OpenAIAnnotatorService.estimateCost(pairCount);
 
     return {

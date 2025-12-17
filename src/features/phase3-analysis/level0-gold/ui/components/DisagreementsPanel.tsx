@@ -99,7 +99,9 @@ export const DisagreementsPanel: React.FC<DisagreementsPanelProps> = ({ result }
                       />
                     </TableCell>
                     <TableCell>
-                      {(disagreement.llmConfidence * 100).toFixed(0)}%
+                      {disagreement.llmConfidence !== undefined
+                        ? (disagreement.llmConfidence * 100).toFixed(0) + '%'
+                        : 'N/A'}
                     </TableCell>
                   </TableRow>
                   

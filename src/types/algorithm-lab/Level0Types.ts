@@ -76,8 +76,20 @@ export interface CharteDefinition {
       context_included?: boolean;
     };
   };
-  created_at?: string;
+  
   is_baseline?: boolean;
+    // 🆕 Sprint 3 : Champs v2.0
+  philosophy?: string;           // Ex: "Minimaliste", "Enrichie"
+  version?: string;              // Ex: "1.0.0", "1.1.0"
+  prompt_template?: string;      // Template prompt LLM
+  prompt_params?: {
+    model: string;               // Ex: "gpt-4o-mini"
+    temperature: number;         // Ex: 0.0
+    max_tokens?: number;
+    context_window?: string[];   // Ex: ["prev1", "next1"]
+  };
+  notes?: string;                // Notes thèse
+  created_at?: string;           // Timestamp
 }
 
 export interface CharteTestResult {

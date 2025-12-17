@@ -80,39 +80,43 @@ export class AnnotationService {
    * Sauvegarde multiple annotations en batch
    * Optimisé pour tests multi-chartes (901 annotations d'un coup)
    */
-  static async saveBatchAnnotations(
-    inputs: AnnotationInput[]
-  ): Promise<{ data: Annotation[] | null; error: string | null }> {
-    try {
-      const { data, error } = await this.supabase
-        .from("annotations")
-        .insert(
-          inputs.map((input) => ({
-            pair_id: input.pair_id,
-            annotator_type: input.annotator_type,
-            annotator_id: input.annotator_id,
-            strategy_tag: input.strategy_tag || null,
-            reaction_tag: input.reaction_tag || null,
-            confidence: input.confidence || null,
-            reasoning: input.reasoning || null,
-            annotation_context: input.annotation_context || null,
-            test_id: input.test_id || null,
-            annotation_duration_ms: input.annotation_duration_ms || null
-          }))
-        )
-        .select();
+ static async saveBatchAnnotations(
+  inputs: AnnotationInput[]
+): Promise<{ data: Annotation[] | null; error: string | null }> {
+  try {
+    const { data, error } = await this.supabase
+      .from("annotations")
+      .upsert(  // ✅ UPSERT au lieu de INSERT
+        inputs.map((input) => ({
+          pair_id: input.pair_id,
+          annotator_type: input.annotator_type,
+          annotator_id: input.annotator_id,
+          strategy_tag: input.strategy_tag || null,
+          reaction_tag: input.reaction_tag || null,
+          confidence: input.confidence || null,
+          reasoning: input.reasoning || null,
+          annotation_context: input.annotation_context || null,
+          test_id: input.test_id || null,
+          annotation_duration_ms: input.annotation_duration_ms || null
+        })),
+        {
+          onConflict: 'pair_id,annotator_type,annotator_id',  // ✅ Clé de conflit
+          ignoreDuplicates: false  // ✅ Mettre à jour si conflit
+        }
+      )
+      .select();
 
-      if (error) {
-        console.error("[AnnotationService] Batch save error:", error);
-        return { data: null, error: error.message };
-      }
-
-      return { data, error: null };
-    } catch (err) {
-      console.error("[AnnotationService] Unexpected batch error:", err);
-      return { data: null, error: "Unexpected error during batch save" };
+    if (error) {
+      console.error("[AnnotationService] Batch save error:", error);
+      return { data: null, error: error.message };
     }
+
+    return { data, error: null };
+  } catch (err) {
+    console.error("[AnnotationService] Unexpected batch error:", err);
+    return { data: null, error: "Unexpected error during batch save" };
   }
+}
 
   // ==========================================================================
   // READ - Récupération annotations

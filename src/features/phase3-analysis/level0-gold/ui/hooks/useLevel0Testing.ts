@@ -6,7 +6,8 @@ import { useState, useCallback } from "react";
 import { CharteTestResult } from "@/types/algorithm-lab/Level0Types";
 import { 
   MultiCharteAnnotator, 
-  SupabaseLevel0Service 
+  SupabaseLevel0Service,
+  CharteRegistry  
 } from "@/features/phase3-analysis/level0-gold/domain/services";
 import { getSupabase } from "@/lib/supabaseClient";
 
@@ -32,24 +33,53 @@ export function useLevel0Testing() {
     return data || [];
   }, []);
 
-  const testVariable = useCallback(async (
-    variable: "X" | "Y",
-    sampleSize: number = 10
-  ) => {
-    setLoading(true);
-    setError(null);
-    setResults([]);
+const testVariable = useCallback(async (
+  variable: "X" | "Y",
+  sampleSize: number = 10,
+  selectedCharteIds?: string[]  // 🆕 Paramètre optionnel
+) => {
+  setLoading(true);
+  setError(null);
+  setResults([]);
 
-    try {
-      const pairs = await loadSamplePairs(sampleSize);
+  try {
+    const pairs = await loadSamplePairs(sampleSize);
+    if (pairs.length === 0) {
+      throw new Error("Aucune paire trouvée");
+    }
+
+    console.log(`Testing ${variable} with ${pairs.length} pairs`);
+
+    // 🆕 Filtrer les chartes si selectedCharteIds fourni
+    let testResults: CharteTestResult[];
+    
+    if (selectedCharteIds && selectedCharteIds.length > 0) {
+      // Tester seulement les chartes sélectionnées
+      const allChartes = await CharteRegistry.getChartesForVariable(variable);
+      const chartes = allChartes.filter(c => selectedCharteIds.includes(c.charte_id));
       
-      if (pairs.length === 0) {
-        throw new Error("Aucune paire trouvée");
+      console.log(`Testing ${chartes.length} selected charte(s)`);
+      
+      testResults = [];
+      for (const charte of chartes) {
+        const result = await MultiCharteAnnotator.testSingleCharte(
+          charte,
+          pairs,
+          (current, total) => {
+            setProgress({ charteName: charte.charte_name, current, total });
+          }
+        );
+        
+        console.log(`Charte ${result.charte_name} completed: κ=${result.kappa.toFixed(3)}`);
+        setResults(prev => [...prev, result]);
+        testResults.push(result);
+        
+        // Sauvegarder immédiatement
+        await SupabaseLevel0Service.saveCharteTestResult(result);
       }
-
-      console.log(`Testing ${variable} with ${pairs.length} pairs`);
-
-      const testResults = await MultiCharteAnnotator.testAllChartesForVariable(
+    } else {
+      // Tester toutes les chartes (comportement par défaut)
+      testResults = await MultiCharteAnnotator.testAllChartesForVariable(
         variable,
         pairs,
         (charteName, current, total) => {
@@ -64,17 +94,17 @@ export function useLevel0Testing() {
       for (const result of testResults) {
         await SupabaseLevel0Service.saveCharteTestResult(result);
       }
-
-      console.log("All tests completed:", testResults);
-      
-    } catch (err: any) {
-      console.error("Error during testing:", err);
-      setError(err.message || "Erreur inconnue");
-    } finally {
-      setLoading(false);
-      setProgress({ current: 0, total: 0, charteName: "" });
     }
-  }, [loadSamplePairs]);
+
+    console.log("All tests completed:", testResults);
+  } catch (err: any) {
+    console.error("Error during testing:", err);
+    setError(err.message || "Erreur inconnue");
+  } finally {
+    setLoading(false);
+    setProgress({ current: 0, total: 0, charteName: "" });
+  }
+}, [loadSamplePairs]);
 
   const loadSavedResults = useCallback(async (variable: "X" | "Y") => {
     try {

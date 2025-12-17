@@ -4,7 +4,8 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { CharteDefinition } from "@/types/algorithm-lab/Level0Types";
 import {
   Box,
   Typography,
@@ -31,15 +32,31 @@ import { PlayArrow, Science, Visibility } from "@mui/icons-material";
 import { useLevel0Testing } from "../hooks/useLevel0Testing";
 import { CharteTestResult } from "@/types/algorithm-lab/Level0Types";
 import { DisagreementsPanel } from "./DisagreementsPanel";
+import { CharteRegistry } from "../../domain/services";
 
 export const Level0Interface: React.FC = () => {
   const { loading, progress, results, error, testVariable, loadSavedResults } = useLevel0Testing();
   const [variable, setVariable] = useState<"X" | "Y">("Y");
   const [sampleSize, setSampleSize] = useState(10);
   const [selectedResult, setSelectedResult] = useState<CharteTestResult | null>(null);
+  
+  // 🆕 État pour sélection de chartes
+  const [selectedChartes, setSelectedChartes] = useState<string[]>([]);
+
+  // 🆕 Récupérer la liste des chartes disponibles pour la variable
+  const [availableChartes, setAvailableChartes] = useState<CharteDefinition[]>([]);
+
+  useEffect(() => {
+    CharteRegistry.getChartesForVariable(variable).then(setAvailableChartes);
+  }, [variable]);
+
+  // 🆕 Reset sélection quand la variable change
+  useEffect(() => {
+    setSelectedChartes([]);
+  }, [variable]);
 
   const handleTest = () => {
-    testVariable(variable, sampleSize);
+    testVariable(variable, sampleSize, selectedChartes);  // 🆕 Passer selectedChartes
     setSelectedResult(null);
   };
 
@@ -62,7 +79,7 @@ export const Level0Interface: React.FC = () => {
       </Typography>
 
       <Typography variant="body2" color="text.secondary" mb={3}>
-        Test de différentes formulations de chartes d''annotation pour optimiser la reproductibilité LLM
+        Test de différentes formulations de chartes d'annotation pour optimiser la reproductibilité LLM
       </Typography>
 
       {/* Section : Configuration */}
@@ -81,8 +98,8 @@ export const Level0Interface: React.FC = () => {
                 label="Variable"
                 disabled={loading}
               >
-                <MenuItem value="Y">Y - Réaction Client (3 chartes)</MenuItem>
-                <MenuItem value="X">X - Stratégie Conseiller (2 chartes)</MenuItem>
+                <MenuItem value="Y">Y - Réaction Client</MenuItem>
+                <MenuItem value="X">X - Stratégie Conseiller</MenuItem>
               </Select>
             </FormControl>
 
@@ -100,10 +117,13 @@ export const Level0Interface: React.FC = () => {
               variant="contained"
               startIcon={<PlayArrow />}
               onClick={handleTest}
-              disabled={loading}
+              disabled={loading || selectedChartes.length === 0}  // 🆕 Désactivé si aucune charte
               size="large"
             >
-              Lancer test
+              {loading 
+                ? `Test en cours... (${selectedChartes.length} charte${selectedChartes.length > 1 ? 's' : ''})`
+                : `Tester ${selectedChartes.length} charte${selectedChartes.length > 1 ? 's' : ''} sur ${sampleSize} paires`
+              }
             </Button>
 
             <Button
@@ -116,14 +136,65 @@ export const Level0Interface: React.FC = () => {
             </Button>
           </Stack>
 
-          {variable === "Y" && (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              Variable Y : 3 chartes seront testées (A-Minimaliste, B-Enrichie, C-Binaire)
+          {/* 🆕 Section : Sélection des chartes */}
+          <Box mt={3}>
+            <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
+              Sélection des chartes ({selectedChartes.length} / {availableChartes.length})
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              Sélectionnez les chartes à tester. Économisez les coûts API en testant une seule charte à la fois.
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
+              {availableChartes.map(charte => (
+                <Chip
+                  key={charte.charte_id}
+                  label={charte.charte_name}
+                  onClick={() => {
+                    setSelectedChartes(prev => 
+                      prev.includes(charte.charte_id)
+                        ? prev.filter(id => id !== charte.charte_id)
+                        : [...prev, charte.charte_id]
+                    )
+                  }}
+                  color={selectedChartes.includes(charte.charte_id) ? "primary" : "default"}
+                  variant={selectedChartes.includes(charte.charte_id) ? "filled" : "outlined"}
+                  disabled={loading}
+                  sx={{ cursor: 'pointer' }}
+                />
+              ))}
+              <Chip
+                label="Tout sélectionner"
+                onClick={() => setSelectedChartes(availableChartes.map(c => c.charte_id))}
+                variant="outlined"
+                color="secondary"
+                disabled={loading}
+                sx={{ cursor: 'pointer' }}
+              />
+              <Chip
+                label="Tout désélectionner"
+                onClick={() => setSelectedChartes([])}
+                variant="outlined"
+                disabled={loading}
+                sx={{ cursor: 'pointer' }}
+              />
+            </Stack>
+          </Box>
+
+          {/* 🆕 Alert dynamique basé sur la sélection */}
+          {selectedChartes.length === 0 && (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              Sélectionnez au moins une charte pour commencer le test
             </Alert>
           )}
-          {variable === "X" && (
+          {selectedChartes.length === availableChartes.length && (
             <Alert severity="info" sx={{ mt: 2 }}>
-              Variable X : 2 chartes seront testées (A-Sans contexte, B-Avec contexte)
+              Toutes les chartes seront testées ({availableChartes.length} chartes × {sampleSize} paires = {availableChartes.length * sampleSize} appels API)
+            </Alert>
+          )}
+          {selectedChartes.length > 0 && selectedChartes.length < availableChartes.length && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              {selectedChartes.length} charte{selectedChartes.length > 1 ? 's' : ''} sélectionnée{selectedChartes.length > 1 ? 's' : ''} ({selectedChartes.length} × {sampleSize} = {selectedChartes.length * sampleSize} appels API)
+              - Économie : {((availableChartes.length - selectedChartes.length) / availableChartes.length * 100).toFixed(0)}% 💰
             </Alert>
           )}
         </CardContent>

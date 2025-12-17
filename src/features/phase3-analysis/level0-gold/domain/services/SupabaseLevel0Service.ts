@@ -3,7 +3,8 @@
 // ============================================================================
 
 import { getSupabase } from "@/lib/supabaseClient";
-import { CharteDefinition, CharteTestResult, GoldStandardUpdate } from "@/types/algorithm-lab/Level0Types";
+import { CharteDefinition, CharteTestResult, GoldStandardUpdate } from "@/types/algorithm-lab/Level0Types"
+import { CharteManagementService } from "./CharteManagementService";
 
 export class SupabaseLevel0Service {
   private static getClient() {
@@ -36,34 +37,46 @@ export class SupabaseLevel0Service {
     }
   }
 
-  static async saveCharteTestResult(result: CharteTestResult): Promise<{ success: boolean; error?: string }> {
+ static async saveCharteTestResult(result: CharteTestResult): Promise<void> {
     try {
+      // Charger la charte pour récupérer philosophy et version
+      const { data: charte, error: charteError } = 
+        await CharteManagementService.getCharteById(result.charte_id);
+      
+      if (charteError || !charte) {
+        console.error("[SupabaseLevel0Service] Error loading charte:", charteError);
+        throw new Error(`Cannot load charte ${result.charte_id}`);
+      }
+      
       const supabase = this.getClient();
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("level0_charte_tests")
-        .upsert({
+        .insert({
           test_id: result.test_id,
           charte_id: result.charte_id,
           variable: result.variable,
+          philosophy: charte.philosophy,
+          version: charte.version,
           kappa: result.kappa,
           accuracy: result.accuracy,
           total_pairs: result.total_pairs,
           disagreements_count: result.disagreements_count,
-          metrics: result.metrics as any,
+          disagreements: result.disagreements || null,
+          metrics: result.metrics || null,
           execution_time_ms: result.execution_time_ms,
           openai_model: result.openai_model,
-          tested_at: result.tested_at
+          tested_at: new Date().toISOString(),
         });
 
       if (error) {
-        console.error("Error saving test result:", error);
-        return { success: false, error: error.message };
+        console.error("[SupabaseLevel0Service] Error saving test result:", error);
+        throw new Error(`Error saving test result: ${error.message}`);
       }
 
-      return { success: true };
+      console.log("[SupabaseLevel0Service] Test result saved successfully");
     } catch (error: any) {
-      console.error("Exception saving test result:", error);
-      return { success: false, error: error.message };
+      console.error("[SupabaseLevel0Service] Exception:", error);
+      throw error;
     }
   }
 
