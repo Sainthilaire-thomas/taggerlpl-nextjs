@@ -159,7 +159,12 @@ useAnalysisPairs-working.txt
 |   |   |-- mission-2025-12-15-level0-llm-ADDENDUM-reuse-level1-components.md
 |   |   |-- mission-2025-12-15-level0-llm-contra-annotation.md
 |   |   |-- mission-2025-12-15-level0-NOTE-tables-obligatoires-these.md
-|   |   +-- mission-2025-12-15-level0-SUPABASE-IMPACT.md
+|   |   |-- mission-2025-12-15-level0-SUPABASE-IMPACT.md
+|   |   |-- mission-2025-12-16-level0-implementation-complete.md
+|   |   |-- mission-2025-12-16-level0-SPECS-unified-annotations.md
+|   |   |-- mission-2025-12-16-prosody-analysis-specs.md
+|   |   |-- mission-2025-12-16-silence-detection-development.md
+|   |   +-- mission-2025-12-17-unified-annotations-sync.md
 |   |-- tuning/
 |   |   +-- TUNING_ALGORITHMES_M1M2M3.md
 |   |-- calls_ddd_tree.txt
@@ -214,7 +219,9 @@ useAnalysisPairs-working.txt
 |   |   |   |   +-- page.tsx
 |   |   |   |-- phase3-analysis/
 |   |   |   |   |-- level0/
-|   |   |   |   |   +-- inter-annotator/
+|   |   |   |   |   |-- inter-annotator/
+|   |   |   |   |   |   +-- page.tsx
+|   |   |   |   |   +-- multi-chartes/
 |   |   |   |   |       +-- page.tsx
 |   |   |   |   |-- level1/
 |   |   |   |   |   +-- algorithm-lab/
@@ -264,8 +271,6 @@ useAnalysisPairs-working.txt
 |   |   |       |   +-- route.tsx
 |   |   |       +-- files/
 |   |   |           +-- route.tsx
-|   |   |-- level0/
-|   |   |   +-- page.tsx
 |   |   |-- login/
 |   |   |   +-- page.tsx
 |   |   |-- favicon.ico
@@ -560,9 +565,13 @@ useAnalysisPairs-working.txt
 |   |   |   |   |       +-- SupabaseLevel0Service.ts
 |   |   |   |   +-- ui/
 |   |   |   |       |-- components/
+|   |   |   |       |   |-- DisagreementsPanel.tsx
+|   |   |   |       |   |-- index.ts
 |   |   |   |       |   |-- InterAnnotatorAgreement.tsx
-|   |   |   |       |   +-- Level0Interface.tsx
+|   |   |   |       |   |-- Level0Interface.tsx
+|   |   |   |       |   +-- Level0Tabs.tsx
 |   |   |   |       +-- hooks/
+|   |   |   |           |-- index.ts
 |   |   |   |           |-- useLevel0Testing.ts
 |   |   |   |           +-- useLevel0Validation.ts
 |   |   |   |-- level1-validation/
