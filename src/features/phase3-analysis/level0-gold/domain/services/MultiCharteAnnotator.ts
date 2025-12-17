@@ -13,6 +13,7 @@ import {
 import { OpenAIAnnotatorService } from "./OpenAIAnnotatorService";
 import { KappaCalculationService } from "./KappaCalculationService";
 import { CharteRegistry } from "./CharteRegistry";
+import { AnnotationService } from "./AnnotationService";
 
 export class MultiCharteAnnotator {
   /**
@@ -93,6 +94,35 @@ export class MultiCharteAnnotator {
     );
 
     const executionTime = Date.now() - startTime;
+    // ✨ SPRINT 2 : Sauvegarder annotations LLM dans table unifiée
+    const testId = crypto.randomUUID();
+    try {
+      const annotationsToSave = annotations.map(ann => ({
+        pair_id: ann.pairId,
+        annotator_type: 'llm_openai' as const,
+        annotator_id: charte.charte_id,
+        strategy_tag: charte.variable === "X" ? ann.x_predicted || null : null,
+        reaction_tag: charte.variable === "Y" ? ann.y_predicted || null : null,
+        confidence: charte.variable === "X" 
+          ? (ann.x_confidence || null) 
+          : (ann.y_confidence || null),
+        reasoning: charte.variable === "X"
+          ? (ann.x_reasoning || null)
+          : (ann.y_reasoning || null),
+        annotation_context: {
+          model: "gpt-4o-mini",
+          temperature: 0.0,
+          charte_name: charte.charte_name
+        },
+        test_id: testId
+      }));
+
+      await AnnotationService.saveBatchAnnotations(annotationsToSave);
+      console.log(`✅ [MultiCharteAnnotator] ${annotations.length} annotations sauvegardées pour ${charte.charte_id}`);
+    } catch (error) {
+      console.error(`❌ [MultiCharteAnnotator] Erreur sauvegarde annotations:`, error);
+      // Ne pas bloquer le test si la sauvegarde échoue
+    }
 
     // Construire les paires pour Kappa
     const annotationPairs: AnnotationPair[] = analysisPairs.map((pair, index) => {
@@ -124,13 +154,15 @@ export class MultiCharteAnnotator {
       ? analysisPairs.map(p => p.conseiller_verbatim)
       : analysisPairs.map(p => p.client_verbatim);
     
-    const llmReasonings = charte.variable === "X"
+    const llmReasonings = (charte.variable === "X"
       ? annotations.map(a => a.x_reasoning)
-      : annotations.map(a => a.y_reasoning);
+      : annotations.map(a => a.y_reasoning)
+    ).filter((r): r is string => r !== undefined);
     
-    const llmConfidences = charte.variable === "X"
+    const llmConfidences = (charte.variable === "X"
       ? annotations.map(a => a.x_confidence)
-      : annotations.map(a => a.y_confidence);
+      : annotations.map(a => a.y_confidence)
+    ).filter((c): c is number => c !== undefined);
 
     const disagreements = KappaCalculationService.findDisagreements(
       annotationPairs,
@@ -142,7 +174,7 @@ export class MultiCharteAnnotator {
 
     // Construire le résultat
     const testResult: CharteTestResult = {
-      test_id: crypto.randomUUID(),
+      test_id: testId,
       charte_id: charte.charte_id,
       charte_name: charte.charte_name,
       variable: charte.variable,
