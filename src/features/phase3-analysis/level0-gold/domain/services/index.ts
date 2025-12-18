@@ -15,3 +15,5 @@ export { SupabaseLevel0Service } from "./SupabaseLevel0Service";
 export { AnnotationService } from "./AnnotationService";
 export { InterAnnotatorAgreementService } from "./InterAnnotatorAgreementService";
 export { HypothesisRobustnessService } from "./HypothesisRobustnessService";
+
+export * from './DisagreementValidationService';

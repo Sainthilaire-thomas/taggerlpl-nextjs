@@ -8,7 +8,7 @@
  *   - Or run: npm run generate:types
  *   - Or run: .\scripts\generate-types.ps1
  * 
- * Generated on: 2025-12-16 08:17:52
+ * Generated on: 2025-12-18 13:35:46
  * Project ID: jregkxiwrnquslbocicz
  */
 export type Json =
@@ -605,6 +605,384 @@ export type Database = {
         }
         Relationships: []
       }
+      analysis_pairs_backup_20251217: {
+        Row: {
+          annotations: Json | null
+          call_id: string | null
+          client_end_time: number | null
+          client_speaker: string | null
+          client_start_time: number | null
+          client_turn_id: number | null
+          client_verbatim: string | null
+          computation_status: string | null
+          conseiller_end_time: number | null
+          conseiller_speaker: string | null
+          conseiller_start_time: number | null
+          conseiller_turn_id: number | null
+          conseiller_verbatim: string | null
+          created_at: string | null
+          extended_context: Json | null
+          level0_annotator_agreement: number | null
+          level0_gold_client: string | null
+          level0_gold_conseiller: string | null
+          level0_notes: string | null
+          level0_validated_at: string | null
+          level0_validated_by: string | null
+          m1_action_verbs: string[] | null
+          m1_algorithm_key: string | null
+          m1_algorithm_version: string | null
+          m1_computed_at: string | null
+          m1_total_words: number | null
+          m1_verb_count: number | null
+          m1_verb_density: number | null
+          m2_algorithm_key: string | null
+          m2_algorithm_version: string | null
+          m2_computed_at: string | null
+          m2_details: Json | null
+          m2_global_alignment: number | null
+          m2_lexical_alignment: number | null
+          m2_scores: Json | null
+          m2_semantic_alignment: number | null
+          m2_shared_terms: string[] | null
+          m3_algorithm_key: string | null
+          m3_algorithm_version: string | null
+          m3_clarification_count: number | null
+          m3_cognitive_load: string | null
+          m3_cognitive_score: number | null
+          m3_computed_at: string | null
+          m3_hesitation_count: number | null
+          m3_patterns: Json | null
+          next1_end_time: number | null
+          next1_speaker: string | null
+          next1_start_time: number | null
+          next1_tag: string | null
+          next1_turn_id: number | null
+          next1_verbatim: string | null
+          next2_end_time: number | null
+          next2_speaker: string | null
+          next2_start_time: number | null
+          next2_tag: string | null
+          next2_turn_id: number | null
+          next2_verbatim: string | null
+          next3_end_time: number | null
+          next3_speaker: string | null
+          next3_start_time: number | null
+          next3_tag: string | null
+          next3_turn_id: number | null
+          next3_verbatim: string | null
+          pair_id: number | null
+          pair_index: number | null
+          prev1_end_time: number | null
+          prev1_speaker: string | null
+          prev1_start_time: number | null
+          prev1_tag: string | null
+          prev1_turn_id: number | null
+          prev1_verbatim: string | null
+          prev2_end_time: number | null
+          prev2_speaker: string | null
+          prev2_start_time: number | null
+          prev2_tag: string | null
+          prev2_turn_id: number | null
+          prev2_verbatim: string | null
+          prev3_end_time: number | null
+          prev3_speaker: string | null
+          prev3_start_time: number | null
+          prev3_tag: string | null
+          prev3_turn_id: number | null
+          prev3_verbatim: string | null
+          reaction_tag: string | null
+          strategy_color: string | null
+          strategy_family: string | null
+          strategy_originespeaker: string | null
+          strategy_tag: string | null
+          updated_at: string | null
+          x_algorithm_key: string | null
+          x_algorithm_version: string | null
+          x_computation_time_ms: number | null
+          x_computed_at: string | null
+          x_confidence: number | null
+          x_evidences: Json | null
+          x_predicted_tag: string | null
+          y_algorithm_key: string | null
+          y_algorithm_version: string | null
+          y_computation_time_ms: number | null
+          y_computed_at: string | null
+          y_confidence: number | null
+          y_evidences: Json | null
+          y_predicted_tag: string | null
+        }
+        Insert: {
+          annotations?: Json | null
+          call_id?: string | null
+          client_end_time?: number | null
+          client_speaker?: string | null
+          client_start_time?: number | null
+          client_turn_id?: number | null
+          client_verbatim?: string | null
+          computation_status?: string | null
+          conseiller_end_time?: number | null
+          conseiller_speaker?: string | null
+          conseiller_start_time?: number | null
+          conseiller_turn_id?: number | null
+          conseiller_verbatim?: string | null
+          created_at?: string | null
+          extended_context?: Json | null
+          level0_annotator_agreement?: number | null
+          level0_gold_client?: string | null
+          level0_gold_conseiller?: string | null
+          level0_notes?: string | null
+          level0_validated_at?: string | null
+          level0_validated_by?: string | null
+          m1_action_verbs?: string[] | null
+          m1_algorithm_key?: string | null
+          m1_algorithm_version?: string | null
+          m1_computed_at?: string | null
+          m1_total_words?: number | null
+          m1_verb_count?: number | null
+          m1_verb_density?: number | null
+          m2_algorithm_key?: string | null
+          m2_algorithm_version?: string | null
+          m2_computed_at?: string | null
+          m2_details?: Json | null
+          m2_global_alignment?: number | null
+          m2_lexical_alignment?: number | null
+          m2_scores?: Json | null
+          m2_semantic_alignment?: number | null
+          m2_shared_terms?: string[] | null
+          m3_algorithm_key?: string | null
+          m3_algorithm_version?: string | null
+          m3_clarification_count?: number | null
+          m3_cognitive_load?: string | null
+          m3_cognitive_score?: number | null
+          m3_computed_at?: string | null
+          m3_hesitation_count?: number | null
+          m3_patterns?: Json | null
+          next1_end_time?: number | null
+          next1_speaker?: string | null
+          next1_start_time?: number | null
+          next1_tag?: string | null
+          next1_turn_id?: number | null
+          next1_verbatim?: string | null
+          next2_end_time?: number | null
+          next2_speaker?: string | null
+          next2_start_time?: number | null
+          next2_tag?: string | null
+          next2_turn_id?: number | null
+          next2_verbatim?: string | null
+          next3_end_time?: number | null
+          next3_speaker?: string | null
+          next3_start_time?: number | null
+          next3_tag?: string | null
+          next3_turn_id?: number | null
+          next3_verbatim?: string | null
+          pair_id?: number | null
+          pair_index?: number | null
+          prev1_end_time?: number | null
+          prev1_speaker?: string | null
+          prev1_start_time?: number | null
+          prev1_tag?: string | null
+          prev1_turn_id?: number | null
+          prev1_verbatim?: string | null
+          prev2_end_time?: number | null
+          prev2_speaker?: string | null
+          prev2_start_time?: number | null
+          prev2_tag?: string | null
+          prev2_turn_id?: number | null
+          prev2_verbatim?: string | null
+          prev3_end_time?: number | null
+          prev3_speaker?: string | null
+          prev3_start_time?: number | null
+          prev3_tag?: string | null
+          prev3_turn_id?: number | null
+          prev3_verbatim?: string | null
+          reaction_tag?: string | null
+          strategy_color?: string | null
+          strategy_family?: string | null
+          strategy_originespeaker?: string | null
+          strategy_tag?: string | null
+          updated_at?: string | null
+          x_algorithm_key?: string | null
+          x_algorithm_version?: string | null
+          x_computation_time_ms?: number | null
+          x_computed_at?: string | null
+          x_confidence?: number | null
+          x_evidences?: Json | null
+          x_predicted_tag?: string | null
+          y_algorithm_key?: string | null
+          y_algorithm_version?: string | null
+          y_computation_time_ms?: number | null
+          y_computed_at?: string | null
+          y_confidence?: number | null
+          y_evidences?: Json | null
+          y_predicted_tag?: string | null
+        }
+        Update: {
+          annotations?: Json | null
+          call_id?: string | null
+          client_end_time?: number | null
+          client_speaker?: string | null
+          client_start_time?: number | null
+          client_turn_id?: number | null
+          client_verbatim?: string | null
+          computation_status?: string | null
+          conseiller_end_time?: number | null
+          conseiller_speaker?: string | null
+          conseiller_start_time?: number | null
+          conseiller_turn_id?: number | null
+          conseiller_verbatim?: string | null
+          created_at?: string | null
+          extended_context?: Json | null
+          level0_annotator_agreement?: number | null
+          level0_gold_client?: string | null
+          level0_gold_conseiller?: string | null
+          level0_notes?: string | null
+          level0_validated_at?: string | null
+          level0_validated_by?: string | null
+          m1_action_verbs?: string[] | null
+          m1_algorithm_key?: string | null
+          m1_algorithm_version?: string | null
+          m1_computed_at?: string | null
+          m1_total_words?: number | null
+          m1_verb_count?: number | null
+          m1_verb_density?: number | null
+          m2_algorithm_key?: string | null
+          m2_algorithm_version?: string | null
+          m2_computed_at?: string | null
+          m2_details?: Json | null
+          m2_global_alignment?: number | null
+          m2_lexical_alignment?: number | null
+          m2_scores?: Json | null
+          m2_semantic_alignment?: number | null
+          m2_shared_terms?: string[] | null
+          m3_algorithm_key?: string | null
+          m3_algorithm_version?: string | null
+          m3_clarification_count?: number | null
+          m3_cognitive_load?: string | null
+          m3_cognitive_score?: number | null
+          m3_computed_at?: string | null
+          m3_hesitation_count?: number | null
+          m3_patterns?: Json | null
+          next1_end_time?: number | null
+          next1_speaker?: string | null
+          next1_start_time?: number | null
+          next1_tag?: string | null
+          next1_turn_id?: number | null
+          next1_verbatim?: string | null
+          next2_end_time?: number | null
+          next2_speaker?: string | null
+          next2_start_time?: number | null
+          next2_tag?: string | null
+          next2_turn_id?: number | null
+          next2_verbatim?: string | null
+          next3_end_time?: number | null
+          next3_speaker?: string | null
+          next3_start_time?: number | null
+          next3_tag?: string | null
+          next3_turn_id?: number | null
+          next3_verbatim?: string | null
+          pair_id?: number | null
+          pair_index?: number | null
+          prev1_end_time?: number | null
+          prev1_speaker?: string | null
+          prev1_start_time?: number | null
+          prev1_tag?: string | null
+          prev1_turn_id?: number | null
+          prev1_verbatim?: string | null
+          prev2_end_time?: number | null
+          prev2_speaker?: string | null
+          prev2_start_time?: number | null
+          prev2_tag?: string | null
+          prev2_turn_id?: number | null
+          prev2_verbatim?: string | null
+          prev3_end_time?: number | null
+          prev3_speaker?: string | null
+          prev3_start_time?: number | null
+          prev3_tag?: string | null
+          prev3_turn_id?: number | null
+          prev3_verbatim?: string | null
+          reaction_tag?: string | null
+          strategy_color?: string | null
+          strategy_family?: string | null
+          strategy_originespeaker?: string | null
+          strategy_tag?: string | null
+          updated_at?: string | null
+          x_algorithm_key?: string | null
+          x_algorithm_version?: string | null
+          x_computation_time_ms?: number | null
+          x_computed_at?: string | null
+          x_confidence?: number | null
+          x_evidences?: Json | null
+          x_predicted_tag?: string | null
+          y_algorithm_key?: string | null
+          y_algorithm_version?: string | null
+          y_computation_time_ms?: number | null
+          y_computed_at?: string | null
+          y_confidence?: number | null
+          y_evidences?: Json | null
+          y_predicted_tag?: string | null
+        }
+        Relationships: []
+      }
+      annotations: {
+        Row: {
+          annotated_at: string | null
+          annotation_context: Json | null
+          annotation_duration_ms: number | null
+          annotation_id: string
+          annotator_id: string
+          annotator_type: string
+          confidence: number | null
+          pair_id: number
+          reaction_tag: string | null
+          reasoning: string | null
+          strategy_tag: string | null
+          test_id: string | null
+        }
+        Insert: {
+          annotated_at?: string | null
+          annotation_context?: Json | null
+          annotation_duration_ms?: number | null
+          annotation_id?: string
+          annotator_id: string
+          annotator_type: string
+          confidence?: number | null
+          pair_id: number
+          reaction_tag?: string | null
+          reasoning?: string | null
+          strategy_tag?: string | null
+          test_id?: string | null
+        }
+        Update: {
+          annotated_at?: string | null
+          annotation_context?: Json | null
+          annotation_duration_ms?: number | null
+          annotation_id?: string
+          annotator_id?: string
+          annotator_type?: string
+          confidence?: number | null
+          pair_id?: number
+          reaction_tag?: string | null
+          reasoning?: string | null
+          strategy_tag?: string | null
+          test_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "annotations_pair_id_fkey"
+            columns: ["pair_id"]
+            isOneToOne: false
+            referencedRelation: "analysis_pairs"
+            referencedColumns: ["pair_id"]
+          },
+          {
+            foreignKeyName: "annotations_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "level0_charte_tests"
+            referencedColumns: ["test_id"]
+          },
+        ]
+      }
       avatars: {
         Row: {
           anonyme: boolean
@@ -1019,6 +1397,85 @@ export type Database = {
           ouverture_titre?: string | null
         }
         Relationships: []
+      }
+      disagreement_validations: {
+        Row: {
+          charte_id: string | null
+          context_after: string | null
+          context_before: string | null
+          corrected_tag: string | null
+          llm_confidence: number | null
+          llm_reasoning: string | null
+          llm_tag: string
+          manual_tag: string
+          pair_id: number | null
+          test_id: string | null
+          validated_at: string | null
+          validated_by: string | null
+          validation_comment: string
+          validation_decision: string
+          validation_id: string
+          verbatim: string
+        }
+        Insert: {
+          charte_id?: string | null
+          context_after?: string | null
+          context_before?: string | null
+          corrected_tag?: string | null
+          llm_confidence?: number | null
+          llm_reasoning?: string | null
+          llm_tag: string
+          manual_tag: string
+          pair_id?: number | null
+          test_id?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_comment: string
+          validation_decision: string
+          validation_id?: string
+          verbatim: string
+        }
+        Update: {
+          charte_id?: string | null
+          context_after?: string | null
+          context_before?: string | null
+          corrected_tag?: string | null
+          llm_confidence?: number | null
+          llm_reasoning?: string | null
+          llm_tag?: string
+          manual_tag?: string
+          pair_id?: number | null
+          test_id?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_comment?: string
+          validation_decision?: string
+          validation_id?: string
+          verbatim?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disagreement_validations_charte_id_fkey"
+            columns: ["charte_id"]
+            isOneToOne: false
+            referencedRelation: "level0_chartes"
+            referencedColumns: ["charte_id"]
+          },
+          {
+            foreignKeyName: "disagreement_validations_pair_id_fkey"
+            columns: ["pair_id"]
+            isOneToOne: false
+            referencedRelation: "analysis_pairs"
+            referencedColumns: ["pair_id"]
+          },
+          {
+            foreignKeyName: "disagreement_validations_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "level0_charte_tests"
+            referencedColumns: ["test_id"]
+          },
+        ]
       }
       domaines: {
         Row: {
@@ -2032,6 +2489,122 @@ export type Database = {
           },
         ]
       }
+      level0_charte_tests: {
+        Row: {
+          accuracy: number
+          charte_id: string
+          disagreements: Json | null
+          disagreements_count: number
+          execution_time_ms: number | null
+          kappa: number
+          kappa_corrected: number | null
+          metrics: Json | null
+          notes: string | null
+          openai_model: string | null
+          philosophy: string | null
+          test_id: string
+          tested_at: string | null
+          total_pairs: number
+          unjustified_disagreements: number | null
+          validated_disagreements: number | null
+          variable: string
+          version: string | null
+        }
+        Insert: {
+          accuracy: number
+          charte_id: string
+          disagreements?: Json | null
+          disagreements_count: number
+          execution_time_ms?: number | null
+          kappa: number
+          kappa_corrected?: number | null
+          metrics?: Json | null
+          notes?: string | null
+          openai_model?: string | null
+          philosophy?: string | null
+          test_id?: string
+          tested_at?: string | null
+          total_pairs: number
+          unjustified_disagreements?: number | null
+          validated_disagreements?: number | null
+          variable: string
+          version?: string | null
+        }
+        Update: {
+          accuracy?: number
+          charte_id?: string
+          disagreements?: Json | null
+          disagreements_count?: number
+          execution_time_ms?: number | null
+          kappa?: number
+          kappa_corrected?: number | null
+          metrics?: Json | null
+          notes?: string | null
+          openai_model?: string | null
+          philosophy?: string | null
+          test_id?: string
+          tested_at?: string | null
+          total_pairs?: number
+          unjustified_disagreements?: number | null
+          validated_disagreements?: number | null
+          variable?: string
+          version?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "level0_charte_tests_charte_id_fkey"
+            columns: ["charte_id"]
+            isOneToOne: false
+            referencedRelation: "level0_chartes"
+            referencedColumns: ["charte_id"]
+          },
+        ]
+      }
+      level0_chartes: {
+        Row: {
+          charte_description: string | null
+          charte_id: string
+          charte_name: string
+          created_at: string | null
+          definition: Json
+          is_baseline: boolean | null
+          notes: string | null
+          philosophy: string
+          prompt_params: Json | null
+          prompt_template: string | null
+          variable: string
+          version: string
+        }
+        Insert: {
+          charte_description?: string | null
+          charte_id: string
+          charte_name: string
+          created_at?: string | null
+          definition: Json
+          is_baseline?: boolean | null
+          notes?: string | null
+          philosophy: string
+          prompt_params?: Json | null
+          prompt_template?: string | null
+          variable: string
+          version: string
+        }
+        Update: {
+          charte_description?: string | null
+          charte_id?: string
+          charte_name?: string
+          created_at?: string | null
+          definition?: Json
+          is_baseline?: boolean | null
+          notes?: string | null
+          philosophy?: string
+          prompt_params?: Json | null
+          prompt_template?: string | null
+          variable?: string
+          version?: string
+        }
+        Relationships: []
+      }
       level1_validation_results: {
         Row: {
           algorithm_key: string
@@ -2771,6 +3344,7 @@ export type Database = {
       turntagged: {
         Row: {
           annotations: Json
+          annotator_name: string | null
           call_id: number
           date: string
           end_time: number
@@ -2794,6 +3368,7 @@ export type Database = {
         }
         Insert: {
           annotations?: Json
+          annotator_name?: string | null
           call_id: number
           date?: string
           end_time: number
@@ -2817,6 +3392,7 @@ export type Database = {
         }
         Update: {
           annotations?: Json
+          annotator_name?: string | null
           call_id?: number
           date?: string
           end_time?: number
@@ -3141,6 +3717,24 @@ export type Database = {
       }
     }
     Views: {
+      annotations_summary: {
+        Row: {
+          annotator_id: string | null
+          annotator_type: string | null
+          avg_confidence: number | null
+          avg_duration_ms: number | null
+          distinct_tests: number | null
+          first_annotation: string | null
+          last_annotation: string | null
+          max_confidence: number | null
+          min_confidence: number | null
+          reaction_annotations: number | null
+          strategy_annotations: number | null
+          total_annotations: number | null
+          unique_pairs: number | null
+        }
+        Relationships: []
+      }
       call_relations_stats: {
         Row: {
           call_id: number | null
@@ -3338,6 +3932,15 @@ export type Database = {
         }
         Relationships: []
       }
+      sync_status: {
+        Row: {
+          missing_annotations: number | null
+          pairs_with_annotations: number | null
+          sync_percentage: number | null
+          total_pairs: number | null
+        }
+        Relationships: []
+      }
       turntagged_with_context: {
         Row: {
           annotations: Json | null
@@ -3412,9 +4015,26 @@ export type Database = {
           updated_count: number
         }[]
       }
+      bulk_update_level0_gold: { Args: { updates: Json }; Returns: undefined }
       bulk_upsert_domain_references: {
         Args: { p_references: Json[] }
         Returns: undefined
+      }
+      calculate_corrected_kappa: {
+        Args: { p_test_id: string }
+        Returns: {
+          agreements: number
+          ambiguous_cases: number
+          cas_a_count: number
+          cas_b_count: number
+          cas_c_count: number
+          justified_disagreements: number
+          kappa_brut: number
+          kappa_corrected: number
+          pending_validations: number
+          total_pairs: number
+          unjustified_disagreements: number
+        }[]
       }
       calculate_turn_relations: {
         Args: { p_call_id?: number }
@@ -3422,6 +4042,65 @@ export type Database = {
           execution_time_ms: number
           total_turns: number
           updated_count: number
+        }[]
+      }
+      compare_annotators: {
+        Args: { id1: string; id2: string; type1: string; type2: string }
+        Returns: {
+          agreement_reaction: boolean
+          agreement_strategy: boolean
+          pair_id: number
+          tag1_reaction: string
+          tag1_strategy: string
+          tag2_reaction: string
+          tag2_strategy: string
+        }[]
+      }
+      find_unsynced_pairs: {
+        Args: never
+        Returns: {
+          call_id: string
+          created_at: string
+          pair_id: number
+          reaction_tag: string
+          strategy_tag: string
+        }[]
+      }
+      force_sync_all_pairs: { Args: never; Returns: number }
+      force_sync_pair: { Args: { p_pair_id: number }; Returns: undefined }
+      get_annotations_for_pair: {
+        Args: { p_pair_id: number }
+        Returns: {
+          annotated_at: string
+          annotation_id: string
+          annotator_id: string
+          annotator_type: string
+          confidence: number
+          reaction_tag: string
+          reasoning: string
+          strategy_tag: string
+          test_id: string
+        }[]
+      }
+      get_annotator_stats: {
+        Args: { p_annotator_id: string; p_annotator_type: string }
+        Returns: {
+          avg_confidence: number
+          first_annotation: string
+          last_annotation: string
+          reaction_count: number
+          strategy_count: number
+          total_annotations: number
+        }[]
+      }
+      get_available_annotators: {
+        Args: { p_variable?: string }
+        Returns: {
+          annotation_count: number
+          annotator_id: string
+          annotator_type: string
+          first_annotation: string
+          last_annotation: string
         }[]
       }
       get_calls_summary: {
@@ -3458,6 +4137,24 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_common_annotations: {
+        Args: {
+          p_annotator1_id: string
+          p_annotator1_type: string
+          p_annotator2_id: string
+          p_annotator2_type: string
+          p_variable?: string
+        }
+        Returns: {
+          confidence1: number
+          confidence2: number
+          pair_id: number
+          tag1: string
+          tag2: string
+          variable: string
+          verbatim: string
+        }[]
+      }
       get_jwt_claims: {
         Args: never
         Returns: {
@@ -3465,6 +4162,7 @@ export type Database = {
           jwt_role: string
         }[]
       }
+      get_source_annotator: { Args: { p_call_id: string }; Returns: string }
       get_tag_families: {
         Args: never
         Returns: {
@@ -3541,6 +4239,7 @@ export type Database = {
           updated: number
         }[]
       }
+      refresh_annotations_summary: { Args: never; Returns: undefined }
       refresh_h2_analysis_pairs_v2: {
         Args: { p_call_ids?: string[]; p_incremental?: boolean }
         Returns: {

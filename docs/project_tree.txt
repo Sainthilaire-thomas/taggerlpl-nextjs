@@ -110,12 +110,16 @@ useAnalysisPairs-working.txt
 |-- docs/
 |   |-- ai_context/
 |   |   |-- specs/
+|   |   |   |-- FLUX_DONNEES_LEVEL0.md
+|   |   |   |-- SPECS_KAPPA_COMPARATOR.md
+|   |   |   |-- SPECS_MODALITE_AUDIO.md
 |   |   |   +-- SPEC-VERSIONING-INVESTIGATION.md
 |   |   |-- versioning/
 |   |   |   |-- base-context-versioning-complement.md
 |   |   |   +-- mission-2025-11-24-versioning-investigation.md
 |   |   |-- AI-CONTEXT-WORKFLOW-SPEC.md
 |   |   |-- base-context.md
+|   |   |-- MISSION_SPRINT4_v2_2025-12-18 .md
 |   |   |-- mission-2025-01-23-typescript-cleanup.md
 |   |   |-- mission-2025-01-24-level1-investigation.md
 |   |   |-- mission-2025-11-24-versioning-investigation-avancement.md
@@ -124,11 +128,13 @@ useAnalysisPairs-working.txt
 |   |   |-- mission-2025-12-11-level1-interface-evolution.md
 |   |   |-- mission-2025-12-12-level1-section-c-final.md
 |   |   |-- mission-level0-inter-annotator-agreement.md
+|   |   |-- mission-level0-SPECS-unified-annotations-v2.0 (1).md
 |   |   |-- mission-next-M2-M3-tuning.md
 |   |   |-- mission-next-M2-M3-tuning-v3.md
 |   |   |-- mission-next-M2-M3-tuning-v4.md
 |   |   |-- mission-next-M2-M3-tuning-v5-PAUSED.md
 |   |   |-- SESSION_2025-11-25_BILAN_PHASE1-2-3.md
+|   |   |-- SESSION_SPRINT3_SYNTHESE_COURTE.md
 |   |   |-- session-reprise-2025-11-25-phase4-debugging.md
 |   |   +-- USER_GUIDE_Phase4_Versioning_Investigation.md
 |   |-- architecture/
@@ -164,7 +170,8 @@ useAnalysisPairs-working.txt
 |   |   |-- mission-2025-12-16-level0-SPECS-unified-annotations.md
 |   |   |-- mission-2025-12-16-prosody-analysis-specs.md
 |   |   |-- mission-2025-12-16-silence-detection-development.md
-|   |   +-- mission-2025-12-17-unified-annotations-sync.md
+|   |   |-- mission-2025-12-17-unified-annotations-sync.md
+|   |   +-- mission-level0-SPECS-unified-annotations-v2.0.md
 |   |-- tuning/
 |   |   +-- TUNING_ALGORITHMES_M1M2M3.md
 |   |-- calls_ddd_tree.txt
@@ -181,6 +188,7 @@ useAnalysisPairs-working.txt
 |   |-- complete-step-0-5.ps1
 |   |-- Fix-Phase3Imports.ps1
 |   |-- fix-recovered-classifiers.ps1
+|   |-- fix-sprint3-errors.ps1
 |   |-- generate-structure-report.ps1
 |   |-- generate-tree.ps1
 |   |-- generate-tree-simple.ps1
@@ -557,8 +565,13 @@ useAnalysisPairs-working.txt
 |   |   |   |-- level0-gold/
 |   |   |   |   |-- domain/
 |   |   |   |   |   +-- services/
+|   |   |   |   |       |-- AnnotationService.ts
+|   |   |   |   |       |-- CharteManagementService.ts
 |   |   |   |   |       |-- CharteRegistry.ts
+|   |   |   |   |       |-- CharteRegistry.ts.v1.0.backup
+|   |   |   |   |       |-- HypothesisRobustnessService.ts
 |   |   |   |   |       |-- index.ts
+|   |   |   |   |       |-- InterAnnotatorAgreementService.ts
 |   |   |   |   |       |-- KappaCalculationService.ts
 |   |   |   |   |       |-- MultiCharteAnnotator.ts
 |   |   |   |   |       |-- OpenAIAnnotatorService.ts

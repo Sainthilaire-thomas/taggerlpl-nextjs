@@ -468,3 +468,328 @@ export interface PaginatedResult<T> {
   offset: number;
   has_more: boolean;
 }
+
+// ============================================================================
+// PATCH POUR Level0Types.ts - SPRINT 4
+// ============================================================================
+// À ajouter à la fin du fichier Level0Types.ts existant
+// Ne pas remplacer, juste ajouter ces types supplémentaires
+
+// ============================================================================
+// VALIDATION DÉSACCORDS - SPRINT 4
+// ============================================================================
+
+/**
+ * Type de décision de validation d'un désaccord
+ */
+export type ValidationDecision = 
+  | 'CAS_A_LLM_CORRECT'      // LLM a raison, tag manuel incorrect → Corriger gold standard
+  | 'CAS_B_LLM_INCORRECT'    // Tag manuel correct, LLM incorrect → Améliorer prompt
+  | 'CAS_C_AMBIGUOUS';       // Ambiguïté légitime → Exclure du calcul
+
+/**
+ * Option de décision de validation (pour UI)
+ */
+export interface ValidationDecisionOption {
+  value: ValidationDecision;
+  label: string;
+  description: string;
+  color: string;
+}
+
+/**
+ * Constantes pour les décisions de validation
+ */
+export const VALIDATION_DECISIONS: ValidationDecisionOption[] = [
+  {
+    value: 'CAS_A_LLM_CORRECT',
+    label: 'CAS A - LLM Correct',
+    description: 'Le LLM a raison, le tag manuel est incorrect (modalité, erreur humaine)',
+    color: '#4caf50'
+  },
+  {
+    value: 'CAS_B_LLM_INCORRECT',
+    label: 'CAS B - LLM Incorrect',
+    description: 'Le tag manuel est correct, le LLM s\'est trompé (améliorer le prompt)',
+    color: '#f44336'
+  },
+  {
+    value: 'CAS_C_AMBIGUOUS',
+    label: 'CAS C - Ambiguïté',
+    description: 'Cas ambigu où les deux tags se défendent (exclure du Kappa)',
+    color: '#ff9800'
+  }
+];
+
+/**
+ * Validation d'un désaccord (table disagreement_validations)
+ */
+export interface DisagreementValidation {
+  validation_id: string;
+  test_id: string;
+  pair_id: number;
+  charte_id: string;
+  
+  // Tags en désaccord
+  manual_tag: string;
+  llm_tag: string;
+  llm_confidence?: number;
+  llm_reasoning?: string;
+  
+  // Décision
+  validation_decision: ValidationDecision;
+  corrected_tag?: string;  // Si CAS A
+  validation_comment: string;
+  
+  // Métadonnées
+  validated_by: string;
+  validated_at: string;
+  
+  // Contexte
+  verbatim: string;
+  context_before?: string;
+  context_after?: string;
+}
+
+/**
+ * Input pour créer une validation de désaccord
+ */
+export interface DisagreementValidationInput {
+  test_id: string;
+  pair_id: number;
+  charte_id: string;
+  manual_tag: string;
+  llm_tag: string;
+  llm_confidence?: number;
+  llm_reasoning?: string;
+  validation_decision: ValidationDecision;
+  corrected_tag?: string;
+  validation_comment: string;
+  verbatim: string;
+  context_before?: string;
+  context_after?: string;
+}
+
+/**
+ * Désaccord en attente de validation
+ */
+export interface PendingDisagreement {
+  pair_id: number;
+  test_id: string;
+  charte_id: string;
+  manual_tag: string;
+  llm_tag: string;
+  llm_confidence?: number;
+  llm_reasoning?: string;
+  verbatim: string;
+  context_before?: string;
+  context_after?: string;
+  call_id?: string;
+}
+
+// ============================================================================
+// KAPPA CORRIGÉ - SPRINT 4
+// ============================================================================
+
+/**
+ * Résultat du calcul de Kappa corrigé (fonction SQL calculate_corrected_kappa)
+ */
+export interface CorrectedKappaResult {
+  kappa_brut: number | null;
+  kappa_corrected: number | null;
+  total_pairs: number;
+  agreements: number;
+  justified_disagreements: number;      // CAS A count
+  unjustified_disagreements: number;    // CAS B count
+  ambiguous_cases: number;              // CAS C count
+  pending_validations: number;
+  cas_a_count: number;
+  cas_b_count: number;
+  cas_c_count: number;
+}
+
+/**
+ * Statistiques de validation pour un test
+ */
+export interface ValidationStats {
+  total_disagreements: number;
+  validated_count: number;
+  pending_count: number;
+  cas_a_percentage: number;
+  cas_b_percentage: number;
+  cas_c_percentage: number;
+  kappa_improvement: number;  // kappa_corrected - kappa_brut
+}
+
+// ============================================================================
+// COMPARATEUR KAPPA FLEXIBLE - SPRINT 4 EXTENSION 1
+// ============================================================================
+
+/**
+ * Annotateur pour comparateur (structure enrichie)
+ */
+export interface AnnotatorForComparison {
+  type: AnnotatorType;
+  id: string;
+  label: string;
+  modalityLabel: string;
+  count: number;
+  firstAnnotation: string;
+  lastAnnotation: string;
+}
+
+/**
+ * Résultat de comparaison Kappa entre 2 annotateurs (fonction SQL get_common_annotations)
+ */
+export interface KappaComparisonResult {
+  success: boolean;
+  error?: string;
+  annotator1?: AnnotatorIdentifier;
+  annotator2?: AnnotatorIdentifier;
+  kappa?: number;
+  accuracy?: number;
+  total_pairs: number;
+  agreements?: number;
+  disagreements_count?: number;
+  disagreements?: DisagreementDetailComparison[];
+  confusion_matrix?: ConfusionMatrix;
+}
+
+/**
+ * Détail d'un désaccord dans une comparaison
+ */
+export interface DisagreementDetailComparison {
+  pair_id: number;
+  tag1: string;
+  tag2: string;
+  verbatim: string;
+  confidence1?: number;
+  confidence2?: number;
+}
+
+/**
+ * Matrice de confusion
+ */
+export interface ConfusionMatrix {
+  categories: string[];
+  matrix: number[][];
+}
+
+/**
+ * Annotation commune entre 2 annotateurs (retour SQL get_common_annotations)
+ */
+export interface CommonAnnotation {
+  pair_id: number;
+  tag1: string;
+  tag2: string;
+  confidence1?: number;
+  confidence2?: number;
+  verbatim: string;
+  variable: 'X' | 'Y';
+}
+
+// ============================================================================
+// SERVICE RESPONSES - SPRINT 4
+// ============================================================================
+
+/**
+ * Réponse générique d'un service
+ */
+export interface ValidationServiceResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+/**
+ * Réponse spécifique validation désaccord
+ */
+export interface DisagreementValidationResponse {
+  success: boolean;
+  validation?: DisagreementValidation;
+  correctedKappa?: CorrectedKappaResult;
+  error?: string;
+}
+
+// ============================================================================
+// UI STATE - SPRINT 4
+// ============================================================================
+
+/**
+ * État UI pour validation désaccords
+ */
+export interface DisagreementValidationState {
+  currentIndex: number;
+  totalDisagreements: number;
+  validations: Map<number, DisagreementValidation>;
+  pendingDisagreements: PendingDisagreement[];
+  isValidating: boolean;
+  error: string | null;
+}
+
+// ============================================================================
+// HELPERS - SPRINT 4
+// ============================================================================
+
+/**
+ * Obtenir le label d'une décision de validation
+ */
+export function getValidationDecisionLabel(decision: ValidationDecision): string {
+  const option = VALIDATION_DECISIONS.find(d => d.value === decision);
+  return option?.label || decision;
+}
+
+/**
+ * Obtenir la couleur d'une décision de validation
+ */
+export function getValidationDecisionColor(decision: ValidationDecision): string {
+  const option = VALIDATION_DECISIONS.find(d => d.value === decision);
+  return option?.color || '#757575';
+}
+
+/**
+ * Interpréter valeur Kappa (enrichissement de la fonction existante)
+ */
+export function interpretKappaValue(kappa: number | null): string {
+  if (kappa === null || isNaN(kappa)) return 'Invalide';
+  if (kappa < 0) return 'Pire que hasard';
+  if (kappa < 0.20) return 'Très faible';
+  if (kappa < 0.40) return 'Faible';
+  if (kappa < 0.60) return 'Modéré';
+  if (kappa < 0.80) return 'Bon';
+  return 'Excellent';
+}
+
+/**
+ * Formater valeur Kappa pour affichage
+ */
+export function formatKappa(kappa: number | null): string {
+  if (kappa === null || isNaN(kappa)) return 'N/A';
+  return kappa.toFixed(3);
+}
+
+/**
+ * Calculer amélioration Kappa
+ */
+export function calculateKappaImprovement(
+  kappaBrut: number | null,
+  kappaCorrected: number | null
+): number | null {
+  if (kappaBrut === null || kappaCorrected === null) return null;
+  if (isNaN(kappaBrut) || isNaN(kappaCorrected)) return null;
+  return kappaCorrected - kappaBrut;
+}
+
+/**
+ * Formater amélioration Kappa pour affichage
+ */
+export function formatKappaImprovement(improvement: number | null): string {
+  if (improvement === null || isNaN(improvement)) return 'N/A';
+  const sign = improvement >= 0 ? '+' : '';
+  return `${sign}${improvement.toFixed(3)}`;
+}
+
+// ============================================================================
+// FIN DU PATCH SPRINT 4
+// ============================================================================
