@@ -35,16 +35,12 @@ import { useLevel0Testing } from "../hooks/useLevel0Testing";
 import { CharteTestResult } from "@/types/algorithm-lab/Level0Types";
 import { DisagreementsPanel } from "./DisagreementsPanel";
 import { CharteRegistry } from "../../domain/services";
-import { 
-  DisagreementValidationPanel,
-  KappaComparator,
-  
-} from "./index";
-import { 
-  DisagreementValidationPanel,
-  GoldStandardManager,
-  DerivationWizard
-} from "../../level0-gold/presentation/components";
+
+import { DisagreementValidationPanel } from './DisagreementValidationPanel';
+
+import { KappaComparator } from './KappaComparator';
+import { GoldStandardManager } from './GoldStandardManager';
+import { DerivationWizard } from './DerivationWizard';
 
 export const Level0Interface: React.FC = () => {
   const { loading, progress, results, error, testVariable, loadSavedResults } = useLevel0Testing();
@@ -53,8 +49,9 @@ export const Level0Interface: React.FC = () => {
   const [selectedResult, setSelectedResult] = useState<CharteTestResult | null>(null);
   
   // 🆕 État pour les onglets
-  const [currentTab, setCurrentTab] = useState<'tests' | 'validation' | 'comparator'>('tests');
-  const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
+  const [currentTab, setCurrentTab] = useState<'tests' | 'goldstandards' | 'validation' | 'comparator'>('tests');
+const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
+const [showDerivationWizard, setShowDerivationWizard] = useState(false);
   
   // État pour sélection de chartes
   const [selectedChartes, setSelectedChartes] = useState<string[]>([]);
@@ -99,15 +96,16 @@ export const Level0Interface: React.FC = () => {
       </Typography>
 
       {/* 🆕 Système d'onglets */}
-      <Tabs 
-        value={currentTab} 
-        onChange={(e, v) => setCurrentTab(v)} 
-        sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
-      >
-        <Tab label="Tests de Chartes" value="tests" />
-        <Tab label="Validation Désaccords" value="validation" />
-        <Tab label="Comparateur Kappa" value="comparator" />
-      </Tabs>
+<Tabs 
+  value={currentTab} 
+  onChange={(e, v) => setCurrentTab(v)} 
+  sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
+>
+  <Tab label="Tests de Chartes" value="tests" />
+  <Tab label="⭐ Gold Standards" value="goldstandards" />
+  <Tab label="Validation Désaccords" value="validation" />
+  <Tab label="Comparateur Kappa" value="comparator" />
+</Tabs>
 
       {/* ============ ONGLET TESTS ============ */}
       {currentTab === 'tests' && (
@@ -366,25 +364,130 @@ export const Level0Interface: React.FC = () => {
           )}
         </>
       )}
+      {/* ============ ONGLET GOLD STANDARDS ============ */}
+{currentTab === 'goldstandards' && (
+  <>
+    <GoldStandardManager
+      onCreateNew={() => {
+        alert('Création manuelle : Annotation complète de 901 paires (fonctionnalité à venir)');
+      }}
+      onCreateByDerivation={() => {
+        setShowDerivationWizard(true);
+      }}
+    />
+    
+    {/* Wizard de dérivation */}
+    <DerivationWizard
+      open={showDerivationWizard}
+      onClose={() => setShowDerivationWizard(false)}
+      onSuccess={(goldStandardId, pairsToReview) => {
+        setShowDerivationWizard(false);
+        alert(`✅ Gold standard ${goldStandardId} créé !\n\n${pairsToReview.length} paires à ré-annoter.\n\nTemps estimé : ~${Math.ceil(pairsToReview.length * 1.5)} minutes`);
+        // TODO: Naviguer vers interface de ré-annotation
+      }}
+    />
+  </>
+)}
 
-      {/* ============ ONGLET VALIDATION ============ */}
-      {currentTab === 'validation' && (
-        <>
-          {selectedTestId ? (
-            <DisagreementValidationPanel 
-              testId={selectedTestId}
-              onValidationComplete={() => {
-                // Recharger les résultats
-                loadSavedResults(variable);
-              }}
-            />
-          ) : (
+     {/* ============ ONGLET VALIDATION ============ */}
+{currentTab === 'validation' && (
+  <>
+    {!selectedTestId ? (
+      <Card>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Sélectionner un test à valider
+          </Typography>
+          <Typography variant="body2" color="text.secondary" mb={3}>
+            Choisissez un test avec des désaccords pour valider les annotations
+          </Typography>
+
+          {/* Liste des tests avec désaccords */}
+          {results.length === 0 ? (
             <Alert severity="info">
-              Retournez dans l'onglet "Tests de Chartes" et cliquez sur "Valider" pour un test ayant des désaccords.
+              Aucun test chargé. Cliquez sur "Charger résultats sauvegardés" dans l'onglet "Tests de Chartes" pour voir les tests existants.
+            </Alert>
+          ) : (
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell><strong>Charte</strong></TableCell>
+                  <TableCell align="center"><strong>Variable</strong></TableCell>
+                  <TableCell align="center"><strong>Kappa</strong></TableCell>
+                  <TableCell align="center"><strong>Désaccords</strong></TableCell>
+                  <TableCell align="center"><strong>Date</strong></TableCell>
+                  <TableCell align="center"><strong>Action</strong></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {results
+                  .filter(r => r.disagreements_count > 0)
+                  .sort((a, b) => new Date(b.tested_at).getTime() - new Date(a.tested_at).getTime())
+                  .map((result) => (
+                    <TableRow key={result.test_id}>
+                      <TableCell>{result.charte_name}</TableCell>
+                      <TableCell align="center">
+                        <Chip label={variable} size="small" color="primary" />
+                      </TableCell>
+                      <TableCell align="center">
+                        {result.kappa.toFixed(3)}
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip 
+                          label={`${result.disagreements_count} désaccords`}
+                          size="small"
+                          color="warning"
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography variant="caption">
+                          {new Date(result.tested_at).toLocaleDateString('fr-FR')}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Button
+                          variant="contained"
+                          size="small"
+                          onClick={() => setSelectedTestId(result.test_id)}
+                        >
+                          Valider
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          )}
+
+          {results.length > 0 && results.filter(r => r.disagreements_count > 0).length === 0 && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              Aucun test avec désaccords trouvé. Tous les tests sont en accord parfait ! 🎉
             </Alert>
           )}
-        </>
-      )}
+        </CardContent>
+      </Card>
+    ) : (
+      <>
+        <Button
+          variant="outlined"
+          onClick={() => setSelectedTestId(null)}
+          sx={{ mb: 2 }}
+        >
+          ← Retour à la sélection
+        </Button>
+        
+        <DisagreementValidationPanel 
+          testId={selectedTestId}
+          onComplete={() => {
+            loadSavedResults(variable);
+            setSelectedTestId(null);
+            alert('Tous les désaccords ont été validés !');
+          }}
+        />
+      </>
+    )}
+  </>
+)}
 
       {/* ============ ONGLET COMPARATEUR ============ */}
       {currentTab === 'comparator' && (

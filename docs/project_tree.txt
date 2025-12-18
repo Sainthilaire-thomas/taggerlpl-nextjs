@@ -120,6 +120,7 @@ useAnalysisPairs-working.txt
 |   |   |-- AI-CONTEXT-WORKFLOW-SPEC.md
 |   |   |-- base-context.md
 |   |   |-- MISSION_SPRINT4_v2_2025-12-18 .md
+|   |   |-- MISSION_SPRINT4_v3_2025-12-18_GOLD_STANDARDS.md
 |   |   |-- mission-2025-01-23-typescript-cleanup.md
 |   |   |-- mission-2025-01-24-level1-investigation.md
 |   |   |-- mission-2025-11-24-versioning-investigation-avancement.md
@@ -569,6 +570,8 @@ useAnalysisPairs-working.txt
 |   |   |   |   |       |-- CharteManagementService.ts
 |   |   |   |   |       |-- CharteRegistry.ts
 |   |   |   |   |       |-- CharteRegistry.ts.v1.0.backup
+|   |   |   |   |       |-- DisagreementValidationService.ts
+|   |   |   |   |       |-- GoldStandardService.ts
 |   |   |   |   |       |-- HypothesisRobustnessService.ts
 |   |   |   |   |       |-- index.ts
 |   |   |   |   |       |-- InterAnnotatorAgreementService.ts
@@ -576,15 +579,19 @@ useAnalysisPairs-working.txt
 |   |   |   |   |       |-- MultiCharteAnnotator.ts
 |   |   |   |   |       |-- OpenAIAnnotatorService.ts
 |   |   |   |   |       +-- SupabaseLevel0Service.ts
-|   |   |   |   +-- ui/
+|   |   |   |   +-- presentation/
 |   |   |   |       |-- components/
+|   |   |   |       |   |-- DerivationWizard.tsx
 |   |   |   |       |   |-- DisagreementsPanel.tsx
+|   |   |   |       |   |-- DisagreementValidationPanel.tsx
+|   |   |   |       |   |-- GoldStandardManager.tsx
 |   |   |   |       |   |-- index.ts
-|   |   |   |       |   |-- InterAnnotatorAgreement.tsx
-|   |   |   |       |   |-- Level0Interface.tsx
-|   |   |   |       |   +-- Level0Tabs.tsx
+|   |   |   |       |   |-- KappaComparator.tsx
+|   |   |   |       |   +-- Level0Interface.tsx
 |   |   |   |       +-- hooks/
 |   |   |   |           |-- index.ts
+|   |   |   |           |-- useDisagreementValidation.ts
+|   |   |   |           |-- useKappaComparison.ts
 |   |   |   |           |-- useLevel0Testing.ts
 |   |   |   |           +-- useLevel0Validation.ts
 |   |   |   |-- level1-validation/
