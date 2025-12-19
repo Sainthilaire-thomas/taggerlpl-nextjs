@@ -6,8 +6,11 @@
 export { GoldStandardManager } from './GoldStandardManager';
 export { DerivationWizard } from './DerivationWizard';
 export { DisagreementValidationPanel } from './DisagreementValidationPanel';
+export { DisagreementDetailView } from './DisagreementDetailView';
 
 // Composants existants (migrés depuis ui/)
 export { DisagreementsPanel } from './DisagreementsPanel';
 export { KappaComparator } from './KappaComparator';
 export { Level0Interface } from './Level0Interface';
+
+export { CharteManager } from './CharteManager';

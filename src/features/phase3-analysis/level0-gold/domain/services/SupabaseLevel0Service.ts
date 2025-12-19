@@ -37,7 +37,7 @@ export class SupabaseLevel0Service {
     }
   }
 
- static async saveCharteTestResult(result: CharteTestResult): Promise<void> {
+  static async saveCharteTestResult(result: CharteTestResult): Promise<void> {
     try {
       // Charger la charte pour récupérer philosophy et version
       const { data: charte, error: charteError } = 
@@ -49,6 +49,8 @@ export class SupabaseLevel0Service {
       }
       
       const supabase = this.getClient();
+      
+      // 1. Sauvegarder le résultat du test
       const { data, error } = await supabase
         .from("level0_charte_tests")
         .insert({
@@ -74,6 +76,21 @@ export class SupabaseLevel0Service {
       }
 
       console.log("[SupabaseLevel0Service] Test result saved successfully");
+
+      // ⭐ 2. NOUVEAU : Lier les annotations au test
+    
+const { error: updateError } = await supabase
+  .from('annotations')
+  .update({ test_id: result.test_id })
+  .eq('annotator_id', result.charte_id)
+  .is('test_id', null);
+
+if (updateError) {
+  console.error("[SupabaseLevel0Service] Error linking annotations:", updateError);
+  throw new Error(`Error linking annotations: ${updateError.message}`);
+}
+
+console.log(`[SupabaseLevel0Service] Annotations linked to test ${result.test_id}`);
     } catch (error: any) {
       console.error("[SupabaseLevel0Service] Exception:", error);
       throw error;

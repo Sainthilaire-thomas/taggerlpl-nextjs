@@ -582,6 +582,7 @@ useAnalysisPairs-working.txt
 |   |   |   |   +-- presentation/
 |   |   |   |       |-- components/
 |   |   |   |       |   |-- DerivationWizard.tsx
+|   |   |   |       |   |-- DisagreementDetailView.tsx
 |   |   |   |       |   |-- DisagreementsPanel.tsx
 |   |   |   |       |   |-- DisagreementValidationPanel.tsx
 |   |   |   |       |   |-- GoldStandardManager.tsx

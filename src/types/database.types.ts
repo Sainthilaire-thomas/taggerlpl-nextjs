@@ -8,7 +8,7 @@
  *   - Or run: npm run generate:types
  *   - Or run: .\scripts\generate-types.ps1
  * 
- * Generated on: 2025-12-18 13:35:46
+ * Generated on: 2025-12-19 07:46:50
  * Project ID: jregkxiwrnquslbocicz
  */
 export type Json =
@@ -305,8 +305,6 @@ export type Database = {
           created_at: string | null
           extended_context: Json | null
           level0_annotator_agreement: number | null
-          level0_gold_client: string | null
-          level0_gold_conseiller: string | null
           level0_notes: string | null
           level0_validated_at: string | null
           level0_validated_by: string | null
@@ -410,8 +408,6 @@ export type Database = {
           created_at?: string | null
           extended_context?: Json | null
           level0_annotator_agreement?: number | null
-          level0_gold_client?: string | null
-          level0_gold_conseiller?: string | null
           level0_notes?: string | null
           level0_validated_at?: string | null
           level0_validated_by?: string | null
@@ -515,8 +511,6 @@ export type Database = {
           created_at?: string | null
           extended_context?: Json | null
           level0_annotator_agreement?: number | null
-          level0_gold_client?: string | null
-          level0_gold_conseiller?: string | null
           level0_notes?: string | null
           level0_validated_at?: string | null
           level0_validated_by?: string | null
@@ -606,6 +600,324 @@ export type Database = {
         Relationships: []
       }
       analysis_pairs_backup_20251217: {
+        Row: {
+          annotations: Json | null
+          call_id: string | null
+          client_end_time: number | null
+          client_speaker: string | null
+          client_start_time: number | null
+          client_turn_id: number | null
+          client_verbatim: string | null
+          computation_status: string | null
+          conseiller_end_time: number | null
+          conseiller_speaker: string | null
+          conseiller_start_time: number | null
+          conseiller_turn_id: number | null
+          conseiller_verbatim: string | null
+          created_at: string | null
+          extended_context: Json | null
+          level0_annotator_agreement: number | null
+          level0_gold_client: string | null
+          level0_gold_conseiller: string | null
+          level0_notes: string | null
+          level0_validated_at: string | null
+          level0_validated_by: string | null
+          m1_action_verbs: string[] | null
+          m1_algorithm_key: string | null
+          m1_algorithm_version: string | null
+          m1_computed_at: string | null
+          m1_total_words: number | null
+          m1_verb_count: number | null
+          m1_verb_density: number | null
+          m2_algorithm_key: string | null
+          m2_algorithm_version: string | null
+          m2_computed_at: string | null
+          m2_details: Json | null
+          m2_global_alignment: number | null
+          m2_lexical_alignment: number | null
+          m2_scores: Json | null
+          m2_semantic_alignment: number | null
+          m2_shared_terms: string[] | null
+          m3_algorithm_key: string | null
+          m3_algorithm_version: string | null
+          m3_clarification_count: number | null
+          m3_cognitive_load: string | null
+          m3_cognitive_score: number | null
+          m3_computed_at: string | null
+          m3_hesitation_count: number | null
+          m3_patterns: Json | null
+          next1_end_time: number | null
+          next1_speaker: string | null
+          next1_start_time: number | null
+          next1_tag: string | null
+          next1_turn_id: number | null
+          next1_verbatim: string | null
+          next2_end_time: number | null
+          next2_speaker: string | null
+          next2_start_time: number | null
+          next2_tag: string | null
+          next2_turn_id: number | null
+          next2_verbatim: string | null
+          next3_end_time: number | null
+          next3_speaker: string | null
+          next3_start_time: number | null
+          next3_tag: string | null
+          next3_turn_id: number | null
+          next3_verbatim: string | null
+          pair_id: number | null
+          pair_index: number | null
+          prev1_end_time: number | null
+          prev1_speaker: string | null
+          prev1_start_time: number | null
+          prev1_tag: string | null
+          prev1_turn_id: number | null
+          prev1_verbatim: string | null
+          prev2_end_time: number | null
+          prev2_speaker: string | null
+          prev2_start_time: number | null
+          prev2_tag: string | null
+          prev2_turn_id: number | null
+          prev2_verbatim: string | null
+          prev3_end_time: number | null
+          prev3_speaker: string | null
+          prev3_start_time: number | null
+          prev3_tag: string | null
+          prev3_turn_id: number | null
+          prev3_verbatim: string | null
+          reaction_tag: string | null
+          strategy_color: string | null
+          strategy_family: string | null
+          strategy_originespeaker: string | null
+          strategy_tag: string | null
+          updated_at: string | null
+          x_algorithm_key: string | null
+          x_algorithm_version: string | null
+          x_computation_time_ms: number | null
+          x_computed_at: string | null
+          x_confidence: number | null
+          x_evidences: Json | null
+          x_predicted_tag: string | null
+          y_algorithm_key: string | null
+          y_algorithm_version: string | null
+          y_computation_time_ms: number | null
+          y_computed_at: string | null
+          y_confidence: number | null
+          y_evidences: Json | null
+          y_predicted_tag: string | null
+        }
+        Insert: {
+          annotations?: Json | null
+          call_id?: string | null
+          client_end_time?: number | null
+          client_speaker?: string | null
+          client_start_time?: number | null
+          client_turn_id?: number | null
+          client_verbatim?: string | null
+          computation_status?: string | null
+          conseiller_end_time?: number | null
+          conseiller_speaker?: string | null
+          conseiller_start_time?: number | null
+          conseiller_turn_id?: number | null
+          conseiller_verbatim?: string | null
+          created_at?: string | null
+          extended_context?: Json | null
+          level0_annotator_agreement?: number | null
+          level0_gold_client?: string | null
+          level0_gold_conseiller?: string | null
+          level0_notes?: string | null
+          level0_validated_at?: string | null
+          level0_validated_by?: string | null
+          m1_action_verbs?: string[] | null
+          m1_algorithm_key?: string | null
+          m1_algorithm_version?: string | null
+          m1_computed_at?: string | null
+          m1_total_words?: number | null
+          m1_verb_count?: number | null
+          m1_verb_density?: number | null
+          m2_algorithm_key?: string | null
+          m2_algorithm_version?: string | null
+          m2_computed_at?: string | null
+          m2_details?: Json | null
+          m2_global_alignment?: number | null
+          m2_lexical_alignment?: number | null
+          m2_scores?: Json | null
+          m2_semantic_alignment?: number | null
+          m2_shared_terms?: string[] | null
+          m3_algorithm_key?: string | null
+          m3_algorithm_version?: string | null
+          m3_clarification_count?: number | null
+          m3_cognitive_load?: string | null
+          m3_cognitive_score?: number | null
+          m3_computed_at?: string | null
+          m3_hesitation_count?: number | null
+          m3_patterns?: Json | null
+          next1_end_time?: number | null
+          next1_speaker?: string | null
+          next1_start_time?: number | null
+          next1_tag?: string | null
+          next1_turn_id?: number | null
+          next1_verbatim?: string | null
+          next2_end_time?: number | null
+          next2_speaker?: string | null
+          next2_start_time?: number | null
+          next2_tag?: string | null
+          next2_turn_id?: number | null
+          next2_verbatim?: string | null
+          next3_end_time?: number | null
+          next3_speaker?: string | null
+          next3_start_time?: number | null
+          next3_tag?: string | null
+          next3_turn_id?: number | null
+          next3_verbatim?: string | null
+          pair_id?: number | null
+          pair_index?: number | null
+          prev1_end_time?: number | null
+          prev1_speaker?: string | null
+          prev1_start_time?: number | null
+          prev1_tag?: string | null
+          prev1_turn_id?: number | null
+          prev1_verbatim?: string | null
+          prev2_end_time?: number | null
+          prev2_speaker?: string | null
+          prev2_start_time?: number | null
+          prev2_tag?: string | null
+          prev2_turn_id?: number | null
+          prev2_verbatim?: string | null
+          prev3_end_time?: number | null
+          prev3_speaker?: string | null
+          prev3_start_time?: number | null
+          prev3_tag?: string | null
+          prev3_turn_id?: number | null
+          prev3_verbatim?: string | null
+          reaction_tag?: string | null
+          strategy_color?: string | null
+          strategy_family?: string | null
+          strategy_originespeaker?: string | null
+          strategy_tag?: string | null
+          updated_at?: string | null
+          x_algorithm_key?: string | null
+          x_algorithm_version?: string | null
+          x_computation_time_ms?: number | null
+          x_computed_at?: string | null
+          x_confidence?: number | null
+          x_evidences?: Json | null
+          x_predicted_tag?: string | null
+          y_algorithm_key?: string | null
+          y_algorithm_version?: string | null
+          y_computation_time_ms?: number | null
+          y_computed_at?: string | null
+          y_confidence?: number | null
+          y_evidences?: Json | null
+          y_predicted_tag?: string | null
+        }
+        Update: {
+          annotations?: Json | null
+          call_id?: string | null
+          client_end_time?: number | null
+          client_speaker?: string | null
+          client_start_time?: number | null
+          client_turn_id?: number | null
+          client_verbatim?: string | null
+          computation_status?: string | null
+          conseiller_end_time?: number | null
+          conseiller_speaker?: string | null
+          conseiller_start_time?: number | null
+          conseiller_turn_id?: number | null
+          conseiller_verbatim?: string | null
+          created_at?: string | null
+          extended_context?: Json | null
+          level0_annotator_agreement?: number | null
+          level0_gold_client?: string | null
+          level0_gold_conseiller?: string | null
+          level0_notes?: string | null
+          level0_validated_at?: string | null
+          level0_validated_by?: string | null
+          m1_action_verbs?: string[] | null
+          m1_algorithm_key?: string | null
+          m1_algorithm_version?: string | null
+          m1_computed_at?: string | null
+          m1_total_words?: number | null
+          m1_verb_count?: number | null
+          m1_verb_density?: number | null
+          m2_algorithm_key?: string | null
+          m2_algorithm_version?: string | null
+          m2_computed_at?: string | null
+          m2_details?: Json | null
+          m2_global_alignment?: number | null
+          m2_lexical_alignment?: number | null
+          m2_scores?: Json | null
+          m2_semantic_alignment?: number | null
+          m2_shared_terms?: string[] | null
+          m3_algorithm_key?: string | null
+          m3_algorithm_version?: string | null
+          m3_clarification_count?: number | null
+          m3_cognitive_load?: string | null
+          m3_cognitive_score?: number | null
+          m3_computed_at?: string | null
+          m3_hesitation_count?: number | null
+          m3_patterns?: Json | null
+          next1_end_time?: number | null
+          next1_speaker?: string | null
+          next1_start_time?: number | null
+          next1_tag?: string | null
+          next1_turn_id?: number | null
+          next1_verbatim?: string | null
+          next2_end_time?: number | null
+          next2_speaker?: string | null
+          next2_start_time?: number | null
+          next2_tag?: string | null
+          next2_turn_id?: number | null
+          next2_verbatim?: string | null
+          next3_end_time?: number | null
+          next3_speaker?: string | null
+          next3_start_time?: number | null
+          next3_tag?: string | null
+          next3_turn_id?: number | null
+          next3_verbatim?: string | null
+          pair_id?: number | null
+          pair_index?: number | null
+          prev1_end_time?: number | null
+          prev1_speaker?: string | null
+          prev1_start_time?: number | null
+          prev1_tag?: string | null
+          prev1_turn_id?: number | null
+          prev1_verbatim?: string | null
+          prev2_end_time?: number | null
+          prev2_speaker?: string | null
+          prev2_start_time?: number | null
+          prev2_tag?: string | null
+          prev2_turn_id?: number | null
+          prev2_verbatim?: string | null
+          prev3_end_time?: number | null
+          prev3_speaker?: string | null
+          prev3_start_time?: number | null
+          prev3_tag?: string | null
+          prev3_turn_id?: number | null
+          prev3_verbatim?: string | null
+          reaction_tag?: string | null
+          strategy_color?: string | null
+          strategy_family?: string | null
+          strategy_originespeaker?: string | null
+          strategy_tag?: string | null
+          updated_at?: string | null
+          x_algorithm_key?: string | null
+          x_algorithm_version?: string | null
+          x_computation_time_ms?: number | null
+          x_computed_at?: string | null
+          x_confidence?: number | null
+          x_evidences?: Json | null
+          x_predicted_tag?: string | null
+          y_algorithm_key?: string | null
+          y_algorithm_version?: string | null
+          y_computation_time_ms?: number | null
+          y_computed_at?: string | null
+          y_confidence?: number | null
+          y_evidences?: Json | null
+          y_predicted_tag?: string | null
+        }
+        Relationships: []
+      }
+      analysis_pairs_backup_20251218: {
         Row: {
           annotations: Json | null
           call_id: string | null
@@ -1697,6 +2009,39 @@ export type Database = {
           },
         ]
       }
+      gold_standards: {
+        Row: {
+          annotator_name: string | null
+          created_at: string | null
+          description: string
+          gold_standard_id: string
+          methodology_notes: string | null
+          modality: string
+          name: string
+          variable: string
+        }
+        Insert: {
+          annotator_name?: string | null
+          created_at?: string | null
+          description: string
+          gold_standard_id: string
+          methodology_notes?: string | null
+          modality: string
+          name: string
+          variable: string
+        }
+        Update: {
+          annotator_name?: string | null
+          created_at?: string | null
+          description?: string
+          gold_standard_id?: string
+          methodology_notes?: string | null
+          modality?: string
+          name?: string
+          variable?: string
+        }
+        Relationships: []
+      }
       h2_analysis_pairs: {
         Row: {
           algorithm_version: string | null
@@ -2567,6 +2912,7 @@ export type Database = {
           charte_name: string
           created_at: string | null
           definition: Json
+          gold_standard_id: string | null
           is_baseline: boolean | null
           notes: string | null
           philosophy: string
@@ -2581,6 +2927,7 @@ export type Database = {
           charte_name: string
           created_at?: string | null
           definition: Json
+          gold_standard_id?: string | null
           is_baseline?: boolean | null
           notes?: string | null
           philosophy: string
@@ -2595,6 +2942,7 @@ export type Database = {
           charte_name?: string
           created_at?: string | null
           definition?: Json
+          gold_standard_id?: string | null
           is_baseline?: boolean | null
           notes?: string | null
           philosophy?: string
@@ -2603,7 +2951,15 @@ export type Database = {
           variable?: string
           version?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "level0_chartes_gold_standard_id_fkey"
+            columns: ["gold_standard_id"]
+            isOneToOne: false
+            referencedRelation: "gold_standards"
+            referencedColumns: ["gold_standard_id"]
+          },
+        ]
       }
       level1_validation_results: {
         Row: {
@@ -2796,6 +3152,63 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "exercices"
             referencedColumns: ["idexercice"]
+          },
+        ]
+      }
+      pair_gold_standards: {
+        Row: {
+          confidence: number | null
+          gold_standard_id: string
+          is_current: boolean | null
+          pair_gold_id: string
+          pair_id: number
+          reaction_gold_tag: string | null
+          strategy_gold_tag: string | null
+          validated_at: string | null
+          validated_by: string | null
+          validation_notes: string | null
+          version: number | null
+        }
+        Insert: {
+          confidence?: number | null
+          gold_standard_id: string
+          is_current?: boolean | null
+          pair_gold_id?: string
+          pair_id: number
+          reaction_gold_tag?: string | null
+          strategy_gold_tag?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_notes?: string | null
+          version?: number | null
+        }
+        Update: {
+          confidence?: number | null
+          gold_standard_id?: string
+          is_current?: boolean | null
+          pair_gold_id?: string
+          pair_id?: number
+          reaction_gold_tag?: string | null
+          strategy_gold_tag?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_notes?: string | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pair_gold_standards_gold_standard_id_fkey"
+            columns: ["gold_standard_id"]
+            isOneToOne: false
+            referencedRelation: "gold_standards"
+            referencedColumns: ["gold_standard_id"]
+          },
+          {
+            foreignKeyName: "pair_gold_standards_pair_id_fkey"
+            columns: ["pair_id"]
+            isOneToOne: false
+            referencedRelation: "analysis_pairs"
+            referencedColumns: ["pair_id"]
           },
         ]
       }

@@ -34,117 +34,103 @@ export class DisagreementValidationService {
    * @returns Liste des désaccords non encore validés
    */
   static async getPendingDisagreements(
-    testId: string
-  ): Promise<ValidationServiceResponse<PendingDisagreement[]>> {
-    try {
-      // 1. Récupérer charte_id depuis test
-      const charteId = await this.getCharteIdFromTest(testId);
-      if (!charteId) {
-        return {
-          success: false,
-          error: 'Test introuvable ou charte_id manquant'
-        };
-      }
+  testId: string
+): Promise<ValidationServiceResponse<PendingDisagreement[]>> {
+  try {
+    // 1. Récupérer le test avec ses désaccords (JSON)
+    const { data: test, error: testError } = await this.supabase
+      .from('level0_charte_tests')
+      .select('charte_id, disagreements')
+      .eq('test_id', testId)
+      .single();
 
-      // 2. Récupérer toutes les annotations du test
-      const { data: annotations, error: annError } = await this.supabase
-        .from('annotations')
-        .select(`
-          pair_id,
-          reaction_tag,
-          strategy_tag,
-          confidence,
-          reasoning
-        `)
-        .eq('test_id', testId);
-
-      if (annError) throw annError;
-      if (!annotations || annotations.length === 0) {
-        return {
-          success: true,
-          data: [],
-          message: 'Aucune annotation trouvée pour ce test'
-        };
-      }
-
-      // 3. Récupérer les paires correspondantes avec tags manuels
-      const pairIds = annotations.map(a => a.pair_id);
-      const { data: pairs, error: pairError } = await this.supabase
-        .from('analysis_pairs')
-        .select(`
-          pair_id,
-          call_id,
-          reaction_tag,
-          strategy_tag,
-          client_verbatim,
-          conseiller_verbatim,
-          prev1_verbatim,
-          next1_verbatim
-        `)
-        .in('pair_id', pairIds);
-
-      if (pairError) throw pairError;
-
-      // 4. Récupérer validations existantes
-      const { data: existingValidations, error: valError } = await this.supabase
-        .from('disagreement_validations')
-        .select('pair_id')
-        .eq('test_id', testId);
-
-      if (valError) throw valError;
-
-      const validatedPairIds = new Set(
-        (existingValidations || []).map(v => v.pair_id)
-      );
-
-      // 5. Identifier désaccords non validés
-      const pendingDisagreements: PendingDisagreement[] = [];
-
-      for (const annotation of annotations) {
-        const pair = pairs?.find(p => p.pair_id === annotation.pair_id);
-        if (!pair) continue;
-
-        // Déjà validé ? Skip
-        if (validatedPairIds.has(annotation.pair_id)) continue;
-
-        // Identifier variable et tags
-        const isY = pair.reaction_tag !== null;
-        const manualTag = isY ? pair.reaction_tag : pair.strategy_tag;
-        const llmTag = isY ? annotation.reaction_tag : annotation.strategy_tag;
-        const verbatim = isY ? pair.client_verbatim : pair.conseiller_verbatim;
-
-        // Désaccord ?
-        if (manualTag !== llmTag) {
-          pendingDisagreements.push({
-            pair_id: annotation.pair_id,
-            test_id: testId,
-            charte_id: charteId,
-            manual_tag: manualTag || '',
-            llm_tag: llmTag || '',
-            llm_confidence: annotation.confidence,
-            llm_reasoning: annotation.reasoning,
-            verbatim: verbatim || '',
-            context_before: pair.prev1_verbatim,
-            context_after: pair.next1_verbatim,
-            call_id: pair.call_id
-          });
-        }
-      }
-
+    if (testError) throw testError;
+    if (!test || !test.disagreements) {
       return {
         success: true,
-        data: pendingDisagreements,
-        message: `${pendingDisagreements.length} désaccord(s) en attente`
-      };
-
-    } catch (error: any) {
-      console.error('Error fetching pending disagreements:', error);
-      return {
-        success: false,
-        error: error.message || 'Erreur lors de la récupération des désaccords'
+        data: [],
+        message: 'Aucun désaccord trouvé pour ce test'
       };
     }
+
+    // 2. Parser les désaccords (JSON)
+    const disagreementsArray = Array.isArray(test.disagreements) 
+      ? test.disagreements 
+      : [];
+
+    if (disagreementsArray.length === 0) {
+      return {
+        success: true,
+        data: [],
+        message: 'Aucun désaccord dans ce test'
+      };
+    }
+
+    // 3. Récupérer validations existantes
+    const { data: existingValidations } = await this.supabase
+      .from('disagreement_validations')
+      .select('pair_id')
+      .eq('test_id', testId);
+
+    const validatedPairIds = new Set(
+      (existingValidations || []).map((v: any) => v.pair_id)
+    );
+
+    // 4. Filtrer désaccords non validés
+    const unvalidatedDisagreements = disagreementsArray.filter(
+      (d: any) => !validatedPairIds.has(d.pairId)
+    );
+
+    if (unvalidatedDisagreements.length === 0) {
+      return {
+        success: true,
+        data: [],
+        message: 'Tous les désaccords ont été validés'
+      };
+    }
+
+    // 5. Enrichir avec call_id depuis analysis_pairs
+    const pairIds = unvalidatedDisagreements.map((d: any) => d.pairId);
+
+    const { data: pairs } = await this.supabase
+      .from('analysis_pairs')
+      .select('pair_id, call_id')
+      .in('pair_id', pairIds);
+
+    const pairIdToCallId = new Map(
+      (pairs || []).map((p: any) => [p.pair_id, p.call_id])
+    );
+
+    // 6. Construire liste désaccords enrichis
+    const pendingDisagreements: PendingDisagreement[] = unvalidatedDisagreements.map(
+      (d: any) => ({
+        pair_id: d.pairId,
+        test_id: testId,
+        charte_id: test.charte_id,
+        manual_tag: d.manualTag,
+        llm_tag: d.llmTag,
+        llm_confidence: d.llmConfidence,
+        llm_reasoning: d.llmReasoning,
+        verbatim: d.verbatim,
+        context_before: undefined,
+context_after: undefined,
+        call_id: pairIdToCallId.get(d.pairId) || ''
+      })
+    );
+
+    return {
+      success: true,
+      data: pendingDisagreements,
+      message: `${pendingDisagreements.length} désaccord(s) en attente`
+    };
+  } catch (error: any) {
+    console.error('Error fetching pending disagreements:', error);
+    return {
+      success: false,
+      error: error.message || 'Erreur lors de la récupération des désaccords'
+    };
   }
+}
 
   /**
    * Valider un désaccord (CAS A, B ou C)
@@ -181,11 +167,11 @@ export class DisagreementValidationService {
 
       // 2. Si CAS A, propager correction vers analysis_pairs
       if (input.validation_decision === 'CAS_A_LLM_CORRECT' && input.corrected_tag) {
-        await this.propagateCorrectionToAnalysisPairs(
-          input.pair_id,
-          input.corrected_tag,
-          input.manual_tag
-        );
+       await this.createCorrectedGoldStandard(
+  input.pair_id,
+  input.corrected_tag!,
+  input.test_id
+);
       }
 
       // 3. Recalculer Kappa corrigé
@@ -215,27 +201,82 @@ export class DisagreementValidationService {
    * Propager correction CAS A vers analysis_pairs
    * Met à jour le gold standard manuel avec le tag corrigé
    */
-  private static async propagateCorrectionToAnalysisPairs(
-    pairId: number,
-    correctedTag: string,
-    originalTag: string
-  ): Promise<void> {
-    // Déterminer quelle colonne mettre à jour (X ou Y)
-    const isYTag = ['CLIENT_POSITIF', 'CLIENT_NEGATIF', 'CLIENT_NEUTRE'].includes(correctedTag);
-    const columnToUpdate = isYTag ? 'reaction_tag' : 'strategy_tag';
+  private static async createCorrectedGoldStandard(
+  pairId: number,
+  correctedTag: string,
+  testId: string
+): Promise<void> {
+  try {
+    // 1. Récupérer le gold_standard_id depuis le test
+    const { data: test } = await this.supabase
+      .from('level0_charte_tests')
+      .select(`
+        charte_id,
+        level0_chartes!inner(gold_standard_id, variable)
+      `)
+      .eq('test_id', testId)
+      .single();
 
-    const { error } = await this.supabase
-      .from('analysis_pairs')
-      .update({ [columnToUpdate]: correctedTag })
-      .eq('pair_id', pairId);
-
-    if (error) {
-      console.error('Error propagating correction:', error);
-      throw error;
+    if (!test) {
+      throw new Error('Test introuvable');
     }
 
-    console.log(`✅ Correction propagée: pair ${pairId}, ${originalTag} → ${correctedTag}`);
+    const goldStandardId = (test as any).level0_chartes.gold_standard_id;
+    const variable = (test as any).level0_chartes.variable;
+
+    if (!goldStandardId) {
+      throw new Error('Gold standard ID manquant dans la charte');
+    }
+
+    // 2. Récupérer la version actuelle
+    const { data: currentVersion } = await this.supabase
+      .from('pair_gold_standards')
+      .select('version')
+      .eq('pair_id', pairId)
+      .eq('gold_standard_id', goldStandardId)
+      .eq('is_current', true)
+      .single();
+
+    if (!currentVersion) {
+      throw new Error('Version actuelle du gold standard introuvable');
+    }
+
+    const newVersion = currentVersion.version + 1;
+
+    // 3. Désactiver la version actuelle
+    const { error: updateError } = await this.supabase
+      .from('pair_gold_standards')
+      .update({ is_current: false })
+      .eq('pair_id', pairId)
+      .eq('gold_standard_id', goldStandardId)
+      .eq('version', currentVersion.version);
+
+    if (updateError) throw updateError;
+
+    // 4. Créer nouvelle version avec tag corrigé
+    const columnToUpdate = variable === 'Y' ? 'reaction_gold_tag' : 'strategy_gold_tag';
+
+    const { error: insertError } = await this.supabase
+      .from('pair_gold_standards')
+      .insert({
+        pair_id: pairId,
+        gold_standard_id: goldStandardId,
+        [columnToUpdate]: correctedTag,
+        version: newVersion,
+        is_current: true,
+        validated_at: new Date().toISOString(),
+        validated_by: 'system',
+        validation_notes: `CAS A: Corrected from disagreement validation (v${currentVersion.version} → v${newVersion})`
+      });
+
+    if (insertError) throw insertError;
+
+    console.log(`✅ Gold standard corrigé: pair ${pairId}, version ${newVersion}, tag=${correctedTag}`);
+  } catch (error) {
+    console.error('Error creating corrected gold standard:', error);
+    throw error;
   }
+}
 
   /**
    * Calculer Kappa corrigé pour un test
@@ -391,51 +432,119 @@ export class DisagreementValidationService {
    * @param validationId - UUID de la validation à supprimer
    */
   static async deleteValidation(
-    validationId: string
-  ): Promise<ValidationServiceResponse<void>> {
-    try {
-      // 1. Récupérer validation avant suppression
-      const { data: validation, error: fetchError } = await this.supabase
-        .from('disagreement_validations')
-        .select('*')
-        .eq('validation_id', validationId)
-        .single();
+  validationId: string
+): Promise<ValidationServiceResponse<void>> {
+  try {
+    // 1. Récupérer validation avant suppression
+    const { data: validation, error: fetchError } = await this.supabase
+      .from('disagreement_validations')
+      .select('*')
+      .eq('validation_id', validationId)
+      .single();
 
-      if (fetchError) throw fetchError;
+    if (fetchError) throw fetchError;
 
-      // 2. Si CAS A avec correction, rollback vers tag original
-      if (validation.validation_decision === 'CAS_A_LLM_CORRECT' && validation.corrected_tag) {
-        await this.propagateCorrectionToAnalysisPairs(
-          validation.pair_id,
-          validation.manual_tag, // Restore original
-          validation.corrected_tag
-        );
-      }
-
-      // 3. Supprimer validation
-      const { error: deleteError } = await this.supabase
-        .from('disagreement_validations')
-        .delete()
-        .eq('validation_id', validationId);
-
-      if (deleteError) throw deleteError;
-
-      // 4. Recalculer Kappa corrigé
-      const correctedKappaResponse = await this.getCorrectedKappa(validation.test_id);
-      if (correctedKappaResponse.success && correctedKappaResponse.data) {
-        await this.updateCharteTestKappa(validation.test_id, correctedKappaResponse.data);
-      }
-
-      return { success: true };
-
-    } catch (error: any) {
-      console.error('Error deleting validation:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+    // 2. Si CAS A avec correction, rollback vers version précédente
+    if (validation.validation_decision === 'CAS_A_LLM_CORRECT' && validation.corrected_tag) {
+      await this.rollbackGoldStandardCorrection(
+        validation.pair_id,
+        validation.test_id
+      );
     }
+
+    // 3. Supprimer validation
+    const { error: deleteError } = await this.supabase
+      .from('disagreement_validations')
+      .delete()
+      .eq('validation_id', validationId);
+
+    if (deleteError) throw deleteError;
+
+    // 4. Recalculer Kappa corrigé
+    const correctedKappaResponse = await this.getCorrectedKappa(validation.test_id);
+    if (correctedKappaResponse.success && correctedKappaResponse.data) {
+      await this.updateCharteTestKappa(validation.test_id, correctedKappaResponse.data);
+    }
+
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('Error deleting validation:', error);
+    return {
+      success: false,
+      error: error.message
+    };
   }
+}
+
+/**
+ * Rollback d'une correction de gold standard
+ * Réactive la version précédente et supprime la version corrigée
+ */
+private static async rollbackGoldStandardCorrection(
+  pairId: number,
+  testId: string
+): Promise<void> {
+  try {
+    // 1. Récupérer le gold_standard_id depuis le test
+    const { data: test } = await this.supabase
+      .from('level0_charte_tests')
+      .select(`
+        level0_chartes!inner(gold_standard_id)
+      `)
+      .eq('test_id', testId)
+      .single();
+
+    if (!test) {
+      throw new Error('Test introuvable');
+    }
+
+    const goldStandardId = (test as any).level0_chartes.gold_standard_id;
+
+    if (!goldStandardId) {
+      throw new Error('Gold standard ID manquant');
+    }
+
+    // 2. Récupérer la version actuelle (corrigée)
+    const { data: currentVersion } = await this.supabase
+      .from('pair_gold_standards')
+      .select('version')
+      .eq('pair_id', pairId)
+      .eq('gold_standard_id', goldStandardId)
+      .eq('is_current', true)
+      .single();
+
+    if (!currentVersion || currentVersion.version <= 1) {
+      console.warn('Aucune correction à rollback pour cette paire');
+      return;
+    }
+
+    // 3. Supprimer la version corrigée
+    const { error: deleteError } = await this.supabase
+      .from('pair_gold_standards')
+      .delete()
+      .eq('pair_id', pairId)
+      .eq('gold_standard_id', goldStandardId)
+      .eq('version', currentVersion.version);
+
+    if (deleteError) throw deleteError;
+
+    // 4. Réactiver la version précédente
+    const { error: updateError } = await this.supabase
+      .from('pair_gold_standards')
+      .update({ is_current: true })
+      .eq('pair_id', pairId)
+      .eq('gold_standard_id', goldStandardId)
+      .eq('version', currentVersion.version - 1);
+
+    if (updateError) throw updateError;
+
+    console.log(`✅ Rollback effectué: pair ${pairId}, version ${currentVersion.version} supprimée, version ${currentVersion.version - 1} réactivée`);
+  } catch (error) {
+    console.error('Error rolling back gold standard correction:', error);
+    throw error;
+  }
+}
 
   /**
    * Récupérer charte_id depuis test_id

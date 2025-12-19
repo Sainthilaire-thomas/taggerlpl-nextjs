@@ -41,6 +41,8 @@ import { DisagreementValidationPanel } from './DisagreementValidationPanel';
 import { KappaComparator } from './KappaComparator';
 import { GoldStandardManager } from './GoldStandardManager';
 import { DerivationWizard } from './DerivationWizard';
+import Level0AuditPage from '@/app/(protected)/phase3-analysis/level0/audit/page';
+import { CharteManager } from './CharteManager';
 
 export const Level0Interface: React.FC = () => {
   const { loading, progress, results, error, testVariable, loadSavedResults } = useLevel0Testing();
@@ -49,9 +51,9 @@ export const Level0Interface: React.FC = () => {
   const [selectedResult, setSelectedResult] = useState<CharteTestResult | null>(null);
   
   // 🆕 État pour les onglets
-  const [currentTab, setCurrentTab] = useState<'tests' | 'goldstandards' | 'validation' | 'comparator'>('tests');
-const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
-const [showDerivationWizard, setShowDerivationWizard] = useState(false);
+  const [currentTab, setCurrentTab] = useState<'tests' | 'goldstandards' | 'validation' | 'comparator' | 'audit' | 'chartes'>('tests');
+  const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
+  const [showDerivationWizard, setShowDerivationWizard] = useState(false);
   
   // État pour sélection de chartes
   const [selectedChartes, setSelectedChartes] = useState<string[]>([]);
@@ -105,6 +107,8 @@ const [showDerivationWizard, setShowDerivationWizard] = useState(false);
   <Tab label="⭐ Gold Standards" value="goldstandards" />
   <Tab label="Validation Désaccords" value="validation" />
   <Tab label="Comparateur Kappa" value="comparator" />
+  <Tab label="🔍 Audit & Debug" value="audit" />
+  <Tab label="📝 Gestion Chartes" value="chartes" />
 </Tabs>
 
       {/* ============ ONGLET TESTS ============ */}
@@ -496,6 +500,15 @@ const [showDerivationWizard, setShowDerivationWizard] = useState(false);
           title={`Comparateur Kappa - Variable ${variable}`}
         />
       )}
+      {/* ============ ONGLET AUDIT ============ */}
+{currentTab === 'audit' && (
+  <Level0AuditPage />
+)}
+
+{/* ============ ONGLET GESTION CHARTES ============ */}
+{currentTab === 'chartes' && (
+  <CharteManager variable={variable} />
+)}
     </Box>
   );
 };
