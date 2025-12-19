@@ -79,20 +79,24 @@ export class SupabaseLevel0Service {
 
       console.log("[SupabaseLevel0Service] Test result saved successfully");
 
-      // ⭐ 2. NOUVEAU : Lier les annotations au test
-    
-const { error: updateError } = await supabase
-  .from('annotations')
-  .update({ test_id: result.test_id })
-  .eq('annotator_id', result.charte_id)
-  .is('test_id', null);
+      // ⭐ 2. AMÉLIORATION : Lier les annotations au test avec précision
+if (result.tested_pair_ids && result.tested_pair_ids.length > 0) {
+  const { error: updateError } = await supabase
+    .from('annotations')
+    .update({ test_id: result.test_id })
+    .eq('annotator_id', result.charte_id)
+    .in('pair_id', result.tested_pair_ids)  // ⭐ Précision : uniquement ces paires
+    .is('test_id', null);
 
-if (updateError) {
-  console.error("[SupabaseLevel0Service] Error linking annotations:", updateError);
-  throw new Error(`Error linking annotations: ${updateError.message}`);
+  if (updateError) {
+    console.error("[SupabaseLevel0Service] Error linking annotations:", updateError);
+    throw new Error(`Error linking annotations: ${updateError.message}`);
+  }
+
+  console.log(`[SupabaseLevel0Service] ${result.tested_pair_ids.length} annotations linked to test ${result.test_id}`);
+} else {
+  console.warn("[SupabaseLevel0Service] No tested_pair_ids provided, skipping annotation linking");
 }
-
-console.log(`[SupabaseLevel0Service] Annotations linked to test ${result.test_id}`);
     } catch (error: any) {
       console.error("[SupabaseLevel0Service] Exception:", error);
       throw error;
@@ -202,5 +206,8 @@ console.log(`[SupabaseLevel0Service] Annotations linked to test ${result.test_id
     }
   }
 }
+
+
+
 
 

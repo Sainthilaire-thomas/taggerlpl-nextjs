@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // AnnotationService - CRUD pour Système d'Annotations Unifiées
 // ============================================================================
 // Description : Service générique pour toutes opérations sur table annotations
@@ -86,7 +86,7 @@ export class AnnotationService {
   try {
     const { data, error } = await this.supabase
       .from("annotations")
-      .upsert(  // ✅ UPSERT au lieu de INSERT
+      .insert(
         inputs.map((input) => ({
           pair_id: input.pair_id,
           annotator_type: input.annotator_type,
@@ -98,13 +98,7 @@ export class AnnotationService {
           annotation_context: input.annotation_context || null,
           test_id: input.test_id || null,
           annotation_duration_ms: input.annotation_duration_ms || null
-        })),
-        {
-          onConflict: 'pair_id,annotator_type,annotator_id',  // ✅ Clé de conflit
-          ignoreDuplicates: false  // ✅ Mettre à jour si conflit
-        }
-      )
-      .select();
+        }))).select();
 
     if (error) {
       console.error("[AnnotationService] Batch save error:", error);
@@ -491,3 +485,9 @@ export class AnnotationService {
     }
   }
 }
+
+
+
+
+
+
