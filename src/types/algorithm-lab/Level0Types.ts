@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // Types Level 0 - Contra-annotation LLM et Multi-chartes
 // ============================================================================
 
@@ -100,6 +100,7 @@ export interface CharteTestResult {
   kappa: number;
   accuracy: number;
   total_pairs: number;
+  tested_pair_ids?: number[];  // ⭐ Liste des pair_id testés (pour reproductibilité)
   disagreements_count: number;
   disagreements: DisagreementCase[];
   metrics?: {
@@ -793,3 +794,5 @@ export function formatKappaImprovement(improvement: number | null): string {
 // ============================================================================
 // FIN DU PATCH SPRINT 4
 // ============================================================================
+
+

@@ -181,6 +181,8 @@ export class MultiCharteAnnotator {
       kappa: kappaResult.kappa,
       accuracy,
       total_pairs: analysisPairs.length,
+      tested_pair_ids: analysisPairs.map(p => p.pair_id),  // ⭐ Stocker les pair_ids testés
+
       disagreements_count: disagreements.length,
       disagreements,
       metrics: {
@@ -309,3 +311,5 @@ export class MultiCharteAnnotator {
     };
   }
 }
+
+

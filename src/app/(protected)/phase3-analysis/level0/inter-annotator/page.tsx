@@ -1,5 +1,6 @@
-import { InterAnnotatorAgreement } from '@/features/phase3-analysis/level0-gold/ui/components/InterAnnotatorAgreement';
+﻿// TODO: Create InterAnnotatorAgreement component
 
 export default function InterAnnotatorPage() {
-  return <InterAnnotatorAgreement />;
+  return <div>Inter-annotator Agreement (TODO)</div>;
 }
+

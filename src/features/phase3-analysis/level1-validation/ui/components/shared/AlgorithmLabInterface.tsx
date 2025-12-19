@@ -1,4 +1,4 @@
-// Interface principale - components/shared/AlgorithmLabInterface.tsx
+ï»¿// Interface principale - components/shared/AlgorithmLabInterface.tsx
 import React from "react";
 import {
   Box,
@@ -19,11 +19,11 @@ import {
 } from "@mui/icons-material";
 import { useWorkflowManagement } from '@/features/phase3-analysis/level1-validation/ui/hooks/useWorkflowManagement';
 import { NavigationTabs } from "./NavigationTabs";
-import { InterAnnotatorAgreement } from '@/features/phase3-analysis/level0-gold/ui/components/InterAnnotatorAgreement';
+// TODO: Create InterAnnotatorAgreement component
 import { Level1Interface } from '../AlgorithmLab/Level1Interface';
 import { Level2Interface } from '@/features/phase3-analysis/level2-hypotheses/ui/components/Level2Interface';
 // import { initializeAlgorithms } from "@/features/phase3-analysis/level1-validation/algorithms/shared/initializeAlgorithms";
-// import { algorithmRegistry } from "@/features/phase3-analysis/level1-validation/algorithms/shared/AlgorithmRegistry"; // Props pour l'intégration dans la page analysis
+// import { algorithmRegistry } from "@/features/phase3-analysis/level1-validation/algorithms/shared/AlgorithmRegistry"; // Props pour l'intï¿½gration dans la page analysis
 interface AlgorithmLabInterfaceProps {
   selectedOrigin?: string | null;
   availableDomains?: string[];
@@ -101,18 +101,18 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
   const renderCurrentLevel = () => {
     switch (currentLevel) {
       case 0:
-        return <InterAnnotatorAgreement />;
+        return <div>Inter-annotator Agreement (TODO)</div>;
       case 1:
         return <Level1Interface />;
       case 2:
         return <Level2Interface />;
       default:
-        return <InterAnnotatorAgreement />;
+        return <div>Inter-annotator Agreement (TODO)</div>;
     }
   };
 
   // React.useEffect(() => {
-  //   // Peupler le registre côté client si vide
+  //   // Peupler le registre cï¿½tï¿½ client si vide
   //   if (algorithmRegistry.list().length === 0) {
   //     initializeAlgorithms();
   //   }
@@ -120,7 +120,7 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
 
   return (
     <Box sx={styles.mainContainer}>
-      {/* Header adapté pour intégration */}
+      {/* Header adaptï¿½ pour intï¿½gration */}
       <Paper elevation={1} sx={styles.headerPaper}>
         <Box sx={{ p: 3 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
@@ -164,7 +164,7 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
                 />
               </Box>
               <Typography variant="body1" color="text.secondary">
-                Framework de validation scientifique à 3 niveaux - Intégré au
+                Framework de validation scientifique ï¿½ 3 niveaux - Intï¿½grï¿½ au
                 Centre d'Analyse
               </Typography>
               {selectedOrigin && (
@@ -172,7 +172,7 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
                   variant="body2"
                   sx={{ color: theme.palette.primary.main, mt: 0.5 }}
                 >
-                  Origine sélectionnée: <strong>{selectedOrigin}</strong>
+                  Origine sï¿½lectionnï¿½e: <strong>{selectedOrigin}</strong>
                 </Typography>
               )}
             </Box>
@@ -193,7 +193,7 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
       {/* Contenu */}
       <Box sx={{ px: 3 }}>{renderCurrentLevel()}</Box>
 
-      {/* Footer adapté */}
+      {/* Footer adaptï¿½ */}
       <Paper elevation={1} sx={styles.footerPaper}>
         <Box sx={{ textAlign: "center" }}>
           <Typography
@@ -201,8 +201,8 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
             color="text.secondary"
             sx={{ mb: 1, display: "block" }}
           >
-            <strong>Validation séquentielle :</strong> Gold Standard ?
-            Performance Technique ? Hypothèses Scientifiques
+            <strong>Validation sï¿½quentielle :</strong> Gold Standard ?
+            Performance Technique ? Hypothï¿½ses Scientifiques
           </Typography>
           <Box
             sx={{
@@ -224,7 +224,7 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
                 Niveau 0: Accord inter-annotateur
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Kappa de Cohen, résolution désaccords
+                Kappa de Cohen, rï¿½solution dï¿½saccords
               </Typography>
             </Box>
             <Box sx={styles.gridItem}>
@@ -251,10 +251,10 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
                   color: theme.palette.text.primary,
                 }}
               >
-                Niveau 2: Tests hypothèses
+                Niveau 2: Tests hypothï¿½ses
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                H1 (Efficacité), H2 (Cognitif), H3 (Pratique)
+                H1 (Efficacitï¿½), H2 (Cognitif), H3 (Pratique)
               </Typography>
             </Box>
           </Box>
@@ -264,5 +264,7 @@ export const AlgorithmLabInterface: React.FC<AlgorithmLabInterfaceProps> = ({
   );
 };
 
-// Export unique par défaut pour l'intégration
+// Export unique par dï¿½faut pour l'intï¿½gration
 export default AlgorithmLabInterface;
+
+

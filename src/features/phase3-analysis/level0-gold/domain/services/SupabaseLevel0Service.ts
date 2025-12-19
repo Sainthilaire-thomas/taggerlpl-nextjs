@@ -62,6 +62,8 @@ export class SupabaseLevel0Service {
           kappa: result.kappa,
           accuracy: result.accuracy,
           total_pairs: result.total_pairs,
+            tested_pair_ids: result.tested_pair_ids || null,  // ⭐ Stocker les pair_ids testés
+
           disagreements_count: result.disagreements_count,
           disagreements: result.disagreements || null,
           metrics: result.metrics || null,
@@ -200,3 +202,5 @@ console.log(`[SupabaseLevel0Service] Annotations linked to test ${result.test_id
     }
   }
 }
+
+
