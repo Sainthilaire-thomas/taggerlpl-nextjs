@@ -24,7 +24,7 @@ export class OpenAIAnnotatorService {
     
     try {
       const response = await this.callAnnotateAPI(prompt);
-      return this.parseResponse(response, request.pairId, charte.variable);
+      return this.parseResponse(response, request.pairId, charte.variable, charte);
     } catch (error) {
       console.error(`Error annotating pair ${request.pairId}:`, error);
       throw error;
@@ -165,16 +165,19 @@ export class OpenAIAnnotatorService {
 
     const data = await response.json();
     return data.content;
+  }  /**
+   * Applique les aliases de la charte pour normaliser un tag LLM
+   */
+  private static applyAliases(tag: string, charte: CharteDefinition): string {
+    const aliases = (charte.definition as any)?.aliases || {};
+    return aliases[tag] || tag;  // Si alias existe, utiliser, sinon garder tag original
   }
+
 
   /**
    * Parse la réponse JSON d''OpenAI
    */
-  private static parseResponse(
-    jsonString: string,
-    pairId: number,
-    variable: "X" | "Y"
-  ): OpenAIAnnotationResult {
+  private static parseResponse(jsonString: string, pairId: number, variable: "X" | "Y", charte: CharteDefinition): OpenAIAnnotationResult {
     try {
       const parsed = JSON.parse(jsonString);
       
@@ -183,11 +186,11 @@ export class OpenAIAnnotatorService {
       };
 
       if (variable === "X") {
-        result.x_predicted = parsed.tag;
+        result.x_predicted = this.applyAliases(parsed.tag, charte) as any;
         result.x_confidence = parsed.confidence || 0;
         result.x_reasoning = parsed.reasoning || "";
       } else {
-        result.y_predicted = parsed.tag;
+        result.y_predicted = this.applyAliases(parsed.tag, charte) as any;
         result.y_confidence = parsed.confidence || 0;
         result.y_reasoning = parsed.reasoning || "";
       }
@@ -224,3 +227,6 @@ export class OpenAIAnnotatorService {
     };
   }
 }
+
+
+
