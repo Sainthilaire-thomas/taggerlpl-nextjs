@@ -110,7 +110,9 @@ useAnalysisPairs-working.txt
 |-- docs/
 |   |-- ai_context/
 |   |   |-- specs/
+|   |   |   |-- ARCHITECTURE_TABLES_FLUX_LEVEL0.md
 |   |   |   |-- FLUX_DONNEES_LEVEL0.md
+|   |   |   |-- SPECS_CHARTE_TUNING_SYSTEM.md
 |   |   |   |-- SPECS_KAPPA_COMPARATOR.md
 |   |   |   |-- SPECS_MODALITE_AUDIO.md
 |   |   |   +-- SPEC-VERSIONING-INVESTIGATION.md
@@ -119,8 +121,11 @@ useAnalysisPairs-working.txt
 |   |   |   +-- mission-2025-11-24-versioning-investigation.md
 |   |   |-- AI-CONTEXT-WORKFLOW-SPEC.md
 |   |   |-- base-context.md
+|   |   |-- CONTEXTE_SESSION3_SPRINT4.md
 |   |   |-- MISSION_SPRINT4_v2_2025-12-18 .md
 |   |   |-- MISSION_SPRINT4_v3_2025-12-18_GOLD_STANDARDS.md
+|   |   |-- MISSION_SPRINT4_v4_2025-12-19.md
+|   |   |-- MISSION_SPRINT4_v5_2025-12-19.md
 |   |   |-- mission-2025-01-23-typescript-cleanup.md
 |   |   |-- mission-2025-01-24-level1-investigation.md
 |   |   |-- mission-2025-11-24-versioning-investigation-avancement.md
@@ -137,6 +142,7 @@ useAnalysisPairs-working.txt
 |   |   |-- SESSION_2025-11-25_BILAN_PHASE1-2-3.md
 |   |   |-- SESSION_SPRINT3_SYNTHESE_COURTE.md
 |   |   |-- session-reprise-2025-11-25-phase4-debugging.md
+|   |   |-- TESTS_SPRINT4_VALIDATION.md
 |   |   +-- USER_GUIDE_Phase4_Versioning_Investigation.md
 |   |-- architecture/
 |   |   |-- ARCHITECTURE_CIBLE_WORKFLOW.md
@@ -228,6 +234,8 @@ useAnalysisPairs-working.txt
 |   |   |   |   +-- page.tsx
 |   |   |   |-- phase3-analysis/
 |   |   |   |   |-- level0/
+|   |   |   |   |   |-- audit/
+|   |   |   |   |   |   +-- page.tsx
 |   |   |   |   |   |-- inter-annotator/
 |   |   |   |   |   |   +-- page.tsx
 |   |   |   |   |   +-- multi-chartes/
@@ -581,6 +589,7 @@ useAnalysisPairs-working.txt
 |   |   |   |   |       +-- SupabaseLevel0Service.ts
 |   |   |   |   +-- presentation/
 |   |   |   |       |-- components/
+|   |   |   |       |   |-- CharteManager.tsx
 |   |   |   |       |   |-- DerivationWizard.tsx
 |   |   |   |       |   |-- DisagreementDetailView.tsx
 |   |   |   |       |   |-- DisagreementsPanel.tsx
