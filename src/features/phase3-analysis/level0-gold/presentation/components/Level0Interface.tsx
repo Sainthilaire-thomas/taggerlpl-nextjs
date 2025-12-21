@@ -43,6 +43,7 @@ import { GoldStandardManager } from './GoldStandardManager';
 import { DerivationWizard } from './DerivationWizard';
 import Level0AuditPage from '@/app/(protected)/phase3-analysis/level0/audit/page';
 import { CharteManager } from './CharteManager';
+import { CharteTuningPanel } from './tuning';
 
 export const Level0Interface: React.FC = () => {
   const { loading, progress, results, error, testVariable, loadSavedResults } = useLevel0Testing();
@@ -51,7 +52,7 @@ export const Level0Interface: React.FC = () => {
   const [selectedResult, setSelectedResult] = useState<CharteTestResult | null>(null);
   
   // 🆕 État pour les onglets
-  const [currentTab, setCurrentTab] = useState<'tests' | 'goldstandards' | 'validation' | 'comparator' | 'audit' | 'chartes'>('tests');
+ const [currentTab, setCurrentTab] = useState<'tests' | 'goldstandards' | 'validation' | 'comparator' | 'audit' | 'chartes' | 'tuning'>('tests');
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
   const [showDerivationWizard, setShowDerivationWizard] = useState(false);
   
@@ -109,6 +110,7 @@ export const Level0Interface: React.FC = () => {
   <Tab label="Comparateur Kappa" value="comparator" />
   <Tab label="🔍 Audit & Debug" value="audit" />
   <Tab label="📝 Gestion Chartes" value="chartes" />
+  <Tab label="🔧 Tuning" value="tuning" />
 </Tabs>
 
       {/* ============ ONGLET TESTS ============ */}
@@ -508,6 +510,13 @@ export const Level0Interface: React.FC = () => {
 {/* ============ ONGLET GESTION CHARTES ============ */}
 {currentTab === 'chartes' && (
   <CharteManager variable={variable} />
+)}
+{/* ============ ONGLET TUNING ============ */}
+{currentTab === 'tuning' && (
+  <CharteTuningPanel 
+    charteId={selectedResult?.charte_id || ''}
+    testId={selectedTestId || undefined}
+  />
 )}
     </Box>
   );

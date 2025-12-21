@@ -1,7 +1,7 @@
 ﻿"use client";
 
 // ============================================================================
-// CharteManager - Gestion des chartes d'annotation
+// CharteManager - Gestion des chartes d'annotation (ENRICHI Session 4)
 // ============================================================================
 
 import React, { useState, useEffect } from "react";
@@ -26,7 +26,9 @@ import {
   Stack,
   Alert,
   Divider,
-  Paper
+  Paper,
+  Tabs,
+  Tab
 } from "@mui/material";
 import {
   Edit as EditIcon,
@@ -47,7 +49,11 @@ export function CharteManager({ variable }: CharteManagerProps) {
   const [loading, setLoading] = useState(false);
   const [selectedCharte, setSelectedCharte] = useState<CharteDefinition | null>(null);
   const [aliasDialogOpen, setAliasDialogOpen] = useState(false);
-  
+
+  // 🆕 États pour la sélection et zone détails
+  const [selectedCharteForDetails, setSelectedCharteForDetails] = useState<CharteDefinition | null>(null);
+  const [detailsTab, setDetailsTab] = useState<'aliases' | 'categories' | 'rules' | 'llm' | 'tuning' | 'history'>('aliases');
+
   // États pour l'édition des aliases
   const [aliases, setAliases] = useState<Record<string, string>>({});
   const [newAliasKey, setNewAliasKey] = useState("");
@@ -56,6 +62,13 @@ export function CharteManager({ variable }: CharteManagerProps) {
   useEffect(() => {
     loadChartes();
   }, [variable]);
+
+  // 🆕 Reset tab quand charte change
+  useEffect(() => {
+    if (selectedCharteForDetails) {
+      setDetailsTab('aliases');
+    }
+  }, [selectedCharteForDetails?.charte_id]);
 
   const loadChartes = async () => {
     setLoading(true);
@@ -99,7 +112,7 @@ export function CharteManager({ variable }: CharteManagerProps) {
 
     try {
       setLoading(true);
-      
+
       // Mettre à jour la définition avec les nouveaux aliases
       const updatedDefinition = {
         ...(selectedCharte.definition as any),
@@ -136,6 +149,11 @@ export function CharteManager({ variable }: CharteManagerProps) {
     return [];
   };
 
+  // 🆕 Gestion du clic sur ligne
+  const handleRowClick = (charte: CharteDefinition) => {
+    setSelectedCharteForDetails(charte);
+  };
+
   return (
     <Box>
       <Card>
@@ -152,6 +170,8 @@ export function CharteManager({ variable }: CharteManagerProps) {
           </Stack>
 
           <Alert severity="info" sx={{ mb: 3 }}>
+            <strong>💡 Cliquez sur une ligne</strong> pour accéder aux détails et options d'édition de la charte.
+            <br />
             <strong>Aliases :</strong> Permettent de normaliser automatiquement les tags LLM non-conformes
             (ex: CLIENT_NON_POSITIF → CLIENT_NEGATIF)
           </Alert>
@@ -173,9 +193,21 @@ export function CharteManager({ variable }: CharteManagerProps) {
               {chartes.map((charte) => {
                 const categories = getCategoriesList(charte);
                 const aliasCount = Object.keys((charte.definition as any).aliases || {}).length;
-                
+                const isSelected = selectedCharteForDetails?.charte_id === charte.charte_id;
+
                 return (
-                  <TableRow key={charte.charte_id}>
+                  <TableRow 
+                    key={charte.charte_id}
+                    onClick={() => handleRowClick(charte)}
+                    sx={{
+                      cursor: 'pointer',
+                      bgcolor: isSelected ? 'action.selected' : 'inherit',
+                      '&:hover': { 
+                        bgcolor: isSelected ? 'action.selected' : 'action.hover' 
+                      },
+                      transition: 'background-color 0.2s'
+                    }}
+                  >
                     <TableCell>
                       <Typography variant="body2" fontWeight={600}>
                         {charte.charte_name}
@@ -185,10 +217,10 @@ export function CharteManager({ variable }: CharteManagerProps) {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Chip 
-                        label={charte.philosophy} 
-                        size="small" 
-                        color="primary" 
+                      <Chip
+                        label={charte.philosophy}
+                        size="small"
+                        color="primary"
                         variant="outlined"
                       />
                     </TableCell>
@@ -198,17 +230,17 @@ export function CharteManager({ variable }: CharteManagerProps) {
                     <TableCell>
                       <Stack direction="row" spacing={0.5} flexWrap="wrap">
                         {categories.map((cat) => (
-                          <Chip 
-                            key={cat} 
-                            label={cat} 
-                            size="small" 
+                          <Chip
+                            key={cat}
+                            label={cat}
+                            size="small"
                             variant="outlined"
                           />
                         ))}
                       </Stack>
                     </TableCell>
                     <TableCell>
-                      <Chip 
+                      <Chip
                         label={aliasCount === 0 ? "Aucun" : aliasCount + " alias"}
                         size="small"
                         color={aliasCount === 0 ? "default" : "success"}
@@ -224,8 +256,11 @@ export function CharteManager({ variable }: CharteManagerProps) {
                         <IconButton
                           size="small"
                           color="primary"
-                          onClick={() => handleEditAliases(charte)}
-                          title="Éditer les aliases"
+                          onClick={(e) => {
+                            e.stopPropagation(); // 🆕 Empêcher sélection ligne
+                            handleEditAliases(charte);
+                          }}
+                          title="Édition rapide aliases"
                         >
                           <EditIcon fontSize="small" />
                         </IconButton>
@@ -239,7 +274,81 @@ export function CharteManager({ variable }: CharteManagerProps) {
         </CardContent>
       </Card>
 
-      {/* Dialog d'édition des aliases */}
+      {/* 🆕 Zone détails sous le tableau */}
+      {selectedCharteForDetails && (
+        <Card sx={{ mt: 3 }}>
+          <CardContent>
+            {/* Header avec bouton fermer */}
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+              <Typography variant="h6">
+                {selectedCharteForDetails.charte_name} v{selectedCharteForDetails.version}
+              </Typography>
+              <IconButton 
+                size="small" 
+                onClick={() => setSelectedCharteForDetails(null)}
+                title="Fermer les détails"
+              >
+                <CancelIcon />
+              </IconButton>
+            </Stack>
+
+            {/* Tabs */}
+            <Tabs 
+              value={detailsTab} 
+              onChange={(_, newValue) => setDetailsTab(newValue)}
+              sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}
+            >
+              <Tab label="Aliases" value="aliases" />
+              <Tab label="Catégories" value="categories" />
+              <Tab label="Règles" value="rules" />
+              <Tab label="Paramètres LLM" value="llm" />
+              <Tab label="🔧 Tuning" value="tuning" />
+              <Tab label="📜 Historique" value="history" />
+            </Tabs>
+
+            {/* Content selon tab */}
+            <Box sx={{ minHeight: 300 }}>
+              {detailsTab === 'aliases' && (
+                <Alert severity="info">
+                  Tab Aliases - À implémenter : CharteAliasesEditor (Étape 2)
+                </Alert>
+              )}
+              
+              {detailsTab === 'categories' && (
+                <Alert severity="info">
+                  Tab Catégories - À implémenter : CharteCategoriesEditor (Étape 4)
+                </Alert>
+              )}
+              
+              {detailsTab === 'rules' && (
+                <Alert severity="info">
+                  Tab Règles - À implémenter : CharteRulesEditor (Étape 5)
+                </Alert>
+              )}
+              
+              {detailsTab === 'llm' && (
+                <Alert severity="info">
+                  Tab LLM - À implémenter : CharteLLMParamsEditor (Étape 5)
+                </Alert>
+              )}
+              
+              {detailsTab === 'tuning' && (
+                <Alert severity="info">
+                  Tab Tuning - À implémenter : Intégration CharteTuningPanel (Étape 3)
+                </Alert>
+              )}
+              
+              {detailsTab === 'history' && (
+                <Alert severity="info">
+                  Tab Historique - À implémenter : CharteVersionHistory (Optionnel)
+                </Alert>
+              )}
+            </Box>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Dialog d'édition des aliases (GARDE LE COMPORTEMENT EXISTANT) */}
       <Dialog
         open={aliasDialogOpen}
         onClose={() => setAliasDialogOpen(false)}
@@ -258,7 +367,7 @@ export function CharteManager({ variable }: CharteManagerProps) {
           <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
             Aliases existants :
           </Typography>
-          
+
           {Object.keys(aliases).length === 0 ? (
             <Alert severity="warning" sx={{ mb: 2 }}>
               Aucun alias configuré pour cette charte
@@ -267,15 +376,15 @@ export function CharteManager({ variable }: CharteManagerProps) {
             <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
               <Stack spacing={1}>
                 {Object.entries(aliases).map(([key, value]) => (
-                  <Stack 
-                    key={key} 
-                    direction="row" 
-                    alignItems="center" 
+                  <Stack
+                    key={key}
+                    direction="row"
+                    alignItems="center"
                     spacing={2}
-                    sx={{ 
-                      p: 1, 
-                      bgcolor: 'grey.50', 
-                      borderRadius: 1 
+                    sx={{
+                      p: 1,
+                      bgcolor: 'grey.50',
+                      borderRadius: 1
                     }}
                   >
                     <Chip label={key} color="error" size="small" />
@@ -300,7 +409,7 @@ export function CharteManager({ variable }: CharteManagerProps) {
           <Typography variant="subtitle2" gutterBottom>
             Ajouter un nouvel alias :
           </Typography>
-          
+
           <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 2 }}>
             <TextField
               label="Tag LLM (à normaliser)"

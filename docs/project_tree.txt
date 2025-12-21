@@ -112,6 +112,8 @@ useAnalysisPairs-working.txt
 |   |   |-- specs/
 |   |   |   |-- ARCHITECTURE_TABLES_FLUX_LEVEL0.md
 |   |   |   |-- FLUX_DONNEES_LEVEL0.md
+|   |   |   |-- SPEC_CHARTE_MANAGEMENT_UI.md
+|   |   |   |-- SPEC_CHARTE_MANAGEMENT_UI_v2.md
 |   |   |   |-- SPECS_CHARTE_TUNING_SYSTEM.md
 |   |   |   |-- SPECS_KAPPA_COMPARATOR.md
 |   |   |   |-- SPECS_MODALITE_AUDIO.md
@@ -122,10 +124,12 @@ useAnalysisPairs-working.txt
 |   |   |-- AI-CONTEXT-WORKFLOW-SPEC.md
 |   |   |-- base-context.md
 |   |   |-- CONTEXTE_SESSION3_SPRINT4.md
+|   |   |-- CURRENT_STATE.md
 |   |   |-- MISSION_SPRINT4_v2_2025-12-18 .md
 |   |   |-- MISSION_SPRINT4_v3_2025-12-18_GOLD_STANDARDS.md
 |   |   |-- MISSION_SPRINT4_v4_2025-12-19.md
 |   |   |-- MISSION_SPRINT4_v5_2025-12-19.md
+|   |   |-- MISSION_SPRINT5_v1.md
 |   |   |-- mission-2025-01-23-typescript-cleanup.md
 |   |   |-- mission-2025-01-24-level1-investigation.md
 |   |   |-- mission-2025-11-24-versioning-investigation-avancement.md
@@ -140,6 +144,7 @@ useAnalysisPairs-working.txt
 |   |   |-- mission-next-M2-M3-tuning-v4.md
 |   |   |-- mission-next-M2-M3-tuning-v5-PAUSED.md
 |   |   |-- SESSION_2025-11-25_BILAN_PHASE1-2-3.md
+|   |   |-- SESSION_4_CONTEXT.md
 |   |   |-- SESSION_SPRINT3_SYNTHESE_COURTE.md
 |   |   |-- session-reprise-2025-11-25-phase4-debugging.md
 |   |   |-- TESTS_SPRINT4_VALIDATION.md
@@ -167,6 +172,8 @@ useAnalysisPairs-working.txt
 |   |   |-- test-asr.md
 |   |   |-- transcription.json
 |   |   +-- transcriptionauto.md
+|   |-- decisions/
+|   |   +-- 005_charte_tuning_system.md
 |   |-- missions/
 |   |   |-- mission-2025-12-15-level0-llm-ADDENDUM2-multi-chartes-optimization.md
 |   |   |-- mission-2025-12-15-level0-llm-ADDENDUM-reuse-level1-components.md
@@ -179,6 +186,8 @@ useAnalysisPairs-working.txt
 |   |   |-- mission-2025-12-16-silence-detection-development.md
 |   |   |-- mission-2025-12-17-unified-annotations-sync.md
 |   |   +-- mission-level0-SPECS-unified-annotations-v2.0.md
+|   |-- state/
+|   |   +-- CURRENT_STATE.md
 |   |-- tuning/
 |   |   +-- TUNING_ALGORITHMES_M1M2M3.md
 |   |-- calls_ddd_tree.txt
@@ -575,9 +584,11 @@ useAnalysisPairs-working.txt
 |   |   |   |   |-- domain/
 |   |   |   |   |   +-- services/
 |   |   |   |   |       |-- AnnotationService.ts
+|   |   |   |   |       |-- CharteEditionService.ts
 |   |   |   |   |       |-- CharteManagementService.ts
 |   |   |   |   |       |-- CharteRegistry.ts
 |   |   |   |   |       |-- CharteRegistry.ts.v1.0.backup
+|   |   |   |   |       |-- CharteTuningService.ts
 |   |   |   |   |       |-- DisagreementValidationService.ts
 |   |   |   |   |       |-- GoldStandardService.ts
 |   |   |   |   |       |-- HypothesisRobustnessService.ts
@@ -589,6 +600,12 @@ useAnalysisPairs-working.txt
 |   |   |   |   |       +-- SupabaseLevel0Service.ts
 |   |   |   |   +-- presentation/
 |   |   |   |       |-- components/
+|   |   |   |       |   |-- tuning/
+|   |   |   |       |   |   |-- CategoryStatsPanel.tsx
+|   |   |   |       |   |   |-- CharteTuningPanel.tsx
+|   |   |   |       |   |   |-- index.ts
+|   |   |   |       |   |   |-- SuggestionCard.tsx
+|   |   |   |       |   |   +-- SuggestionList.tsx
 |   |   |   |       |   |-- CharteManager.tsx
 |   |   |   |       |   |-- DerivationWizard.tsx
 |   |   |   |       |   |-- DisagreementDetailView.tsx
@@ -834,6 +851,7 @@ useAnalysisPairs-working.txt
 |   |   |   |   |-- calculations.ts
 |   |   |   |   |-- index.ts
 |   |   |   |   |-- level0.ts
+|   |   |   |   |-- tuning.ts
 |   |   |   |   |-- validation.ts
 |   |   |   |   +-- variables.ts
 |   |   |   |-- ui/
