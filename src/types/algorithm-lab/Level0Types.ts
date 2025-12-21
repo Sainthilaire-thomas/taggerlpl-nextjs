@@ -54,6 +54,37 @@ export interface DisagreementCase {
 }
 
 // ============================================================================
+// PROMPT STRUCTURE - Sprint 5
+// ============================================================================
+
+/**
+ * Configuration d'une section de prompt
+ */
+export interface PromptSectionConfig {
+  content: string;      // Contenu texte de la section
+  enabled: boolean;     // Section active dans le prompt final ?
+  order: number;        // Ordre d'apparition (1-100)
+}
+
+/**
+ * Structure complète du prompt (12 sections extensibles)
+ */
+export interface PromptStructure {
+  system_instructions?: PromptSectionConfig;
+  task_description: PromptSectionConfig;              // REQUIS
+  preprocessing_instructions?: PromptSectionConfig;   // NOUVEAU Sprint 5
+  examples?: PromptSectionConfig;
+  context_template?: PromptSectionConfig;
+  constraints?: PromptSectionConfig;
+  reasoning_instructions?: PromptSectionConfig;
+  quality_criteria?: PromptSectionConfig;
+  warnings?: PromptSectionConfig;
+  edge_cases?: PromptSectionConfig;
+  fallback_instructions?: PromptSectionConfig;
+  output_format: PromptSectionConfig;                 // REQUIS
+}
+
+// ============================================================================
 // Multi-chartes
 // ============================================================================
 
@@ -63,19 +94,21 @@ export interface CharteDefinition {
   charte_description?: string;
   variable: "X" | "Y";
   definition: {
-    categories: Record<string, {
-      description: string;
-      patterns?: string[];
-      rules?: string[];
-      examples?: string[];
-    }>;
-    priority_rules?: string[];
-    rules?: {
-      approach?: string;
-      examples_per_category?: number;
-      context_included?: boolean;
-    };
+  categories: Record<string, {
+    description: string;
+    patterns?: string[];
+    rules?: string[];
+    examples?: string[];
+  }>;
+  priority_rules?: string[];
+  rules?: {
+    approach?: string;
+    examples_per_category?: number;
+    context_included?: boolean;
   };
+  prompt_structure?: PromptStructure;  // ← AJOUTER CETTE LIGNE
+  aliases?: Record<string, string>;    // ← AJOUTER AUSSI (pour CharteY_C)
+};
   
   is_baseline?: boolean;
     // 🆕 Sprint 3 : Champs v2.0
@@ -794,5 +827,3 @@ export function formatKappaImprovement(improvement: number | null): string {
 // ============================================================================
 // FIN DU PATCH SPRINT 4
 // ============================================================================
-
-
