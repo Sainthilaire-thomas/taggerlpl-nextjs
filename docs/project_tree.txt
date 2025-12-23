@@ -110,10 +110,12 @@ useAnalysisPairs-working.txt
 |-- docs/
 |   |-- ai_context/
 |   |   |-- specs/
+|   |   |   |-- ADDENDUM_PREPROCESSING_INSTRUCTIONS.md
 |   |   |   |-- ARCHITECTURE_TABLES_FLUX_LEVEL0.md
 |   |   |   |-- FLUX_DONNEES_LEVEL0.md
 |   |   |   |-- SPEC_CHARTE_MANAGEMENT_UI.md
 |   |   |   |-- SPEC_CHARTE_MANAGEMENT_UI_v2.md
+|   |   |   |-- SPEC_EDITEUR_PROMPT_INLINE.md
 |   |   |   |-- SPECS_CHARTE_TUNING_SYSTEM.md
 |   |   |   |-- SPECS_KAPPA_COMPARATOR.md
 |   |   |   |-- SPECS_MODALITE_AUDIO.md
@@ -130,6 +132,7 @@ useAnalysisPairs-working.txt
 |   |   |-- MISSION_SPRINT4_v4_2025-12-19.md
 |   |   |-- MISSION_SPRINT4_v5_2025-12-19.md
 |   |   |-- MISSION_SPRINT5_v1.md
+|   |   |-- MISSION_SPRINT5_v2.md
 |   |   |-- mission-2025-01-23-typescript-cleanup.md
 |   |   |-- mission-2025-01-24-level1-investigation.md
 |   |   |-- mission-2025-11-24-versioning-investigation-avancement.md
@@ -173,7 +176,9 @@ useAnalysisPairs-working.txt
 |   |   |-- transcription.json
 |   |   +-- transcriptionauto.md
 |   |-- decisions/
-|   |   +-- 005_charte_tuning_system.md
+|   |   |-- 005_charte_tuning_system.md
+|   |   |-- ADR_006_gestion_exemples_chartes.md
+|   |   +-- ADR_007_architecture_editeur_prompt_inline.md
 |   |-- missions/
 |   |   |-- mission-2025-12-15-level0-llm-ADDENDUM2-multi-chartes-optimization.md
 |   |   |-- mission-2025-12-15-level0-llm-ADDENDUM-reuse-level1-components.md
@@ -600,6 +605,12 @@ useAnalysisPairs-working.txt
 |   |   |   |   |       +-- SupabaseLevel0Service.ts
 |   |   |   |   +-- presentation/
 |   |   |   |       |-- components/
+|   |   |   |       |   |-- chartes/
+|   |   |   |       |   |   |-- CharteAliasesEditor.tsx
+|   |   |   |       |   |   |-- CharteCategoriesEditor.tsx
+|   |   |   |       |   |   |-- CharteLLMParamsEditor.tsx
+|   |   |   |       |   |   |-- CharteRulesEditor.tsx
+|   |   |   |       |   |   +-- index.ts
 |   |   |   |       |   |-- tuning/
 |   |   |   |       |   |   |-- CategoryStatsPanel.tsx
 |   |   |   |       |   |   |-- CharteTuningPanel.tsx

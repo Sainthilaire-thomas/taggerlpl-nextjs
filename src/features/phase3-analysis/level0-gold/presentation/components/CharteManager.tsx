@@ -39,7 +39,13 @@ import {
 } from "@mui/icons-material";
 import { CharteManagementService } from "../../domain/services/CharteManagementService";
 import { CharteDefinition } from "@/types/algorithm-lab/Level0Types";
-
+import { CharteTuningPanel } from "./tuning/CharteTuningPanel";
+import { 
+  CharteAliasesEditor,
+  CharteCategoriesEditor, 
+  CharteRulesEditor,
+  CharteLLMParamsEditor
+} from './chartes';
 interface CharteManagerProps {
   variable: "X" | "Y";
 }
@@ -308,35 +314,40 @@ export function CharteManager({ variable }: CharteManagerProps) {
 
             {/* Content selon tab */}
             <Box sx={{ minHeight: 300 }}>
-              {detailsTab === 'aliases' && (
-                <Alert severity="info">
-                  Tab Aliases - À implémenter : CharteAliasesEditor (Étape 2)
-                </Alert>
-              )}
+             {detailsTab === 'aliases' && (
+  <CharteAliasesEditor 
+    charte={selectedCharteForDetails}
+    onSave={loadChartes}
+  />
+)}
               
               {detailsTab === 'categories' && (
-                <Alert severity="info">
-                  Tab Catégories - À implémenter : CharteCategoriesEditor (Étape 4)
-                </Alert>
-              )}
+  <CharteCategoriesEditor 
+    charte={selectedCharteForDetails}
+    onSave={loadChartes}
+  />
+)}
               
               {detailsTab === 'rules' && (
-                <Alert severity="info">
-                  Tab Règles - À implémenter : CharteRulesEditor (Étape 5)
-                </Alert>
-              )}
+  <CharteRulesEditor 
+    charte={selectedCharteForDetails}
+    onSave={loadChartes}
+  />
+)}
               
-              {detailsTab === 'llm' && (
-                <Alert severity="info">
-                  Tab LLM - À implémenter : CharteLLMParamsEditor (Étape 5)
-                </Alert>
-              )}
+             {detailsTab === 'llm' && (
+  <CharteLLMParamsEditor 
+    charte={selectedCharteForDetails}
+    onSave={loadChartes}
+  />
+)}
               
               {detailsTab === 'tuning' && (
-                <Alert severity="info">
-                  Tab Tuning - À implémenter : Intégration CharteTuningPanel (Étape 3)
-                </Alert>
-              )}
+  <CharteTuningPanel 
+    charteId={selectedCharteForDetails.charte_id}
+    testId={undefined}
+  />
+)}
               
               {detailsTab === 'history' && (
                 <Alert severity="info">
