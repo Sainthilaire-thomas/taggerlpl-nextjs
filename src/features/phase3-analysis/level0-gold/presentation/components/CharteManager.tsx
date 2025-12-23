@@ -44,7 +44,8 @@ import {
   CharteAliasesEditor,
   CharteCategoriesEditor, 
   CharteRulesEditor,
-  CharteLLMParamsEditor
+  CharteLLMParamsEditor,
+  ChartePromptEditor
 } from './chartes';
 interface CharteManagerProps {
   variable: "X" | "Y";
@@ -58,7 +59,7 @@ export function CharteManager({ variable }: CharteManagerProps) {
 
   // 🆕 États pour la sélection et zone détails
   const [selectedCharteForDetails, setSelectedCharteForDetails] = useState<CharteDefinition | null>(null);
-  const [detailsTab, setDetailsTab] = useState<'aliases' | 'categories' | 'rules' | 'llm' | 'tuning' | 'history'>('aliases');
+  const [detailsTab, setDetailsTab] = useState<'aliases' | 'prompt' | 'rules' | 'llm' | 'tuning' | 'history'>('aliases');
 
   // États pour l'édition des aliases
   const [aliases, setAliases] = useState<Record<string, string>>({});
@@ -305,7 +306,7 @@ export function CharteManager({ variable }: CharteManagerProps) {
               sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}
             >
               <Tab label="Aliases" value="aliases" />
-              <Tab label="Catégories" value="categories" />
+              <Tab label="Prompt" value="prompt" />
               <Tab label="Règles" value="rules" />
               <Tab label="Paramètres LLM" value="llm" />
               <Tab label="🔧 Tuning" value="tuning" />
@@ -321,10 +322,26 @@ export function CharteManager({ variable }: CharteManagerProps) {
   />
 )}
               
-              {detailsTab === 'categories' && (
-  <CharteCategoriesEditor 
+              {detailsTab === 'prompt' && (
+  <ChartePromptEditor
     charte={selectedCharteForDetails}
-    onSave={loadChartes}
+    onSave={async (updatedDefinition) => {
+  try {
+    setLoading(true);
+    const result = await CharteManagementService.updateCharte(
+      selectedCharteForDetails.charte_id,
+      { definition: updatedDefinition }
+    );
+    if (result.error) throw new Error(result.error);
+    await loadChartes();
+    alert("Prompt sauvegardé avec succès !");
+  } catch (error) {
+    console.error("Erreur sauvegarde prompt:", error);
+    alert("Erreur lors de la sauvegarde: " + (error as Error).message);
+  } finally {
+    setLoading(false);
+  }
+}}
   />
 )}
               
